@@ -282,17 +282,21 @@
                 // Watch Candidates
                 if(window.vsdCandUnsub) window.vsdCandUnsub();
                 window.vsdCandUnsub = db.collection('candidates').where('section', '==', secName).onSnapshot(snap => {
-                    document.getElementById('vsd-stat-candidates').innerText = snap.size;
+                    const candStatEl = document.getElementById('vsd-stat-candidates');
+                    if (candStatEl) candStatEl.innerText = snap.size;
                     sectionCandidatesData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    if (document.getElementById('content-candidates').classList.contains('block')) renderVsdCandidates();
+                    const candContent = document.getElementById('content-candidates');
+                    if (candContent && candContent.classList.contains('block')) renderVsdCandidates();
                 });
 
                 // Watch Programs
                 if(window.vsdProgUnsub) window.vsdProgUnsub();
                 window.vsdProgUnsub = db.collection('programs').where('section', '==', secName).onSnapshot(snap => {
-                    document.getElementById('vsd-stat-programs').innerText = snap.size;
+                    const progStatEl = document.getElementById('vsd-stat-programs');
+                    if (progStatEl) progStatEl.innerText = snap.size;
                     sectionProgramsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    if (document.getElementById('content-programs').classList.contains('block')) renderVsdPrograms();
+                    const progContent = document.getElementById('content-programs');
+                    if (progContent && progContent.classList.contains('block')) renderVsdPrograms();
                 });
             }
 

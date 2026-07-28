@@ -322,7 +322,8 @@
                 // Fetch All Candidates
                 db.collection('candidates').where('team', '==', teamName).onSnapshot(snap => {
                     allTeamCandidates = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    document.getElementById('st-total-candidates').innerText = snap.size;
+                    const candCountEl = document.getElementById('st-total-candidates');
+                    if (candCountEl) candCountEl.innerText = snap.size;
                     
                     // Fetch Results to calculate points
                     fetchPointsData(allTeamCandidates, teamColor);
@@ -398,9 +399,12 @@
             }
 
             function renderStats(total, published, unpublished) {
-                document.getElementById('st-total-points').innerText = total;
-                document.getElementById('st-published-points').innerText = published;
-                document.getElementById('st-unpublished-points').innerText = unpublished;
+                const totEl = document.getElementById('st-total-points');
+                const pubEl = document.getElementById('st-published-points');
+                const unpubEl = document.getElementById('st-unpublished-points');
+                if (totEl) totEl.innerText = total;
+                if (pubEl) pubEl.innerText = published;
+                if (unpubEl) unpubEl.innerText = unpublished;
             }
 
             window.renderTeamCandidates = function(teamColor) {

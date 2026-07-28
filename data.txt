@@ -1,0 +1,32 @@
+Here is the information you will need to provide to set up Firebase and Cloudinary for your project:
+
+================================
+1. FIREBASE CONFIGURATION
+================================
+To connect your web app to Firebase, you need the following keys from your Firebase Project Settings (usually added to your firebase.js or main.js file):
+
+- apiKey: (e.g., "AIzaSyDOCXI...")
+- authDomain: (e.g., "your-project.firebaseapp.com")
+- projectId: (e.g., "your-project-id")
+- storageBucket: (e.g., "your-project.appspot.com")
+- messagingSenderId: (e.g., "1234567890")
+- appId: (e.g., "1:1234567890:web:abc123def456")
+- measurementId: (Optional for analytics, e.g., "G-ABCDEFG")
+
+Where to find this: 
+Go to the Firebase Console -> Click the Gear icon (Project Settings) -> General tab -> Scroll down to "Your apps" and look for the Firebase SDK snippet.
+
+
+================================
+2. CLOUDINARY CONFIGURATION
+================================
+To upload images or media to Cloudinary, you will need the following details from your Cloudinary Account:
+
+- Cloud Name: (e.g., "dztxhabcd")
+- API Key: (e.g., "123456789012345")
+- API Secret: (e.g., "abcd1234efgh5678" - keep this safe, usually used in backend)
+- Upload Preset: (Required if you are uploading directly from the frontend/browser without a backend server. You will need to create an "unsigned" upload preset in Cloudinary).
+
+Where to find this: 
+Go to your Cloudinary Dashboard -> Programmable Media -> Dashboard (Look at the "Product Environment Credentials" section).
+For Upload Preset: Go to Settings -> Upload -> Scroll down to "Upload presets" and click "Add upload preset" (make sure the Signing Mode is "Unsigned").

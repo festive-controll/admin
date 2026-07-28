@@ -274,11 +274,13 @@
                         document.getElementById('vc-det-sec').innerText = c.section || '—';
                         
                         const avatarEl = document.getElementById('vc-avatar');
-                        if (c.imageUrl) {
-                            avatarEl.innerHTML = `<img src="${c.imageUrl}" class="w-full h-full object-cover rounded-xl">`;
+                        const candInitial = (c.name || candNameStr).charAt(0).toUpperCase();
+                        const candImg = c.imageUrl || c.photo || c.image || c.photoUrl;
+                        if (candImg) {
+                            avatarEl.innerHTML = `<img src="${candImg}" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerText='${candInitial}'; this.parentElement.classList.add('flex');">`;
                             avatarEl.classList.remove('flex'); // Remove flex so img fills correctly
                         } else {
-                            avatarEl.innerText = (c.name || candNameStr).charAt(0).toUpperCase();
+                            avatarEl.innerText = candInitial;
                             avatarEl.classList.add('flex');
                         }
 
@@ -410,7 +412,7 @@
 
                             const statusPill = d._isPublishedStatus
                                 ? `<span class="bg-green-50 text-green-600 text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0 items-center justify-center flex">Published</span>`
-                                : `<span class="bg-yellow-50 text-yellow-600 text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0 items-center justify-center flex">Unpublished</span>`;
+                                : `<span class="bg-yellow-50 text-yellow-600 text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0 items-center justify-center flex">Result not published</span>`;
 
                             const btnState = d._isPublishedStatus ? '' : 'disabled style="opacity:0.5; cursor:not-allowed;"';
 

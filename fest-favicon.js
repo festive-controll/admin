@@ -1,7 +1,7 @@
 (function() {
-    // Check if this page is a public website page
+    const publicPaths = ['/', '/index.html', '/downloads.html', '/gallery.html', '/updates.html', '/schedule.html', '/contact.html', '/result.html', '/results/index.html'];
     const isPublicPage = window.location.pathname.includes('/public/') || 
-                         (window.location.pathname.endsWith('index.html') && !document.querySelector('meta[name="admin-page"]')) ||
+                         publicPaths.includes(window.location.pathname) ||
                          (document.body && document.body.classList.contains('public-site'));
 
     // Only inject 80% zoom CSS on Admin Panel pages, NOT on public website pages
@@ -154,13 +154,13 @@
                 {
                     "src": icon192Url,
                     "sizes": "192x192",
-                    "type": logo192 ? "image/png" : "image/svg+xml",
+                    "type": logo192 ? (logo192.includes('image/webp') ? 'image/webp' : 'image/png') : "image/svg+xml",
                     "purpose": "any maskable"
                 },
                 {
                     "src": icon512Url,
                     "sizes": "512x512",
-                    "type": logo512 ? "image/png" : "image/svg+xml",
+                    "type": logo512 ? (logo512.includes('image/webp') ? 'image/webp' : 'image/png') : "image/svg+xml",
                     "purpose": "any maskable"
                 }
             ]
@@ -186,24 +186,42 @@
     // Expose function globally
     window.updatePageFaviconAndManifest = updatePageFaviconAndManifest;
 
-    // Start a listener automatically if Firebase is available
+    let retryCount = 0;
+    
+    // Start a listener automatically if Firebase is available, else fallback to REST
     function initListener() {
         if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
             try {
                 const db = firebase.firestore();
                 db.collection('config').doc('festData').onSnapshot(doc => {
-                    if (doc.exists) {
-                        updatePageFaviconAndManifest(doc.data());
-                    }
-                }, err => {
-                    console.warn("Favicon sync error:", err);
-                });
+                    if (doc.exists) updatePageFaviconAndManifest(doc.data());
+                }, err => console.warn("Favicon sync error:", err));
             } catch (e) {
                 console.error("Error setting up automatic favicon listener:", e);
             }
         } else {
-            // Retry if Firebase isn't initialized yet
-            setTimeout(initListener, 100);
+            retryCount++;
+            if (retryCount < 10) {
+                // Retry for 1 second (10 * 100ms) to see if firebase loads
+                setTimeout(initListener, 100);
+            } else {
+                // Fallback to REST API if Firebase is not present on this page
+                fetch('https://firestore.googleapis.com/v1/projects/festie-s1u2h3/databases/(default)/documents/config/festData')
+                    .then(res => res.json())
+                    .then(json => {
+                        if (json && json.fields) {
+                            const doc = json.fields;
+                            const data = {};
+                            for (const key in doc) {
+                                if (doc[key].stringValue !== undefined) data[key] = doc[key].stringValue;
+                                else if (doc[key].booleanValue !== undefined) data[key] = doc[key].booleanValue;
+                                else if (doc[key].integerValue !== undefined) data[key] = doc[key].integerValue;
+                            }
+                            updatePageFaviconAndManifest(data);
+                        }
+                    })
+                    .catch(err => console.warn("Favicon REST fetch error:", err));
+            }
         }
     }
 

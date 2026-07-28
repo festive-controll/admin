@@ -328,6 +328,7 @@
 
         var selectedTeamIds = new Set();
         var editingTeamId = null;
+        var editingOldTeamName = null;
         var activeTeamDropdownId = null;
         var teamCurrentPage = 1;
         var teamItemsPerPage = 25;
@@ -623,6 +624,7 @@
 
         window.openTeamSidebar = function () {
             editingTeamId = null;
+            editingOldTeamName = null;
             document.getElementById('teamSidebarTitle').innerText = "Add Team";
             document.getElementById('btn-save-team-text').innerText = "Save Team";
             document.getElementById('teamName').value = '';
@@ -643,6 +645,7 @@
             const team = teamsData.find(t => t.id === id);
             if (!team) return;
             editingTeamId = id;
+            editingOldTeamName = team.name;
             activeTeamDropdownId = null;
             document.getElementById('teamSidebarTitle').innerText = "Edit Team";
             document.getElementById('btn-save-team-text').innerText = "Update Team";
@@ -663,75 +666,116 @@
             document.getElementById('teamSidebar').classList.add('translate-x-full');
         };
 
-        async function syncCaptainsToCandidates(teamName, series, captainName, assistantName) {
-            if (typeof db === 'undefined' || !series) return;
-            const capChest = String(series + 1);
-            const asstChest = String(series + 2);
+        async function syncCaptainsToCandidates(teamName, series, captainName, assistantName, oldTeamName = null) {
+            if (typeof db === 'undefined') return;
+            const seriesBase = parseInt(series) || 0;
+            const capChest = String(seriesBase + 1);
+            const asstChest = String(seriesBase + 2);
+
+            const timestamp = new Date().toISOString();
 
             try {
-                // Sync Captain
+                // Fetch candidates matching current team name or old team name
+                const teamFilter = oldTeamName || teamName;
+                const teamCandsSnap = await db.collection('candidates').where('team', '==', teamFilter).get();
+                let teamCands = teamCandsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // If team name changed, update existing candidates to the new team name
+                if (oldTeamName && oldTeamName !== teamName) {
+                    for (const cand of teamCands) {
+                        await db.collection('candidates').doc(cand.id).update({ team: teamName });
+                        cand.team = teamName;
+                    }
+                }
+
+                // 1. Sync Captain
                 if (captainName) {
-                    const capSnap = await db.collection('candidates').where('chestNo', '==', capChest).get();
-                    if (!capSnap.empty) {
-                        await db.collection('candidates').doc(capSnap.docs[0].id).update({
+                    let capCand = teamCands.find(c => c.isCaptain || c.name === captainName || String(c.chestNo) === capChest);
+                    if (capCand) {
+                        await db.collection('candidates').doc(capCand.id).update({
                             name: captainName,
+                            chestNo: capChest,
                             team: teamName,
                             isCaptain: true,
                             isAssistantCaptain: false,
-                            isActive: true
+                            active: true,
+                            isActive: true,
+                            updatedAt: timestamp
                         });
                     } else {
                         await db.collection('candidates').add({
                             name: captainName,
                             chestNo: capChest,
                             team: teamName,
+                            active: true,
                             isActive: true,
                             isCaptain: true,
                             isAssistantCaptain: false,
-                            section: "General"
+                            section: "General",
+                            admissionNo: "N/A",
+                            createdAt: timestamp,
+                            updatedAt: timestamp
                         });
                     }
                 } else {
-                    const capSnap = await db.collection('candidates').where('chestNo', '==', capChest).get();
-                    if (!capSnap.empty) {
-                        await db.collection('candidates').doc(capSnap.docs[0].id).update({
-                            isCaptain: false
-                        });
+                    const prevCaps = teamCands.filter(c => c.isCaptain || String(c.chestNo) === capChest);
+                    for (const c of prevCaps) {
+                        await db.collection('candidates').doc(c.id).update({ isCaptain: false, updatedAt: timestamp });
                     }
                 }
 
-                // Sync Assistant Captain
+                // 2. Sync Assistant Captain
                 if (assistantName) {
-                    const asstSnap = await db.collection('candidates').where('chestNo', '==', asstChest).get();
-                    if (!asstSnap.empty) {
-                        await db.collection('candidates').doc(asstSnap.docs[0].id).update({
+                    let asstCand = teamCands.find(c => (c.isAssistantCaptain || c.name === assistantName || String(c.chestNo) === asstChest) && c.name !== captainName);
+                    if (asstCand) {
+                        await db.collection('candidates').doc(asstCand.id).update({
                             name: assistantName,
+                            chestNo: asstChest,
                             team: teamName,
                             isCaptain: false,
                             isAssistantCaptain: true,
-                            isActive: true
+                            active: true,
+                            isActive: true,
+                            updatedAt: timestamp
                         });
                     } else {
                         await db.collection('candidates').add({
                             name: assistantName,
                             chestNo: asstChest,
                             team: teamName,
+                            active: true,
                             isActive: true,
                             isCaptain: false,
                             isAssistantCaptain: true,
-                            section: "General"
+                            section: "General",
+                            admissionNo: "N/A",
+                            createdAt: timestamp,
+                            updatedAt: timestamp
                         });
                     }
                 } else {
-                    const asstSnap = await db.collection('candidates').where('chestNo', '==', asstChest).get();
-                    if (!asstSnap.empty) {
-                        await db.collection('candidates').doc(asstSnap.docs[0].id).update({
-                            isAssistantCaptain: false
-                        });
+                    const prevAssts = teamCands.filter(c => c.isAssistantCaptain || String(c.chestNo) === asstChest);
+                    for (const c of prevAssts) {
+                        await db.collection('candidates').doc(c.id).update({ isAssistantCaptain: false, updatedAt: timestamp });
                     }
                 }
             } catch (err) {
                 console.error("Error syncing captains to candidates:", err);
+            }
+        }
+
+        async function autoSyncAllTeamsCaptains() {
+            if (typeof db === 'undefined') return;
+            try {
+                const snap = await db.collection('teams').get();
+                for (const doc of snap.docs) {
+                    const team = doc.data();
+                    if (team.name && (team.captainName || team.assistantCaptainName)) {
+                        await syncCaptainsToCandidates(team.name, team.chestNoSeries, team.captainName, team.assistantCaptainName);
+                    }
+                }
+            } catch (err) {
+                console.error("Error auto syncing all team captains:", err);
             }
         }
 
@@ -743,6 +787,8 @@
             const captain = document.getElementById('teamCaptain').value.trim();
             const assistant = document.getElementById('teamAssistant').value.trim();
             if (!name) return typeof showToast === 'function' ? showToast("❌ Team Name is required!") : alert("Name required");
+
+            const oldTeamName = editingTeamId ? editingOldTeamName : null;
 
             const payload = { 
                 name, 
@@ -759,9 +805,9 @@
             if (editingTeamId) {
                 if (typeof db !== 'undefined') {
                     db.collection('teams').doc(editingTeamId).update(payload).then(() => {
-                        syncCaptainsToCandidates(name, series, captain, assistant).then(() => {
+                        syncCaptainsToCandidates(name, series, captain, assistant, oldTeamName).then(() => {
                             window.closeTeamSidebar();
-                            typeof showToast === 'function' && showToast("✅ Team updated!");
+                            typeof showToast === 'function' && showToast("✅ Team and Captains updated!");
                         });
                     });
                 } else {
@@ -776,9 +822,9 @@
                         payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                     }
                     db.collection('teams').add(payload).then(() => {
-                        syncCaptainsToCandidates(name, series, captain, assistant).then(() => {
+                        syncCaptainsToCandidates(name, series, captain, assistant, null).then(() => {
                             window.closeTeamSidebar();
-                            typeof showToast === 'function' && showToast("✅ Team added!");
+                            typeof showToast === 'function' && showToast("✅ Team and Captains added!");
                         });
                     });
                 } else {
@@ -798,6 +844,7 @@
             window.teamUnsub = db.collection('teams').orderBy('createdAt', 'desc').onSnapshot(snap => {
                 teamsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderTeamsUI();
+                autoSyncAllTeamsCaptains();
             });
         }
     </script>

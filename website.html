@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Portal Control Center</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="public/asset/5Rect.png">
+    <link rel="icon" type="image/png" href="https://festive-sfadc.vercel.app/asset/5Rect.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
@@ -267,12 +267,12 @@
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-900">Result Present Toggle (Live vs Coming Soon)</h3>
                                 <span id="result-present-status-badge" class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-200">
-                                    OFF (Coming Soon: /result.html)
+                                    OFF (Coming Soon)
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-500 max-w-2xl mt-1 leading-relaxed">
-                                <strong>ON (Outline):</strong> Directs public Result links to <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-800 font-mono text-[11px]">results/index.html</code> (Full Live Results &amp; Leaderboard).<br>
-                                <strong>OFF (Inline):</strong> Directs public Result links to <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-800 font-mono text-[11px]">result.html</code> (Coming Soon Banner).
+                            <p class="text-[13px] text-gray-500 font-medium leading-relaxed mt-1">
+                                <strong>ON (Outline):</strong> Directs public Result button to Live Leaderboard.<br>
+                                <strong>OFF (Inline):</strong> Directs public Result button to Coming Soon Banner.
                             </p>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer shrink-0">
@@ -597,11 +597,11 @@
             const badge = document.getElementById('result-present-status-badge');
             if (!badge) return;
             if (isON) {
-                badge.innerText = "ON (Live Results: results/index.html)";
-                badge.className = "px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-green-50 text-green-600 border border-green-200";
+                badge.className = "px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200";
+                badge.innerText = "ON (Live Results)";
             } else {
-                badge.innerText = "OFF (Coming Soon: result.html)";
                 badge.className = "px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-200";
+                badge.innerText = "OFF (Coming Soon)";
             }
         };
 
@@ -652,8 +652,8 @@
 
             // Default fallback mock images if database empty
             const defaultMocks = [
-                { id: 'mock-1', name: 'Fest Showcase Banner', url: 'asset/fest_showcase.png', source: 'admin', sourceLabel: 'Default Asset' },
-                { id: 'mock-2', name: 'College Campus View', url: 'asset/clg.jpg', source: 'admin', sourceLabel: 'Default Asset' }
+                { id: 'mock-1', name: 'Fest Showcase Banner', url: '', source: 'admin', sourceLabel: 'Default Asset' },
+                { id: 'mock-2', name: 'College Campus View', url: '', source: 'admin', sourceLabel: 'Default Asset' }
             ];
 
             defaultMocks.forEach(m => {
@@ -685,7 +685,7 @@
                 <div class="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-2xl group hover:border-brand-blue/30 transition-all">
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shrink-0">
-                            <img src="${url}" class="w-full h-full object-cover" onerror="this.src='asset/fest_showcase.png'">
+                            <img src="${url}" class="w-full h-full object-cover">
                         </div>
                         <div class="truncate">
                             <p class="text-xs font-bold text-gray-800 truncate">Slide #${idx + 1}</p>
@@ -779,7 +779,7 @@
                     class="bg-white border ${isSelected ? 'border-brand-blue ring-2 ring-brand-blue/20 shadow-md' : 'border-gray-200 hover:border-brand-blue/40'} rounded-2xl p-2.5 cursor-pointer transition-all group flex flex-col justify-between">
                     <div>
                         <div class="aspect-video rounded-xl overflow-hidden bg-gray-100 mb-2 relative group-hover:shadow-sm transition-all">
-                            <img src="${f.url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='asset/fest_showcase.png'">
+                            <img src="${f.url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                             ${isSelected ? `
                                 <div class="absolute inset-0 bg-brand-blue/25 backdrop-blur-[1px] flex items-center justify-center text-white">
                                     <div class="w-8 h-8 rounded-full bg-brand-blue flex items-center justify-center shadow-lg transform scale-110">

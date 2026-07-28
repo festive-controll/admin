@@ -561,11 +561,11 @@
                 const isSelected = selectedIds.has(cand.id);
                 const isCap = cand.isCaptain || (cand.chestNo && cand.team && (() => {
                     const teamObj = activeTeamsData.find(t => t.name === cand.team);
-                    return teamObj && teamObj.chestNoSeries && String(cand.chestNo) === String(parseInt(teamObj.chestNoSeries) + 1);
+                    return teamObj && teamObj.chestNoSeries !== undefined && teamObj.chestNoSeries !== null && String(cand.chestNo) === String((parseInt(teamObj.chestNoSeries) || 0) + 1);
                 })());
                 const isAsst = cand.isAssistantCaptain || (cand.chestNo && cand.team && (() => {
                     const teamObj = activeTeamsData.find(t => t.name === cand.team);
-                    return teamObj && teamObj.chestNoSeries && String(cand.chestNo) === String(parseInt(teamObj.chestNoSeries) + 2);
+                    return teamObj && teamObj.chestNoSeries !== undefined && teamObj.chestNoSeries !== null && String(cand.chestNo) === String((parseInt(teamObj.chestNoSeries) || 0) + 2);
                 })());
                 const roleBadge = isCap 
                     ? `<span class="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase tracking-wider shrink-0">Captain</span>` 
@@ -575,8 +575,9 @@
                 const cardBorder = isSelected ? 'border-2 border-[#FFC107]' : 'border border-gray-200';
                 const rowBg = isSelected ? 'bg-blue-50/20' : 'bg-white hover:bg-gray-50';
 
-                const avatarContent = cand.imageUrl
-                    ? `<img src="${cand.imageUrl}" class="w-full h-full object-cover">`
+                const candImg = cand.imageUrl || cand.photo || cand.image || cand.photoUrl;
+                const avatarContent = candImg
+                    ? `<img src="${candImg}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerText='${initial}';">`
                     : initial;
 
                 // --- TABLE ROW ---
@@ -837,7 +838,7 @@
                 let opCount = 0;
 
                 sortedTeams.forEach(team => {
-                    const blockStart = parseInt(team.chestNoSeries); // e.g. 100, 200, 300
+                    const blockStart = parseInt(team.chestNoSeries) || 0; // e.g. 100, 200, 300
                     
                     // Identify the captain and assistant captain
                     const captainCand = byTeam[team.name].find(c => c.isCaptain || c.name === team.captainName || (c.chestNo && String(c.chestNo) === String(blockStart + 1)));
@@ -1197,6 +1198,9 @@
                 }
 
                 renderUI();
+                if (activeTeamsData && activeTeamsData.length > 0) {
+                    autoSyncTeamCaptainsToCandidates(activeTeamsData);
+                }
             });
 
             // 2. Sections Listener (Only active)
@@ -1225,8 +1229,6 @@
                 if (window.currentTMSection) {
                     query = query.where('section', '==', window.currentTMSection);
                 }
-            } else {
-                query = query.orderBy('createdAt', 'desc');
             }
 
             window.candUnsub = query.onSnapshot(snap => {
@@ -1240,6 +1242,63 @@
                 });
                 renderUI();
             });
+        }
+
+        async function autoSyncTeamCaptainsToCandidates(teams) {
+            if (typeof db === 'undefined' || !teams || teams.length === 0) return;
+            const timestamp = new Date().toISOString();
+
+            for (const team of teams) {
+                if (!team.name || (!team.captainName && !team.assistantCaptainName)) continue;
+                const seriesBase = parseInt(team.chestNoSeries) || 0;
+                const capChest = String(seriesBase + 1);
+                const asstChest = String(seriesBase + 2);
+
+                try {
+                    const snap = await db.collection('candidates').where('team', '==', team.name).get();
+                    const teamCands = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    if (team.captainName) {
+                        let capCand = teamCands.find(c => c.isCaptain || c.name === team.captainName || String(c.chestNo) === capChest);
+                        if (!capCand) {
+                            await db.collection('candidates').add({
+                                name: team.captainName,
+                                chestNo: capChest,
+                                team: team.name,
+                                active: true,
+                                isActive: true,
+                                isCaptain: true,
+                                isAssistantCaptain: false,
+                                section: "General",
+                                admissionNo: "N/A",
+                                createdAt: timestamp,
+                                updatedAt: timestamp
+                            });
+                        }
+                    }
+
+                    if (team.assistantCaptainName) {
+                        let asstCand = teamCands.find(c => (c.isAssistantCaptain || c.name === team.assistantCaptainName || String(c.chestNo) === asstChest) && c.name !== team.captainName);
+                        if (!asstCand) {
+                            await db.collection('candidates').add({
+                                name: team.assistantCaptainName,
+                                chestNo: asstChest,
+                                team: team.name,
+                                active: true,
+                                isActive: true,
+                                isCaptain: false,
+                                isAssistantCaptain: true,
+                                section: "General",
+                                admissionNo: "N/A",
+                                createdAt: timestamp,
+                                updatedAt: timestamp
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Auto sync team captains error:", e);
+                }
+            }
         }
     </script>
 </body>

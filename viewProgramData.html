@@ -1464,14 +1464,14 @@
                 iconContainer.className = 'w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center shrink-0';
                 iconContainer.innerHTML = '<i class="fi fi-rr-check-circle"></i>';
             } else {
-                statusTextEl.innerText = 'Unpublished';
+                statusTextEl.innerText = 'Result not published';
                 iconContainer.className = 'w-10 h-10 rounded-full bg-yellow-50 text-yellow-500 flex items-center justify-center shrink-0';
                 iconContainer.innerHTML = '<i class="fi fi-rr-time-fast"></i>';
             }
 
             const inlineStatusText = document.getElementById('inline-results-status-text');
             if (inlineStatusText) {
-                inlineStatusText.innerText = p.resultsPublished ? 'Published' : 'Unpublished';
+                inlineStatusText.innerText = p.resultsPublished ? 'Published' : 'Result not published';
             }
             const btnPublish = document.getElementById('btn-publish-results');
             if (btnPublish) {
@@ -2067,7 +2067,7 @@
                                                   <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center"><i class="fi fi-rr-star"></i></div>
                                                   <div>
                                                       <div class="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Status</div>
-                                                      <div id="inline-results-status-text" class="text-[14px] font-bold text-gray-900 leading-none mt-0.5">${isPub ? 'Published' : 'Unpublished'}</div>
+                                                      <div id="inline-results-status-text" class="text-[14px] font-bold text-gray-900 leading-none mt-0.5">${isPub ? 'Published' : 'Result not published'}</div>
                                                   </div>
                                               </div>
                                               <div class="flex gap-2">
