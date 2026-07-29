@@ -81,7 +81,7 @@
             container.innerHTML = filteredRegs.map(reg => {
                 const prog = window.tmtProgramsList.find(p => p.id === reg.programId) || { code: 'Unknown', name: 'Unknown Program', type: 'Individual' };
                 const chests = reg.chestNumbers || [];
-                const isGroup = (prog.type || '').toLowerCase().includes('group');
+                const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
                 
                 // Initialize active tab if not set
                 const defaultTab = isGroup ? 'group' : (chests[0] || '');
@@ -171,7 +171,7 @@
             const reg = window.tmtRegistrationsList.find(r => r.id === regId);
             if (!reg) return;
             const prog = window.tmtProgramsList.find(p => p.id === reg.programId) || { type: 'Individual' };
-            const isGroup = (prog.type || '').toLowerCase().includes('group');
+            const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
             const chests = reg.chestNumbers || [];
             
             let updateData = {

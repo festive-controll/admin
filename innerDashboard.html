@@ -2132,198 +2132,7 @@
             const tplDesc = document.querySelector('#tpl-bulk-candidates p');
             if (tplDesc) {
                 if (liveDraftEnabled) {
-                           let overlay = document.getElementById('admin-offline-overlay');
-                    if (!overlay) {
-                        overlay = document.createElement('div');
-                        overlay.id = 'admin-offline-overlay';
-                        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:linear-gradient(-45deg, #fdfbfb, #ffffff, #f8f9fa, #fdfbfb);background-size:400% 400%;animation:bg-pan 15s ease infinite;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;';
-                        
-                        const style = document.createElement('style');
-                        style.id = 'admin-offline-style';
-                        style.innerHTML = `
-                            @import url('https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap');
-                            @keyframes error-slide-up { from{opacity:0;transform:translateY(24px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
-                            @keyframes error-float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
-                            @keyframes bg-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-
-                            .error-card {
-                                background: rgba(255, 255, 255, 0.95);
-                                backdrop-filter: blur(10px);
-                                border: 1px solid rgba(178, 230, 206, 0.6);
-                                border-radius: 40px;
-                                padding: 30px;
-                                max-width: 700px;
-                                width: calc(100% - 32px);
-                                text-align: center;
-                                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.02);
-                                animation: error-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-                                position: relative;
-                                z-index: 10;
-                                font-family: 'Clash Grotesk', sans-serif;
-                                display: flex;
-                                flex-direction: column;
-                                align-items: center;
-                            }
-
-                            .error-header {
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 16px;
-                                margin-bottom: 20px;
-                                width: 100%;
-                            }
-                            .error-icon-wrapper {
-                                width: 100px;
-                                height: 100px;
-                                border-radius: 50%;
-                                border: 2px solid #ffb3c6;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                flex-shrink: 0;
-                                background: #fff;
-                                animation: error-float 4s ease-in-out infinite;
-                                box-shadow: 0 12px 24px -8px rgba(242, 139, 130, 0.3);
-                            }
-
-                            .error-text-container {
-                                text-align: left;
-                            }
-                            .error-title {
-                                font-size: 46px;
-                                font-weight: normal;
-                                color: #f05a4f;
-                                margin: 0 0 8px;
-                                line-height: 1.1;
-                                letter-spacing: -1.5px;
-                                text-shadow: 0 2px 4px rgba(240, 90, 79, 0.1);
-                            }
-                            .error-subtitle {
-                                font-size: 26px;
-                                color: #f28b82;
-                                margin: 0;
-                                font-weight: 300;
-                                letter-spacing: -0.5px;
-                            }
-
-                            .error-logo-box {
-                                display: flex;
-                                align-items: center;
-                                gap: 12px;
-                                padding: 8px 16px;
-                                border: 1px solid #ffb3c6;
-                                border-radius: 16px;
-                                margin: 16px 0;
-                                background: #ffffff;
-                                box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05);
-                                cursor: default;
-                            }
-                            .error-logo-img {
-                                width: 48px;
-                                height: 48px;
-                                border-radius: 12px;
-                                object-fit: contain;
-                            }
-                            .error-logo-text {
-                                color: #2b3a67;
-                                text-align: left;
-                                line-height: 1.2;
-                            }
-                            .error-logo-text-title {
-                                font-size: 20px;
-                                font-weight: normal;
-                                letter-spacing: -0.5px;
-                            }
-                            .error-logo-text-sub {
-                                font-size: 14px;
-                                font-weight: normal;
-                                opacity: 0.7;
-                                color: #4a6fa5;
-                            }
-
-                            .error-footer {
-                                font-size: 16px;
-                                color: #888;
-                                margin-top: 16px;
-                                font-weight: normal;
-                            }
-                            .error-footer span {
-                                color: #4a6fa5;
-                                font-weight: normal;
-                                cursor: pointer;
-                            }
-
-                            .error-btn-link {
-                                display: inline-flex;
-                                align-items: center;
-                                justify-content: center;
-                                padding: 10px 18px;
-                                background: #fdfbfb;
-                                color: #4a6fa5;
-                                border: 1px solid #ffb3c6;
-                                border-radius: 8px;
-                                font-size: 14px;
-                                font-weight: normal;
-                                cursor: pointer;
-                                margin-top: 24px;
-                                text-decoration: none;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                            }
-
-                            @media (max-width: 600px) {
-                                .error-header { flex-direction: column; text-align: center; }
-                                .error-text-container { text-align: center; }
-                                .error-title { font-size: 32px; }
-                                .error-subtitle { font-size: 20px; }
-                            }
-                        `;
-                        document.head.appendChild(style);
-
-                        let errorCard = document.createElement('div');
-                        errorCard.className = 'error-card';
-                        errorCard.innerHTML = `
-                            <div class="error-header">
-                                <div class="error-icon-wrapper">
-                                    <svg viewBox="0 0 100 100" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
-                                      <rect x="15" y="25" width="70" height="50" rx="4" fill="#f8f9fa" stroke="#2b3a67" stroke-width="3"/>
-                                      <line x1="15" y1="38" x2="85" y2="38" stroke="#2b3a67" stroke-width="3"/>
-                                      <circle cx="23" cy="31.5" r="2.5" fill="#f05a4f"/>
-                                      <circle cx="31" cy="31.5" r="2.5" fill="#f2c94c"/>
-                                      <circle cx="39" cy="31.5" r="2.5" fill="#27ae60"/>
-                                      <rect x="25" y="46" width="30" height="3" rx="1.5" fill="#a0aec0"/>
-                                      <rect x="25" y="54" width="40" height="3" rx="1.5" fill="#a0aec0"/>
-                                      <rect x="25" y="62" width="20" height="3" rx="1.5" fill="#a0aec0"/>
-                                      <polygon points="55,50 35,85 75,85" fill="#f8f9fa" stroke="#2b3a67" stroke-width="3" stroke-linejoin="round"/>
-                                      <polygon points="55,54 40,81 70,81" fill="#f05a4f" />
-                                      <line x1="55" y1="62" x2="55" y2="72" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-                                      <circle cx="55" cy="77" r="1.5" fill="#fff"/>
-                                    </svg>
-                                </div>
-                                <div class="error-text-container">
-                                    <h1 class="error-title">Website is Shutdown</h1>
-                                    <h2 class="error-subtitle">304 - Backend De-attached</h2>
-                                </div>
-                            </div>
-                            
-                            <div class="error-logo-box">
-                                <img class="error-logo-img" id="offline-logo-img" src="logo-512.svg" alt="Logo">
-                                <div class="error-logo-text">
-                                    <div class="error-logo-text-title" id="offline-fest-name">${d.name || 'Festival'}</div>
-                                    <div class="error-logo-text-sub">System Lockout</div>
-                                </div>
-                            </div>
-
-                            <button onclick="localStorage.removeItem('isLoggedIn'); window.location.href='index.html';" class="error-btn-link">Return to Login</button>
-
-                            <div class="error-footer">
-                                contact owner is problem exists <span>dezignmvs.</span>
-                            </div>
-                        `;
-                        overlay.appendChild(errorCard);
-                        document.body.appendChild(overlay);
-                    }
+                    tplDesc.innerHTML = 'Download a CSV template, fill it in, then upload to add multiple candidates at once. <b class="text-red-600">(Live Draft is ON: You cannot enter team names in CSV)</b>';
                 } else {
                     tplDesc.innerHTML = 'Download a CSV template, fill it in, then upload to add multiple candidates at once. <b class="text-green-600">(Live Draft is OFF: You can manually enter team names in CSV)</b>';
                 }
@@ -2333,15 +2142,197 @@
             
             // Admin Offline Gate
             if (d.isActive === false) {
-                        }
-                    }
+                let overlay = document.getElementById('admin-offline-overlay');
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'admin-offline-overlay';
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:linear-gradient(-45deg, #fdfbfb, #ffffff, #f8f9fa, #fdfbfb);background-size:400% 400%;animation:bg-pan 15s ease infinite;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;';
                     
-                    window.dashboardMatrixInterval = setInterval(draw, 33);
-                    window.dashboardMatrixResizeHandler = () => {
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                    };
-                    window.addEventListener('resize', window.dashboardMatrixResizeHandler);
+                    const style = document.createElement('style');
+                    style.id = 'admin-offline-style';
+                    style.innerHTML = `
+                        @import url('https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap');
+                        @keyframes error-slide-up { from{opacity:0;transform:translateY(24px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+                        @keyframes error-float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+                        @keyframes bg-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+                        .error-card {
+                            background: rgba(255, 255, 255, 0.95);
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(178, 230, 206, 0.6);
+                            border-radius: 40px;
+                            padding: 30px;
+                            max-width: 700px;
+                            width: calc(100% - 32px);
+                            text-align: center;
+                            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.02);
+                            animation: error-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+                            position: relative;
+                            z-index: 10;
+                            font-family: 'Clash Grotesk', sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                        }
+
+                        .error-header {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 16px;
+                            margin-bottom: 20px;
+                            width: 100%;
+                        }
+                        .error-icon-wrapper {
+                            width: 100px;
+                            height: 100px;
+                            border-radius: 50%;
+                            border: 2px solid #ffb3c6;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-shrink: 0;
+                            background: #fff;
+                            animation: error-float 4s ease-in-out infinite;
+                            box-shadow: 0 12px 24px -8px rgba(242, 139, 130, 0.3);
+                        }
+
+                        .error-text-container {
+                            text-align: left;
+                        }
+                        .error-title {
+                            font-size: 46px;
+                            font-weight: normal;
+                            color: #f05a4f;
+                            margin: 0 0 8px;
+                            line-height: 1.1;
+                            letter-spacing: -1.5px;
+                            text-shadow: 0 2px 4px rgba(240, 90, 79, 0.1);
+                        }
+                        .error-subtitle {
+                            font-size: 26px;
+                            color: #f28b82;
+                            margin: 0;
+                            font-weight: 300;
+                            letter-spacing: -0.5px;
+                        }
+
+                        .error-logo-box {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                            padding: 8px 16px;
+                            border: 1px solid #ffb3c6;
+                            border-radius: 16px;
+                            margin: 16px 0;
+                            background: #ffffff;
+                            box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05);
+                            cursor: default;
+                        }
+                        .error-logo-img {
+                            width: 48px;
+                            height: 48px;
+                            border-radius: 12px;
+                            object-fit: contain;
+                        }
+                        .error-logo-text {
+                            color: #2b3a67;
+                            text-align: left;
+                            line-height: 1.2;
+                        }
+                        .error-logo-text-title {
+                            font-size: 20px;
+                            font-weight: normal;
+                            letter-spacing: -0.5px;
+                        }
+                        .error-logo-text-sub {
+                            font-size: 14px;
+                            font-weight: normal;
+                            opacity: 0.7;
+                            color: #4a6fa5;
+                        }
+
+                        .error-footer {
+                            font-size: 16px;
+                            color: #888;
+                            margin-top: 16px;
+                            font-weight: normal;
+                        }
+                        .error-footer span {
+                            color: #4a6fa5;
+                            font-weight: normal;
+                            cursor: pointer;
+                        }
+
+                        .error-btn-link {
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 10px 18px;
+                            background: #fdfbfb;
+                            color: #4a6fa5;
+                            border: 1px solid #ffb3c6;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: normal;
+                            cursor: pointer;
+                            margin-top: 24px;
+                            text-decoration: none;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        }
+
+                        @media (max-width: 600px) {
+                            .error-header { flex-direction: column; text-align: center; }
+                            .error-text-container { text-align: center; }
+                            .error-title { font-size: 32px; }
+                            .error-subtitle { font-size: 20px; }
+                        }
+                    `;
+                    document.head.appendChild(style);
+
+                    let errorCard = document.createElement('div');
+                    errorCard.className = 'error-card';
+                    errorCard.innerHTML = `
+                        <div class="error-header">
+                            <div class="error-icon-wrapper">
+                                <svg viewBox="0 0 100 100" width="60" height="60" xmlns="http://www.w3.org/2000/svg">
+                                  <rect x="15" y="25" width="70" height="50" rx="4" fill="#f8f9fa" stroke="#2b3a67" stroke-width="3"/>
+                                  <line x1="15" y1="38" x2="85" y2="38" stroke="#2b3a67" stroke-width="3"/>
+                                  <circle cx="23" cy="31.5" r="2.5" fill="#f05a4f"/>
+                                  <circle cx="31" cy="31.5" r="2.5" fill="#f2c94c"/>
+                                  <circle cx="39" cy="31.5" r="2.5" fill="#27ae60"/>
+                                  <rect x="25" y="46" width="30" height="3" rx="1.5" fill="#a0aec0"/>
+                                  <rect x="25" y="54" width="40" height="3" rx="1.5" fill="#a0aec0"/>
+                                  <rect x="25" y="62" width="20" height="3" rx="1.5" fill="#a0aec0"/>
+                                  <polygon points="55,50 35,85 75,85" fill="#f8f9fa" stroke="#2b3a67" stroke-width="3" stroke-linejoin="round"/>
+                                  <polygon points="55,54 40,81 70,81" fill="#f05a4f" />
+                                  <line x1="55" y1="62" x2="55" y2="72" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                                  <circle cx="55" cy="77" r="1.5" fill="#fff"/>
+                                </svg>
+                            </div>
+                            <div class="error-text-container">
+                                <h1 class="error-title">Website is Shutdown</h1>
+                                <h2 class="error-subtitle">304 - Backend De-attached</h2>
+                            </div>
+                        </div>
+                        
+                        <div class="error-logo-box">
+                            <img class="error-logo-img" id="offline-logo-img" src="logo-512.svg" alt="Logo">
+                            <div class="error-logo-text">
+                                <div class="error-logo-text-title" id="offline-fest-name">${d.name || 'Festival'}</div>
+                                <div class="error-logo-text-sub">System Lockout</div>
+                            </div>
+                        </div>
+
+                        <button onclick="localStorage.removeItem('isLoggedIn'); window.location.href='index.html';" class="error-btn-link">Return to Login</button>
+
+                        <div class="error-footer">
+                            contact owner is problem exists <span>dezignmvs.</span>
+                        </div>
+                    `;
+                    overlay.appendChild(errorCard);
+                    document.body.appendChild(overlay);
                 }
             } else {
                 let overlay = document.getElementById('admin-offline-overlay');

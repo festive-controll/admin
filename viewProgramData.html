@@ -484,7 +484,7 @@
                                         <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Type
                                             *</label>
                                         <div class="relative">
-                                            <select id="progType"
+                                            <select id="progType" onchange="toggleGroupFields()"
                                                 class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer">
                                                 <option value="Individual">Individual</option>
                                                 <option value="Group">Group</option>
@@ -493,7 +493,17 @@
                                                 class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div id="groupSetsContainer" class="hidden">
+                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Count of Sets</label>
+                                        <input type="number" id="progGroupSets" placeholder="e.g. 2" min="1"
+                                            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    </div>
+                                    <div id="groupParticipantsContainer" class="hidden">
+                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Participants per Set</label>
+                                        <input type="number" id="progGroupParticipants" placeholder="e.g. 10" min="1"
+                                            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    </div>
+                                    <div id="progSetContainer">
                                         <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Set
                                             Limit</label>
                                         <div class="relative">
@@ -522,7 +532,7 @@
                         </div>
 
                         <!-- Accordion 2: Participation Limits -->
-                        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                        <div id="accordion-participation-limits" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                             <button onclick="toggleAccordion('acc-limits', 'icon-limits')"
                                 class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
                                 <div class="flex items-center gap-3">
@@ -832,7 +842,7 @@
             document.getElementById('regTeamSelect').value = "";
             document.getElementById('regChestNumbers').value = "";
             
-            const isGroup = (window.currentProgram && window.currentProgram.type === 'Group');
+            const isGroup = (window.currentProgram && (window.currentProgram.type === 'Group' || (window.currentProgram.section || '').toLowerCase() === 'kulliya'));
             const countContainer = document.getElementById('regMemberCountContainer');
             const chestLabel = document.getElementById('regChestLabel');
             const chestHint = document.getElementById('regChestHint');
@@ -944,7 +954,7 @@
             const list = document.getElementById('rs-candidates-list');
             if(!list) return;
             
-            const isGroup = window.currentProgram && (window.currentProgram.type || '').toLowerCase() === 'group';
+            const isGroup = window.currentProgram && ((window.currentProgram.type || '').toLowerCase() === 'group' || (window.currentProgram.section || '').toLowerCase() === 'kulliya');
 
             if (isGroup) {
                 // --- GROUP MODE: One card per team registration ---
@@ -1092,7 +1102,7 @@
             const programId = localStorage.getItem('viewProgramId');
             if(!db || !programId) return;
 
-            const isGroup = window.currentProgram && (window.currentProgram.type || '').toLowerCase() === 'group';
+            const isGroup = window.currentProgram && ((window.currentProgram.type || '').toLowerCase() === 'group' || (window.currentProgram.section || '').toLowerCase() === 'kulliya');
 
             const btn = document.getElementById('btn-save-result');
             btn.disabled = true;
@@ -1259,7 +1269,7 @@
 
                 // Shuffle logic round-robin to avoid consecutive team members
                 let finalCands = [];
-                if (prog.type && prog.type.toLowerCase() === 'group' && listAllGroupMembers) {
+                if (prog.type && (prog.type.toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya') && listAllGroupMembers) {
                     for(let t in teamGroups) {
                         if (teamGroups[t].length > 0) {
                             finalCands.push({
@@ -1416,6 +1426,28 @@
             if (icon) icon.classList.toggle('rotate-180');
         }
 
+        function toggleGroupFields() {
+            const progType = document.getElementById('progType').value;
+            const setsContainer = document.getElementById('groupSetsContainer');
+            const participantsContainer = document.getElementById('groupParticipantsContainer');
+            const progSetContainer = document.getElementById('progSetContainer');
+            const participationLimitsAccordion = document.getElementById('accordion-participation-limits');
+            
+            if (progType === 'Group' || (window.currentProgram && (window.currentProgram.section || '').toLowerCase() === 'kulliya')) {
+                if(setsContainer) setsContainer.classList.remove('hidden');
+                if(participantsContainer) participantsContainer.classList.remove('hidden');
+                if(progSetContainer) progSetContainer.classList.add('hidden');
+                if(participationLimitsAccordion) participationLimitsAccordion.classList.add('hidden');
+            } else {
+                if(setsContainer) setsContainer.classList.add('hidden');
+                if(participantsContainer) participantsContainer.classList.add('hidden');
+                if(progSetContainer) progSetContainer.classList.remove('hidden');
+                if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                if(document.getElementById('progGroupSets')) document.getElementById('progGroupSets').value = '';
+                if(document.getElementById('progGroupParticipants')) document.getElementById('progGroupParticipants').value = '';
+            }
+        }
+
         function toggleTemplateState(toggleId, selectId, iconId) {
             const isChecked = document.getElementById(toggleId).checked;
             const selectEl = document.getElementById(selectId);
@@ -1536,6 +1568,8 @@
                 var payload = {
                     code: code, name: name, section: section,
                     type: document.getElementById('progType').value,
+                    groupSetsCount: parseInt(document.getElementById('progGroupSets').value) || null,
+                    groupParticipantsPerSet: parseInt(document.getElementById('progGroupParticipants').value) || null,
                     setId: setId,
                     progSet: setName,
                     status: document.getElementById('progStatus').value === 'active',
@@ -1854,6 +1888,11 @@
                     document.getElementById('progName').value = p.name || '';
                     if (p.section) document.getElementById('progSection').value = p.section;
                     document.getElementById('progType').value = p.type || 'Individual';
+                    toggleGroupFields();
+                    if (p.type === 'Group' || (p.section || '').toLowerCase() === 'kulliya') {
+                        document.getElementById('progGroupSets').value = p.groupSetsCount || '';
+                        document.getElementById('progGroupParticipants').value = p.groupParticipantsPerSet || '';
+                    }
                     document.getElementById('progStatus').value = p.status !== false ? 'active' : 'inactive';
                     if (p.setId || p.progSet) {
                         const setVal = p.setId || p.progSet;

@@ -503,11 +503,11 @@
             if (!candSearchQuery) return candidatesData;
             return candidatesData.filter(c => {
                 const nameMatch = c.name && c.name.toLowerCase().includes(candSearchQuery);
-                if (isTeamManager) return nameMatch;
 
                 return nameMatch ||
                     (c.chestNo && String(c.chestNo).toLowerCase().includes(candSearchQuery)) ||
                     (c.admissionNo && String(c.admissionNo).toLowerCase().includes(candSearchQuery)) ||
+                    (c.class && String(c.class).toLowerCase().includes(candSearchQuery)) ||
                     (c.team && c.team.toLowerCase().includes(candSearchQuery)) ||
                     (c.section && c.section.toLowerCase().includes(candSearchQuery));
             });
@@ -592,7 +592,7 @@
                         </div>
                         <div class="flex flex-col items-start">
                             <span onclick="window.viewCandidate('${cand.id}', event)" class="text-[14px] font-medium text-gray-900 leading-snug hover:text-brand-blue hover:underline cursor-pointer transition-colors flex items-center">${cand.name}${roleBadge}</span>
-                            ${!isTeamManager ? `<div class="text-[12.5px] text-[#6B7280] font-mono-custom mt-0.5 tracking-tight">#${cand.chestNo} &bull; Adm: ${cand.admissionNo}</div>` : ''}
+                            <div class="text-[12.5px] text-[#6B7280] font-mono-custom mt-0.5 tracking-tight">#${cand.chestNo || 'N/A'} &bull; Adm: ${cand.admissionNo || 'N/A'} &bull; Class: ${cand.class || 'N/A'}</div>
                         </div>
                     </div>
                     <div class="col-span-3 flex items-center justify-center space-x-2">
@@ -621,7 +621,7 @@
                         <div class="flex-1 pt-0.5">
                             <div onclick="window.viewCandidate('${cand.id}', event)" class="text-[14.5px] font-semibold text-gray-900 pr-8 hover:text-brand-blue hover:underline cursor-pointer transition-colors flex items-center w-max">${cand.name}${roleBadge}</div>
                             <div class="flex items-center space-x-2 mt-1">
-                                ${!isTeamManager ? `<span class="text-[12.5px] text-[#6B7280] font-mono-custom tracking-tight">#${cand.chestNo} &bull; Adm: ${cand.admissionNo}</span>` : ''}
+                                <span class="text-[12.5px] text-[#6B7280] font-mono-custom tracking-tight">#${cand.chestNo || 'N/A'} &bull; Adm: ${cand.admissionNo || 'N/A'} &bull; Class: ${cand.class || 'N/A'}</span>
                                 <span class="px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[10px] font-medium text-gray-600 shadow-sm leading-tight">${cand.section}</span>
                             </div>
                             <div class="flex items-center space-x-2 mt-3">

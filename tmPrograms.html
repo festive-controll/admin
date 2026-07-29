@@ -40,7 +40,9 @@
 
         if (typeof db !== 'undefined' && section && team) {
             // Fetch Candidates
-            db.collection('candidates').where('team', '==', team).where('section', '==', section).get().then(snap => {
+            let candQuery = db.collection('candidates').where('team', '==', team);
+            if (section !== 'Kulliya') candQuery = candQuery.where('section', '==', section);
+            candQuery.get().then(snap => {
                 window.tmTeamCandidates = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 
                 // Fetch Programs
@@ -77,7 +79,7 @@
             }
 
             container.innerHTML = filtered.map(p => {
-                const isGroup = (p.type || '').toLowerCase().includes('group');
+                const isGroup = (p.type || '').toLowerCase().includes('group') || (p.section || '').toLowerCase() === 'kulliya';
                 const reg = window.tmRegistrationsList.find(r => r.programId === p.id);
                 const prefilledChests = reg ? (reg.chestNumbers || []) : [];
                 const maxP = p.maxParticipants || 1;
@@ -85,22 +87,33 @@
                 
                 let inputsHTML = '';
                 if (isGroup) {
-                    const val = prefilledChests.join(', ');
-                    const borderClass = val ? 'border-green-500 bg-green-50/20' : 'border-gray-200';
-                    const countVal = reg ? (reg.memberCount || prefilledChests.length) : '';
+                    const groupSets = p.groupSetsCount || 1;
+                    const groupParts = p.groupParticipantsPerSet || 1;
                     
-                    inputsHTML = `
-                        <div class="space-y-3">
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Member Count</label>
-                                <input type="number" id="count-input-${p.id}" value="${countVal}" placeholder="Total Members" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm">
-                            </div>
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Chest Numbers (Comma Separated)</label>
-                                <textarea id="group-input-${p.id}" rows="2" class="w-full px-3 py-2 ${borderClass} rounded-lg text-[13px] font-mono-custom focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all placeholder:font-sans placeholder:text-gray-300" placeholder="Example: 101, 102, 105" oninput="window.validateGroupChests(this, '${p.id}')">${val}</textarea>
-                                <div id="group-feedback-${p.id}" class="text-[10px] mt-1 font-medium"></div>
-                            </div>
-                        </div>`;
+                    let tabsHeader = '<div class="flex border-b border-gray-100 overflow-x-auto no-scrollbar mb-3">';
+                    let tabsContent = '<div>';
+                    
+                    let globalIndex = 0;
+                    for (let s = 1; s <= groupSets; s++) {
+                        const isActive = s === 1;
+                        const btnClass = isActive ? 'border-brand-blue text-brand-blue bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                        tabsHeader += `<button type="button" onclick="window.switchGroupTab('${p.id}', ${s}, ${groupSets})" id="tab-btn-${p.id}-${s}" class="px-4 py-2 text-[12px] font-bold border-b-2 transition-all whitespace-nowrap ${btnClass}">Set ${s}</button>`;
+                        
+                        const contentClass = isActive ? 'block' : 'hidden';
+                        let chestInputs = '';
+                        for (let c = 1; c <= groupParts; c++) {
+                            const val = prefilledChests[globalIndex] || '';
+                            const borderClass = val ? 'border-green-500 bg-green-50/20' : 'border-gray-200';
+                            chestInputs += `<input type="text" value="${val}" class="prog-input-group-${p.id} w-full px-3 py-2 ${borderClass} rounded-lg text-[13px] font-mono-custom focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center placeholder:font-sans placeholder:text-gray-300" placeholder="Chest No ${c}" oninput="window.validateChest(this)">`;
+                            globalIndex++;
+                        }
+                        
+                        tabsContent += `<div id="tab-content-${p.id}-${s}" class="${contentClass}"><div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">${chestInputs}</div></div>`;
+                    }
+                    tabsHeader += '</div>';
+                    tabsContent += '</div>';
+                    
+                    inputsHTML = `<div class="space-y-1">${tabsHeader}${tabsContent}</div>`;
                 } else {
                     let chestInputs = '';
                     for(let i=0; i<maxP; i++) {
@@ -112,7 +125,14 @@
                 }
 
                 const setInfo = p.progSet ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full mb-2 inline-block shadow-sm ml-1">${p.progSet}</span>` : '';
-                const limitText = isGroup ? `Members: ${minP}-${maxP}` : `Max: ${maxP}`;
+                
+                let limitText = `Max: ${maxP}`;
+                if (isGroup) {
+                    const groupSets = p.groupSetsCount || 1;
+                    const groupParts = p.groupParticipantsPerSet || 1;
+                    const totalGroupMembers = groupSets * groupParts;
+                    limitText = `Members: ${totalGroupMembers} (${groupSets} Set${groupSets>1?'s':''} x ${groupParts})`;
+                }
 
                 return `
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
@@ -171,30 +191,48 @@
             else inputEl.classList.add('border-red-500', 'bg-red-50/20');
         };
 
+        window.switchGroupTab = function(progId, activeSet, totalSets) {
+            for(let s=1; s<=totalSets; s++) {
+                const btn = document.getElementById(`tab-btn-${progId}-${s}`);
+                const content = document.getElementById(`tab-content-${progId}-${s}`);
+                if(s === activeSet) {
+                    btn.classList.add('border-brand-blue', 'text-brand-blue', 'bg-blue-50/50');
+                    btn.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-50');
+                    content.classList.remove('hidden');
+                    content.classList.add('block');
+                } else {
+                    btn.classList.remove('border-brand-blue', 'text-brand-blue', 'bg-blue-50/50');
+                    btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-50');
+                    content.classList.remove('block');
+                    content.classList.add('hidden');
+                }
+            }
+        };
+
         window.saveRegistration = function(progId) {
             const prog = window.tmProgramsList.find(p => p.id === progId);
-            const isGroup = (prog.type || '').toLowerCase().includes('group');
+            const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
             let chestNumbers = [], candidateIds = [];
             let valid = true, filledCount = 0;
             let memberCount = 0;
 
             if (isGroup) {
-                const groupText = document.getElementById('group-input-' + progId).value.trim();
-                memberCount = parseInt(document.getElementById('count-input-' + progId).value) || 0;
-                
-                if (groupText) {
-                    const chests = groupText.split(',').map(s => s.trim()).filter(s => s);
-                    chests.forEach(val => {
+                memberCount = 0;
+                const inputs = document.querySelectorAll('.prog-input-group-' + progId);
+                inputs.forEach(inp => {
+                    const val = inp.value.trim();
+                    if(val) {
                         const found = window.tmTeamCandidates.find(c => c.chestNo === val);
-                        if (found) {
-                            chestNumbers.push(val);
-                            candidateIds.push(found.id);
-                            filledCount++;
+                        if(found) { 
+                            chestNumbers.push(val); 
+                            candidateIds.push(found.id); 
+                            filledCount++; 
                         } else {
                             valid = false;
                         }
-                    });
-                }
+                        memberCount++;
+                    }
+                });
             } else {
                 memberCount = 1;
                 const inputs = document.querySelectorAll('.prog-input-' + progId);
@@ -216,10 +254,11 @@
             if(new Set(chestNumbers).size !== chestNumbers.length) return typeof showToast === 'function' && showToast("❌ Duplicate chest numbers found.");
 
             if (isGroup && memberCount > 0) {
-                const maxP = prog.maxParticipants || 99;
-                const minP = prog.minParticipants || 1;
-                if (memberCount < minP || memberCount > maxP) {
-                    return typeof showToast === 'function' && showToast(`❌ Member count must be between ${minP} and ${maxP}.`);
+                const groupSets = prog.groupSetsCount || 1;
+                const groupParts = prog.groupParticipantsPerSet || 1;
+                const expectedTotal = groupSets * groupParts;
+                if (memberCount !== expectedTotal) {
+                    return typeof showToast === 'function' && showToast(`❌ Member count must be exactly ${expectedTotal} (${groupSets} Set${groupSets>1?'s':''} of ${groupParts}).`);
                 }
             }
 
