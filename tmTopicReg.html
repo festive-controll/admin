@@ -132,10 +132,23 @@
                     }
                 }
 
+                const status = reg.topicStatus || 'Pending';
+                let statusBadge = '';
+                if (status.toLowerCase() === 'approved' || status.toLowerCase() === 'accepted') {
+                    statusBadge = `<span class="text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-check-circle text-[9px] mr-1"></i>Approved</span>`;
+                } else if (status.toLowerCase() === 'rejected') {
+                    statusBadge = `<span class="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-cross-circle text-[9px] mr-1"></i>Rejected</span>`;
+                } else {
+                    statusBadge = `<span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-clock text-[9px] mr-1"></i>Pending Approval</span>`;
+                }
+
                 return `
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
                     <div class="mb-4">
-                        <span class="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full mb-2 inline-block shadow-sm">${prog.code} &bull; ${prog.type}</span>
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full shadow-sm">${prog.code} &bull; ${prog.type}</span>
+                            ${statusBadge}
+                        </div>
                         <h3 class="text-[15px] font-bold text-gray-900 leading-tight pr-4">${prog.name}</h3>
                         <p class="text-[11px] text-gray-500 mt-1 font-medium">${isGroup ? 'Group Registration' : chests.length + ' Registered Candidates'}</p>
                     </div>
@@ -175,6 +188,7 @@
             const chests = reg.chestNumbers || [];
             
             let updateData = {
+                topicStatus: reg.topicStatus || 'Pending',
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
@@ -197,7 +211,8 @@
                     const author = document.getElementById(`tmt-author-${regId}-${c}`).value.trim();
                     const content = document.getElementById(`tmt-content-${regId}-${c}`).value.trim();
                     
-                    topics[c] = { name, author, content };
+                    const prevStatus = (reg.topics && reg.topics[c] && reg.topics[c].status) ? reg.topics[c].status : 'Pending';
+                    topics[c] = { name, author, content, status: prevStatus };
                     
                     if (idx === 0) {
                         firstName = name;

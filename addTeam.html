@@ -289,11 +289,11 @@
                         class="relative w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-200 shadow-sm hover:scale-105 transition-transform cursor-pointer">
                         <input type="color" id="teamColorPicker"
                             class="absolute -top-2 -left-2 w-14 h-14 cursor-pointer border-0 p-0 outline-none appearance-none"
-                            value="#FF0000" oninput="document.getElementById('teamColorText').value = this.value">
+                            value="#FF0000" oninput="window.syncColorFromPicker(this.value)">
                     </div>
                     <input type="text" id="teamColorText"
                         class="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-full text-[13px] font-mono-custom focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all uppercase"
-                        value="#FF0000" oninput="document.getElementById('teamColorPicker').value = this.value">
+                        value="#FF0000" oninput="window.syncColorFromText(this.value)">
                 </div>
             </div>
             <div class="flex items-center mt-2">
@@ -652,6 +652,33 @@
             setTimeout(() => document.getElementById('teamName').focus(), 320);
         };
 
+        window.normalizeHexColor = function(col) {
+            if (!col) return '#FF0000';
+            let hex = String(col).trim();
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) return hex;
+            if (/^#[0-9A-Fa-f]{3}$/.test(hex)) {
+                return '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+            }
+            return '#FF0000';
+        };
+
+        window.syncColorFromPicker = function(val) {
+            const textEl = document.getElementById('teamColorText');
+            if (textEl) textEl.value = val;
+        };
+
+        window.syncColorFromText = function(val) {
+            const pickerEl = document.getElementById('teamColorPicker');
+            if (pickerEl) {
+                let hex = String(val).trim();
+                if (hex && !hex.startsWith('#')) hex = '#' + hex;
+                if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                    pickerEl.value = hex;
+                }
+            }
+        };
+
         window.editTeam = function (id, event) {
             event.stopPropagation();
             const team = teamsData.find(t => t.id === id);
@@ -666,8 +693,9 @@
             document.getElementById('teamCaptain').value = team.captainName || '';
             document.getElementById('teamAssistant').value = team.assistantCaptainName || '';
             window.updateCaptainSeriesHint();
-            document.getElementById('teamColorPicker').value = team.color;
-            document.getElementById('teamColorText').value = team.color;
+            const safeCol = window.normalizeHexColor(team.color);
+            document.getElementById('teamColorPicker').value = safeCol;
+            document.getElementById('teamColorText').value = team.color || safeCol;
             document.getElementById('teamActive').checked = team.isActive;
             document.getElementById('teamOverlay').classList.remove('hidden');
             document.getElementById('teamSidebar').classList.remove('translate-x-full');
@@ -793,7 +821,8 @@
 
         window.saveTeam = function () {
             const name = document.getElementById('teamName').value.trim();
-            const color = document.getElementById('teamColorText').value.trim();
+            const rawColor = document.getElementById('teamColorText').value.trim();
+            const color = window.normalizeHexColor(rawColor);
             const isActive = document.getElementById('teamActive').checked;
             const series = parseInt(document.getElementById('teamSeries').value) || 0;
             const captain = document.getElementById('teamCaptain').value.trim();
@@ -808,11 +837,9 @@
                 isActive, 
                 chestNoSeries: series,
                 captainName: captain,
-                assistantCaptainName: assistant
+                assistantCaptainName: assistant,
+                updatedAt: new Date()
             };
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
-                payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-            }
 
             if (editingTeamId) {
                 if (typeof db !== 'undefined') {
@@ -821,6 +848,9 @@
                             window.closeTeamSidebar();
                             typeof showToast === 'function' && showToast("✅ Team and Captains updated!");
                         });
+                    }).catch(err => {
+                        console.error("Error updating team:", err);
+                        typeof showToast === 'function' && showToast("❌ Error updating team!");
                     });
                 } else {
                     const team = teamsData.find(t => t.id === editingTeamId);
@@ -830,14 +860,15 @@
                 }
             } else {
                 if (typeof db !== 'undefined') {
-                    if (typeof firebase !== 'undefined' && firebase.firestore) {
-                        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                    }
+                    payload.createdAt = new Date();
                     db.collection('teams').add(payload).then(() => {
                         syncCaptainsToCandidates(name, series, captain, assistant, null).then(() => {
                             window.closeTeamSidebar();
                             typeof showToast === 'function' && showToast("✅ Team and Captains added!");
                         });
+                    }).catch(err => {
+                        console.error("Error adding team:", err);
+                        typeof showToast === 'function' && showToast("❌ Error adding team!");
                     });
                 } else {
                     teamsData.unshift({ id: Date.now().toString(), ...payload });

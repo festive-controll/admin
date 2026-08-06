@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registered Topics Management</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="logo-192.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#f8f9fc',
+                            border: '#e5e7eb',
+                            textMuted: '#6b7280',
+                            textDark: '#111827',
+                            blue: '#134E8E',
+                            red: '#C00707',
+                            yellow: '#FFB33F'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="bg-[#f8f9fc] min-h-screen text-gray-800 p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Page Header -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">Programme Management</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">Registered Topics</h1>
+                <p class="text-[13px] text-gray-500 mt-1 font-medium">Review, accept, or reject individual candidate topic submissions sent by team managers.</p>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-center min-w-[90px]">
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                    <p id="stat-total" class="text-lg font-black text-gray-800">0</p>
+                </div>
+                <div class="bg-amber-50/70 border border-amber-100 rounded-xl px-4 py-2.5 text-center min-w-[100px]">
+                    <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-clock text-[10px]"></i> Pending
+                    </p>
+                    <p id="stat-pending" class="text-lg font-black text-amber-700">0</p>
+                </div>
+                <div class="bg-green-50/70 border border-green-100 rounded-xl px-4 py-2.5 text-center min-w-[100px]">
+                    <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-check-circle text-[10px]"></i> Approved
+                    </p>
+                    <p id="stat-approved" class="text-lg font-black text-green-700">0</p>
+                </div>
+                <div class="bg-red-50/70 border border-red-100 rounded-xl px-4 py-2.5 text-center min-w-[100px]">
+                    <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-cross-circle text-[10px]"></i> Rejected
+                    </p>
+                    <p id="stat-rejected" class="text-lg font-black text-red-700">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Filters Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                
+                <!-- Status Filter Tabs -->
+                <div class="flex bg-gray-100/80 p-1 rounded-xl items-center overflow-x-auto no-scrollbar border border-gray-200/60">
+                    <button id="tab-all" onclick="filterByStatus('ALL')" class="bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        All Topics
+                    </button>
+                    <button id="tab-pending" onclick="filterByStatus('Pending')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending
+                    </button>
+                    <button id="tab-approved" onclick="filterByStatus('Approved')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Approved
+                    </button>
+                    <button id="tab-rejected" onclick="filterByStatus('Rejected')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span> Rejected
+                    </button>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative flex-1 max-w-md">
+                    <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="onSearchChange(this.value)" 
+                        placeholder="Search topic, candidate, chest no, team or program..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Topics Table Container -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/80 border-b border-gray-100 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                            <th class="py-4 px-5">Program</th>
+                            <th class="py-4 px-5">Team &amp; Candidate</th>
+                            <th class="py-4 px-5">Registered Topic Details</th>
+                            <th class="py-4 px-5 text-center">Status</th>
+                            <th class="py-4 px-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topics-tbody" class="divide-y divide-gray-100 text-[13px]">
+                        <tr>
+                            <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <div class="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Loading registered topics...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK (Version 8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        (function () {
+            var db = window.db || (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+
+            if (!db && typeof firebase !== 'undefined') {
+                const firebaseConfig = {
+                    authDomain: "festie-s1u2h3.firebaseapp.com",
+                    projectId: "festie-s1u2h3",
+                    storageBucket: "festie-s1u2h3.firebasestorage.app",
+                    messagingSenderId: "305105260195",
+                    appId: "1:305105260195:web:53177651a556fb404771c9"
+                };
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+            }
+
+            let allRegistrations = [];
+            let allProgramsMap = {};
+            let allCandidatesMap = {};
+            let currentStatusFilter = 'ALL';
+            let searchQuery = '';
+
+            function showToast(msg, type = 'success') {
+                if (typeof Toastify === 'function') {
+                    Toastify({
+                        text: msg,
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        style: {
+                            background: type === 'error' ? "#EF4444" : (type === 'warning' ? "#F59E0B" : "#10B981")
+                        }
+                    }).showToast();
+                } else {
+                    alert(msg);
+                }
+            }
+
+            Promise.all([
+                db ? db.collection('programs').get() : Promise.resolve({ docs: [] }),
+                db ? db.collection('candidates').get() : Promise.resolve({ docs: [] })
+            ]).then(([pSnap, cSnap]) => {
+                pSnap.docs.forEach(d => { allProgramsMap[d.id] = { id: d.id, ...d.data() }; });
+                cSnap.docs.forEach(d => { allCandidatesMap[d.id] = { id: d.id, ...d.data() }; });
+                listenRegistrations();
+            }).catch(err => {
+                console.error("Error fetching metadata:", err);
+                listenRegistrations();
+            });
+
+            function listenRegistrations() {
+                if (!db) {
+                    renderEmptyState("Database connection unavailable");
+                    return;
+                }
+
+                db.collection('registrations').onSnapshot(snap => {
+                    allRegistrations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderUI();
+                }, err => {
+                    console.error("Error loading topic registrations:", err);
+                    renderEmptyState("Error loading topic registrations");
+                });
+            }
+
+            window.filterByStatus = function(status) {
+                currentStatusFilter = status;
+                ['all', 'pending', 'approved', 'rejected'].forEach(tab => {
+                    const btn = document.getElementById('tab-' + tab);
+                    if (btn) {
+                        if (tab.toLowerCase() === status.toLowerCase() || (tab === 'all' && status === 'ALL')) {
+                            btn.className = "bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all border border-gray-200/60";
+                        } else {
+                            btn.className = "text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all";
+                        }
+                    }
+                });
+                renderUI();
+            };
+
+            window.onSearchChange = function(val) {
+                searchQuery = (val || '').toLowerCase().trim();
+                renderUI();
+            };
+
+            function renderUI() {
+                const tbody = document.getElementById('topics-tbody');
+                
+                // Flatten topic entries so individual candidates in multi-candidate registrations get separate rows
+                let topicItems = [];
+
+                allRegistrations.forEach(r => {
+                    const prog = allProgramsMap[r.programId] || { name: 'Program ID: ' + (r.programId || '---'), code: 'PRG', section: '' };
+                    const teamName = r.team || 'Solo Participant';
+                    const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
+
+                    if (r.topics && Object.keys(r.topics).length > 0 && !isGroup) {
+                        // Individual candidate topics map (handles 2 or more candidate responses in 1 registration)
+                        Object.keys(r.topics).forEach(chestNo => {
+                            const tData = r.topics[chestNo];
+                            if (tData && (tData.name || tData.author || tData.content)) {
+                                const cand = Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(chestNo).trim() && c.team === r.team);
+                                const candName = cand ? cand.name : (r.candidateName || r.name || `Candidate #${chestNo}`);
+                                
+                                topicItems.push({
+                                    regId: r.id,
+                                    chestNo: chestNo,
+                                    isMultiTopic: true,
+                                    programId: r.programId,
+                                    prog: prog,
+                                    team: teamName,
+                                    candidateName: candName,
+                                    chestDisplay: '#' + chestNo,
+                                    topicName: tData.name || 'Untitled Topic',
+                                    topicAuthor: tData.author || '',
+                                    topicContent: tData.content || '',
+                                    status: tData.status || r.topicStatus || 'Pending'
+                                });
+                            }
+                        });
+                    } else if (r.topicName || r.topicContent || r.topicAuthor) {
+                        // Single root topic or Group program topic
+                        const chestDisplay = Array.isArray(r.chestNumbers) && r.chestNumbers.length > 0 ? '#' + r.chestNumbers.join(', #') : (r.chestNo ? '#' + r.chestNo : '--');
+                        const candidateDisplay = r.candidateName || r.name || (isGroup ? 'Group Entry' : 'Participant');
+
+                        topicItems.push({
+                            regId: r.id,
+                            chestNo: r.chestNo || null,
+                            isMultiTopic: false,
+                            programId: r.programId,
+                            prog: prog,
+                            team: teamName,
+                            candidateName: candidateDisplay,
+                            chestDisplay: chestDisplay,
+                            topicName: r.topicName || 'Untitled Topic',
+                            topicAuthor: r.topicAuthor || '',
+                            topicContent: r.topicContent || '',
+                            status: r.topicStatus || 'Pending'
+                        });
+                    }
+                });
+
+                // Update Stats
+                const total = topicItems.length;
+                let pendingCount = 0, approvedCount = 0, rejectedCount = 0;
+
+                topicItems.forEach(item => {
+                    const st = (item.status || 'Pending').toLowerCase();
+                    if (st === 'approved' || st === 'accepted') approvedCount++;
+                    else if (st === 'rejected') rejectedCount++;
+                    else pendingCount++;
+                });
+
+                document.getElementById('stat-total').innerText = total;
+                document.getElementById('stat-pending').innerText = pendingCount;
+                document.getElementById('stat-approved').innerText = approvedCount;
+                document.getElementById('stat-rejected').innerText = rejectedCount;
+
+                // Apply Status Filter
+                if (currentStatusFilter !== 'ALL') {
+                    topicItems = topicItems.filter(item => {
+                        const st = (item.status || 'Pending').toLowerCase();
+                        if (currentStatusFilter === 'Pending') return st !== 'approved' && st !== 'accepted' && st !== 'rejected';
+                        if (currentStatusFilter === 'Approved') return st === 'approved' || st === 'accepted';
+                        if (currentStatusFilter === 'Rejected') return st === 'rejected';
+                        return true;
+                    });
+                }
+
+                // Apply Search Query
+                if (searchQuery) {
+                    topicItems = topicItems.filter(item => {
+                        const pName = (item.prog.name || '').toLowerCase();
+                        const pCode = (item.prog.code || '').toLowerCase();
+                        const team = (item.team || '').toLowerCase();
+                        const candName = (item.candidateName || '').toLowerCase();
+                        const chestNo = String(item.chestDisplay || '').toLowerCase();
+                        const topicTitle = (item.topicName || '').toLowerCase();
+                        const author = (item.topicAuthor || '').toLowerCase();
+                        const desc = (item.topicContent || '').toLowerCase();
+
+                        return pName.includes(searchQuery) ||
+                               pCode.includes(searchQuery) ||
+                               team.includes(searchQuery) ||
+                               candName.includes(searchQuery) ||
+                               chestNo.includes(searchQuery) ||
+                               topicTitle.includes(searchQuery) ||
+                               author.includes(searchQuery) ||
+                               desc.includes(searchQuery);
+                    });
+                }
+
+                if (topicItems.length === 0) {
+                    renderEmptyState("No topic registrations found");
+                    return;
+                }
+
+                tbody.innerHTML = topicItems.map(item => {
+                    const topicTitle = item.topicName || 'Untitled Topic';
+                    const author = item.topicAuthor ? `By: ${item.topicAuthor}` : '';
+                    const content = item.topicContent || 'No description provided.';
+                    
+                    const status = item.status || 'Pending';
+                    const isApproved = status.toLowerCase() === 'approved' || status.toLowerCase() === 'accepted';
+                    const isRejected = status.toLowerCase() === 'rejected';
+                    
+                    let badgeHtml = '';
+                    if (isApproved) {
+                        badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                                        <i class="fi fi-rr-check-circle text-xs"></i> Approved
+                                     </span>`;
+                    } else if (isRejected) {
+                        badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                        <i class="fi fi-rr-cross-circle text-xs"></i> Rejected
+                                     </span>`;
+                    } else {
+                        badgeHtml = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <i class="fi fi-rr-clock text-xs"></i> Pending
+                                     </span>`;
+                    }
+
+                    const chestArg = item.chestNo ? `'${item.chestNo}'` : 'null';
+                    const isMultiArg = item.isMultiTopic ? 'true' : 'false';
+
+                    return `
+                    <tr class="hover:bg-gray-50/70 transition-colors">
+                        <td class="py-4 px-5 align-top">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider inline-block mb-1">${item.prog.code || 'PRG'}</span>
+                            <div class="font-bold text-gray-900 text-[14px] leading-tight">${item.prog.name}</div>
+                            <div class="text-[11px] text-gray-400 font-medium mt-0.5">${item.prog.section || ''}</div>
+                        </td>
+                        <td class="py-4 px-5 align-top">
+                            <div class="font-bold text-gray-800 text-[13px] flex items-center gap-1.5">
+                                <i class="fi fi-rr-users text-xs text-brand-blue"></i> ${item.team}
+                            </div>
+                            <div class="text-xs text-gray-600 font-medium mt-1">${item.candidateName}</div>
+                            <div class="text-[11px] font-mono-custom font-bold text-gray-400 mt-0.5">${item.chestDisplay}</div>
+                        </td>
+                        <td class="py-4 px-5 align-top">
+                            <div class="font-bold text-gray-900 text-[14px]">${topicTitle}</div>
+                            ${author ? `<div class="text-[11px] text-brand-blue font-bold mt-0.5">${author}</div>` : ''}
+                            <div class="text-xs text-gray-600 mt-1 line-clamp-2 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100">${content}</div>
+                        </td>
+                        <td class="py-4 px-5 align-top text-center">
+                            ${badgeHtml}
+                        </td>
+                        <td class="py-4 px-5 align-top text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                                ${!isApproved ? `
+                                    <button onclick="window.updateTopicStatus('${item.regId}', ${chestArg}, ${isMultiArg}, 'Approved')" title="Accept / Approve Topic" class="px-3 py-1.5 bg-green-50 hover:bg-green-600 text-green-700 hover:text-white border border-green-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                                        <i class="fi fi-rr-check"></i> Accept
+                                    </button>
+                                ` : ''}
+                                ${!isRejected ? `
+                                    <button onclick="window.updateTopicStatus('${item.regId}', ${chestArg}, ${isMultiArg}, 'Rejected')" title="Reject Topic" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-700 hover:text-white border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                                        <i class="fi fi-rr-cross"></i> Reject
+                                    </button>
+                                ` : ''}
+                                ${(isApproved || isRejected) ? `
+                                    <button onclick="window.updateTopicStatus('${item.regId}', ${chestArg}, ${isMultiArg}, 'Pending')" title="Reset to Pending" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-bold transition-all">
+                                        <i class="fi fi-rr-refresh"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+
+            function renderEmptyState(message) {
+                const tbody = document.getElementById('topics-tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fi fi-rr-document-signed text-4xl text-gray-300"></i>
+                                <span>${message}</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
+            }
+
+            window.updateTopicStatus = function(regId, chestNo, isMultiTopic, newStatus) {
+                if (!db) return showToast("Database error", "error");
+                
+                let updateObj = {};
+                if (isMultiTopic && chestNo) {
+                    updateObj[`topics.${chestNo}.status`] = newStatus;
+                    updateObj.topicStatus = newStatus; // update parent status for compatibility
+                    updateObj.updatedAt = new Date();
+                } else {
+                    updateObj.topicStatus = newStatus;
+                    updateObj.updatedAt = new Date();
+                }
+
+                db.collection('registrations').doc(regId).update(updateObj).then(() => {
+                    showToast(`Topic marked as ${newStatus}!`, newStatus === 'Rejected' ? 'warning' : 'success');
+                }).catch(err => {
+                    console.error("Error updating topic status:", err);
+                    showToast("Failed to update status: " + err.message, "error");
+                });
+            };
+
+        })();
+    </script>
+</body>
+
+</html>

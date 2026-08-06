@@ -3454,34 +3454,91 @@
             const btn = document.getElementById('btn-import-cands');
             btn.disabled = true; btn.innerText = 'Importing...';
 
-            // Pre-calculate max chest numbers
-            let maxChest = 0;
+            // Build map of team name -> team object for series base
+            const teamsMap = {};
+            if (window.bulkTeamsData) {
+                window.bulkTeamsData.forEach(t => {
+                    if (t.name) teamsMap[t.name.trim().toLowerCase()] = t;
+                });
+            }
+
+            // Pre-calculate max chest number per team (and global fallback)
+            const teamMaxChest = {};
+            let globalMaxChest = 0;
+
             if (window.bulkExistingCandidates) {
                 window.bulkExistingCandidates.forEach(c => {
-                    let num = parseInt(String(c.chestNo).replace(/\D/g, ''), 10) || 0;
-                    if (num > maxChest) maxChest = num;
+                    const cNum = parseInt(String(c.chestNo).replace(/\D/g, ''), 10) || 0;
+                    if (cNum > globalMaxChest) globalMaxChest = cNum;
+
+                    if (c.team) {
+                        const tKey = c.team.trim().toLowerCase();
+                        const tObj = teamsMap[tKey];
+                        if (tObj && tObj.chestNoSeries) {
+                            const sBase = parseInt(tObj.chestNoSeries) || 0;
+                            const bStart = sBase + 3;
+                            const bEnd = sBase + 98;
+                            if (cNum >= bStart && cNum <= bEnd) {
+                                if (!teamMaxChest[tKey] || cNum > teamMaxChest[tKey]) {
+                                    teamMaxChest[tKey] = cNum;
+                                }
+                            }
+                        }
+                    }
                 });
             }
 
             const batch = db.batch();
             const ts = firebase.firestore.FieldValue.serverTimestamp();
             validRows.forEach(r => {
-                maxChest++;
-                let generatedChestNo = maxChest.toString();
+                let generatedChestNo = (r.chestno || r.chestNo || '').toString().trim();
+
+                if (!generatedChestNo) {
+                    const candTeamStr = (r.team || '').trim();
+                    const candTeamKey = candTeamStr.toLowerCase();
+                    const tObj = teamsMap[candTeamKey];
+
+                    if (tObj && tObj.chestNoSeries) {
+                        const sBase = parseInt(tObj.chestNoSeries) || 0;
+                        const bStart = sBase + 3;
+                        if (!teamMaxChest[candTeamKey]) {
+                            teamMaxChest[candTeamKey] = bStart - 1;
+                        }
+                        teamMaxChest[candTeamKey]++;
+                        generatedChestNo = teamMaxChest[candTeamKey].toString();
+                    } else {
+                        globalMaxChest++;
+                        generatedChestNo = globalMaxChest.toString();
+                    }
+                }
 
                 const ref = db.collection('candidates').doc();
                 batch.set(ref, {
-                    name: r.name, chestNo: generatedChestNo,
+                    name: r.name,
+                    chestNo: generatedChestNo,
                     team: liveDraftEnabled ? '' : (r.team || ''),
-                    section: r.section, class: r.class || '', admissionNo: r.admissionno || r.admissionNo || '',
+                    section: r.section,
+                    class: r.class || '',
+                    admissionNo: r.admissionno || r.admissionNo || '',
                     active: (r.status || 'active').toLowerCase() !== 'inactive',
                     createdAt: ts,
                     inAuction: liveDraftEnabled
                 });
             });
+
             batch.commit()
-                .then(() => { showToast('<b>✅</b> ' + validRows.length + ' candidates imported!'); btn.disabled = false; btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid'; bulkCandidateRows = []; renderCandidatePreview(); })
-                .catch(err => { showToast('<b>❌</b> ' + err.message); btn.disabled = false; btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid'; });
+                .then(() => {
+                    showToast('<b>✅</b> ' + validRows.length + ' candidates imported!');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
+                    bulkCandidateRows = [];
+                    renderCandidatePreview();
+                })
+                .catch(err => {
+                    showToast('<b>❌</b> ' + err.message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
+                });
         }
 
         // ═══════════════════════════════════════════════════════════════

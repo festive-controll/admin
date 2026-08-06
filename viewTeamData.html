@@ -275,8 +275,19 @@
             let teamSeriesBase = 0;
 
             if (!teamId) {
-                document.getElementById('vt-name').innerText = "No Team Selected";
+                const vtName = document.getElementById('vt-name');
+                if (vtName) vtName.innerText = "No Team Selected";
                 return;
+            }
+
+            // Helper functions for safe DOM manipulation
+            function safeText(id, val) {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val;
+            }
+            function safeHTML(id, val) {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = val;
             }
 
             // 1. Fetch Team Details
@@ -285,36 +296,47 @@
                     const t = doc.data();
                     const teamName = t.name;
                     teamSeriesBase = parseInt(t.chestNoSeries) || 0;
-                    document.getElementById('vt-name').innerText = teamName;
-                    document.getElementById('vt-avatar').style.backgroundColor = t.color + '15';
-                    document.getElementById('vt-avatar').style.color = t.color;
-                    document.getElementById('vt-avatar').style.borderColor = t.color + '30';
+                    safeText('vt-name', teamName);
+                    
+                    const avatarEl = document.getElementById('vt-avatar');
+                    if (avatarEl) {
+                        avatarEl.style.backgroundColor = (t.color || '#134E8E') + '15';
+                        avatarEl.style.color = t.color || '#134E8E';
+                        avatarEl.style.borderColor = (t.color || '#134E8E') + '30';
+                    }
                     
                     const statusEl = document.getElementById('vt-status');
-                    statusEl.innerText = t.isActive ? 'ACTIVE' : 'INACTIVE';
-                    statusEl.className = t.isActive 
-                        ? 'bg-[#FFB33F] text-yellow-950 text-[10px] font-black tracking-[0.1em] uppercase px-4 py-1.5 rounded-full shadow-sm border border-yellow-400/20'
-                        : 'bg-red-50 text-red-600 text-[10px] font-black tracking-[0.1em] uppercase px-4 py-1.5 rounded-full shadow-sm border border-red-100';
+                    if (statusEl) {
+                        statusEl.innerText = t.isActive ? 'ACTIVE' : 'INACTIVE';
+                        statusEl.className = t.isActive 
+                            ? 'bg-[#FFB33F] text-yellow-950 text-[10px] font-black tracking-[0.1em] uppercase px-4 py-1.5 rounded-full shadow-sm border border-yellow-400/20'
+                            : 'bg-red-50 text-red-600 text-[10px] font-black tracking-[0.1em] uppercase px-4 py-1.5 rounded-full shadow-sm border border-red-100';
+                    }
 
-                    document.getElementById('vt-detail-captain').innerHTML = t.captainName ? `${t.captainName} <span class="font-mono-custom text-xs text-gray-400 font-bold ml-1">#${(parseInt(t.chestNoSeries) || 0) + 1}</span>` : '—';
-                    document.getElementById('vt-detail-assistant').innerHTML = t.assistantCaptainName ? `${t.assistantCaptainName} <span class="font-mono-custom text-xs text-gray-400 font-bold ml-1">#${(parseInt(t.chestNoSeries) || 0) + 2}</span>` : '—';
-                    document.getElementById('vt-detail-color-box').style.backgroundColor = t.color;
-                    document.getElementById('vt-detail-color-text').innerText = t.color;
-                    document.getElementById('vt-detail-order').innerText = t.displayOrder || '—';
-                    document.getElementById('vt-detail-created').innerText = t.createdAt ? new Date(t.createdAt.seconds * 1000).toLocaleDateString() : '—';
-                    document.getElementById('vt-detail-updated').innerText = t.updatedAt ? new Date(t.updatedAt.seconds * 1000).toLocaleDateString() : '—';
+                    safeHTML('vt-detail-captain', t.captainName ? `${t.captainName} <span class="font-mono-custom text-xs text-gray-400 font-bold ml-1">#${(parseInt(t.chestNoSeries) || 0) + 1}</span>` : '—');
+                    safeHTML('vt-detail-assistant', t.assistantCaptainName ? `${t.assistantCaptainName} <span class="font-mono-custom text-xs text-gray-400 font-bold ml-1">#${(parseInt(t.chestNoSeries) || 0) + 2}</span>` : '—');
+                    
+                    const colorBoxEl = document.getElementById('vt-detail-color-box');
+                    if (colorBoxEl) colorBoxEl.style.backgroundColor = t.color || '#134E8E';
+                    safeText('vt-detail-color-text', t.color || '—');
+                    safeText('vt-detail-order', t.displayOrder || '—');
+                    safeText('vt-detail-created', t.createdAt ? (t.createdAt.seconds ? new Date(t.createdAt.seconds * 1000).toLocaleDateString() : new Date(t.createdAt).toLocaleDateString()) : '—');
+                    safeText('vt-detail-updated', t.updatedAt ? (t.updatedAt.seconds ? new Date(t.updatedAt.seconds * 1000).toLocaleDateString() : new Date(t.updatedAt).toLocaleDateString()) : '—');
 
                     // Fetch Candidates for this team
                     fetchTeamMainData(teamName, t.color);
                 }
                 else {
-                    document.getElementById('vt-name').innerText = "Team Not Found";
-                    document.getElementById('vt-subtitle').innerText = "This team may have been deleted";
-                    document.getElementById('vt-status').innerText = "DELETED";
-                    document.getElementById('vt-status').className = "bg-red-50 text-red-600 text-[10px] font-black tracking-[0.1em] uppercase px-4 py-1.5 rounded-full shadow-sm border border-red-100";
+                    safeText('vt-name', "Team Not Found");
+                    safeText('vt-subtitle', "This team may have been deleted");
+                    const statusEl = document.getElementById('vt-status');
+                    if (statusEl) {
+                        statusEl.innerText = "DELETED";
+                        statusEl.className = "bg-red-50 text-red-600 text-[10px] font-black tracking-[0.1em] uppercase px-4 py-1.5 rounded-full shadow-sm border border-red-100";
+                    }
                 }
             }, err => {
-                document.getElementById('vt-name').innerText = "Error Loading Team";
+                safeText('vt-name', "Error Loading Team");
                 console.error("Error fetching team data:", err);
             });
 
@@ -409,9 +431,12 @@
 
             window.renderTeamCandidates = function(teamColor) {
                 const container = document.getElementById('vt-candidates-list');
-                const searchQuery = document.getElementById('cand-search').value.toLowerCase().trim();
+                if (!container) return;
+
+                const searchInput = document.getElementById('cand-search');
+                const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 
-                let filtered = allTeamCandidates;
+                let filtered = allTeamCandidates || [];
                 if (searchQuery) {
                     filtered = filtered.filter(c => 
                         (c.name && c.name.toLowerCase().includes(searchQuery)) ||
@@ -419,7 +444,8 @@
                     );
                 }
 
-                document.getElementById('vt-pagination-text').innerText = `Showing ${filtered.length} results`;
+                const paginationEl = document.getElementById('vt-pagination-text');
+                if (paginationEl) paginationEl.innerText = `Showing ${filtered.length} results`;
 
                 if (filtered.length === 0) {
                     container.innerHTML = `<div class="p-12 text-center text-gray-400 text-sm">No candidates found</div>`;

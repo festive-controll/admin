@@ -236,7 +236,7 @@
             
             db.collection('programs').doc(programId).update({
                 topicRegistration: isEnabled,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: new Date()
             }).then(() => {
                 const msg = isEnabled ? `✅ Topic Registration ENABLED for ${programName}` : `ℹ️ Topic Registration DISABLED for ${programName}`;
                 showToast(msg, isEnabled ? "#10B981" : "#6B7280");
@@ -261,7 +261,7 @@
                 const ref = db.collection('programs').doc(p.id);
                 batch.update(ref, {
                     topicRegistration: isEnabled,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    updatedAt: new Date()
                 });
             });
 

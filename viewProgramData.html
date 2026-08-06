@@ -843,6 +843,33 @@
                     </div>
                 </div>
 
+                <!-- Select Candidate Order / Sequence -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                        Candidate Order / Sequence
+                    </label>
+                    <div class="grid grid-cols-3 gap-2.5" id="jsm-cand-orders">
+                        <label class="flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 cursor-pointer transition-all text-center shadow-sm" id="jsm-order-asc-label" onclick="window.selectCandOrder('chest-asc')">
+                            <input type="radio" name="jsmCandOrder" value="chest-asc" checked class="sr-only">
+                            <i class="fi fi-rr-sort-numeric-down text-lg text-blue-600 mb-1"></i>
+                            <span class="text-xs font-bold text-blue-900">Chest Order</span>
+                            <span class="text-[9px] text-blue-600 font-medium mt-0.5">101, 102, 201...</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-all text-center" id="jsm-order-auto-label" onclick="window.selectCandOrder('auto-mixed')">
+                            <input type="radio" name="jsmCandOrder" value="auto-mixed" class="sr-only">
+                            <i class="fi fi-rr-shuffle text-lg text-gray-500 mb-1"></i>
+                            <span class="text-xs font-bold text-gray-800">Auto Mixed</span>
+                            <span class="text-[9px] text-gray-400 font-medium mt-0.5">Shuffled Order</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-all text-center" id="jsm-order-desc-label" onclick="window.selectCandOrder('chest-desc')">
+                            <input type="radio" name="jsmCandOrder" value="chest-desc" class="sr-only">
+                            <i class="fi fi-rr-sort-numeric-up text-lg text-gray-500 mb-1"></i>
+                            <span class="text-xs font-bold text-gray-800">Reverse Order</span>
+                            <span class="text-[9px] text-gray-400 font-medium mt-0.5">202, 201, 102...</span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Select Number of Judges -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
@@ -1042,7 +1069,7 @@
                     throw new Error(`The following chest numbers do not belong to ${team}: ${invalidChests.join(', ')}`);
                 }
 
-                const ts = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date();
+                const ts = new Date();
                 
                 const payload = {
                     programId: programId,
@@ -1281,7 +1308,7 @@
                                 positionLabel: pLbl,
                                 positionPoints: pPts,
                                 totalPoints: (gPts + pPts),
-                                updatedAt: (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+                                updatedAt: new Date()
                             }, {merge: true});
                             addedCount++;
                         }
@@ -1316,7 +1343,7 @@
                                 positionLabel: pLbl, positionPoints: pPts,
                                 totalPoints: (gPts + pPts),
                                 createdAt: new Date(),
-                                updatedAt: (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+                                updatedAt: new Date()
                             }, {merge: true});
                             addedCount++;
                         }
@@ -1452,6 +1479,32 @@
             }, 200);
         };
 
+        window.selectCandOrder = function(orderKey) {
+            const orders = ['chest-asc', 'auto-mixed', 'chest-desc'];
+            orders.forEach(key => {
+                const input = document.querySelector(`input[name="jsmCandOrder"][value="${key}"]`);
+                const label = input ? input.closest('label') : null;
+                if (input && label) {
+                    const icon = label.querySelector('i');
+                    const title = label.querySelector('span.text-xs');
+                    const sub = label.querySelector('span.text-\\[9px\\]');
+                    if (key === orderKey) {
+                        input.checked = true;
+                        label.className = "flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 cursor-pointer transition-all text-center shadow-sm";
+                        if (icon) { icon.classList.remove('text-gray-500'); icon.classList.add('text-blue-600'); }
+                        if (title) { title.className = "text-xs font-bold text-blue-900"; }
+                        if (sub) { sub.className = "text-[9px] text-blue-600 font-medium mt-0.5"; }
+                    } else {
+                        input.checked = false;
+                        label.className = "flex flex-col items-center justify-center p-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-all text-center";
+                        if (icon) { icon.classList.remove('text-blue-600'); icon.classList.add('text-gray-500'); }
+                        if (title) { title.className = "text-xs font-bold text-gray-800"; }
+                        if (sub) { sub.className = "text-[9px] text-gray-400 font-medium mt-0.5"; }
+                    }
+                }
+            });
+        };
+
         window.confirmJudgeSheetExport = function() {
             const count = window.selectedJudgeCount || 2;
             const layoutRadios = document.getElementsByName('jsmLayout');
@@ -1464,15 +1517,20 @@
             for (let r of formatRadios) {
                 if (r.checked) format = r.value;
             }
+            const orderRadios = document.getElementsByName('jsmCandOrder');
+            let candOrder = 'chest-asc';
+            for (let r of orderRadios) {
+                if (r.checked) candOrder = r.value;
+            }
             window.closeJudgeSheetModal();
-            window.processJudgesheetExport(count, layoutStyle, format);
+            window.processJudgesheetExport(count, layoutStyle, format, candOrder);
         };
 
         window.exportJudgesheet = function() {
             window.openJudgeSheetModal();
         };
 
-        window.processJudgesheetExport = async function(judgeCount = 2, layoutStyle = 'side-by-side', exportFormat = 'pdf') {
+        window.processJudgesheetExport = async function(judgeCount = 2, layoutStyle = 'side-by-side', exportFormat = 'pdf', candOrder = 'chest-asc') {
             vpToast(`⏳ Cooking ${exportFormat.toUpperCase()} judgement sheet preview...`, "#F59E0B");
 
             // Load libraries
@@ -1622,20 +1680,46 @@
                             });
                         }
                     }
-                    finalCands.sort(() => Math.random() - 0.5);
                 } else {
-                    // General Program Mode: Round-robin shuffle candidates across teams
-                    let maxDepth = 0;
                     for(let t in teamGroups) {
-                         if(teamGroups[t].length > maxDepth) maxDepth = teamGroups[t].length;
-                         teamGroups[t].sort(() => Math.random() - 0.5);
+                        teamGroups[t].forEach(c => finalCands.push(c));
                     }
-                    const teamNames = Object.keys(teamGroups);
-                    for(let i=0; i<maxDepth; i++) {
-                        teamNames.forEach(t => {
-                            if(teamGroups[t][i]) finalCands.push(teamGroups[t][i]);
-                        });
+                }
+
+                // Apply candidate ordering based on selected candOrder mode
+                if (candOrder === 'chest-desc') {
+                    finalCands.sort((a, b) => {
+                        const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
+                        const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                        if (numA !== numB) return numB - numA;
+                        return String(b.chestNo || '').localeCompare(String(a.chestNo || ''));
+                    });
+                } else if (candOrder === 'auto-mixed') {
+                    if (isGroup) {
+                        finalCands.sort(() => Math.random() - 0.5);
+                    } else {
+                        let mixedCands = [];
+                        let maxDepth = 0;
+                        for(let t in teamGroups) {
+                            if(teamGroups[t].length > maxDepth) maxDepth = teamGroups[t].length;
+                            teamGroups[t].sort(() => Math.random() - 0.5);
+                        }
+                        const teamNames = Object.keys(teamGroups);
+                        for(let i=0; i<maxDepth; i++) {
+                            teamNames.forEach(t => {
+                                if(teamGroups[t][i]) mixedCands.push(teamGroups[t][i]);
+                            });
+                        }
+                        finalCands = mixedCands;
                     }
+                } else {
+                    // Default: 'chest-asc' (Chest Number Ascending Order: 101, 102, 201, 202...)
+                    finalCands.sort((a, b) => {
+                        const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
+                        const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                        if (numA !== numB) return numA - numB;
+                        return String(a.chestNo || '').localeCompare(String(a.chestNo || ''));
+                    });
                 }
 
                 // If no candidates at all, provide standard participant rows
@@ -2043,8 +2127,7 @@
                     return;
                 }
 
-                var ts;
-                try { ts = firebase.firestore.FieldValue.serverTimestamp(); } catch(e) { ts = new Date(); }
+                var ts = new Date();
 
                 const setId = document.getElementById('progSet').value || '';
                 const setName = (setId && typeof window.db !== 'undefined') ? (document.querySelector('#progSet option:checked')?.text || '') : '';

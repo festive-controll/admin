@@ -158,12 +158,12 @@
                         selected</span>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="deleteSelected()"
+                    <button id="btn-bulk-delete" onclick="deleteSelected()"
                         class="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#DC2626] border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-red-700 shadow-sm transition-colors">
                         <i class="fi fi-rr-trash text-sm"></i>
                         Delete
                     </button>
-                    <button onclick="exportToAuction()"
+                    <button id="btn-bulk-auction" onclick="exportToAuction()"
                         class="flex items-center justify-center gap-2 px-4 py-1.5 bg-brand-blue border border-transparent rounded-md text-[13px] font-medium text-white hover:opacity-90 shadow-sm transition-colors">
                         <i class="fi fi-rr-exchange text-sm"></i>
                         Export to Auction
@@ -385,7 +385,7 @@
         var liveDraftEnabled = false;
 
         if (isTeamManager) {
-            // Hide the Create Candidate button for Team Managers
+            // Hide the Create Candidate button and Delete button for Team Managers
             setTimeout(() => {
                 const createBtns = document.querySelectorAll('button[onclick="window.openCandidateSidebar()"]');
                 createBtns.forEach(btn => {
@@ -394,6 +394,10 @@
                         btn.parentElement.style.display = 'none';
                     }
                 });
+                const bulkDeleteBtn = document.getElementById('btn-bulk-delete');
+                if (bulkDeleteBtn) bulkDeleteBtn.style.display = 'none';
+                const bulkAuctionBtn = document.getElementById('btn-bulk-auction');
+                if (bulkAuctionBtn) bulkAuctionBtn.style.display = 'none';
             }, 0);
         } else {
             // Show admin-only buttons
@@ -593,6 +597,14 @@
                     ? `<img src="${candImg}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerText='${initial}';">`
                     : initial;
 
+                // --- Pre-compute conditional HTML for TM ---
+                const nameSpanTable = isTeamManager
+                    ? '<span class="text-[14px] font-medium text-gray-900 leading-snug flex items-center">' + cand.name + roleBadge + '</span>'
+                    : '<span onclick="window.viewCandidate(\'' + cand.id + '\', event)" class="text-[14px] font-medium text-gray-900 leading-snug hover:text-brand-blue hover:underline cursor-pointer transition-colors flex items-center">' + cand.name + roleBadge + '</span>';
+                const subtextTable = isTeamManager
+                    ? 'Class: ' + (cand.class || 'N/A')
+                    : '#' + (cand.chestNo || 'N/A') + ' &bull; Adm: ' + (cand.admissionNo || 'N/A') + ' &bull; Class: ' + (cand.class || 'N/A');
+
                 // --- TABLE ROW ---
                 tableHTML += `
                 <div class="grid grid-cols-12 gap-4 items-center py-2.5 px-6 border-b border-gray-100 ${rowBg} transition-colors group">
@@ -604,8 +616,8 @@
                             ${avatarContent}
                         </div>
                         <div class="flex flex-col items-start">
-                            <span onclick="window.viewCandidate('${cand.id}', event)" class="text-[14px] font-medium text-gray-900 leading-snug hover:text-brand-blue hover:underline cursor-pointer transition-colors flex items-center">${cand.name}${roleBadge}</span>
-                            <div class="text-[12.5px] text-[#6B7280] font-mono-custom mt-0.5 tracking-tight">#${cand.chestNo || 'N/A'} &bull; Adm: ${cand.admissionNo || 'N/A'} &bull; Class: ${cand.class || 'N/A'}</div>
+                            ${nameSpanTable}
+                            <div class="text-[12.5px] text-[#6B7280] font-mono-custom mt-0.5 tracking-tight">${subtextTable}</div>
                         </div>
                     </div>
                     <div class="col-span-3 flex items-center justify-center space-x-2">
@@ -621,6 +633,13 @@
                 </div>`;
 
                 // --- CARD VIEW ---
+                const nameSpanCard = isTeamManager
+                    ? '<div class="text-[14.5px] font-semibold text-gray-900 pr-8 flex items-center w-max">' + cand.name + roleBadge + '</div>'
+                    : '<div onclick="window.viewCandidate(\'' + cand.id + '\', event)" class="text-[14.5px] font-semibold text-gray-900 pr-8 hover:text-brand-blue hover:underline cursor-pointer transition-colors flex items-center w-max">' + cand.name + roleBadge + '</div>';
+                const subtextCard = isTeamManager
+                    ? 'Class: ' + (cand.class || 'N/A')
+                    : '#' + (cand.chestNo || 'N/A') + ' &bull; Adm: ' + (cand.admissionNo || 'N/A') + ' &bull; Class: ' + (cand.class || 'N/A');
+
                 cardsHTML += `
                 <div class="bg-white ${cardBorder} rounded-xl p-4 relative shadow-sm hover:shadow-md transition-shadow">
                     <div class="absolute top-4 right-4 z-10">
@@ -632,9 +651,9 @@
                             ${avatarContent}
                         </div>
                         <div class="flex-1 pt-0.5">
-                            <div onclick="window.viewCandidate('${cand.id}', event)" class="text-[14.5px] font-semibold text-gray-900 pr-8 hover:text-brand-blue hover:underline cursor-pointer transition-colors flex items-center w-max">${cand.name}${roleBadge}</div>
+                            ${nameSpanCard}
                             <div class="flex items-center space-x-2 mt-1">
-                                <span class="text-[12.5px] text-[#6B7280] font-mono-custom tracking-tight">#${cand.chestNo || 'N/A'} &bull; Adm: ${cand.admissionNo || 'N/A'} &bull; Class: ${cand.class || 'N/A'}</span>
+                                <span class="text-[12.5px] text-[#6B7280] font-mono-custom tracking-tight">${subtextCard}</span>
                                 <span class="px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[10px] font-medium text-gray-600 shadow-sm leading-tight">${cand.section}</span>
                             </div>
                             <div class="flex items-center space-x-2 mt-3">
@@ -695,7 +714,7 @@
                         batch.delete(db.collection('candidates').doc(id));
                         if (cand.team && activeTeamsData) {
                             const teamObj = activeTeamsData.find(t => t.name === cand.team);
-                            if (teamObj) {
+                            if (teamObj && teamObj.id) {
                                 const blockStart = parseInt(teamObj.chestNoSeries) || 0;
                                 const capChest = String(blockStart + 1);
                                 const asstChest = String(blockStart + 2);
@@ -714,7 +733,7 @@
                 });
 
                 Object.keys(teamsToUpdate).forEach(teamId => {
-                    if (Object.keys(teamsToUpdate[teamId]).length > 0) {
+                    if (teamId && teamId !== 'undefined' && Object.keys(teamsToUpdate[teamId]).length > 0) {
                         batch.update(db.collection('teams').doc(teamId), teamsToUpdate[teamId]);
                     }
                 });
@@ -753,7 +772,7 @@
 
                 if (cand && cand.team && activeTeamsData) {
                     const teamObj = activeTeamsData.find(t => t.name === cand.team);
-                    if (teamObj) {
+                    if (teamObj && teamObj.id) {
                         const blockStart = parseInt(teamObj.chestNoSeries) || 0;
                         const capChest = String(blockStart + 1);
                         const asstChest = String(blockStart + 2);
@@ -828,19 +847,18 @@
             menu.style.top = topPos + 'px';
             menu.style.left = (rect.right - 144) + 'px'; // w-36 = 144px
 
-            document.getElementById('btn-view').onclick = (e) => { window.candCloseDropdowns(); viewCandidate(id, e); };
-
+            const btnView = document.getElementById('btn-view');
             const btnEdit = document.getElementById('btn-edit');
             const btnDelete = document.getElementById('btn-delete');
 
             if (isTeamManager) {
-                btnEdit.classList.add('hidden');
-                btnDelete.classList.add('hidden');
+                if (btnView) btnView.classList.add('hidden');
+                if (btnEdit) btnEdit.classList.add('hidden');
+                if (btnDelete) btnDelete.classList.add('hidden');
             } else {
-                btnEdit.classList.remove('hidden');
-                btnDelete.classList.remove('hidden');
-                btnEdit.onclick = (e) => { window.candCloseDropdowns(); editCandidate(id, e); };
-                btnDelete.onclick = (e) => { window.candCloseDropdowns(); deleteSingleCandidate(id, e); };
+                if (btnView) { btnView.classList.remove('hidden'); btnView.onclick = (e) => { window.candCloseDropdowns(); viewCandidate(id, e); }; }
+                if (btnEdit) { btnEdit.classList.remove('hidden'); btnEdit.onclick = (e) => { window.candCloseDropdowns(); editCandidate(id, e); }; }
+                if (btnDelete) { btnDelete.classList.remove('hidden'); btnDelete.onclick = (e) => { window.candCloseDropdowns(); deleteSingleCandidate(id, e); }; }
             }
         }
 
@@ -1247,7 +1265,7 @@
                 const tmTeam = isTeamManager ? localStorage.getItem('managerTeam') : null;
 
                 snap.forEach(doc => {
-                    const team = doc.data();
+                    const team = { id: doc.id, ...doc.data() };
                     if (isTeamManager && team.name !== tmTeam) return;
                     activeTeamsData.push(team);
                 });

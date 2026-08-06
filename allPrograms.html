@@ -829,11 +829,9 @@
                 positionTemplateId: document.getElementById('progScoring').checked ? document.getElementById('progScoreTemplate').value : null,
                 conceptNote: document.getElementById('progConceptNote').value || '',
                 timeLimit: document.getElementById('progTimeLimit').value || '',
-                skillRequired: document.getElementById('progSkill').value || ''
+                skillRequired: document.getElementById('progSkill').value || '',
+                updatedAt: new Date()
             };
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
-                payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-            }
 
             if(editingProgId) {
                 db.collection('programs').doc(editingProgId).update(payload).then(() => {
@@ -841,9 +839,7 @@
                     closeFormView();
                 });
             } else {
-                if (typeof firebase !== 'undefined' && firebase.firestore) {
-                    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                }
+                payload.createdAt = new Date();
                 db.collection('programs').add(payload).then(() => {
                     typeof showToast === 'function' && showToast("✅ Program added!");
                     closeFormView();
@@ -889,10 +885,7 @@
                 return typeof showToast === 'function' ? showToast("❌ Code, Name and Section are required") : alert("Required fields missing");
             }
             
-            const payload = { code, name, section, type };
-            if (typeof firebase !== 'undefined' && firebase.firestore) {
-                payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-            }
+            const payload = { code, name, section, type, updatedAt: new Date() };
             
             db.collection('programs').doc(quickEditingProgId).update(payload).then(() => {
                 typeof showToast === 'function' && showToast("✅ Quick Edit saved!");
