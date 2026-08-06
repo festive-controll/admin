@@ -79,14 +79,24 @@
             }
 
             container.innerHTML = filtered.map(p => {
-                const isGroup = (p.type || '').toLowerCase().includes('group') || (p.section || '').toLowerCase() === 'kulliya';
+                const isUnlimited = !!p.isUnlimited || p.maxParticipants === 'unlimited';
+                const isGroup = !isUnlimited && (p.type || '').toLowerCase().includes('group');
                 const reg = window.tmRegistrationsList.find(r => r.programId === p.id);
                 const prefilledChests = reg ? (reg.chestNumbers || []) : [];
                 const maxP = p.maxParticipants || 1;
                 const minP = p.minParticipants || 1;
                 
                 let inputsHTML = '';
-                if (isGroup) {
+                if (isUnlimited) {
+                    inputsHTML = `
+                        <div class="bg-blue-50/60 border border-blue-100 rounded-xl p-4 text-center my-1">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-brand-blue flex items-center justify-center mx-auto mb-2 shadow-sm">
+                                <i class="fi fi-rr-info text-xs"></i>
+                            </div>
+                            <h4 class="text-[13px] font-bold text-gray-800">General Program &bull; Unlimited</h4>
+                            <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">No candidate entry required. All team candidates in this section can participate.</p>
+                        </div>`;
+                } else if (isGroup) {
                     const groupSets = p.groupSetsCount || 1;
                     const groupParts = p.groupParticipantsPerSet || 1;
                     
@@ -127,12 +137,19 @@
                 const setInfo = p.progSet ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full mb-2 inline-block shadow-sm ml-1">${p.progSet}</span>` : '';
                 
                 let limitText = `Max: ${maxP}`;
-                if (isGroup) {
+                if (isUnlimited) {
+                    limitText = `Limits: Unlimited Participants`;
+                } else if (isGroup) {
                     const groupSets = p.groupSetsCount || 1;
                     const groupParts = p.groupParticipantsPerSet || 1;
                     const totalGroupMembers = groupSets * groupParts;
                     limitText = `Members: ${totalGroupMembers} (${groupSets} Set${groupSets>1?'s':''} x ${groupParts})`;
                 }
+
+                const saveBtnHTML = isUnlimited ? '' : `
+                    <button id="btn-save-${p.id}" onclick="window.saveRegistration('${p.id}')" class="w-full mt-4 bg-gray-50 hover:bg-[#FFB33F] text-gray-800 border border-gray-200 hover:border-transparent font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fi fi-rr-disk text-xs"></i> ${reg ? 'Update' : 'Save'} Registration
+                    </button>`;
 
                 return `
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
@@ -147,12 +164,36 @@
                         <div id="tab-content-reg-${p.id}" class="space-y-3">
                             ${inputsHTML}
                         </div>
-                        <button id="btn-save-${p.id}" onclick="window.saveRegistration('${p.id}')" class="w-full mt-4 bg-gray-50 hover:bg-[#FFB33F] text-gray-800 border border-gray-200 hover:border-transparent font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
-                            <i class="fi fi-rr-disk text-xs"></i> ${reg ? 'Update' : 'Save'} Registration
-                        </button>
+                        ${saveBtnHTML}
                     </div>
                 </div>`;
             }).join('');
+        };
+
+        window.validateUnlimitedChests = function(textarea, progId) {
+            const val = textarea.value.trim();
+            const feedback = document.getElementById('unlimited-feedback-' + progId);
+            textarea.classList.remove('border-gray-200', 'border-red-500', 'border-green-500', 'bg-red-50/20', 'bg-green-50/20');
+            
+            if(!val) { 
+                textarea.classList.add('border-gray-200'); 
+                if(feedback) feedback.innerHTML = '';
+                return; 
+            }
+            
+            const chests = val.split(',').map(s => s.trim()).filter(s => s);
+            let invalid = [];
+            chests.forEach(c => {
+                if(!window.tmTeamCandidates.find(cand => cand.chestNo === c)) invalid.push(c);
+            });
+
+            if(invalid.length > 0) {
+                textarea.classList.add('border-red-500', 'bg-red-50/20');
+                if(feedback) feedback.innerHTML = `<span class="text-red-500 font-medium">Invalid Chest No(s): ${invalid.join(', ')}</span>`;
+            } else {
+                textarea.classList.add('border-green-500', 'bg-green-50/20');
+                if(feedback) feedback.innerHTML = `<span class="text-green-600 font-medium">All ${chests.length} candidates valid</span>`;
+            }
         };
 
         window.validateGroupChests = function(textarea, progId) {
@@ -211,12 +252,30 @@
 
         window.saveRegistration = function(progId) {
             const prog = window.tmProgramsList.find(p => p.id === progId);
-            const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
+            const isUnlimited = !!prog.isUnlimited || prog.maxParticipants === 'unlimited';
+            const isGroup = !isUnlimited && (prog.type || '').toLowerCase().includes('group');
             let chestNumbers = [], candidateIds = [];
             let valid = true, filledCount = 0;
             let memberCount = 0;
 
-            if (isGroup) {
+            if (isUnlimited) {
+                const textarea = document.getElementById('prog-input-unlimited-' + progId);
+                const val = textarea ? textarea.value.trim() : '';
+                if (val) {
+                    const chests = val.split(',').map(s => s.trim()).filter(s => s);
+                    chests.forEach(c => {
+                        const found = window.tmTeamCandidates.find(cand => cand.chestNo === c);
+                        if (found) {
+                            chestNumbers.push(c);
+                            candidateIds.push(found.id);
+                            filledCount++;
+                        } else {
+                            valid = false;
+                        }
+                    });
+                    memberCount = chestNumbers.length;
+                }
+            } else if (isGroup) {
                 memberCount = 0;
                 const inputs = document.querySelectorAll('.prog-input-group-' + progId);
                 inputs.forEach(inp => {

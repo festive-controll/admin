@@ -517,6 +517,8 @@
         function renderUI() {
             const tableList = document.getElementById('candidate-table-list');
             const cardsList = document.getElementById('candidate-cards-list');
+            if (!tableList || !cardsList) return;
+
             const filteredData = getFilteredCandidates();
 
             const totalItems = filteredData.length;
@@ -527,23 +529,34 @@
             const endIndex = Math.min(startIndex + candItemsPerPage, totalItems);
             const paginatedData = filteredData.slice(startIndex, endIndex);
 
-            document.getElementById('results-count').innerText = `Showing ${totalItems > 0 ? startIndex + 1 : 0} to ${endIndex} of ${totalItems} results`;
-            document.getElementById('cand-page-info').innerText = `Page ${candCurrentPage} of ${totalPages}`;
-            document.getElementById('cand-prev-page').disabled = candCurrentPage === 1;
-            document.getElementById('cand-next-page').disabled = candCurrentPage === totalPages;
+            const resCount = document.getElementById('results-count');
+            if (resCount) resCount.innerText = `Showing ${totalItems > 0 ? startIndex + 1 : 0} to ${endIndex} of ${totalItems} results`;
+            
+            const pageInfo = document.getElementById('cand-page-info');
+            if (pageInfo) pageInfo.innerText = `Page ${candCurrentPage} of ${totalPages}`;
+
+            const prevPageBtn = document.getElementById('cand-prev-page');
+            if (prevPageBtn) prevPageBtn.disabled = candCurrentPage === 1;
+
+            const nextPageBtn = document.getElementById('cand-next-page');
+            if (nextPageBtn) nextPageBtn.disabled = candCurrentPage === totalPages;
 
             // Toggle Bulk Header
             const stdHeader = document.getElementById('standard-header');
             const blkHeader = document.getElementById('bulk-header');
 
-            if (selectedIds.size > 0) {
-                stdHeader.classList.add('hidden');
-                blkHeader.classList.remove('hidden');
-                document.getElementById('selected-count-text').innerText = selectedIds.size;
-            } else {
-                stdHeader.classList.remove('hidden');
-                blkHeader.classList.add('hidden');
-                document.getElementById('master-checkbox').outerHTML = `<div onclick="toggleSelectAll(event)" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="master-checkbox"></div>`;
+            if (stdHeader && blkHeader) {
+                if (selectedIds.size > 0) {
+                    stdHeader.classList.add('hidden');
+                    blkHeader.classList.remove('hidden');
+                    const selCount = document.getElementById('selected-count-text');
+                    if (selCount) selCount.innerText = selectedIds.size;
+                } else {
+                    stdHeader.classList.remove('hidden');
+                    blkHeader.classList.add('hidden');
+                    const masterCb = document.getElementById('master-checkbox');
+                    if (masterCb) masterCb.outerHTML = `<div onclick="toggleSelectAll(event)" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="master-checkbox"></div>`;
+                }
             }
 
             if (filteredData.length === 0) {
@@ -674,10 +687,44 @@
         function deleteSelected() {
             if (confirm(`Are you sure you want to delete ${selectedIds.size} candidates?`)) {
                 const batch = db.batch();
-                selectedIds.forEach(id => batch.delete(db.collection('candidates').doc(id)));
+                const teamsToUpdate = {};
+
+                selectedIds.forEach(id => {
+                    const cand = candidatesData.find(c => c.id === id);
+                    if (cand) {
+                        batch.delete(db.collection('candidates').doc(id));
+                        if (cand.team && activeTeamsData) {
+                            const teamObj = activeTeamsData.find(t => t.name === cand.team);
+                            if (teamObj) {
+                                const blockStart = parseInt(teamObj.chestNoSeries) || 0;
+                                const capChest = String(blockStart + 1);
+                                const asstChest = String(blockStart + 2);
+
+                                if (!teamsToUpdate[teamObj.id]) teamsToUpdate[teamObj.id] = {};
+
+                                if (cand.isCaptain || cand.name === teamObj.captainName || String(cand.chestNo) === capChest) {
+                                    teamsToUpdate[teamObj.id].captainName = '';
+                                }
+                                if (cand.isAssistantCaptain || cand.name === teamObj.assistantCaptainName || String(cand.chestNo) === asstChest) {
+                                    teamsToUpdate[teamObj.id].assistantCaptainName = '';
+                                }
+                            }
+                        }
+                    }
+                });
+
+                Object.keys(teamsToUpdate).forEach(teamId => {
+                    if (Object.keys(teamsToUpdate[teamId]).length > 0) {
+                        batch.update(db.collection('teams').doc(teamId), teamsToUpdate[teamId]);
+                    }
+                });
+
                 batch.commit().then(() => {
                     selectedIds.clear();
                     typeof showToast === 'function' && showToast("✅ Candidates deleted!");
+                }).catch(err => {
+                    console.error("Error deleting candidates:", err);
+                    typeof showToast === 'function' && showToast("❌ Error: " + err.message);
                 });
             }
         }
@@ -698,12 +745,40 @@
         }
 
         function deleteSingleCandidate(id, event) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
             if (confirm(`Delete this candidate?`)) {
-                db.collection('candidates').doc(id).delete().then(() => {
+                const cand = candidatesData.find(c => c.id === id);
+                const batch = db.batch();
+                batch.delete(db.collection('candidates').doc(id));
+
+                if (cand && cand.team && activeTeamsData) {
+                    const teamObj = activeTeamsData.find(t => t.name === cand.team);
+                    if (teamObj) {
+                        const blockStart = parseInt(teamObj.chestNoSeries) || 0;
+                        const capChest = String(blockStart + 1);
+                        const asstChest = String(blockStart + 2);
+                        const updates = {};
+
+                        if (cand.isCaptain || cand.name === teamObj.captainName || String(cand.chestNo) === capChest) {
+                            updates.captainName = '';
+                        }
+                        if (cand.isAssistantCaptain || cand.name === teamObj.assistantCaptainName || String(cand.chestNo) === asstChest) {
+                            updates.assistantCaptainName = '';
+                        }
+
+                        if (Object.keys(updates).length > 0) {
+                            batch.update(db.collection('teams').doc(teamObj.id), updates);
+                        }
+                    }
+                }
+
+                batch.commit().then(() => {
                     selectedIds.delete(id);
                     activeDropdownId = null;
                     typeof showToast === 'function' && showToast("✅ Candidate deleted!");
+                }).catch(err => {
+                    console.error("Error deleting candidate:", err);
+                    typeof showToast === 'function' && showToast("❌ Error: " + err.message);
                 });
             }
         }

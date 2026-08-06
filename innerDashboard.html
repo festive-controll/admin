@@ -16,6 +16,7 @@
     <link rel='stylesheet'
         href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 
@@ -1119,23 +1120,29 @@
                         <div>
                             <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
                                     class="fi fi-rr-user-add text-brand-blue"></i> Bulk Candidate Import</h1>
-                            <p class="text-[13px] text-gray-500 mt-1">Download a CSV template, fill it in, then upload
+                            <p class="text-[13px] text-gray-500 mt-1">Download an Excel or CSV template, fill it in, then upload
                                 to add multiple candidates at once.</p>
                         </div>
-                        <button onclick="downloadCandidateTemplate()"
-                            class="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-[13px] font-bold hover:bg-green-700 shadow-md transition-all">
-                            <i class="fi fi-rr-file-download"></i> Download Template
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadExcel(CAND_HEADERS, 'candidate_template.xlsx')"
+                                class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="downloadCandidateTemplate()"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full mb-8">
-                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled CSV</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled File (.xlsx, .xls, .csv)</label>
                         <div class="max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-brand-blue hover:bg-blue-50/30 transition-all"
                             onclick="document.getElementById('bulk-cand-file').click()">
                             <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-[15px] font-semibold text-gray-600">Click to select CSV file</p>
-                            <p class="text-[13px] text-gray-400 mt-2">Only .csv files supported</p>
-                            <input type="file" id="bulk-cand-file" accept=".csv" class="hidden"
+                            <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
+                            <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (Full Transliteration Support)</p>
+                            <input type="file" id="bulk-cand-file" accept=".csv, .xlsx, .xls" class="hidden"
                                 onchange="handleCandidateCSV(this)">
                         </div>
                         <div id="bulk-cand-preview" class="mt-8 hidden">
@@ -1162,23 +1169,29 @@
                         <div>
                             <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
                                     class="fi fi-rr-apps text-brand-orange"></i> Bulk Program Import</h1>
-                            <p class="text-[13px] text-gray-500 mt-1">Download a CSV template, fill it in, then upload
+                            <p class="text-[13px] text-gray-500 mt-1">Download an Excel or CSV template, fill it in, then upload
                                 to add multiple programs at once.</p>
                         </div>
-                        <button onclick="downloadProgramTemplate()"
-                            class="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-[13px] font-bold hover:bg-green-700 shadow-md transition-all">
-                            <i class="fi fi-rr-file-download"></i> Download Template
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadExcel(PROG_HEADERS, 'program_template.xlsx')"
+                                class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="downloadProgramTemplate()"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full mb-8">
-                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled CSV</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled File (.xlsx, .xls, .csv)</label>
                         <div class="max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-brand-orange hover:bg-orange-50/30 transition-all"
                             onclick="document.getElementById('bulk-prog-file').click()">
                             <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-[15px] font-semibold text-gray-600">Click to select CSV file</p>
-                            <p class="text-[13px] text-gray-400 mt-2">Only .csv files supported</p>
-                            <input type="file" id="bulk-prog-file" accept=".csv" class="hidden"
+                            <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
+                            <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (Full Transliteration Support)</p>
+                            <input type="file" id="bulk-prog-file" accept=".csv, .xlsx, .xls" class="hidden"
                                 onchange="handleProgramCSV(this)">
                         </div>
                         <div id="bulk-prog-preview" class="mt-8 hidden">
@@ -1205,23 +1218,29 @@
                         <div>
                             <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
                                     class="fi fi-rr-document text-brand-blue"></i> Bulk Grade Template Import</h1>
-                            <p class="text-[13px] text-gray-500 mt-1">Upload CSV to create multiple grade templates with
+                            <p class="text-[13px] text-gray-500 mt-1">Upload Excel or CSV to create multiple grade templates with
                                 points mapping.</p>
                         </div>
-                        <button onclick="downloadGradeTemplate()"
-                            class="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-[13px] font-bold hover:bg-green-700 shadow-md transition-all">
-                            <i class="fi fi-rr-file-download"></i> Download Template
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadExcel(GRADE_HEADERS, 'grade_template.xlsx')"
+                                class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="downloadGradeTemplate()"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full mb-8">
-                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled CSV</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled File (.xlsx, .xls, .csv)</label>
                         <div class="max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-brand-blue hover:bg-blue-50/30 transition-all"
                             onclick="document.getElementById('bulk-grade-file').click()">
                             <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-[15px] font-semibold text-gray-600">Click to select CSV file</p>
-                            <p class="text-[13px] text-gray-400 mt-2">Only .csv files supported</p>
-                            <input type="file" id="bulk-grade-file" accept=".csv" class="hidden"
+                            <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
+                            <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (Full Transliteration Support)</p>
+                            <input type="file" id="bulk-grade-file" accept=".csv, .xlsx, .xls" class="hidden"
                                 onchange="handleGradeTemplateCSV(this)">
                         </div>
                         <div id="bulk-grade-preview" class="mt-8 hidden">
@@ -1248,23 +1267,29 @@
                         <div>
                             <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
                                     class="fi fi-rr-trophy text-brand-yellow"></i> Bulk Pattern Template Import</h1>
-                            <p class="text-[13px] text-gray-500 mt-1">Upload CSV to create multiple pattern (position)
+                            <p class="text-[13px] text-gray-500 mt-1">Upload Excel or CSV to create multiple pattern (position)
                                 templates.</p>
                         </div>
-                        <button onclick="downloadPositionTemplate()"
-                            class="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-[13px] font-bold hover:bg-green-700 shadow-md transition-all">
-                            <i class="fi fi-rr-file-download"></i> Download Template
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadExcel(POS_HEADERS, 'pattern_template.xlsx')"
+                                class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="downloadPositionTemplate()"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full mb-8">
-                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled CSV</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled File (.xlsx, .xls, .csv)</label>
                         <div class="max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-brand-yellow hover:bg-yellow-50/30 transition-all"
                             onclick="document.getElementById('bulk-pos-file').click()">
                             <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-[15px] font-semibold text-gray-600">Click to select CSV file</p>
-                            <p class="text-[13px] text-gray-400 mt-2">Only .csv files supported</p>
-                            <input type="file" id="bulk-pos-file" accept=".csv" class="hidden"
+                            <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
+                            <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (Full Transliteration Support)</p>
+                            <input type="file" id="bulk-pos-file" accept=".csv, .xlsx, .xls" class="hidden"
                                 onchange="handlePositionTemplateCSV(this)">
                         </div>
                         <div id="bulk-pos-preview" class="mt-8 hidden">
@@ -3140,24 +3165,129 @@
             const csv = POS_HEADERS.join(',') + '\n';
             downloadCSV(csv, 'pattern_template.csv');
         }
+        function downloadExcel(headers, filename) {
+            if (typeof XLSX !== 'undefined') {
+                const ws = XLSX.utils.aoa_to_sheet([headers]);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Template');
+                XLSX.writeFile(wb, filename);
+            } else {
+                downloadCSV(headers.join(',') + '\n', filename.replace('.xlsx', '.csv'));
+            }
+        }
+
         function downloadCSV(content, filename) {
             const a = document.createElement('a');
-            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(content);
+            a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(content);
             a.download = filename;
             a.click();
         }
 
-        // Shared CSV parser
+        function readExcelOrCSV(file, callback) {
+            if (!file) return;
+            const fileName = (file.name || '').toLowerCase();
+            const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+            if (isExcel && typeof XLSX !== 'undefined') {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+                        if (!json || json.length < 2) {
+                            callback({ headers: [], rows: [] });
+                            return;
+                        }
+                        const rawHeaders = json[0].map(h => String(h !== undefined ? h : '').trim());
+                        const headers = rawHeaders.map(h => h.replace(/^["']|["']$/g, '').trim().toLowerCase());
+                        
+                        const rows = json.slice(1).map(rowArray => {
+                            if (!rowArray || rowArray.every(cell => String(cell !== undefined ? cell : '').trim() === '')) return null;
+                            const obj = {};
+                            rawHeaders.forEach((rh, i) => {
+                                const h = rh.replace(/^["']|["']$/g, '').trim().toLowerCase();
+                                const cleanKey = h.replace(/[^a-z0-9]/g, '');
+                                const val = String(rowArray[i] !== undefined ? rowArray[i] : '').trim();
+                                obj[h] = val;
+                                obj[cleanKey] = val;
+                            });
+                            return obj;
+                        }).filter(Boolean);
+
+                        callback({ headers, rows });
+                    } catch (err) {
+                        console.error('XLSX parse error:', err);
+                        typeof showToast === 'function' ? showToast('<b>❌</b> Error reading Excel file: ' + err.message) : alert('Error reading Excel');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    callback(parseCSV(e.target.result));
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+        }
+
+        // Shared CSV parser with UTF-8 transliteration support, delimiter auto-detection & quoted value handling
         function parseCSV(text) {
-            const lines = text.trim().split(/\r?\n/);
+            if (!text) return { headers: [], rows: [] };
+            // Remove UTF-8 BOM or zero-width space if present
+            text = text.replace(/^[\uFEFF\uFFFE\u200B]/, '').trim();
+            const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
             if (lines.length < 2) return { headers: [], rows: [] };
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            // Auto-detect delimiter: comma, semicolon, or tab
+            let delimiter = ',';
+            const firstLine = lines[0];
+            if (firstLine.includes(';') && (firstLine.split(';').length > firstLine.split(',').length)) {
+                delimiter = ';';
+            } else if (firstLine.includes('\t') && (firstLine.split('\t').length > firstLine.split(',').length)) {
+                delimiter = '\t';
+            }
+            
+            function parseCSVLine(line) {
+                const result = [];
+                let cur = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"' || char === "'") {
+                        if (inQuotes && line[i + 1] === char) {
+                            cur += char;
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === delimiter && !inQuotes) {
+                        result.push(cur.trim());
+                        cur = '';
+                    } else {
+                        cur += char;
+                    }
+                }
+                result.push(cur.trim());
+                return result;
+            }
+
+            const headers = parseCSVLine(lines[0]).map(h => h.replace(/^["']|["']$/g, '').trim().toLowerCase());
             const rows = lines.slice(1).map(line => {
-                const vals = line.split(',').map(v => v.trim());
+                if (!line.trim()) return null;
+                const vals = parseCSVLine(line);
                 const obj = {};
-                headers.forEach((h, i) => obj[h] = vals[i] || '');
+                headers.forEach((h, i) => {
+                    const cleanKey = h.replace(/[^a-z0-9]/g, '');
+                    const val = (vals[i] || '').replace(/^["']|["']$/g, '').trim();
+                    obj[h] = val;
+                    obj[cleanKey] = val;
+                });
                 return obj;
-            }).filter(r => Object.values(r).some(v => v !== ''));
+            }).filter(r => r && Object.values(r).some(v => v !== ''));
+
             return { headers, rows };
         }
 
@@ -3203,12 +3333,14 @@
         function handleCandidateCSV(input) {
             const file = input.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-                const { headers, rows } = parseCSV(e.target.result);
-                const missingHeaders = CAND_HEADERS.filter(h => !headers.includes(h.toLowerCase()));
+            readExcelOrCSV(file, async function ({ headers, rows }) {
+                const missingHeaders = CAND_HEADERS.filter(h => {
+                    const normH = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return !headers.some(hdr => hdr.toLowerCase().replace(/[^a-z0-9]/g, '') === normH);
+                });
                 if (missingHeaders.length) {
                     showToast('<b>❌</b> Missing columns: ' + missingHeaders.join(', '));
+                    input.value = '';
                     return;
                 }
                 // Load valid sections + teams
@@ -3238,9 +3370,8 @@
                 });
 
                 revalidateAllCandidateRows();
-            };
-            reader.readAsText(file);
-            input.value = ''; // Reset file input
+                input.value = '';
+            });
         }
 
         function getBulkCandidateField(r, h) {
@@ -3374,7 +3505,7 @@
             if (!(r.name || '').trim()) errs.push('Name is required');
             if (!sec) errs.push('Section is required');
             else if (!bulkProgramValidSections.some(s => s.toLowerCase() === sec.toLowerCase())) errs.push('Unknown section "' + sec + '"');
-            if (!['individual', 'group'].includes((r.type || '').trim().toLowerCase())) errs.push('Type must be Individual or Group');
+            if (!['individual', 'group', 'general'].includes((r.type || '').trim().toLowerCase())) errs.push('Type must be Individual, Group, or General');
 
             const pset = (r.progset || '').trim();
             if (pset && !bulkProgramValidSets.some(s => s.toLowerCase() === pset.toLowerCase())) errs.push('Unknown program set "' + pset + '"');
@@ -3423,12 +3554,14 @@
         function handleProgramCSV(input) {
             const file = input.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-                const { headers, rows } = parseCSV(e.target.result);
-                const missingHeaders = PROG_HEADERS.filter(h => !headers.includes(h.toLowerCase()));
+            readExcelOrCSV(file, async function ({ headers, rows }) {
+                const missingHeaders = PROG_HEADERS.filter(h => {
+                    const normH = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return !headers.some(hdr => hdr.toLowerCase().replace(/[^a-z0-9]/g, '') === normH);
+                });
                 if (missingHeaders.length) {
                     showToast('<b>❌</b> Missing columns: ' + missingHeaders.join(', '));
+                    input.value = '';
                     return;
                 }
                 const [secSnap, progSnap, setSnap, gradeSnap, posSnap] = await Promise.all([
@@ -3453,9 +3586,8 @@
                 });
 
                 revalidateAllProgramRows();
-            };
-            reader.readAsText(file);
-            input.value = ''; // Reset file input
+                input.value = '';
+            });
         }
 
         function getBulkProgramField(r, h) {
@@ -3478,7 +3610,7 @@
             if (field === 'type') {
                 let opts = `<option value="">Select Type</option>`;
                 let matched = false;
-                ['Individual', 'Group'].forEach(t => {
+                ['Individual', 'Group', 'General'].forEach(t => {
                     if (t.toLowerCase() === valLower) matched = true;
                     opts += `<option value="${t}" ${t.toLowerCase() === valLower ? 'selected' : ''}>${t}</option>`;
                 });
@@ -3647,13 +3779,15 @@
         function handleTplCSV(input, type) {
             const file = input.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const { headers, rows } = parseCSV(e.target.result);
+            readExcelOrCSV(file, function ({ headers, rows }) {
                 const reqHeaders = ['templatename', 'label', 'points'];
-                const missing = reqHeaders.filter(h => !headers.includes(h));
+                const missing = reqHeaders.filter(h => {
+                    const normH = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return !headers.some(hdr => hdr.toLowerCase().replace(/[^a-z0-9]/g, '') === normH);
+                });
                 if (missing.length) {
                     showToast('<b>❌</b> Missing columns: ' + missing.join(', '));
+                    input.value = '';
                     return;
                 }
                 const processedRows = rows.map((r, i) => {
@@ -3663,9 +3797,8 @@
                 });
                 if (type === 'grade') { bulkGradeTplRows = processedRows; renderTplPreview('grade'); }
                 else { bulkPosTplRows = processedRows; renderTplPreview('position'); }
-            };
-            reader.readAsText(file);
-            input.value = '';
+                input.value = '';
+            });
         }
 
         function renderTplPreview(type) {

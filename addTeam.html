@@ -403,6 +403,7 @@
         function renderTeamsUI() {
             const tableList = document.getElementById('team-table-list');
             const cardsList = document.getElementById('team-cards-list');
+            if (!tableList || !cardsList) return;
             const stdHeader = document.getElementById('standard-header');
             const blkHeader = document.getElementById('bulk-header');
 
@@ -416,19 +417,30 @@
             const endIndex = Math.min(startIndex + teamItemsPerPage, totalItems);
             const paginatedData = filteredData.slice(startIndex, endIndex);
 
-            document.getElementById('results-count').innerText = `Showing ${totalItems > 0 ? startIndex + 1 : 0} to ${endIndex} of ${totalItems} results`;
-            document.getElementById('team-page-info').innerText = `Page ${teamCurrentPage} of ${totalPages}`;
-            document.getElementById('team-prev-page').disabled = teamCurrentPage === 1;
-            document.getElementById('team-next-page').disabled = teamCurrentPage === totalPages;
+            const resCount = document.getElementById('results-count');
+            if (resCount) resCount.innerText = `Showing ${totalItems > 0 ? startIndex + 1 : 0} to ${endIndex} of ${totalItems} results`;
+            
+            const pageInfo = document.getElementById('team-page-info');
+            if (pageInfo) pageInfo.innerText = `Page ${teamCurrentPage} of ${totalPages}`;
 
-            if (selectedTeamIds.size > 0) {
-                stdHeader.classList.add('hidden');
-                blkHeader.classList.remove('hidden');
-                document.getElementById('selected-count-text').innerText = selectedTeamIds.size;
-            } else {
-                stdHeader.classList.remove('hidden');
-                blkHeader.classList.add('hidden');
-                document.getElementById('master-checkbox').outerHTML = `<div onclick="toggleAllTeams(event)" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="master-checkbox"></div>`;
+            const prevBtn = document.getElementById('team-prev-page');
+            if (prevBtn) prevBtn.disabled = teamCurrentPage === 1;
+
+            const nextBtn = document.getElementById('team-next-page');
+            if (nextBtn) nextBtn.disabled = teamCurrentPage === totalPages;
+
+            if (stdHeader && blkHeader) {
+                if (selectedTeamIds.size > 0) {
+                    stdHeader.classList.add('hidden');
+                    blkHeader.classList.remove('hidden');
+                    const selCount = document.getElementById('selected-count-text');
+                    if (selCount) selCount.innerText = selectedTeamIds.size;
+                } else {
+                    stdHeader.classList.remove('hidden');
+                    blkHeader.classList.add('hidden');
+                    const masterCb = document.getElementById('master-checkbox');
+                    if (masterCb) masterCb.outerHTML = `<div onclick="toggleAllTeams(event)" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="master-checkbox"></div>`;
+                }
             }
 
             if (filteredData.length === 0) {

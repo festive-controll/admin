@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic Registration Settings</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="logo-192.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#f8f9fc',
+                            border: '#e5e7eb',
+                            textMuted: '#6b7280',
+                            textDark: '#111827',
+                            blue: '#134E8E',
+                            red: '#C00707',
+                            yellow: '#FFB33F'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="bg-[#f8f9fc] min-h-screen text-gray-800 p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Page Header -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">Programme Settings</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">Topic Registration Settings</h1>
+                <p class="text-[13px] text-gray-500 mt-1 font-medium">Enable or disable candidate topic registration requirement for programs grouped by section.</p>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-center min-w-[100px]">
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                    <p id="stat-total" class="text-lg font-black text-gray-800">0</p>
+                </div>
+                <div class="bg-green-50/60 border border-green-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                    <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-check-circle text-[10px]"></i> Enabled
+                    </p>
+                    <p id="stat-enabled" class="text-lg font-black text-green-700">0</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-cross-circle text-[10px]"></i> Disabled
+                    </p>
+                    <p id="stat-disabled" class="text-lg font-black text-gray-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Filters Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                
+                <!-- Search Input -->
+                <div class="relative flex-1 max-w-md">
+                    <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="onSearchChange(this.value)" 
+                        placeholder="Search program by code or name..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                </div>
+
+                <!-- Topic Status Filter -->
+                <div class="flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl shrink-0 self-start md:self-auto">
+                    <button onclick="setTopicFilter('ALL')" id="filter-topic-ALL" class="px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all bg-white text-gray-800 shadow-sm">All Programs</button>
+                    <button onclick="setTopicFilter('ON')" id="filter-topic-ON" class="px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all text-gray-500 hover:text-gray-800">Topic Required</button>
+                    <button onclick="setTopicFilter('OFF')" id="filter-topic-OFF" class="px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all text-gray-500 hover:text-gray-800">Topic Not Required</button>
+                </div>
+            </div>
+
+            <!-- Section Tabs -->
+            <div class="flex border-b border-gray-100 overflow-x-auto no-scrollbar pt-2 gap-2" id="sectionTabsContainer">
+                <button onclick="setSectionFilter('ALL')" id="tab-sec-ALL" class="px-4 py-2 text-[12px] font-bold border-b-2 border-brand-blue text-brand-blue bg-blue-50/50 rounded-t-lg transition-all whitespace-nowrap">
+                    All Sections
+                </button>
+                <!-- Dynamic section tabs will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Sections & Programs Container -->
+        <div id="sectionsContentContainer" class="space-y-6">
+            <!-- Loading Spinner -->
+            <div class="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+                <div class="w-8 h-8 border-4 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p class="text-[13px] font-medium text-gray-500">Loading programs and section settings...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        var db = window.db || (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+        
+        var allSections = [];
+        var allPrograms = [];
+        var currentSectionFilter = 'ALL';
+        var currentTopicFilter = 'ALL';
+        var currentSearch = '';
+
+        function checkDbInit() {
+            if (!db) {
+                if (window.db) db = window.db;
+                else if (window.parent && window.parent.db) db = window.parent.db;
+                else if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) db = firebase.firestore();
+            }
+            if (db) {
+                initData();
+            } else {
+                setTimeout(checkDbInit, 200);
+            }
+        }
+
+        function showToast(msg, bg) {
+            if (typeof Toastify === 'function') {
+                Toastify({
+                    text: msg,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "center",
+                    style: { background: bg || "#134E8E", borderRadius: "10px", fontSize: "13px", fontWeight: "600" }
+                }).showToast();
+            } else {
+                alert(msg);
+            }
+        }
+
+        // Initialize Firestore Listeners
+        function initData() {
+            if (!db) return;
+
+            // Fetch Sections
+            db.collection('sections').where('isActive', '==', true).onSnapshot(secSnap => {
+                allSections = secSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderSectionTabs();
+                renderUI();
+            });
+
+            // Fetch Programs
+            db.collection('programs').onSnapshot(progSnap => {
+                allPrograms = progSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUI();
+            });
+        }
+
+        function renderSectionTabs() {
+            const container = document.getElementById('sectionTabsContainer');
+            if (!container) return;
+
+            let html = `
+                <button onclick="setSectionFilter('ALL')" id="tab-sec-ALL" 
+                    class="px-4 py-2 text-[12px] font-bold border-b-2 ${currentSectionFilter === 'ALL' ? 'border-brand-blue text-brand-blue bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'} rounded-t-lg transition-all whitespace-nowrap">
+                    All Sections
+                </button>
+            `;
+
+            allSections.forEach(sec => {
+                const isActive = currentSectionFilter.toLowerCase() === (sec.name || '').toLowerCase();
+                const btnClass = isActive ? 'border-brand-blue text-brand-blue bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                html += `
+                    <button onclick="setSectionFilter('${sec.name}')" id="tab-sec-${sec.id}" 
+                        class="px-4 py-2 text-[12px] font-bold border-b-2 ${btnClass} rounded-t-lg transition-all whitespace-nowrap">
+                        ${sec.name}
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function setSectionFilter(secName) {
+            currentSectionFilter = secName;
+            renderSectionTabs();
+            renderUI();
+        }
+
+        function setTopicFilter(filterType) {
+            currentTopicFilter = filterType;
+            ['ALL', 'ON', 'OFF'].forEach(t => {
+                const btn = document.getElementById(`filter-topic-${t}`);
+                if (btn) {
+                    if (t === filterType) {
+                        btn.className = "px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all bg-white text-gray-800 shadow-sm";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all text-gray-500 hover:text-gray-800";
+                    }
+                }
+            });
+            renderUI();
+        }
+
+        function onSearchChange(val) {
+            currentSearch = (val || '').toLowerCase().trim();
+            renderUI();
+        }
+
+        function toggleProgramTopic(programId, isEnabled, programName) {
+            if (!db) return;
+            
+            db.collection('programs').doc(programId).update({
+                topicRegistration: isEnabled,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                const msg = isEnabled ? `✅ Topic Registration ENABLED for ${programName}` : `ℹ️ Topic Registration DISABLED for ${programName}`;
+                showToast(msg, isEnabled ? "#10B981" : "#6B7280");
+            }).catch(err => {
+                console.error(err);
+                showToast("❌ Update failed: " + err.message, "#EF4444");
+            });
+        }
+
+        function bulkToggleSectionTopic(sectionName, isEnabled) {
+            if (!db) return;
+            const progsToUpdate = allPrograms.filter(p => (p.section || '').toLowerCase() === sectionName.toLowerCase());
+            if (progsToUpdate.length === 0) return;
+
+            const actionText = isEnabled ? 'ENABLE' : 'DISABLE';
+            if (!confirm(`Are you sure you want to ${actionText} Topic Registration for all ${progsToUpdate.length} programs in section "${sectionName}"?`)) {
+                return;
+            }
+
+            const batch = db.batch();
+            progsToUpdate.forEach(p => {
+                const ref = db.collection('programs').doc(p.id);
+                batch.update(ref, {
+                    topicRegistration: isEnabled,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+
+            batch.commit().then(() => {
+                showToast(`✅ ${actionText}D Topic Registration for all programs in ${sectionName}`, isEnabled ? "#10B981" : "#6B7280");
+            }).catch(err => {
+                console.error(err);
+                showToast("❌ Bulk update failed: " + err.message, "#EF4444");
+            });
+        }
+
+        function renderUI() {
+            // Update stats
+            const totalCount = allPrograms.length;
+            const enabledCount = allPrograms.filter(p => !!p.topicRegistration).length;
+            const disabledCount = totalCount - enabledCount;
+
+            document.getElementById('stat-total').innerText = totalCount;
+            document.getElementById('stat-enabled').innerText = enabledCount;
+            document.getElementById('stat-disabled').innerText = disabledCount;
+
+            const container = document.getElementById('sectionsContentContainer');
+            if (!container) return;
+
+            // Filter programs
+            let filteredProgs = allPrograms.filter(p => {
+                // Section filter
+                if (currentSectionFilter !== 'ALL' && (p.section || '').toLowerCase() !== currentSectionFilter.toLowerCase()) {
+                    return false;
+                }
+                // Topic status filter
+                if (currentTopicFilter === 'ON' && !p.topicRegistration) return false;
+                if (currentTopicFilter === 'OFF' && !!p.topicRegistration) return false;
+
+                // Search query
+                if (currentSearch) {
+                    const c = (p.code || '').toLowerCase();
+                    const n = (p.name || '').toLowerCase();
+                    const s = (p.section || '').toLowerCase();
+                    if (!c.includes(currentSearch) && !n.includes(currentSearch) && !s.includes(currentSearch)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            if (filteredProgs.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+                        <i class="fi fi-rr-search text-4xl text-gray-300 mb-3"></i>
+                        <h3 class="text-[15px] font-bold text-gray-700">No programs found</h3>
+                        <p class="text-[13px] text-gray-400 mt-1">Try adjusting your section filter or search term.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group filtered programs by Section
+            const sectionsMap = {};
+            
+            // Collect section names
+            filteredProgs.forEach(p => {
+                const secName = p.section || 'Uncategorized';
+                if (!sectionsMap[secName]) {
+                    sectionsMap[secName] = [];
+                }
+                sectionsMap[secName].push(p);
+            });
+
+            let html = '';
+            
+            Object.keys(sectionsMap).forEach(secName => {
+                const progs = sectionsMap[secName];
+                // Sort programs by Code
+                progs.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+
+                const secEnabledCount = progs.filter(p => !!p.topicRegistration).length;
+
+                html += `
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.03)] overflow-hidden">
+                    
+                    <!-- Section Header -->
+                    <div class="bg-gray-50/70 border-b border-gray-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 text-brand-blue font-bold flex items-center justify-center border border-blue-100 text-sm shadow-sm shrink-0">
+                                <i class="fi fi-rr-folder text-base"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h2 class="text-[15px] font-bold text-gray-900">${secName} Section</h2>
+                                    <span class="text-[11px] font-semibold text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded-full shadow-xs">${progs.length} Program${progs.length > 1 ? 's' : ''}</span>
+                                </div>
+                                <p class="text-[11px] text-gray-400 font-medium mt-0.5">${secEnabledCount} of ${progs.length} Topic Registration Enabled</p>
+                            </div>
+                        </div>
+
+                        <!-- Bulk Action Buttons -->
+                        <div class="flex items-center gap-2 self-end sm:self-auto">
+                            <button onclick="bulkToggleSectionTopic('${secName}', true)" 
+                                class="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200/60 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-2xs">
+                                <i class="fi fi-rr-check text-[10px]"></i> Enable All
+                            </button>
+                            <button onclick="bulkToggleSectionTopic('${secName}', false)" 
+                                class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200/70 text-gray-600 border border-gray-200 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-2xs">
+                                <i class="fi fi-rr-cross text-[10px]"></i> Disable All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Programs List Grid -->
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                `;
+
+                progs.forEach(p => {
+                    const isTopicOn = !!p.topicRegistration;
+                    const safeName = (p.name || '').replace(/'/g, "\\'");
+                    const setInfo = p.progSet ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-md">${p.progSet}</span>` : '';
+
+                    html += `
+                        <div class="p-4 rounded-xl border ${isTopicOn ? 'border-green-200 bg-green-50/20 shadow-xs' : 'border-gray-200 bg-white hover:border-gray-300'} transition-all flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-md font-mono-custom shadow-2xs">${p.code || 'PRG'}</span>
+                                    <div class="flex items-center gap-1">
+                                        ${setInfo}
+                                        <span class="text-[10px] font-bold text-gray-500 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md">${p.type || 'Individual'}</span>
+                                    </div>
+                                </div>
+                                <h3 class="text-[14px] font-bold text-gray-900 leading-snug mb-3">${p.name}</h3>
+                            </div>
+
+                            <!-- Toggle Switch Control -->
+                            <div class="pt-3 border-t border-gray-100/80 flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-gray-500">Topic Required?</span>
+                                
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" ${isTopicOn ? 'checked' : ''} 
+                                        onchange="toggleProgramTopic('${p.id}', this.checked, '${safeName}')" 
+                                        class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue shadow-inner transition-colors"></div>
+                                    <span class="ml-2.5 text-[11px] font-bold ${isTopicOn ? 'text-brand-blue' : 'text-gray-400'}">${isTopicOn ? 'ON' : 'OFF'}</span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Run on load
+        document.addEventListener('DOMContentLoaded', checkDbInit);
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            checkDbInit();
+        }
+    </script>
+</body>
+
+</html>

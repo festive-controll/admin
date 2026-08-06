@@ -267,8 +267,18 @@
                     </button>
                     <div id="acc-limits" class="hidden p-6 border-t border-gray-100 bg-gray-50/30">
                         <div class="grid grid-cols-1 gap-6">
-                            <div>
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Maximum Participants</label>
+                            <div id="unlimitedCheckboxContainer" class="hidden flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div>
+                                    <h4 class="text-[14px] font-semibold text-gray-800">Unlimited Participants</h4>
+                                    <p class="text-[12px] text-gray-500 mt-0.5">Enable unlimited participant registrations for this program (no fixed participant entry columns in Team Manager).</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="progUnlimited" class="sr-only peer" onchange="toggleUnlimitedMaxInput()">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue"></div>
+                                </label>
+                            </div>
+                            <div id="maxParticipantsContainer">
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5" id="progMaxLabel">Maximum Participants</label>
                                 <input type="number" id="progMax" value="1" min="1" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                         </div>
@@ -594,11 +604,16 @@
         }
 
         function toggleGroupFields() {
-            const progType = document.getElementById('progType').value;
+            const progType = document.getElementById('progType')?.value;
+            const sectionEl = document.getElementById('progSection');
+            const sectionText = sectionEl ? (sectionEl.options[sectionEl.selectedIndex]?.text || sectionEl.value || '').toLowerCase() : '';
+            const isKulliya = sectionText.includes('kulliya');
+
             const setsContainer = document.getElementById('groupSetsContainer');
             const participantsContainer = document.getElementById('groupParticipantsContainer');
             const progSetContainer = document.getElementById('progSetContainer');
             const participationLimitsAccordion = document.getElementById('accordion-participation-limits');
+            const unlimContainer = document.getElementById('unlimitedCheckboxContainer');
             const participantsLabel = document.querySelector('#groupParticipantsContainer label');
             
             if (progType === 'Group') {
@@ -614,11 +629,16 @@
                 if(participantsContainer) participantsContainer.classList.add('hidden');
                 if(progSetContainer) progSetContainer.classList.add('hidden');
                 if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                if(unlimContainer) unlimContainer.classList.remove('hidden');
             } else {
                 if(setsContainer) setsContainer.classList.add('hidden');
                 if(participantsContainer) participantsContainer.classList.add('hidden');
                 if(progSetContainer) progSetContainer.classList.remove('hidden');
                 if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                if(unlimContainer) {
+                    if(isKulliya) unlimContainer.classList.remove('hidden');
+                    else unlimContainer.classList.add('hidden');
+                }
                 if(document.getElementById('progGroupSets')) document.getElementById('progGroupSets').value = '';
                 if(document.getElementById('progGroupParticipants')) document.getElementById('progGroupParticipants').value = '';
             }
@@ -627,14 +647,34 @@
         function handleSectionChange(sectionId, typeId) {
             const sectionEl = document.getElementById(sectionId);
             const typeEl = document.getElementById(typeId);
-            if (sectionEl && typeEl) {
+            if (sectionEl) {
                 const text = sectionEl.options[sectionEl.selectedIndex]?.text?.toLowerCase() || '';
                 const val = sectionEl.value?.toLowerCase() || '';
-                if (text.includes('kulliya') || val.includes('kulliya')) {
+                const isKulliya = text.includes('kulliya') || val.includes('kulliya');
+                if (typeEl && isKulliya && typeEl.value !== 'Group') {
                     typeEl.value = 'General';
-                    if (typeId === 'progType') {
-                        toggleGroupFields();
-                    }
+                }
+                toggleGroupFields();
+            }
+        }
+
+        function toggleUnlimitedMaxInput() {
+            const isUnlim = document.getElementById('progUnlimited')?.checked;
+            const maxInput = document.getElementById('progMax');
+            const maxLabel = document.getElementById('progMaxLabel');
+            if (maxInput) {
+                if (isUnlim) {
+                    maxInput.disabled = true;
+                    maxInput.value = '';
+                    maxInput.placeholder = 'Unlimited';
+                    maxInput.classList.add('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+                    if (maxLabel) maxLabel.classList.add('text-gray-400');
+                } else {
+                    maxInput.disabled = false;
+                    if (!maxInput.value || maxInput.value === 'Unlimited') maxInput.value = '1';
+                    maxInput.placeholder = '';
+                    maxInput.classList.remove('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+                    if (maxLabel) maxLabel.classList.remove('text-gray-400');
                 }
             }
         }
@@ -671,6 +711,10 @@
                 ['progCode', 'progName', 'progSection', 'progTimeLimit', 'progSkill', 'progConceptNote'].forEach(x => document.getElementById(x).value = '');
                 document.getElementById('progType').value = 'Individual';
                 toggleGroupFields();
+                handleSectionChange('progSection', 'progType');
+                const unlimCheck = document.getElementById('progUnlimited');
+                if (unlimCheck) unlimCheck.checked = false;
+                toggleUnlimitedMaxInput();
                 document.getElementById('progStatus').value = 'active';
                 document.getElementById('progSet').value = '';
                 document.getElementById('progMax').value = '1';
@@ -699,6 +743,7 @@
                     
                     document.getElementById('progType').value = p.type || 'Individual';
                     toggleGroupFields();
+                    handleSectionChange('progSection', 'progType');
                     if (p.type === 'Group') {
                         document.getElementById('progGroupSets').value = p.groupSetsCount || '';
                         document.getElementById('progGroupParticipants').value = p.groupParticipantsPerSet || '';
@@ -710,7 +755,13 @@
                     pSet.value = currentSet;
                     if (!pSet.value && currentSet) pSet.setAttribute('data-pending-val', currentSet);
                     
-                    document.getElementById('progMax').value = p.maxParticipants || 1;
+                    const isUnlim = !!p.isUnlimited || p.maxParticipants === 'unlimited';
+                    const unlimCheck = document.getElementById('progUnlimited');
+                    if (unlimCheck) unlimCheck.checked = isUnlim;
+                    toggleUnlimitedMaxInput();
+                    if (!isUnlim) {
+                        document.getElementById('progMax').value = p.maxParticipants || 1;
+                    }
 
                     document.getElementById('progTopicReg').checked = !!p.topicRegistration;
                     document.getElementById('progGrading').checked = !!p.enableGrading;
@@ -756,6 +807,7 @@
 
             const setId = document.getElementById('progSet').value || '';
             const setName = (setId && typeof db !== 'undefined') ? (document.querySelector('#progSet option:checked')?.text || '') : '';
+            const isUnlimited = document.getElementById('progUnlimited') ? document.getElementById('progUnlimited').checked : false;
 
             const payload = {
                 code: (document.getElementById('progCode').value || '').toUpperCase(),
@@ -768,7 +820,8 @@
                 progSet: setName,
                 status: document.getElementById('progStatus').value === 'active',
                 minParticipants: 1,
-                maxParticipants: parseInt(document.getElementById('progMax').value) || 1,
+                isUnlimited: isUnlimited,
+                maxParticipants: isUnlimited ? 999999 : (parseInt(document.getElementById('progMax').value) || 1),
                 topicRegistration: document.getElementById('progTopicReg').checked,
                 enableGrading: document.getElementById('progGrading').checked,
                 gradeTemplateId: document.getElementById('progGrading').checked ? document.getElementById('progGradeTemplate').value : null,

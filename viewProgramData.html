@@ -108,7 +108,7 @@
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <button
-                    onclick="exportJudgesheet()" id="btn-judgesheet-export"
+                    onclick="openJudgeSheetModal()" id="btn-judgesheet-export"
                     class="hidden md:flex px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-full text-sm items-center gap-2 hover:bg-gray-50 font-medium text-gray-700 transition-colors">
                     <i class="fi fi-rr-download text-gray-500"></i> Judge Sheet
                 </button>
@@ -121,6 +121,10 @@
                     <!-- Dropdown Menu -->
                     <div id="optionsDropdown"
                         class="hidden absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-[100] py-2 overflow-hidden">
+                        <button onclick="handleMenuAction('export_judgesheet')"
+                            class="w-full text-left px-4 py-3 md:py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                            <i class="fi fi-rr-document-signed text-gray-500"></i> Judge Sheet
+                        </button>
                         <button onclick="handleMenuAction('add_registration')"
                             class="w-full text-left px-4 py-3 md:py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
                             <i class="fi fi-rr-add text-gray-500"></i> Add Registration
@@ -363,7 +367,7 @@
                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <h2 class="text-[12px] font-black text-gray-400 uppercase tracking-widest">INDIVIDUAL
                             REGISTRATIONS</h2>
-                        <button onclick="openRegistrationSidebar()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[12px] font-bold shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <button id="btn-add-registration" onclick="openRegistrationSidebar()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[12px] font-bold shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
                             <i class="fi fi-rr-add text-[10px]"></i> Add Registration
                         </button>
 
@@ -472,7 +476,7 @@
                                         <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Section
                                             *</label>
                                         <div class="relative">
-                                            <select id="progSection"
+                                            <select id="progSection" onchange="handleSectionChange('progSection', 'progType')"
                                                 class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer">
                                                 <option value="" disabled selected>Select Section</option>
                                             </select>
@@ -546,9 +550,18 @@
                             </button>
                             <div id="acc-limits" class="hidden p-6 border-t border-gray-100 bg-gray-50/30">
                                 <div class="grid grid-cols-1 gap-6">
-                                    <div>
-                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Maximum
-                                            Participants</label>
+                                    <div id="unlimitedCheckboxContainer" class="hidden flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                        <div>
+                                            <h4 class="text-[14px] font-semibold text-gray-800">Unlimited Participants</h4>
+                                            <p class="text-[12px] text-gray-500 mt-0.5">Enable unlimited participant registrations for this program (no fixed participant entry columns in Team Manager).</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="progUnlimited" class="sr-only peer" onchange="toggleUnlimitedMaxInput()">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                        </label>
+                                    </div>
+                                    <div id="maxParticipantsContainer">
+                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5" id="progMaxLabel">Maximum Participants</label>
                                         <input type="number" id="progMax" value="1" min="1"
                                             class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                     </div>
@@ -772,6 +785,124 @@
         </div>
     </div>
 
+    <!-- Judge Sheet Export Modal -->
+    <div id="judgesheetModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-transform duration-300 scale-95 overflow-hidden" id="judgesheetModalContent">
+            <div class="flex justify-between items-center pb-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shadow-sm border border-blue-100/60">
+                        <i class="fi fi-rr-document-signed"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Export Judge Sheet</h3>
+                        <p class="text-xs text-gray-500 font-medium">Download printable judgement sheet image</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeJudgeSheetModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 flex items-center justify-center transition-colors">
+                    <i class="fi fi-rr-cross text-xs"></i>
+                </button>
+            </div>
+
+            <div class="py-5 space-y-5">
+                <!-- Program Mode Info Card -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Program Format</div>
+                            <div id="jsm-prog-mode-title" class="text-sm font-bold text-slate-800 mt-0.5">Detecting mode...</div>
+                        </div>
+                        <span id="jsm-prog-mode-badge" class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200 shrink-0">
+                            Auto Mode
+                        </span>
+                    </div>
+                    <p id="jsm-prog-mode-desc" class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">
+                        Loading format configuration...
+                    </p>
+                </div>
+
+                <!-- Select Export Format (PDF vs PNG) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                        Export Format
+                    </label>
+                    <div class="grid grid-cols-2 gap-3" id="jsm-file-formats">
+                        <label class="flex items-center gap-3 p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 cursor-pointer transition-all shadow-sm" id="jsm-format-pdf-label">
+                            <input type="radio" name="jsmFormat" value="pdf" checked onchange="toggleExportFormatOptions()" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                            <div>
+                                <div class="text-xs font-bold text-blue-900 flex items-center gap-1.5"><i class="fi fi-rr-file-pdf text-red-500 text-sm"></i> PDF Document</div>
+                                <div class="text-[10px] text-blue-600 font-medium mt-0.5" id="jsm-pdf-subtext">Multi-page PDF (1 page per judge)</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-all" id="jsm-format-png-label">
+                            <input type="radio" name="jsmFormat" value="png" onchange="toggleExportFormatOptions()" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                            <div>
+                                <div class="text-xs font-bold text-gray-800 flex items-center gap-1.5"><i class="fi fi-rr-picture text-blue-500 text-sm"></i> PNG Image</div>
+                                <div class="text-[10px] text-gray-400 font-medium mt-0.5">High-res image</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Select Number of Judges -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                        Number of Judges (Pages / Sheets)
+                    </label>
+                    <div class="grid grid-cols-4 gap-2.5" id="jsm-judge-counts">
+                        <button type="button" onclick="selectJudgeCount(1)" data-count="1" class="jsm-judge-btn py-3 px-2 rounded-2xl border border-gray-200 text-center font-bold text-sm hover:border-blue-500 transition-all flex flex-col items-center gap-0.5 bg-white text-gray-700">
+                            <span class="text-sm font-black">1</span>
+                            <span class="text-[10px] text-gray-400 font-medium">Judge</span>
+                        </button>
+                        <button type="button" onclick="selectJudgeCount(2)" data-count="2" class="jsm-judge-btn active py-3 px-2 rounded-2xl border-2 border-blue-600 bg-blue-50/70 text-blue-700 text-center font-bold text-sm shadow-sm transition-all flex flex-col items-center gap-0.5">
+                            <span class="text-sm font-black">2</span>
+                            <span class="text-[10px] text-blue-600 font-medium">Judges</span>
+                        </button>
+                        <button type="button" onclick="selectJudgeCount(3)" data-count="3" class="jsm-judge-btn py-3 px-2 rounded-2xl border border-gray-200 text-center font-bold text-sm hover:border-blue-500 transition-all flex flex-col items-center gap-0.5 bg-white text-gray-700">
+                            <span class="text-sm font-black">3</span>
+                            <span class="text-[10px] text-gray-400 font-medium">Judges</span>
+                        </button>
+                        <button type="button" onclick="selectJudgeCount(4)" data-count="4" class="jsm-judge-btn py-3 px-2 rounded-2xl border border-gray-200 text-center font-bold text-sm hover:border-blue-500 transition-all flex flex-col items-center gap-0.5 bg-white text-gray-700">
+                            <span class="text-sm font-black">4</span>
+                            <span class="text-[10px] text-gray-400 font-medium">Judges</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Arrangement Option for PNG mode with multiple judges -->
+                <div id="jsm-layout-container" class="hidden">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Arrangement in Single Image
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors bg-white">
+                            <input type="radio" name="jsmLayout" value="side-by-side" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                            <div>
+                                <div class="text-xs font-bold text-gray-800">Side-by-Side</div>
+                                <div class="text-[10px] text-gray-400 font-medium">Horizontal view</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors bg-white">
+                            <input type="radio" name="jsmLayout" value="stacked" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                            <div>
+                                <div class="text-xs font-bold text-gray-800">Stacked</div>
+                                <div class="text-[10px] text-gray-400 font-medium">Vertical view</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeJudgeSheetModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="btn-confirm-js-export" onclick="confirmJudgeSheetExport()" class="px-6 py-2.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-md hover:bg-blue-700 transition-all flex items-center gap-2">
+                    <i class="fi fi-rr-download"></i> Export Judge Sheet
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Toast helper — uses parent dashboard's showToast if available, else Toastify
         function vpToast(msg, color) {
@@ -834,6 +965,10 @@
         };
 
         window.openRegistrationSidebar = function() {
+            if (window.currentProgram && (window.currentProgram.isUnlimited || window.currentProgram.maxParticipants === 'unlimited')) {
+                if (typeof vpToast === 'function') vpToast('🚫 Cannot add registrations: General Unlimited program open to all candidates.', '#F59E0B');
+                return;
+            }
             const overlay = document.getElementById('registrationOverlay');
             const sidebar = document.getElementById('registrationSidebar');
             if(!overlay || !sidebar) return;
@@ -1201,10 +1336,174 @@
             }
         };
 
-        // Export Judgesheet mechanism
-        window.exportJudgesheet = async function() {
-            vpToast("⏳ Cooking the judgementsheet preview...", "#F59E0B");
-            
+        // -------------------------------------------------------------
+        // JUDGE SHEET EXPORT & MULTI-JUDGE DOM2IMAGE LOGIC
+        // -------------------------------------------------------------
+        // -------------------------------------------------------------
+        // JUDGE SHEET EXPORT & MULTI-JUDGE DOM2IMAGE / PDF LOGIC
+        // -------------------------------------------------------------
+        window.selectedJudgeCount = 2;
+
+        window.toggleExportFormatOptions = function() {
+            const formatRadios = document.getElementsByName('jsmFormat');
+            let format = 'pdf';
+            for (let r of formatRadios) { if (r.checked) format = r.value; }
+
+            const pdfLabel = document.getElementById('jsm-format-pdf-label');
+            const pngLabel = document.getElementById('jsm-format-png-label');
+            const layoutContainer = document.getElementById('jsm-layout-container');
+
+            if (format === 'pdf') {
+                if (pdfLabel) pdfLabel.className = "flex items-center gap-3 p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 cursor-pointer transition-all shadow-sm";
+                if (pngLabel) pngLabel.className = "flex items-center gap-3 p-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-all";
+                if (layoutContainer) layoutContainer.classList.add('hidden');
+            } else {
+                if (pngLabel) pngLabel.className = "flex items-center gap-3 p-3 rounded-2xl border-2 border-blue-600 bg-blue-50/70 cursor-pointer transition-all shadow-sm";
+                if (pdfLabel) pdfLabel.className = "flex items-center gap-3 p-3 rounded-2xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-all";
+                if (layoutContainer && window.selectedJudgeCount > 1) {
+                    layoutContainer.classList.remove('hidden');
+                }
+            }
+        };
+
+        window.selectJudgeCount = function(count) {
+            window.selectedJudgeCount = count;
+            document.querySelectorAll('#jsm-judge-counts button').forEach(btn => {
+                const c = parseInt(btn.getAttribute('data-count'));
+                if (c === count) {
+                    btn.className = "jsm-judge-btn active py-3 px-2 rounded-2xl border-2 border-blue-600 bg-blue-50/70 text-blue-700 text-center font-bold text-sm shadow-sm transition-all flex flex-col items-center gap-0.5";
+                    btn.querySelector('span:last-child').className = "text-[10px] text-blue-600 font-medium";
+                } else {
+                    btn.className = "jsm-judge-btn py-3 px-2 rounded-2xl border border-gray-200 text-center font-bold text-sm hover:border-blue-500 transition-all flex flex-col items-center gap-0.5 bg-white text-gray-700";
+                    btn.querySelector('span:last-child').className = "text-[10px] text-gray-400 font-medium";
+                }
+            });
+
+            const subtext = document.getElementById('jsm-pdf-subtext');
+            if (subtext) {
+                subtext.innerText = count > 1 ? `Multi-page PDF (${count} pages, 1 per judge)` : 'Single page PDF';
+            }
+
+            const formatRadios = document.getElementsByName('jsmFormat');
+            let format = 'pdf';
+            for (let r of formatRadios) { if (r.checked) format = r.value; }
+
+            const layoutContainer = document.getElementById('jsm-layout-container');
+            if (layoutContainer) {
+                if (count > 1 && format === 'png') {
+                    layoutContainer.classList.remove('hidden');
+                } else {
+                    layoutContainer.classList.add('hidden');
+                }
+            }
+        };
+
+        window.openJudgeSheetModal = function() {
+            const overlay = document.getElementById('judgesheetModalOverlay');
+            const content = document.getElementById('judgesheetModalContent');
+            if (!overlay || !content) {
+                window.exportJudgesheet();
+                return;
+            }
+
+            const p = window.currentProgram || {};
+            const isGroup = (p.type || '').toLowerCase() === 'group' || (p.section || '').toLowerCase() === 'kulliya';
+
+            const titleEl = document.getElementById('jsm-prog-mode-title');
+            const badgeEl = document.getElementById('jsm-prog-mode-badge');
+            const descEl = document.getElementById('jsm-prog-mode-desc');
+
+            if (isGroup) {
+                if (titleEl) titleEl.innerText = "Group Program";
+                if (badgeEl) {
+                    badgeEl.innerText = "Group Mode (Comma Separated)";
+                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200 shrink-0";
+                }
+                if (descEl) descEl.innerText = "Group registrations will be listed as entry codes (A, B, C...) with candidate names joined by commas (e.g. Candidate 1, Candidate 2).";
+            } else {
+                if (titleEl) titleEl.innerText = "General / Individual Program";
+                if (badgeEl) {
+                    badgeEl.innerText = "Individual Mode";
+                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200 shrink-0";
+                }
+                if (descEl) descEl.innerText = "Candidates will be listed individually with separate chest numbers and unique code letters.";
+            }
+
+            window.selectJudgeCount(2);
+
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeJudgeSheetModal = function() {
+            const overlay = document.getElementById('judgesheetModalOverlay');
+            const content = document.getElementById('judgesheetModalContent');
+            if (!overlay || !content) return;
+
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                overlay.classList.remove('flex');
+                overlay.classList.add('hidden');
+            }, 200);
+        };
+
+        window.confirmJudgeSheetExport = function() {
+            const count = window.selectedJudgeCount || 2;
+            const layoutRadios = document.getElementsByName('jsmLayout');
+            let layoutStyle = 'side-by-side';
+            for (let r of layoutRadios) {
+                if (r.checked) layoutStyle = r.value;
+            }
+            const formatRadios = document.getElementsByName('jsmFormat');
+            let format = 'pdf';
+            for (let r of formatRadios) {
+                if (r.checked) format = r.value;
+            }
+            window.closeJudgeSheetModal();
+            window.processJudgesheetExport(count, layoutStyle, format);
+        };
+
+        window.exportJudgesheet = function() {
+            window.openJudgeSheetModal();
+        };
+
+        window.processJudgesheetExport = async function(judgeCount = 2, layoutStyle = 'side-by-side', exportFormat = 'pdf') {
+            vpToast(`⏳ Cooking ${exportFormat.toUpperCase()} judgement sheet preview...`, "#F59E0B");
+
+            // Load libraries
+            if (exportFormat === 'pdf' && typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                } catch (e) {
+                    console.warn("jsPDF failed to load");
+                }
+            }
+
+            if (typeof domtoimage === 'undefined') {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = "https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js";
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                } catch (e) {
+                    console.warn("dom-to-image script failed to load, fallback will be used.");
+                }
+            }
+
             if (typeof html2canvas === 'undefined') {
                 try {
                     await new Promise((resolve, reject) => {
@@ -1219,7 +1518,7 @@
                     return;
                 }
             }
-            
+
             const db = window.db;
             const pId = localStorage.getItem('viewProgramId');
             if(!db || !pId) return;
@@ -1231,16 +1530,31 @@
                 if(cDoc.exists) cfg = Object.assign(cfg, cDoc.data());
 
                 const cfgContent = cfg.content || {};
-                const festivalName = cfgContent.festivalName || 'OFFICIAL JUDGEMENT SHEET';
+                const festivalName = cfgContent.festivalName || cfg.festivalName || 'OFFICIAL JUDGEMENT SHEET';
                 const subtitle = cfgContent.subtitle || '';
                 const location = cfgContent.location || '';
-                const footerNote = cfgContent.footerNote || '';
                 const candidateLimit = parseInt(cfgContent.candidateLimit) || 0;
-                const listAllGroupMembers = !!cfgContent.listAllGroupMembers;
+
+                // Logo fetching logic
+                let festivalLogo = cfgContent.logo || cfg.logo || '';
+                if (!festivalLogo) {
+                    try {
+                        const festDoc = await db.collection('config').doc('website').get();
+                        if (festDoc.exists && festDoc.data().logo) {
+                            festivalLogo = festDoc.data().logo;
+                        }
+                    } catch(e){}
+                }
+                if (!festivalLogo) {
+                    festivalLogo = 'logo-512.svg';
+                }
 
                 // Fetch program details
                 const pDoc = await db.collection('programs').doc(pId).get();
                 const prog = pDoc.exists ? pDoc.data() : {name: 'Unknown', code: 'PRG', section: 'Unknown'};
+
+                // Determine group program mode
+                const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
 
                 // Fetch candidates & registrations
                 const candSnap = await db.collection('candidates').get();
@@ -1250,41 +1564,70 @@
 
                 // Group by team and find candidates
                 let teamGroups = {};
-                regs.forEach(reg => {
-                    const tName = reg.team || 'Solo Participant';
-                    if(!teamGroups[tName]) teamGroups[tName] = [];
-                    if(reg.chestNumbers) {
-                        reg.chestNumbers.forEach(chest => {
-                            const cand = allCands.find(c => c.chestNo === chest && c.team === reg.team);
-                            if(cand) {
+                if (regs.length > 0) {
+                    regs.forEach(reg => {
+                        const tName = reg.team || (reg.chestNo ? 'Solo Participant' : 'Individual');
+                        if(!teamGroups[tName]) teamGroups[tName] = [];
+                        const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                        
+                        if (chestsList.length > 0) {
+                            chestsList.forEach(chest => {
+                                const cand = allCands.find(c => String(c.chestNo).trim() === String(chest).trim() || String(c.id) === String(chest));
                                 teamGroups[tName].push({
                                     chestNo: chest,
-                                    name: cand.name,
+                                    name: cand ? cand.name : (reg.candidateName || reg.name || `Chest #${chest}`),
                                     team: tName
                                 });
-                            }
-                        });
-                    }
-                });
+                            });
+                        } else if (reg.candidateName || reg.name) {
+                            teamGroups[tName].push({
+                                chestNo: reg.chestNo || '---',
+                                name: reg.candidateName || reg.name || 'Participant',
+                                team: tName
+                            });
+                        }
+                    });
+                }
 
-                // Shuffle logic round-robin to avoid consecutive team members
+                // Fallback for General/Unlimited programs without explicit registration docs
+                if (Object.keys(teamGroups).length === 0 && allCands.length > 0) {
+                    const secCands = allCands.filter(c => {
+                        const cSec = (c.section || '').toLowerCase().trim();
+                        const pSec = (prog.section || '').toLowerCase().trim();
+                        return cSec && pSec && cSec === pSec;
+                    });
+
+                    (secCands.length > 0 ? secCands : allCands).forEach(cand => {
+                        const tName = cand.team || 'Solo Participant';
+                        if (!teamGroups[tName]) teamGroups[tName] = [];
+                        teamGroups[tName].push({
+                            chestNo: cand.chestNo || '---',
+                            name: cand.name || 'Candidate',
+                            team: tName
+                        });
+                    });
+                }
+
                 let finalCands = [];
-                if (prog.type && (prog.type.toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya') && listAllGroupMembers) {
+                if (isGroup) {
+                    // Group Program Mode: Each team registration is 1 entry with comma-separated names
                     for(let t in teamGroups) {
                         if (teamGroups[t].length > 0) {
+                            const chestNos = teamGroups[t].map(c => c.chestNo).filter(b => b && b !== '---').join(', ');
+                            const names = teamGroups[t].map(c => c.name).filter(Boolean).join(', ');
                             finalCands.push({
-                                chestNo: teamGroups[t].map(c => c.chestNo).join(', '),
-                                name: teamGroups[t].map(c => c.name).join(', '),
+                                chestNo: chestNos || '---',
+                                name: names || 'Group Members',
                                 team: t
                             });
                         }
                     }
                     finalCands.sort(() => Math.random() - 0.5);
                 } else {
+                    // General Program Mode: Round-robin shuffle candidates across teams
                     let maxDepth = 0;
                     for(let t in teamGroups) {
                          if(teamGroups[t].length > maxDepth) maxDepth = teamGroups[t].length;
-                         // internal candidate shuffle per team
                          teamGroups[t].sort(() => Math.random() - 0.5);
                     }
                     const teamNames = Object.keys(teamGroups);
@@ -1295,7 +1638,7 @@
                     }
                 }
 
-                // If no candidates, provide dummy rows corresponding to maxParticipants
+                // If no candidates at all, provide standard participant rows
                 if(finalCands.length === 0 && candidateLimit === 0) {
                     for(let i=1; i<= (prog.maxParticipants || 5); i++) {
                         finalCands.push({chestNo: ``, name: '', team: ''});
@@ -1309,109 +1652,250 @@
                     }
                 }
 
-                // Build Table header dynamically
-                let thHtml = '<tr style="background: #1e293b; color: #ffffff;">';
-                if(cfg.cols.codeLetter) thHtml += '<th style="padding:10px; border-right:1px solid #334155; text-align:center; width:50px; font-size:10px; font-weight:900; letter-spacing:1px;">CODE</th>';
-                if(cfg.cols.chestNo) thHtml += '<th style="padding:10px; border-right:1px solid #334155; text-align:center; width:60px; font-size:10px; font-weight:900; letter-spacing:1px;">CHEST</th>';
-                if(cfg.cols.candidate !== false) thHtml += '<th style="padding:10px; border-right:1px solid #334155; text-align:left; font-size:10px; font-weight:900; letter-spacing:1px;"><i class="fi fi-rr-user"></i> CANDIDATE</th>';
-                if(cfg.cols.team !== false) thHtml += '<th style="padding:10px; border-right:1px solid #334155; text-align:left; font-size:10px; font-weight:900; letter-spacing:1px;"><i class="fi fi-rr-users-alt"></i> TEAM</th>';
-                if(cfg.cols.grade) thHtml += '<th style="padding:10px; border-right:1px solid #334155; text-align:center; width:90px; font-size:10px; font-weight:900; letter-spacing:1px;"><i class="fi fi-rr-star"></i> GRADE</th>';
-                if(cfg.cols.points) thHtml += '<th style="padding:10px; border-right:1px solid #334155; text-align:center; width:90px; font-size:10px; font-weight:900; letter-spacing:1px;"><i class="fi fi-rr-dashboard"></i> POINTS</th>';
-                if(cfg.cols.remarks) thHtml += '<th style="padding:10px; text-align:left; font-size:10px; font-weight:900; letter-spacing:1px;"><i class="fi fi-rr-comment"></i> REMARKS</th>';
+                // Build Table header with official brand color #134E8E
+                let thHtml = '<tr style="background: #134E8E; color: #ffffff; text-transform: uppercase; font-size: 9px; font-weight: 900; letter-spacing: 1px;">';
+                if(cfg.cols.codeLetter) thHtml += '<th style="padding: 8px 10px; border-right: 1px solid #1e40af; text-align: center; width: 50px;">CODE</th>';
+                if(cfg.cols.chestNo) thHtml += '<th style="padding: 8px 10px; border-right: 1px solid #1e40af; text-align: center; width: 70px;">CHEST</th>';
+                if(cfg.cols.candidate !== false) thHtml += '<th style="padding: 8px 10px; border-right: 1px solid #1e40af; text-align: left;">CANDIDATE / PARTICIPANTS</th>';
+                if(cfg.cols.team !== false) thHtml += '<th style="padding: 8px 10px; border-right: 1px solid #1e40af; text-align: left; width: 110px;">TEAM</th>';
+                if(cfg.cols.grade) thHtml += '<th style="padding: 8px 10px; border-right: 1px solid #1e40af; text-align: center; width: 70px;">GRADE</th>';
+                if(cfg.cols.points) thHtml += '<th style="padding: 8px 10px; border-right: 1px solid #1e40af; text-align: center; width: 70px;">POINTS</th>';
+                if(cfg.cols.remarks) thHtml += '<th style="padding: 8px 10px; text-align: left; width: 130px;">REMARKS</th>';
                 thHtml += '</tr>';
 
-                // Build Table body dynamically
+                // Build Table body dynamically with compact row height
                 let tbHtml = '';
                 finalCands.forEach((c, i) => {
                     const rowBg = i % 2 === 0 ? '#f8fafc' : '#ffffff';
-                    tbHtml += `<tr style="background-color: ${rowBg};">`;
-                    if(cfg.cols.codeLetter) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0; text-align:center; font-weight:800; color:#0f172a; font-size:14px;">${String.fromCharCode(65 + i)}</td>`;
-                    if(cfg.cols.chestNo) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0; text-align:center; font-weight:900; color:#1e293b; font-size:14px;">${c.chestNo}</td>`;
-                    if(cfg.cols.candidate !== false) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0; font-weight:900; color:#0f172a; font-size:12px; text-transform:uppercase;">${c.name}</td>`;
-                    if(cfg.cols.team !== false) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0; font-weight:700; font-size:9px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px;">${c.team}</td>`;
-                    if(cfg.cols.grade) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0;"></td>`;
-                    if(cfg.cols.points) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0;"></td>`;
-                    if(cfg.cols.remarks) tbHtml += `<td style="padding:15px 12px; border:1px solid #e2e8f0;"></td>`;
+                    tbHtml += `<tr style="background-color: ${rowBg}; border-bottom: 1px solid #e2e8f0;">`;
+                    if(cfg.cols.codeLetter) tbHtml += `<td style="padding:8px 10px; border-right:1px solid #e2e8f0; text-align:center; font-weight:800; color:#134E8E; font-size:12px;">${String.fromCharCode(65 + i)}</td>`;
+                    if(cfg.cols.chestNo) tbHtml += `<td style="padding:8px 10px; border-right:1px solid #e2e8f0; text-align:center; font-weight:900; color:#0f172a; font-size:11px;">${c.chestNo || ''}</td>`;
+                    if(cfg.cols.candidate !== false) tbHtml += `<td style="padding:8px 10px; border-right:1px solid #e2e8f0; font-weight:800; color:#0f172a; font-size:10px; text-transform:uppercase; line-height:1.3;">${c.name || ''}</td>`;
+                    if(cfg.cols.team !== false) tbHtml += `<td style="padding:8px 10px; border-right:1px solid #e2e8f0; font-weight:700; font-size:9px; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">${c.team || ''}</td>`;
+                    if(cfg.cols.grade) tbHtml += `<td style="padding:8px 10px; border-right:1px solid #e2e8f0;"></td>`;
+                    if(cfg.cols.points) tbHtml += `<td style="padding:8px 10px; border-right:1px solid #e2e8f0;"></td>`;
+                    if(cfg.cols.remarks) tbHtml += `<td style="padding:8px 10px;"></td>`;
                     tbHtml += '</tr>';
                 });
 
-
-                // Build Info fields HTML dynamically
-                let infoHtml = '<div style="display:flex; flex-wrap:wrap; gap:10px; width:100%; margin-top:24px; font-size:13px; font-weight:bold; color:#334155;">';
-                if(cfg.info?.date) infoHtml += `<div style="flex:1; border:1px solid #e2e8f0; background:#ffffff; padding:8px 12px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-width:110px;"><div style="font-size:8px; color:#94a3b8; text-transform:uppercase; margin-bottom:2px; letter-spacing:1px; font-weight:900;"><i class="fi fi-rr-calendar"></i> Date</div><div style="color:#1e293b;">${new Date().toLocaleDateString()}</div></div>`;
-                if(cfg.info?.venue) infoHtml += `<div style="flex:1; border:1px solid #e2e8f0; background:#ffffff; padding:8px 12px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-width:110px;"><div style="font-size:8px; color:#94a3b8; text-transform:uppercase; margin-bottom:2px; letter-spacing:1px; font-weight:900;"><i class="fi fi-rr-marker"></i> Venue</div><div style="color:#1e293b;">${prog.venue || 'Main Stage'}</div></div>`;
-                if(cfg.info?.name) infoHtml += `<div style="flex:1; border:1px solid #e2e8f0; background:#ffffff; padding:8px 12px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-width:110px;"><div style="font-size:8px; color:#94a3b8; text-transform:uppercase; margin-bottom:2px; letter-spacing:1px; font-weight:900;"><i class="fi fi-rr-document"></i> Program</div><div style="color:#1e293b;">${prog.name}</div></div>`;
-                if(cfg.info?.code) infoHtml += `<div style="flex:1; border:1px solid #e2e8f0; background:#ffffff; padding:8px 12px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-width:110px;"><div style="font-size:8px; color:#94a3b8; text-transform:uppercase; margin-bottom:2px; letter-spacing:1px; font-weight:900;"><i class="fi fi-rr-hashtag"></i> Code</div><div style="color:#1e293b;">${prog.code || '---'}</div></div>`;
-                if(cfg.info?.section) infoHtml += `<div style="flex:1; border:1px solid #e2e8f0; background:#ffffff; padding:8px 12px; border-radius:8px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-width:110px;"><div style="font-size:8px; color:#94a3b8; text-transform:uppercase; margin-bottom:2px; letter-spacing:1px; font-weight:900;"><i class="fi fi-rr-folders"></i> Section</div><div style="color:#1e293b;">${prog.section || '---'}</div></div>`;
-                infoHtml += '</div>';
-
-                const hiddenDiv = document.createElement('div');
-                // Build a full robust URL for the QR
                 let cleanUrl = window.location.href.split('?')[0]; 
                 const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(cleanUrl + "?id=" + pId + "&src=qr");
 
+                // Helper to create HTML for a single judge sheet (Compact Reduced Size)
+                const createSingleSheetHtml = (judgeIndex) => {
+                    return `
+                    <div id="pdfSingleSheet_${judgeIndex}" style="padding: 24px 28px; background: #ffffff; width: 750px; min-height: 980px; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0f172a; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #cbd5e1; border-radius: 16px;">
+                        <div>
+                            <!-- Festival Brand Color Gradient Line -->
+                            <div style="height: 5px; width: 100%; border-top-left-radius: 16px; border-top-right-radius: 16px; background: linear-gradient(90deg, #134E8E 0%, #00A3E0 35%, #09ABB1 60%, #FFC20E 80%, #EA3650 100%); margin-bottom: 2px;"></div>
+                            
+                            <!-- Compact Header with Logo & Name -->
+                            <div style="padding: 14px 0 12px 0; margin-bottom: 14px; border-bottom: 2px solid #134E8E; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 44px; height: 44px; border-radius: 10px; background: #ffffff; border: 1px solid #cbd5e1; padding: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <img src="${festivalLogo}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" crossorigin="anonymous" onerror="this.style.display='none'" />
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <div style="font-size: 16px; font-weight: 900; color: #134E8E; letter-spacing: -0.2px; line-height: 1.1; text-transform: uppercase;">
+                                            ${festivalName || 'OFFICIAL JUDGEMENT SHEET'}
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; color: #475569; letter-spacing: 0.5px; text-transform: uppercase;">
+                                            <span>VENUE: ${location || 'MAIN AUDITORIUM'}</span>
+                                            <span style="color:#cbd5e1;">&bull;</span>
+                                            <span>FESTIVAL: ${subtitle || 'ANNUAL FESTIVAL'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 10px; shrink-0;">
+                                    <div style="background: #134E8E; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; text-align: center; border-bottom: 2px solid #FFC20E; white-space: nowrap; flex-shrink: 0;">
+                                        JUDGE ${judgeIndex} OF ${judgeCount}
+                                    </div>
+                                    <div style="padding: 3px; background: #ffffff; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                                        <img src="${qrUrl}" alt="QR" style="width: 38px; height: 38px; display: block;" crossorigin="anonymous" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Compact Info Grid -->
+                            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px;">
+                                <div style="border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 8px; border-radius: 8px;">
+                                    <div style="font-size: 8px; font-weight: 900; color: #134E8E; text-transform: uppercase; margin-bottom: 2px;">DATE</div>
+                                    <div style="font-size: 11px; font-weight: 800; color: #0f172a;">${new Date().toLocaleDateString()}</div>
+                                </div>
+                                <div style="border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 8px; border-radius: 8px;">
+                                    <div style="font-size: 8px; font-weight: 900; color: #134E8E; text-transform: uppercase; margin-bottom: 2px;">VENUE</div>
+                                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase;">${prog.venue || 'MAIN STAGE'}</div>
+                                </div>
+                                <div style="border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 8px; border-radius: 8px; grid-column: span 2;">
+                                    <div style="font-size: 8px; font-weight: 900; color: #134E8E; text-transform: uppercase; margin-bottom: 2px;">PROGRAM</div>
+                                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase;">${prog.name || '---'}</div>
+                                </div>
+                                <div style="border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 8px; border-radius: 8px;">
+                                    <div style="font-size: 8px; font-weight: 900; color: #134E8E; text-transform: uppercase; margin-bottom: 2px;">CODE &amp; SECTION</div>
+                                    <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase;">${prog.code || '---'} &bull; ${prog.section || '---'}</div>
+                                </div>
+                            </div>
+
+                            <!-- Table -->
+                            <div style="border: 1.5px solid #134E8E; border-radius: 10px; overflow: hidden; background: #ffffff;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                    <thead>
+                                        ${thHtml}
+                                    </thead>
+                                    <tbody>
+                                        ${tbHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Compact Footer -->
+                        <div style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase;">
+                                <span>OFFICIAL EVALUATION SHEET</span>
+                                <span>&bull;</span>
+                                <span>JUDGE ${judgeIndex} OF ${judgeCount}</span>
+                            </div>
+                            <div style="font-size: 10px; font-weight: 900; color: #134E8E; text-transform: uppercase; display: flex; align-items: flex-end;">
+                                JUDGE ${judgeIndex} SIGNATURE: <span style="border-bottom: 1.5px solid #134E8E; width: 160px; margin-left: 8px; display: inline-block;"></span>
+                            </div>
+                        </div>
+                    </div>`;
+                };
+
+                // MULTI-PAGE PDF EXPORT BRANCH
+                if (exportFormat === 'pdf') {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.style.position = 'absolute';
+                    tempDiv.style.left = '-9999px';
+                    tempDiv.style.top = '-9999px';
+
+                    let sheetsHtml = '';
+                    for (let j = 1; j <= judgeCount; j++) {
+                        sheetsHtml += createSingleSheetHtml(j);
+                    }
+                    tempDiv.innerHTML = sheetsHtml;
+                    document.body.appendChild(tempDiv);
+
+                    setTimeout(async () => {
+                        try {
+                            const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+                            if (!jsPDFLib) {
+                                throw new Error("jsPDF library not loaded");
+                            }
+                            const pdf = new jsPDFLib('p', 'mm', 'a4');
+                            const pdfWidth = pdf.internal.pageSize.getWidth(); // 210 mm
+                            const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+
+                            for (let j = 1; j <= judgeCount; j++) {
+                                const sheetNode = document.getElementById(`pdfSingleSheet_${j}`);
+                                let imgData;
+
+                                if (typeof domtoimage !== 'undefined' && domtoimage.toPng) {
+                                    try {
+                                        imgData = await domtoimage.toPng(sheetNode, { bgcolor: '#ffffff', quality: 0.98 });
+                                    } catch (e) {
+                                        console.warn("dom2image error page " + j, e);
+                                    }
+                                }
+
+                                if (!imgData && typeof html2canvas !== 'undefined') {
+                                    const canvas = await html2canvas(sheetNode, { scale: 2, useCORS: true, logging: false });
+                                    imgData = canvas.toDataURL('image/png');
+                                }
+
+                                if (imgData) {
+                                    if (j > 1) pdf.addPage();
+                                    const imgProps = pdf.getImageProperties(imgData);
+                                    const margin = 10;
+                                    const renderWidth = pdfWidth - (margin * 2); // 190mm
+                                    const renderHeight = (imgProps.height * renderWidth) / imgProps.width;
+                                    const topMargin = Math.max(margin, (pdfHeight - renderHeight) / 2);
+
+                                    pdf.addImage(imgData, 'PNG', margin, topMargin, renderWidth, Math.min(renderHeight, pdfHeight - (margin * 2)));
+                                }
+                            }
+
+                            pdf.save(`Judgesheet_${prog.code || pId}_${judgeCount}Judges.pdf`);
+                            if (document.body.contains(tempDiv)) document.body.removeChild(tempDiv);
+                            vpToast(`✅ Downloaded ${judgeCount}-Page PDF Judge Sheet successfully!`, "#10b981");
+                        } catch (err) {
+                            console.error(err);
+                            if (document.body.contains(tempDiv)) document.body.removeChild(tempDiv);
+                            vpToast("❌ Error generating PDF document: " + err.message, "#EF4444");
+                        }
+                    }, 1200);
+
+                    return;
+                }
+
+                // PNG IMAGE EXPORT BRANCH
+                let sheetsContent = '';
+                for (let j = 1; j <= judgeCount; j++) {
+                    sheetsContent += createSingleSheetHtml(j);
+                }
+
+                const isSideBySide = (layoutStyle === 'side-by-side' && judgeCount > 1);
+                const containerFlexDir = isSideBySide ? 'row' : 'column';
+
+                const hiddenDiv = document.createElement('div');
+                hiddenDiv.style.position = 'absolute';
+                hiddenDiv.style.left = '-9999px';
+                hiddenDiv.style.top = '-9999px';
+
                 hiddenDiv.innerHTML = `
-                <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
-                <div id="exportWrapper" style="padding:40px; background:white; width: 850px; text-transform: uppercase; font-family: 'Inter', sans-serif; color: #1e293b;">
-                    <!-- Minimal Premium Header -->
-                    <div style="border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                        <div style="height: 6px; width: 100%; background: linear-gradient(90deg, #2563eb, #8b5cf6, #ec4899);"></div>
-                        <div style="padding: 24px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                            <div style="display:flex; flex-direction:column;">
-                                <div style="display:flex; align-items:center; gap:10px; margin-bottom: 4px;">
-                                    <i class="fi fi-rr-award" style="font-size: 24px; color: #2563eb;"></i>
-                                    <h1 style="margin:0; font-size: 20px; font-weight: 900; letter-spacing: 0.5px; color: #0f172a;">${festivalName || 'OFFICIAL JUDGEMENT SHEET'}</h1>
-                                </div>
-                                <div style="display: flex; gap: 15px; margin-top: 4px; font-size: 10px; font-weight: 800; color: #94a3b8; letter-spacing: 1px;">
-                                    <span style="display:flex; align-items:center; gap:4px;"><i class="fi fi-rr-marker"></i> ${location || 'MAIN AUDITORIUM'}</span>
-                                    <span style="display:flex; align-items:center; gap:4px;"><i class="fi fi-rr-star"></i> ${subtitle || 'ANNUAL FESTIVAL'}</span>
-                                </div>
-                            </div>
-                            <div style="padding: 6px; background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
-                                <img src="${qrUrl}" alt="QR" style="width: 50px; height: 50px; display: block;" crossorigin="anonymous" />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${infoHtml}
-                    
-                    <div style="margin-top:24px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <table style="width:100%; border-collapse: collapse; font-size:12px;">
-                            ${thHtml}
-                            ${tbHtml}
-                        </table>
-                    </div>
-                    
-                    <div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
-                        <div style="font-size: 10px; font-weight: 800; color: #cbd5e1; display:flex; align-items:center; gap:6px;">
-                            <i class="fi fi-rr-info"></i> GENERATED VIA FEST MANAGER
-                        </div>
-                        <div style="font-size: 11px; font-weight: 900; color: #334155; display: flex; align-items: baseline;">
-                            JUDGE SIGNATURE: <span style="border-bottom: 2px solid #e2e8f0; width: 180px; margin-left: 10px; display: inline-block;"></span>
-                        </div>
-                    </div>
+                <div id="exportWrapper" style="padding:40px; background:#f1f5f9; display:flex; flex-direction:${containerFlexDir}; gap:30px; align-items:flex-start; justify-content:center; box-sizing:border-box;">
+                    ${sheetsContent}
                 </div>`;
+
                 document.body.appendChild(hiddenDiv);
 
                 setTimeout(() => {
-                    html2canvas(document.getElementById('exportWrapper'), { 
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: false,
-                        logging: false
-                    }).then(canvas => {
+                    const targetEl = document.getElementById('exportWrapper');
+                    
+                    const doDownload = (dataUrl) => {
                         const link = document.createElement('a');
-                        link.download = `Judgesheet_${prog.code || pId}.png`;
-                        link.href = canvas.toDataURL('image/png');
+                        link.download = `Judgesheet_${prog.code || pId}_${judgeCount}Judges.png`;
+                        link.href = dataUrl;
                         link.click();
-                        document.body.removeChild(hiddenDiv);
-                        vpToast("✅ Downloaded image successfully!", "#10b981");
-                    }).catch(err => {
-                        console.error("html2canvas error:", err);
-                        document.body.removeChild(hiddenDiv);
-                        vpToast("❌ Error generating image from preview.", "#EF4444");
-                    });
-                }, 1500);
+                        if (document.body.contains(hiddenDiv)) {
+                            document.body.removeChild(hiddenDiv);
+                        }
+                        vpToast(`✅ Downloaded ${judgeCount} Judge Sheet(s) Image successfully!`, "#10b981");
+                    };
+
+                    if (typeof domtoimage !== 'undefined' && domtoimage.toPng) {
+                        domtoimage.toPng(targetEl, {
+                            bgcolor: '#f1f5f9',
+                            quality: 0.98
+                        }).then(dataUrl => {
+                            doDownload(dataUrl);
+                        }).catch(err => {
+                            console.warn("dom2image rendering error, trying html2canvas fallback:", err);
+                            if (typeof html2canvas !== 'undefined') {
+                                html2canvas(targetEl, { scale: 2, useCORS: true, allowTaint: false, logging: false }).then(canvas => {
+                                    doDownload(canvas.toDataURL('image/png'));
+                                }).catch(e => {
+                                    console.error(e);
+                                    if (document.body.contains(hiddenDiv)) document.body.removeChild(hiddenDiv);
+                                    vpToast("❌ Error rendering judge sheet image.", "#EF4444");
+                                });
+                            } else {
+                                if (document.body.contains(hiddenDiv)) document.body.removeChild(hiddenDiv);
+                                vpToast("❌ Error rendering judge sheet image.", "#EF4444");
+                            }
+                        });
+                    } else if (typeof html2canvas !== 'undefined') {
+                        html2canvas(targetEl, { scale: 2, useCORS: true, allowTaint: false, logging: false }).then(canvas => {
+                            doDownload(canvas.toDataURL('image/png'));
+                        }).catch(err => {
+                            console.error(err);
+                            if (document.body.contains(hiddenDiv)) document.body.removeChild(hiddenDiv);
+                            vpToast("❌ Error rendering judge sheet image.", "#EF4444");
+                        });
+                    }
+                }, 1200);
 
             } catch(e) {
                 console.error(e);
@@ -1564,6 +2048,7 @@
 
                 const setId = document.getElementById('progSet').value || '';
                 const setName = (setId && typeof window.db !== 'undefined') ? (document.querySelector('#progSet option:checked')?.text || '') : '';
+                const isUnlimited = document.getElementById('progUnlimited') ? document.getElementById('progUnlimited').checked : false;
 
                 var payload = {
                     code: code, name: name, section: section,
@@ -1574,7 +2059,8 @@
                     progSet: setName,
                     status: document.getElementById('progStatus').value === 'active',
                     minParticipants: 1,
-                    maxParticipants: parseInt(document.getElementById('progMax').value) || 1,
+                    isUnlimited: isUnlimited,
+                    maxParticipants: isUnlimited ? 999999 : (parseInt(document.getElementById('progMax').value) || 1),
                     topicRegistration: document.getElementById('progTopicReg').checked,
                     enableGrading: document.getElementById('progGrading').checked,
                     gradeTemplateId: document.getElementById('progGrading').checked ? (document.getElementById('progGradeTemplate').value || null) : null,
@@ -1599,6 +2085,82 @@
                     });
             };
 
+            window.toggleGroupFields = function() {
+                const progType = document.getElementById('progType')?.value;
+                const sectionEl = document.getElementById('progSection');
+                const sectionText = sectionEl ? (sectionEl.options[sectionEl.selectedIndex]?.text || sectionEl.value || '').toLowerCase() : '';
+                const isKulliya = sectionText.includes('kulliya');
+
+                const setsContainer = document.getElementById('groupSetsContainer');
+                const participantsContainer = document.getElementById('groupParticipantsContainer');
+                const progSetContainer = document.getElementById('progSetContainer');
+                const participationLimitsAccordion = document.getElementById('accordion-participation-limits');
+                const unlimContainer = document.getElementById('unlimitedCheckboxContainer');
+                const participantsLabel = document.querySelector('#groupParticipantsContainer label');
+                
+                if (progType === 'Group') {
+                    if(setsContainer) setsContainer.classList.remove('hidden');
+                    if(participantsContainer) {
+                        participantsContainer.classList.remove('hidden');
+                        if(participantsLabel) participantsLabel.innerText = 'Participants per Set';
+                    }
+                    if(progSetContainer) progSetContainer.classList.add('hidden');
+                    if(participationLimitsAccordion) participationLimitsAccordion.classList.add('hidden');
+                } else if (progType === 'General') {
+                    if(setsContainer) setsContainer.classList.add('hidden');
+                    if(participantsContainer) participantsContainer.classList.add('hidden');
+                    if(progSetContainer) progSetContainer.classList.add('hidden');
+                    if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                    if(unlimContainer) unlimContainer.classList.remove('hidden');
+                } else {
+                    if(setsContainer) setsContainer.classList.add('hidden');
+                    if(participantsContainer) participantsContainer.classList.add('hidden');
+                    if(progSetContainer) progSetContainer.classList.remove('hidden');
+                    if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                    if(unlimContainer) {
+                        if(isKulliya) unlimContainer.classList.remove('hidden');
+                        else unlimContainer.classList.add('hidden');
+                    }
+                    if(document.getElementById('progGroupSets')) document.getElementById('progGroupSets').value = '';
+                    if(document.getElementById('progGroupParticipants')) document.getElementById('progGroupParticipants').value = '';
+                }
+            };
+
+            window.handleSectionChange = function(sectionId, typeId) {
+                const sectionEl = document.getElementById(sectionId);
+                const typeEl = document.getElementById(typeId);
+                if (sectionEl) {
+                    const text = sectionEl.options[sectionEl.selectedIndex]?.text?.toLowerCase() || '';
+                    const val = sectionEl.value?.toLowerCase() || '';
+                    const isKulliya = text.includes('kulliya') || val.includes('kulliya');
+                    if (typeEl && isKulliya && typeEl.value !== 'Group') {
+                        typeEl.value = 'General';
+                    }
+                    window.toggleGroupFields();
+                }
+            };
+
+            window.toggleUnlimitedMaxInput = function() {
+                const isUnlim = document.getElementById('progUnlimited')?.checked;
+                const maxInput = document.getElementById('progMax');
+                const maxLabel = document.getElementById('progMaxLabel');
+                if (maxInput) {
+                    if (isUnlim) {
+                        maxInput.disabled = true;
+                        maxInput.value = '';
+                        maxInput.placeholder = 'Unlimited';
+                        maxInput.classList.add('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+                        if (maxLabel) maxLabel.classList.add('text-gray-400');
+                    } else {
+                        maxInput.disabled = false;
+                        if (!maxInput.value || maxInput.value === 'Unlimited') maxInput.value = '1';
+                        maxInput.placeholder = '';
+                        maxInput.classList.remove('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+                        if (maxLabel) maxLabel.classList.remove('text-gray-400');
+                    }
+                }
+            };
+
             // Go Back
             window.goBack = function () {
                 var role = localStorage.getItem('userRole') || '';
@@ -1617,7 +2179,10 @@
                 var dropdown = document.getElementById('optionsDropdown');
                 if (dropdown) dropdown.classList.add('hidden');
 
-                if (action === 'edit') {
+                if (action === 'export_judgesheet') {
+                    if (window.openJudgeSheetModal) window.openJudgeSheetModal();
+                    else if (window.exportJudgesheet) window.exportJudgesheet();
+                } else if (action === 'edit') {
                     if (isTeamManager) { vpToast('🚫 Access Denied: Managed by Admin'); return; }
                     switchTab('settings');
                 } else if (action === 'add_results') {
@@ -1832,7 +2397,9 @@
                     } else if (p.venue) {
                         document.getElementById('vp-venue').innerText = p.venue;
                     } else {
-                        document.getElementById('vp-venue').innerText = 'No venue assigned';
+                        const cleanStr = `${p.progSet || ''} ${savedProgSet || ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const isNonStage = cleanStr.includes('nonstage') || cleanStr.includes('nonstag');
+                        document.getElementById('vp-venue').innerText = isNonStage ? 'NON-STAGE' : 'No venue assigned';
                     }
 
                     if (p.time) {
@@ -1889,6 +2456,8 @@
                     if (p.section) document.getElementById('progSection').value = p.section;
                     document.getElementById('progType').value = p.type || 'Individual';
                     toggleGroupFields();
+                    if (typeof window.handleSectionChange === 'function') window.handleSectionChange('progSection', 'progType');
+
                     if (p.type === 'Group' || (p.section || '').toLowerCase() === 'kulliya') {
                         document.getElementById('progGroupSets').value = p.groupSetsCount || '';
                         document.getElementById('progGroupParticipants').value = p.groupParticipantsPerSet || '';
@@ -1903,7 +2472,13 @@
                         document.getElementById('progSet').removeAttribute('data-pending-val');
                     }
 
-                    document.getElementById('progMax').value = p.maxParticipants || 1;
+                    const isUnlim = !!p.isUnlimited || p.maxParticipants === 'unlimited';
+                    const unlimCheck = document.getElementById('progUnlimited');
+                    if (unlimCheck) unlimCheck.checked = isUnlim;
+                    if (typeof window.toggleUnlimitedMaxInput === 'function') window.toggleUnlimitedMaxInput();
+                    if (!isUnlim) {
+                        document.getElementById('progMax').value = p.maxParticipants || 1;
+                    }
 
                     document.getElementById('progTopicReg').checked = !!p.topicRegistration;
                     document.getElementById('progGrading').checked = !!p.enableGrading;
@@ -1946,6 +2521,26 @@
                 db.collection('registrations').where('programId', '==', programId).onSnapshot(regSnap => {
                     const regs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     const regContainer = document.getElementById('registrations-list-container');
+                    const isUnlimProg = window.currentProgram && (window.currentProgram.isUnlimited || window.currentProgram.maxParticipants === 'unlimited');
+                    const addRegBtn = document.getElementById('btn-add-registration');
+
+                    if (isUnlimProg) {
+                        if (addRegBtn) addRegBtn.classList.add('hidden');
+                        if (regContainer) {
+                            regContainer.innerHTML = `
+                            <div class="text-center py-16 bg-blue-50/40 rounded-2xl border border-blue-100 p-8 my-4">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                    <i class="fi fi-rr-info text-xl"></i>
+                                </div>
+                                <h3 class="text-[16px] font-bold text-gray-800">General Program (Unlimited)</h3>
+                                <p class="text-[13px] text-gray-500 mt-1 max-w-md mx-auto leading-relaxed">This is a general program open to all candidates in the section. Candidate registrations are not entered individually by Admin or Team Managers.</p>
+                            </div>`;
+                        }
+                        return;
+                    }
+
+                    if (addRegBtn) addRegBtn.classList.remove('hidden');
+
                     if (regs.length === 0) {
                         regContainer.innerHTML = `
                         <div class="flex flex-col items-center justify-center py-32 opacity-40">
