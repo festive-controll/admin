@@ -136,7 +136,19 @@
                     </button>
                 </div>
                 <!-- Search -->
-                <div class="flex items-center gap-3 w-full sm:w-auto mt-3 sm:mt-0">
+                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto mt-3 sm:mt-0">
+                    <div class="relative w-full sm:w-auto min-w-[130px]">
+                        <select id="filter-team" onchange="applyCandFilters()" class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                            <option value="All">All Teams</option>
+                        </select>
+                        <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                    </div>
+                    <div class="relative w-full sm:w-auto min-w-[130px]">
+                        <select id="filter-category" onchange="applyCandFilters()" class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                            <option value="All">All Categories</option>
+                        </select>
+                        <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                    </div>
                     <div class="relative w-full sm:w-64">
                         <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                         <input type="text" id="search-candidates" oninput="applyCandFilters()"
@@ -496,16 +508,30 @@
 
         // FILTERING & SEARCH LOGIC
         var candSearchQuery = '';
+        var filterTeamVal = 'All';
+        var filterCategoryVal = 'All';
 
         function applyCandFilters() {
             candSearchQuery = document.getElementById('search-candidates').value.toLowerCase().trim();
+            const filterTeamEl = document.getElementById('filter-team');
+            if (filterTeamEl) filterTeamVal = filterTeamEl.value;
+            const filterCatEl = document.getElementById('filter-category');
+            if (filterCatEl) filterCategoryVal = filterCatEl.value;
             candCurrentPage = 1;
             renderUI();
         }
 
         function getFilteredCandidates() {
-            if (!candSearchQuery) return candidatesData;
-            return candidatesData.filter(c => {
+            let filtered = candidatesData;
+            if (filterTeamVal && filterTeamVal !== 'All') {
+                filtered = filtered.filter(c => c.team === filterTeamVal);
+            }
+            if (filterCategoryVal && filterCategoryVal !== 'All') {
+                filtered = filtered.filter(c => c.section === filterCategoryVal);
+            }
+            
+            if (!candSearchQuery) return filtered;
+            return filtered.filter(c => {
                 const nameMatch = c.name && c.name.toLowerCase().includes(candSearchQuery);
 
                 return nameMatch ||
@@ -1270,8 +1296,20 @@
                     activeTeamsData.push(team);
                 });
 
-                // Populate sidebar team dropdown only if element exists
+                // Populate sidebar team dropdown and filter dropdown
                 const teamSelect = document.getElementById('candTeam');
+                const filterTeamSelect = document.getElementById('filter-team');
+                
+                if (filterTeamSelect) {
+                    const filterCurrent = filterTeamSelect.value;
+                    let opts = '<option value="All">All Teams</option>';
+                    activeTeamsData.forEach(team => {
+                        opts += `<option value="${team.name}">${team.name}</option>`;
+                    });
+                    filterTeamSelect.innerHTML = opts;
+                    filterTeamSelect.value = filterCurrent;
+                }
+
                 if (teamSelect) {
                     let defaultText = liveDraftEnabled ? 'Waiting for Auction...' : 'Select Team';
                     let optionsHTML = `<option value="">${defaultText}</option>`;
@@ -1298,17 +1336,38 @@
 
             // 2. Sections Listener (Only active)
             window.candSectionsUnsub = db.collection('sections').where('isActive', '==', true).onSnapshot(snap => {
-                activeSectionsData = snap.docs.map(doc => doc.data());
-                const sectionSelect = document.getElementById('candSection');
-                const currentVal = sectionSelect.value;
-                let optionsHTML = '<option value="" disabled selected>Select Section</option>';
-                activeSectionsData.forEach(section => {
-                    optionsHTML += `<option value="${section.name}">${section.name}</option>`;
+                let sortedDocs = snap.docs.map(doc => doc.data());
+                sortedDocs.sort((a, b) => {
+                    let o1 = typeof a.order === 'number' ? a.order : 999;
+                    let o2 = typeof b.order === 'number' ? b.order : 999;
+                    return o1 - o2;
                 });
-                sectionSelect.innerHTML = optionsHTML;
-                if (currentVal) {
-                    sectionSelect.value = currentVal;
-                    window.updateClassDropdown();
+                activeSectionsData = sortedDocs;
+                
+                const sectionSelect = document.getElementById('candSection');
+                const filterSectionSelect = document.getElementById('filter-category');
+                
+                if (filterSectionSelect) {
+                    const filterCurrent = filterSectionSelect.value;
+                    let opts = '<option value="All">All Categories</option>';
+                    activeSectionsData.forEach(section => {
+                        opts += `<option value="${section.name}">${section.name}</option>`;
+                    });
+                    filterSectionSelect.innerHTML = opts;
+                    filterSectionSelect.value = filterCurrent;
+                }
+                
+                if (sectionSelect) {
+                    const currentVal = sectionSelect.value;
+                    let optionsHTML = '<option value="" disabled selected>Select Section</option>';
+                    activeSectionsData.forEach(section => {
+                        optionsHTML += `<option value="${section.name}">${section.name}</option>`;
+                    });
+                    sectionSelect.innerHTML = optionsHTML;
+                    if (currentVal) {
+                        sectionSelect.value = currentVal;
+                        window.updateClassDropdown();
+                    }
                 }
             });
 

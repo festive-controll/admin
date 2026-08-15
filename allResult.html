@@ -201,10 +201,48 @@
                 const dbRef = window.db;
                 if (!dbRef) return;
 
+                let sectionOrderMap = {};
                 // Listeners
                 dbRef.collection('teams').where('isActive', '==', true).onSnapshot(s => { allTeams = s.docs.map(d => ({ id: d.id, ...d.data() })); updateData(); });
-                dbRef.collection('sections').onSnapshot(s => { allSections = s.docs.map(d => d.data().name); renderSectionFilter(); });
-                dbRef.collection('programs').onSnapshot(s => { allPrograms = s.docs.map(d => ({ id: d.id, ...d.data() })); updateData(); });
+                dbRef.collection('sections').onSnapshot(s => { 
+                    allSections = s.docs.map(d => d.data().name); 
+                    sectionOrderMap = {};
+                    s.docs.forEach(doc => {
+                        sectionOrderMap[doc.data().name.toLowerCase()] = typeof doc.data().order === 'number' ? doc.data().order : 999;
+                    });
+                    
+                    if (allPrograms.length > 0) {
+                        sortAllPrograms();
+                        updateData();
+                    }
+                    renderSectionFilter(); 
+                });
+                
+                function sortAllPrograms() {
+                    allPrograms.sort((a,b) => {
+                        const secA = (a.section || '').toLowerCase();
+                        const secB = (b.section || '').toLowerCase();
+                        const orderA = sectionOrderMap[secA] !== undefined ? sectionOrderMap[secA] : 999;
+                        const orderB = sectionOrderMap[secB] !== undefined ? sectionOrderMap[secB] : 999;
+                        
+                        if (orderA !== orderB) return orderA - orderB;
+                        if (secA < secB) return -1;
+                        if (secA > secB) return 1;
+                        
+                        const codeA = (a.code || '').toLowerCase();
+                        const codeB = (b.code || '').toLowerCase();
+                        if (codeA < codeB) return -1;
+                        if (codeA > codeB) return 1;
+                        
+                        return 0;
+                    });
+                }
+                
+                dbRef.collection('programs').onSnapshot(s => { 
+                    allPrograms = s.docs.map(d => ({ id: d.id, ...d.data() })); 
+                    sortAllPrograms();
+                    updateData(); 
+                });
                 dbRef.collection('programResults').onSnapshot(s => { allResults = s.docs.map(d => ({ id: d.id, ...d.data() })); updateData(); });
                 dbRef.collection('negativeMarks').where('status', '==', 'Active').onSnapshot(s => { allNegMarks = s.docs.map(d => ({ id: d.id, ...d.data() })); updateData(); });
 
@@ -292,7 +330,7 @@
                         <div class="col-span-1 text-[13px] font-medium text-gray-400 text-center">${startIdx + i + 1}</div>
                         <div class="col-span-4 flex flex-col min-w-0">
                             <span class="text-[14px] font-semibold text-gray-900 leading-tight truncate">${prog.name}</span>
-                            <span class="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">${prog.code || 'PRG'} • <span class="text-brand-blue font-bold">${prog.section}</span></span>
+                            <span class="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">${prog.code || 'PRG'} • <span class="text-brand-blue font-bold">${prog.section}</span>${prog.category ? ` • ${prog.category}` : ''}${prog.venueType ? ` • ${prog.venueType}` : ''}</span>
                         </div>
                         <div class="col-span-6 grid grid-flow-col auto-cols-auto gap-4 items-center">`;
                         rankedTeams.forEach(t => {
@@ -349,8 +387,8 @@
                         html += `
                     <div class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col h-full hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-3">
-                            <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">${p.code || 'PRG'}</span>
-                            <span class="px-2 py-0.5 bg-gray-50 rounded text-[9px] font-bold text-gray-400 uppercase">${p.section}</span>
+                            <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">${p.code || 'PRG'}${p.venueType ? ` • ${p.venueType}` : ''}</span>
+                            <span class="px-2 py-0.5 bg-gray-50 rounded text-[9px] font-bold text-gray-400 uppercase">${p.section}${p.category ? ` • ${p.category}` : ''}</span>
                         </div>
                         <h3 class="text-md font-bold text-gray-900 mb-4 leading-tight truncate">${p.name}</h3>
                         <div class="flex-1 space-y-1 mb-5">${items || '<div class="text-center py-4 text-[11px] text-gray-300 italic">No winners recorded</div>'}</div>

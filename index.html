@@ -720,7 +720,7 @@
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
-        firebase.firestore().settings({ experimentalForceLongPolling: true });
+        firebase.firestore().settings({ experimentalForceLongPolling: true, merge: true });
 
         // Listen for Firestore DB changes for Fest Data + System Status
         firebase.firestore().collection('config').doc('festData').onSnapshot((doc) => {

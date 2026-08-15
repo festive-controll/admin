@@ -308,11 +308,7 @@
                 const s = setsData.find(x => x.id === p.setId);
                 const setName = s ? s.name : (p.progSet || 'No Set');
 
-                const cleanStr = `${setName || ''} ${p.progSet || ''}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const isNonStage = cleanStr.includes('nonstage') || cleanStr.includes('nonstag');
-
-                let defaultVenueLabel = isNonStage ? 'NON-STAGE' : '-- No Venue --';
-                let pVenueOpts = `<option value="">${defaultVenueLabel}</option>`;
+                let pVenueOpts = `<option value="">-- No Venue --</option>`;
                 venuesData.forEach(v => {
                     pVenueOpts += `<option value="${v.id}" ${v.id === currentVenue ? 'selected' : ''}>${v.name}</option>`;
                 });
@@ -378,7 +374,7 @@
                     </div>
 
                     <div class="col-span-2 pr-3 pt-1">
-                        <select onchange="updateProgSchedule('${p.id}', 'venueId', this.value)" class="w-full text-[12px] font-medium ${isNonStage && !currentVenue ? 'bg-gray-100 text-gray-600 border-gray-200 font-bold' : 'bg-blue-50/50 text-gray-700 border-blue-200 hover:border-blue-400'} rounded-md py-1.5 pl-3 table-select transition-all outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                        <select onchange="updateProgSchedule('${p.id}', 'venueId', this.value)" class="w-full text-[12px] font-medium bg-blue-50/50 text-gray-700 border-blue-200 hover:border-blue-400 rounded-md py-1.5 pl-3 table-select transition-all outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                             ${pVenueOpts}
                         </select>
                     </div>

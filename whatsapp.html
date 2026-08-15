@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Sender Setup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <!-- Socket.io client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+        
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span class="iconify text-4xl" data-icon="solar:phone-calling-bold"></span>
+        </div>
+
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">WhatsApp Sender</h1>
+        <p class="text-gray-500 text-sm mb-6">Scan the QR code below to connect your WhatsApp account for sending automated messages.</p>
+
+        <!-- Status Box -->
+        <div id="status-box" class="py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm mb-6 inline-block">
+            Connecting to server...
+        </div>
+
+        <!-- QR Code Container -->
+        <div id="qr-container" class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center min-h-[250px] relative">
+            <div id="qr-loader" class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
+                <div class="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"></div>
+            </div>
+            
+            <img id="qr-image" src="" alt="WhatsApp QR Code" class="hidden w-56 h-56 object-contain" />
+            
+            <div id="connected-state" class="hidden flex-col items-center justify-center w-full h-full text-green-600">
+                <span class="iconify text-6xl mb-2" data-icon="solar:check-circle-bold"></span>
+                <span class="font-bold text-lg">WhatsApp Connected!</span>
+                <p class="text-xs text-gray-500 mt-2 text-center max-w-[200px]">You can now send messages via the API.</p>
+            </div>
+        </div>
+
+        <!-- API Info -->
+        <div class="mt-8 text-left bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <h3 class="text-sm font-bold text-gray-700 mb-2">API Endpoint</h3>
+            <code class="block text-xs bg-gray-800 text-green-400 p-2 rounded w-full overflow-x-auto">
+                POST <span id="api-url-display">http://localhost:8000/send</span>
+            </code>
+            <p class="text-[10px] text-gray-400 mt-2">Replace localhost with your Koyeb URL after deployment.</p>
+        </div>
+
+        <!-- Koyeb Settings Input -->
+        <div class="mt-4 text-left">
+            <label class="block text-xs font-bold text-gray-600 mb-1">Server URL</label>
+            <input type="text" id="server-url" value="http://localhost:8000" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="e.g. https://your-app.koyeb.app" />
+            <button onclick="reconnect()" class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded transition-colors text-sm">
+                Update Connection
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+
+        function updateStatus(text, type = 'info') {
+            const statusBox = document.getElementById('status-box');
+            statusBox.textContent = text;
+            statusBox.className = 'py-2 px-4 rounded-lg font-medium text-sm mb-6 inline-block transition-colors ';
+            
+            if (type === 'info') statusBox.className += 'bg-blue-50 text-blue-700';
+            else if (type === 'success') statusBox.className += 'bg-green-50 text-green-700';
+            else if (type === 'error') statusBox.className += 'bg-red-50 text-red-700';
+        }
+
+        function showQR(qrDataUrl) {
+            document.getElementById('qr-loader').classList.add('hidden');
+            document.getElementById('connected-state').classList.add('hidden');
+            
+            const qrImage = document.getElementById('qr-image');
+            qrImage.src = qrDataUrl;
+            qrImage.classList.remove('hidden');
+        }
+
+        function showConnected() {
+            document.getElementById('qr-loader').classList.add('hidden');
+            document.getElementById('qr-image').classList.add('hidden');
+            document.getElementById('connected-state').classList.remove('hidden');
+            document.getElementById('connected-state').classList.add('flex');
+        }
+
+        function showLoader() {
+            document.getElementById('qr-loader').classList.remove('hidden');
+            document.getElementById('qr-image').classList.add('hidden');
+            document.getElementById('connected-state').classList.add('hidden');
+            document.getElementById('connected-state').classList.remove('flex');
+        }
+
+        function reconnect() {
+            if (socket) socket.disconnect();
+            
+            const serverUrl = document.getElementById('server-url').value;
+            document.getElementById('api-url-display').textContent = serverUrl + '/send';
+            
+            updateStatus('Connecting...', 'info');
+            showLoader();
+
+            socket = io(serverUrl, {
+                reconnectionDelayMax: 10000,
+            });
+
+            socket.on('connect', () => {
+                updateStatus('Connected to server. Waiting for WhatsApp...', 'info');
+            });
+
+            socket.on('qr', (data) => {
+                updateStatus('Scan the QR code', 'info');
+                showQR(data.qrUrl);
+            });
+
+            socket.on('ready', () => {
+                updateStatus('WhatsApp is Ready!', 'success');
+                showConnected();
+            });
+
+            socket.on('authenticated', () => {
+                updateStatus('Authenticated! Loading...', 'success');
+            });
+
+            socket.on('auth_failure', () => {
+                updateStatus('Authentication failed. Try again.', 'error');
+                showLoader();
+            });
+
+            socket.on('disconnected', () => {
+                updateStatus('WhatsApp disconnected. Generating new QR...', 'error');
+                showLoader();
+            });
+
+            socket.on('connect_error', () => {
+                updateStatus('Could not connect to server. Is it running?', 'error');
+            });
+        }
+
+        // Initial connect
+        window.onload = reconnect;
+    </script>
+</body>
+</html>

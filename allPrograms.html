@@ -85,8 +85,14 @@
                             <i class="fi fi-rr-grid text-xs shrink-0"></i> Cards
                         </button>
                     </div>
-                    <!-- Search -->
+                    <!-- Search and Filter -->
                     <div class="flex items-center gap-3 w-full sm:w-auto mt-3 sm:mt-0">
+                        <div class="relative w-full sm:w-auto min-w-[140px]">
+                            <select id="filter-section" onchange="applyProgFilters()" class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                                <option value="All">All Categories</option>
+                            </select>
+                            <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                        </div>
                         <div class="relative w-full sm:w-64">
                             <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                             <input type="text" id="search-programs" oninput="applyProgFilters()" placeholder="Search programs..." 
@@ -238,6 +244,19 @@
                                     <select id="progSet" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
                                         <option value="">No Limit Set</option>
                                         <!-- Fetched dynamically -->
+                                    </select>
+                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Venue Type</label>
+                                <div class="relative">
+                                    <select id="progVenueType" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                        <option value="" disabled selected>Select Venue Type</option>
+                                        <option value="Stage">Stage</option>
+                                        <option value="Non-Stage">Non-Stage</option>
+                                        <option value="Sports">Sports</option>
                                     </select>
                                     <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
@@ -481,6 +500,8 @@
         var quickEditingProgId = null;
         var progCurrentPage = 1;
         var progItemsPerPage = 25;
+        
+        let sectionOrderMap = {};
 
         function downloadProgCSV(onlySelected = false) {
             let data = programsData;
@@ -532,21 +553,64 @@
         // Section fetching for dropdown
         if(typeof db !== 'undefined') {
             db.collection('sections').where('isActive', '==', true).onSnapshot(snap => {
+                let sortedDocs = snap.docs.map(doc => doc.data());
+                sortedDocs.sort((a, b) => {
+                    let o1 = typeof a.order === 'number' ? a.order : 999;
+                    let o2 = typeof b.order === 'number' ? b.order : 999;
+                    return o1 - o2;
+                });
+                
                 const secSelect = document.getElementById('progSection');
                 const quickSecSelect = document.getElementById('quickProgSection');
+                const filterSecSelect = document.getElementById('filter-section');
+                
                 if(secSelect) {
                     const current = secSelect.getAttribute('data-pending-val') || secSelect.value;
                     let opts = '<option value="" disabled selected>Select Section</option>';
-                    snap.forEach(doc => { opts += `<option value="${doc.data().name}">${doc.data().name}</option>`; });
+                    sortedDocs.forEach(data => { opts += `<option value="${data.name}">${data.name}</option>`; });
                     secSelect.innerHTML = opts; 
                     if(current) { secSelect.value = current; secSelect.removeAttribute('data-pending-val'); }
                 }
                 if(quickSecSelect) {
                     const quickCurrent = quickSecSelect.getAttribute('data-pending-val') || quickSecSelect.value;
                     let opts = '<option value="" disabled selected>Select Section</option>';
-                    snap.forEach(doc => { opts += `<option value="${doc.data().name}">${doc.data().name}</option>`; });
+                    sortedDocs.forEach(data => { opts += `<option value="${data.name}">${data.name}</option>`; });
                     quickSecSelect.innerHTML = opts; 
                     if(quickCurrent) { quickSecSelect.value = quickCurrent; quickSecSelect.removeAttribute('data-pending-val'); }
+                }
+                if(filterSecSelect) {
+                    const filterCurrent = filterSecSelect.value;
+                    let opts = '<option value="All">All Categories</option>';
+                    sortedDocs.forEach(data => { opts += `<option value="${data.name}">${data.name}</option>`; });
+                    filterSecSelect.innerHTML = opts;
+                    filterSecSelect.value = filterCurrent;
+                }
+                
+                // Build section order map
+                sectionOrderMap = {};
+                snap.forEach(doc => {
+                    sectionOrderMap[doc.data().name.toLowerCase()] = typeof doc.data().order === 'number' ? doc.data().order : 999;
+                });
+                
+                // Re-render UI if programs are already loaded to apply new sort
+                if (programsData.length > 0) {
+                    programsData.sort((a,b) => {
+                        const secA = (a.section || '').toLowerCase();
+                        const secB = (b.section || '').toLowerCase();
+                        const orderA = sectionOrderMap[secA] !== undefined ? sectionOrderMap[secA] : 999;
+                        const orderB = sectionOrderMap[secB] !== undefined ? sectionOrderMap[secB] : 999;
+                        if (orderA !== orderB) return orderA - orderB;
+                        if (secA < secB) return -1;
+                        if (secA > secB) return 1;
+                        
+                        const codeA = (a.code || '').toLowerCase();
+                        const codeB = (b.code || '').toLowerCase();
+                        if (codeA < codeB) return -1;
+                        if (codeA > codeB) return 1;
+                        
+                        return 0;
+                    });
+                    renderProgsUI();
                 }
             });
             
@@ -588,9 +652,20 @@
             window.progUnsub = db.collection('programs').onSnapshot(snap => {
                 programsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 programsData.sort((a,b) => {
-                    const tA = (a.createdAt && a.createdAt.seconds) ? a.createdAt.seconds : 0;
-                    const tB = (b.createdAt && b.createdAt.seconds) ? b.createdAt.seconds : 0;
-                    return tB - tA;
+                    const secA = (a.section || '').toLowerCase();
+                    const secB = (b.section || '').toLowerCase();
+                    const orderA = sectionOrderMap[secA] !== undefined ? sectionOrderMap[secA] : 999;
+                    const orderB = sectionOrderMap[secB] !== undefined ? sectionOrderMap[secB] : 999;
+                    if (orderA !== orderB) return orderA - orderB;
+                    if (secA < secB) return -1;
+                    if (secA > secB) return 1;
+                    
+                    const codeA = (a.code || '').toLowerCase();
+                    const codeB = (b.code || '').toLowerCase();
+                    if (codeA < codeB) return -1;
+                    if (codeA > codeB) return 1;
+                    
+                    return 0;
                 });
                 renderProgsUI();
             });
@@ -708,7 +783,10 @@
                 document.getElementById('btn-save-program-text').innerText = "Create Program";
                 
                 // Reset
-                ['progCode', 'progName', 'progSection', 'progTimeLimit', 'progSkill', 'progConceptNote'].forEach(x => document.getElementById(x).value = '');
+                ['progCode', 'progName', 'progSection', 'progTimeLimit', 'progSkill', 'progConceptNote', 'progVenueType'].forEach(x => {
+                    const el = document.getElementById(x);
+                    if (el) el.value = '';
+                });
                 document.getElementById('progType').value = 'Individual';
                 toggleGroupFields();
                 handleSectionChange('progSection', 'progType');
@@ -783,6 +861,7 @@
                     document.getElementById('progTimeLimit').value = p.timeLimit || '';
                     document.getElementById('progSkill').value = p.skillRequired || '';
                     document.getElementById('progConceptNote').value = p.conceptNote || '';
+                    if (document.getElementById('progVenueType')) document.getElementById('progVenueType').value = p.venueType || '';
 
                     toggleTemplateState('progGrading', 'progGradeTemplate', 'icon-grade-template');
                     toggleTemplateState('progScoring', 'progScoreTemplate', 'icon-score-template');
@@ -814,6 +893,7 @@
                 name: document.getElementById('progName').value || '',
                 section: document.getElementById('progSection').value || '',
                 type: document.getElementById('progType').value || 'Individual',
+                venueType: document.getElementById('progVenueType') ? document.getElementById('progVenueType').value : '',
                 groupSetsCount: parseInt(document.getElementById('progGroupSets').value) || null,
                 groupParticipantsPerSet: parseInt(document.getElementById('progGroupParticipants').value) || null,
                 setId: setId,
@@ -917,8 +997,14 @@
             const cardsList = document.getElementById('prog-cards-list');
             
             let filtered = programsData;
+            
+            const categoryFilter = document.getElementById('filter-section') ? document.getElementById('filter-section').value : 'All';
+            if(categoryFilter !== 'All') {
+                filtered = filtered.filter(p => p.section === categoryFilter);
+            }
+            
             if(progSearchQuery) {
-                filtered = programsData.filter(p => 
+                filtered = filtered.filter(p => 
                     (p.name && p.name.toLowerCase().includes(progSearchQuery)) ||
                     (p.code && p.code.toLowerCase().includes(progSearchQuery)) ||
                     (p.section && p.section.toLowerCase().includes(progSearchQuery))
@@ -1061,13 +1147,14 @@
             menu.style.top = topPos + 'px';
             menu.style.left = (rect.right - 144) + 'px';
             
-            document.getElementById('btn-view').onclick = (e) => { 
+            let actionBtn;
+            if (actionBtn = document.getElementById('btn-view')) actionBtn.onclick = (e) => { 
                 window.progCloseMenu(); 
                 const prog = programsData.find(p => p.id === id);
                 viewProgram(id, prog ? prog.name : 'Program'); 
             };
-            document.getElementById('btn-edit').onclick = (e) => { window.progCloseMenu(); openEditSidebar(id); };
-            document.getElementById('btn-add-reg').onclick = (e) => { 
+            if (actionBtn = document.getElementById('btn-edit')) actionBtn.onclick = (e) => { window.progCloseMenu(); openEditSidebar(id); };
+            if (actionBtn = document.getElementById('btn-add-reg')) actionBtn.onclick = (e) => { 
                 window.progCloseMenu(); 
                 localStorage.setItem('viewProgramId', id);
                 const prog = programsData.find(p => p.id === id);
@@ -1078,8 +1165,8 @@
                     window.location.href = 'viewProgramData.html?action=register';
                 }
             };
-            document.getElementById('btn-add-result').onclick = (e) => { window.progCloseMenu(); typeof showToast === 'function' && showToast("Navigating to Add Result..."); };
-            document.getElementById('btn-delete').onclick = (e) => { 
+            if (actionBtn = document.getElementById('btn-add-result')) actionBtn.onclick = (e) => { window.progCloseMenu(); typeof showToast === 'function' && showToast("Navigating to Add Result..."); };
+            if (actionBtn = document.getElementById('btn-delete')) actionBtn.onclick = (e) => { 
                 window.progCloseMenu(); 
                 if(confirm("Delete this program?")) db.collection('programs').doc(id).delete().then(() => typeof showToast === 'function' && showToast("✅ Deleted")); 
             };

@@ -966,7 +966,7 @@
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true });
+        db.settings({ experimentalForceLongPolling: true, merge: true });
         window.db = db;
 
         // ── Auth Guard & Session Watcher ──────────────────────────────

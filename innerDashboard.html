@@ -191,6 +191,12 @@
                                 class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                             </div> Set Limits
                         </a>
+                        <a href="#" data-tab="section-order" onclick="event.preventDefault(); showOwnerTab('section-order')"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                            </div> Section Order
+                        </a>
                     </div>
                 </div>
 
@@ -452,6 +458,32 @@
                             <div class="col-span-1 text-right">Actions</div>
                         </div>
                         <div id="limits-table-body" class="p-4 flex flex-col gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Section Order Tab -->
+                <div id="tpl-section-order" class="hidden animate-in fade-in duration-500">
+                    <div
+                        class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                        <div>
+                            <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
+                                    class="fi fi-rr-list text-brand-blue"></i> Section Order</h1>
+                            <p class="text-[13px] text-gray-500 mt-1">Set the display order of sections across the platform.</p>
+                        </div>
+                        <button onclick="saveSectionOrder()"
+                            class="bg-brand-blue text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-md hover:opacity-90 transition-all flex items-center gap-2"><i
+                                class="fi fi-rr-disk"></i> Save Order</button>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden max-w-2xl">
+                        <div
+                            class="grid grid-cols-12 gap-4 p-4 border-b border-gray-100 bg-gray-50/50 font-semibold text-[13px] text-gray-600">
+                            <div class="col-span-8">Section Name</div>
+                            <div class="col-span-4 text-right">Order</div>
+                        </div>
+                        <div id="section-order-list" class="p-4 flex flex-col gap-2">
+                            <!-- Populated dynamically -->
+                            <div class="text-center text-sm text-gray-500 py-4">Loading sections...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -4454,6 +4486,97 @@
                 btn.innerHTML = '<i class="fi fi-rr-star"></i> Set as Main News';
             }
         }
+        
+        // --- Section Order Logic ---
+        let sectionsListForOrder = [];
+        let sectionOrderUnsub = null;
+
+        function loadSectionOrderData() {
+            if (sectionOrderUnsub) sectionOrderUnsub();
+            sectionOrderUnsub = db.collection('sections').onSnapshot(snap => {
+                sectionsListForOrder = snap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                // Sort by existing order, fallback to 999
+                sectionsListForOrder.sort((a, b) => {
+                    const orderA = typeof a.order === 'number' ? a.order : 999;
+                    const orderB = typeof b.order === 'number' ? b.order : 999;
+                    if (orderA !== orderB) return orderA - orderB;
+                    return (a.name || '').localeCompare(b.name || '');
+                });
+                renderSectionOrderList();
+            });
+        }
+
+        function renderSectionOrderList() {
+            const container = document.getElementById('section-order-list');
+            if (!container) return;
+            if (sectionsListForOrder.length === 0) {
+                container.innerHTML = '<div class="text-center text-sm text-gray-500 py-4">No sections found.</div>';
+                return;
+            }
+            
+            let html = '';
+            sectionsListForOrder.forEach((sec, idx) => {
+                html += `
+                <div class="flex items-center justify-between p-3 border border-gray-100 rounded-xl bg-white hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center font-bold text-xs">
+                            ${idx + 1}
+                        </div>
+                        <span class="text-[13px] font-bold text-gray-800">${sec.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="moveSectionUp(${idx})" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-brand-blue hover:bg-blue-50 disabled:opacity-30 transition-colors" ${idx === 0 ? 'disabled' : ''}>
+                            <i class="fi fi-rr-angle-small-up text-lg"></i>
+                        </button>
+                        <button onclick="moveSectionDown(${idx})" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-brand-blue hover:bg-blue-50 disabled:opacity-30 transition-colors" ${idx === sectionsListForOrder.length - 1 ? 'disabled' : ''}>
+                            <i class="fi fi-rr-angle-small-down text-lg"></i>
+                        </button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function moveSectionUp(index) {
+            if (index <= 0) return;
+            const temp = sectionsListForOrder[index];
+            sectionsListForOrder[index] = sectionsListForOrder[index - 1];
+            sectionsListForOrder[index - 1] = temp;
+            renderSectionOrderList();
+        }
+
+        function moveSectionDown(index) {
+            if (index >= sectionsListForOrder.length - 1) return;
+            const temp = sectionsListForOrder[index];
+            sectionsListForOrder[index] = sectionsListForOrder[index + 1];
+            sectionsListForOrder[index + 1] = temp;
+            renderSectionOrderList();
+        }
+
+        async function saveSectionOrder() {
+            try {
+                const batch = db.batch();
+                sectionsListForOrder.forEach((sec, idx) => {
+                    const docRef = db.collection('sections').doc(sec.id);
+                    batch.update(docRef, { order: idx + 1 });
+                });
+                await batch.commit();
+                typeof showToast === 'function' ? showToast('<b>✅</b> Section order saved successfully!') : alert('Section order saved!');
+            } catch (err) {
+                console.error("Error saving section order:", err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to save section order.') : alert('Failed to save section order.');
+            }
+        }
+
+        // Initialize section loading
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof db !== 'undefined') {
+                loadSectionOrderData();
+            }
+        });
 
     </script>
 </body>

@@ -153,13 +153,13 @@
             "icons": [
                 {
                     "src": icon192Url,
-                    "sizes": "192x192",
+                    "sizes": "any",
                     "type": logo192 ? (logo192.includes('image/webp') ? 'image/webp' : 'image/png') : "image/svg+xml",
                     "purpose": "any maskable"
                 },
                 {
                     "src": icon512Url,
-                    "sizes": "512x512",
+                    "sizes": "any",
                     "type": logo512 ? (logo512.includes('image/webp') ? 'image/webp' : 'image/png') : "image/svg+xml",
                     "purpose": "any maskable"
                 }

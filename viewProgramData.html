@@ -283,6 +283,17 @@
                                     </div>
                                     <div class="flex items-start gap-4">
                                         <div
+                                            class="w-9 h-9 rounded-full bg-blue-50 flex flex-shrink-0 items-center justify-center border border-blue-100/50">
+                                            <i class="fi fi-rr-map-marker text-blue-500 text-sm"></i></div>
+                                        <div class="pt-0.5">
+                                            <div class="text-[11px] text-gray-500 uppercase font-bold tracking-widest">
+                                                Venue Type</div>
+                                            <div id="vp-venue-type" class="text-[14px] font-bold mt-0.5 text-gray-900">—
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-4">
+                                        <div
                                             class="w-9 h-9 rounded-full bg-gray-100 flex flex-shrink-0 items-center justify-center border border-gray-200/50">
                                             <i class="fi fi-rr-calendar text-gray-500 text-sm"></i></div>
                                         <div class="pt-0.5">
@@ -508,15 +519,25 @@
                                             class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                     </div>
                                     <div id="progSetContainer">
-                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Set
-                                            Limit</label>
+                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Set Limit</label>
                                         <div class="relative">
                                             <select id="progSet"
                                                 class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer">
                                                 <option value="">No Limit Set</option>
                                             </select>
-                                            <i
-                                                class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                            <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Venue Type</label>
+                                        <div class="relative">
+                                            <select id="progVenueType" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                                <option value="" disabled selected>Select Venue Type</option>
+                                                <option value="Stage">Stage</option>
+                                                <option value="Non-Stage">Non-Stage</option>
+                                                <option value="Sports">Sports</option>
+                                            </select>
+                                            <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                         </div>
                                     </div>
                                     <div class="md:col-span-2">
@@ -2136,6 +2157,7 @@
                 var payload = {
                     code: code, name: name, section: section,
                     type: document.getElementById('progType').value,
+                    venueType: document.getElementById('progVenueType') ? document.getElementById('progVenueType').value : '',
                     groupSetsCount: parseInt(document.getElementById('progGroupSets').value) || null,
                     groupParticipantsPerSet: parseInt(document.getElementById('progGroupParticipants').value) || null,
                     setId: setId,
@@ -2303,7 +2325,7 @@
                         messagingSenderId: "794049194885",
                         appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
                     };
-                    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                    if (!firebase.apps.length) firebase['initializeApp'](firebaseConfig);
                     db = firebase.firestore();
                     window.db = db;
                 } catch(e) {
@@ -2472,6 +2494,9 @@
                     document.getElementById('vp-time-limit').innerText = p.timeLimit || '—';
                     document.getElementById('vp-skill').innerText = p.skillRequired || '—';
                     document.getElementById('vp-section').innerText = p.section || '—';
+                    document.getElementById('vp-venue-type').innerText = p.venueType || '—';
+                    
+                    if (document.getElementById('progVenueType')) document.getElementById('progVenueType').value = p.venueType || '';
                     
                     if (p.venueId) {
                         db.collection('venues').doc(p.venueId).get().then(vDoc => {
