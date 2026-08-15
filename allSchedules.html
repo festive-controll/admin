@@ -158,7 +158,7 @@
             <!-- Server URL Config -->
             <div class="px-5 pt-4 pb-2">
                 <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Notifier Server URL</label>
-                <input id="wa-server-url" type="text" value="http://localhost:3500"
+                <input id="wa-server-url" type="text" value="https://whatsapp-backend-b60t.onrender.com"
                     class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-mono focus:outline-none focus:ring-1 focus:ring-[#25D366] focus:border-[#25D366]">
                 <p class="text-[10px] text-gray-400 mt-1">Run <code class="bg-gray-100 px-1 rounded">npm start</code> inside the <strong>/whatsapp</strong> folder first.</p>
             </div>
@@ -395,7 +395,7 @@
 
     <!-- WhatsApp Alert Scripts -->
     <script>
-        var WA_SERVER = 'http://localhost:3500';
+        var WA_SERVER = 'https://whatsapp-backend-b60t.onrender.com';
 
         async function openWaModal() {
             document.getElementById('wa-modal-overlay').classList.remove('hidden');
@@ -408,14 +408,32 @@
             document.getElementById('wa-modal-overlay').classList.add('hidden');
         }
 
+        async function getPendingPrograms() {
+            // A program is pending if: judgeAlertSent is not true, time is set, venue is set, and at least one judge is assigned.
+            return programsData.filter(p => {
+                if (p.judgeAlertSent === true) return false;
+                if (!p.time) return false;
+                
+                // check if any judge is assigned
+                const jCount = p.judgeCount || 2;
+                let hasJudge = false;
+                for (let i = 1; i <= jCount; i++) {
+                    if (p[`judge${i}Id`]) {
+                        hasJudge = true; break;
+                    }
+                }
+                return hasJudge;
+            });
+        }
+
         async function waLoadPending() {
             const info = document.getElementById('wa-pending-info');
-            const serverUrl = document.getElementById('wa-server-url').value.trim();
-            info.innerHTML = '<i class="fi fi-rr-spinner animate-spin text-gray-400"></i> <span>Checking server…</span>';
+            info.innerHTML = '<i class="fi fi-rr-spinner animate-spin text-gray-400"></i> <span>Checking pending programs locally...</span>';
+            
             try {
-                const res  = await fetch(`${serverUrl}/pending`, { signal: AbortSignal.timeout(4000) });
-                const data = await res.json();
-                if (data.count === 0) {
+                const pending = await getPendingPrograms();
+                
+                if (pending.length === 0) {
                     info.innerHTML = `
                         <div class="flex items-center gap-2 text-green-600">
                             <i class="fi fi-rr-check-circle text-lg"></i>
@@ -425,11 +443,11 @@
                     info.innerHTML = `
                         <div class="w-full">
                             <div class="flex items-center gap-2 mb-3">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-600 font-black text-[14px]">${data.count}</span>
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-600 font-black text-[14px]">${pending.length}</span>
                                 <span class="font-semibold text-gray-800">program(s) ready to notify</span>
                             </div>
                             <div class="space-y-1.5 max-h-28 overflow-y-auto custom-scrollbar">
-                                ${data.programs.map(p => `
+                                ${pending.map(p => `
                                     <div class="flex items-center gap-2 text-[12px] bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5">
                                         <span class="font-bold text-orange-600 font-mono">${p.code || '—'}</span>
                                         <span class="text-gray-700 truncate">${p.name || 'Unnamed'}</span>
@@ -445,9 +463,8 @@
                     <div class="w-full">
                         <div class="flex items-center gap-2 text-red-500 mb-2">
                             <i class="fi fi-rr-cross-circle text-lg"></i>
-                            <span class="font-semibold">Cannot reach notifier server</span>
+                            <span class="font-semibold">Error processing pending alerts</span>
                         </div>
-                        <p class="text-[11px] text-gray-500">Start the server: open a terminal in the <code class="bg-gray-100 px-1 rounded">/whatsapp</code> folder and run <code class="bg-gray-100 px-1 rounded">npm start</code></p>
                     </div>`;
             }
         }
@@ -463,66 +480,104 @@
         }
 
         async function waRunSendAll() {
-            const serverUrl = document.getElementById('wa-server-url').value.trim();
             const btn = document.getElementById('wa-btn-send-all');
             btn.disabled = true;
             btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Sending…';
             document.getElementById('wa-log').innerHTML = '';
 
-            waLog('Contacting notifier server…');
             try {
-                const res  = await fetch(`${serverUrl}/send-alerts`, {
-                    method : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({})
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const s = data.summary;
-                    waLog(`Processed: ${s.processed}`, 'info');
-                    waLog(`Messages sent: ${s.sent}`, s.sent > 0 ? 'success' : 'warn');
-                    waLog(`Skipped: ${s.skipped}`, 'info');
-                    if (s.errors && s.errors.length) {
-                        s.errors.forEach(e => waLog(e, 'error'));
-                    }
-                    if (s.sent > 0) {
-                        typeof Toastify === 'function' && Toastify({
-                            text: `✅ ${s.sent} WhatsApp alert(s) sent!`,
-                            duration: 3000, gravity: 'bottom', position: 'right',
-                            style: { background: '#25D366', borderRadius: '8px', fontSize: '13px' }
-                        }).showToast();
-                        // Refresh program data to show updated judgeAlertSent status
-                        await waLoadPending();
-                    } else {
-                        waLog('No new alerts were sent.', 'warn');
-                    }
+                const pending = await getPendingPrograms();
+                let sentCount = 0;
+                
+                for (let p of pending) {
+                    await waSendSingle(p.id, false);
+                    sentCount++;
+                }
+                
+                if (sentCount > 0) {
+                    waLog(`Finished sending alerts for ${sentCount} programs!`, 'success');
+                    typeof Toastify === 'function' && Toastify({
+                        text: `✅ Alerts sent for ${sentCount} programs!`,
+                        duration: 3000, gravity: 'bottom', position: 'right',
+                        style: { background: '#25D366', borderRadius: '8px', fontSize: '13px' }
+                    }).showToast();
                 } else {
-                    waLog('Server error: ' + (data.error || 'Unknown'), 'error');
+                    waLog('No new alerts were sent.', 'warn');
                 }
             } catch (e) {
-                waLog('Could not reach server: ' + e.message, 'error');
+                waLog('Error during bulk send: ' + e.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fi fi-rr-paper-plane"></i> Send All Pending';
+                await waLoadPending();
             }
         }
 
-        async function waSendSingle(programId) {
+        function formatDateTime(isoString) {
+            if (!isoString) return 'TBD';
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+
+        async function waSendSingle(programId, refreshPending = true) {
             const serverUrl = document.getElementById('wa-server-url').value.trim();
-            waLog(`Sending alert for program ${programId}…`);
+            waLog(`Preparing alert for program ${programId}…`);
+            
             try {
-                const res  = await fetch(`${serverUrl}/send-alerts`, {
-                    method : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({ programId })
-                });
-                const data = await res.json();
-                if (data.success && data.summary.sent > 0) {
-                    waLog(`Sent ${data.summary.sent} message(s)`, 'success');
-                    await waLoadPending();
-                } else {
-                    waLog('No messages sent: ' + JSON.stringify(data.summary), 'warn');
+                const prog = programsData.find(x => x.id === programId);
+                if (!prog) throw new Error("Program not found");
+                
+                const venueObj = venuesData.find(v => v.id === prog.venueId);
+                const venueName = venueObj ? venueObj.name : "TBD";
+                const timeStr = formatDateTime(prog.time);
+                
+                const jCount = prog.judgeCount || 2;
+                let msgsSent = 0;
+                
+                for (let i = 1; i <= jCount; i++) {
+                    const jId = prog[`judge${i}Id`];
+                    if (jId) {
+                        const judge = judgesData.find(j => j.id === jId);
+                        if (judge && judge.phone) {
+                            // Construct message
+                            const msg = `*Sibaq '25 Judge Alert*\n\nHello ${judge.name},\nYou have been assigned as a judge for the following program:\n\n*Code:* ${prog.code || 'N/A'}\n*Program:* ${prog.name}\n*Venue:* ${venueName}\n*Time:* ${timeStr}\n\nPlease be present at the venue on time. Thank you!`;
+                            
+                            // Send to Node API
+                            waLog(`Sending to ${judge.name} (${judge.phone})...`);
+                            const res = await fetch(`${serverUrl}/send`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ number: judge.phone, message: msg })
+                            });
+                            
+                            const data = await res.json();
+                            if (data.success) {
+                                waLog(`✓ Message sent to ${judge.name}`, 'success');
+                                msgsSent++;
+                            } else {
+                                waLog(`✗ Failed for ${judge.name}: ${data.error}`, 'error');
+                            }
+                        } else {
+                            waLog(`✗ Judge #${i} has no valid phone number.`, 'warn');
+                        }
+                    }
                 }
+                
+                // Update Firebase
+                if (msgsSent > 0) {
+                    await db.collection('programs').doc(programId).update({ judgeAlertSent: true });
+                    // Update local state
+                    const idx = programsData.findIndex(x => x.id === programId);
+                    if (idx !== -1) programsData[idx].judgeAlertSent = true;
+                    waLog(`Marked program ${prog.code} as Sent in Firebase.`, 'success');
+                } else {
+                    waLog(`No messages were sent for program ${prog.code}.`, 'warn');
+                }
+                
+                if (refreshPending) {
+                    await waLoadPending();
+                }
+                
             } catch (e) {
                 waLog('Error: ' + e.message, 'error');
             }
