@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -74,13 +76,13 @@
                 <button onclick="loadData()" class="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 shadow-sm rounded-lg text-gray-500 hover:bg-gray-50 hover:text-brand-blue transition-colors" title="Refresh">
                     <i class="fi fi-rr-refresh"></i>
                 </button>
-                <button onclick="openWaModal()" id="btn-wa-alerts"
+                <button onclick="openSchedulesWaModal()" id="btn-wa-alerts"
                     class="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white text-[13px] font-bold rounded-lg shadow hover:bg-[#1ebe5d] transition-all"
-                    title="Send WhatsApp alerts to judges">
+                    title="Setup WhatsApp Auto-Sender">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                     </svg>
-                    <span class="hidden sm:inline">Send Judge Alerts</span>
+                    <span class="hidden sm:inline">WhatsApp Setup</span>
                 </button>
             </div>
         </div>
@@ -129,56 +131,47 @@
 
     <!-- WhatsApp Alerts Modal -->
     <div id="wa-modal-overlay" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-[#075E54] to-[#128C7E]">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="text-white font-bold text-[15px]">WhatsApp Judge Alerts</h2>
-                        <p class="text-white/70 text-[11px]">Send schedule notifications to assigned judges</p>
-                    </div>
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center relative">
+            <button onclick="closeSchedulesWaModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                <i class="fi fi-rr-cross text-sm"></i>
+            </button>
+            
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span class="iconify text-4xl" data-icon="solar:phone-calling-bold"></span>
+            </div>
+
+            <h1 class="text-xl font-bold text-gray-800 mb-2">WhatsApp Sender Setup</h1>
+            <p class="text-gray-500 text-sm mb-6">Scan the QR code to connect your WhatsApp account for sending automated judge alerts.</p>
+
+            <!-- Status Box -->
+            <div id="wa-status-box" class="py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm mb-6 inline-block">
+                Connecting to server...
+            </div>
+
+            <!-- QR Code Container -->
+            <div id="wa-qr-container" class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center min-h-[250px] relative">
+                <div id="wa-qr-loader" class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
+                    <div class="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"></div>
                 </div>
-                <button onclick="closeWaModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
-                    <i class="fi fi-rr-cross text-sm"></i>
-                </button>
-            </div>
-
-            <!-- Pending Programs Summary -->
-            <div class="p-5 border-b border-gray-100">
-                <div id="wa-pending-info" class="flex items-center gap-3 text-[13px] text-gray-600">
-                    <i class="fi fi-rr-spinner animate-spin text-gray-400"></i> Checking pending alerts...
+                
+                <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="hidden w-56 h-56 object-contain" />
+                
+                <div id="wa-connected-state" class="hidden flex-col items-center justify-center w-full h-full text-green-600">
+                    <span class="iconify text-6xl mb-2" data-icon="solar:check-circle-bold"></span>
+                    <span class="font-bold text-lg">WhatsApp Connected!</span>
+                    <p class="text-xs text-gray-500 mt-2 text-center max-w-[200px]">Alerts will be sent automatically when schedules update.</p>
                 </div>
             </div>
 
-            <!-- Server URL Config -->
-            <div class="px-5 pt-4 pb-2">
-                <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Notifier Server URL</label>
-                <input id="wa-server-url" type="text" value="https://whatsapp-backend-b60t.onrender.com"
-                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-mono focus:outline-none focus:ring-1 focus:ring-[#25D366] focus:border-[#25D366]">
-                <p class="text-[10px] text-gray-400 mt-1">Run <code class="bg-gray-100 px-1 rounded">npm start</code> inside the <strong>/whatsapp</strong> folder first.</p>
-            </div>
-
-            <!-- Status Log -->
-            <div id="wa-log-wrap" class="hidden px-5 pb-2">
-                <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Result Log</div>
-                <div id="wa-log" class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-[12px] font-mono text-gray-700 max-h-36 overflow-y-auto space-y-0.5 custom-scrollbar"></div>
-            </div>
-
-            <!-- Actions -->
-            <div class="p-5 flex flex-col sm:flex-row gap-3">
-                <button id="wa-btn-send-all" onclick="waRunSendAll()"
-                    class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white text-[13px] font-bold rounded-xl hover:bg-[#1ebe5d] transition-all shadow">
-                    <i class="fi fi-rr-paper-plane"></i> Send All Pending
-                </button>
-                <button onclick="closeWaModal()"
-                    class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-700 text-[13px] font-semibold rounded-xl hover:bg-gray-200 transition-all">
-                    Close
-                </button>
+            <!-- Settings -->
+            <div class="mt-6 text-left">
+                <label class="block text-xs font-bold text-gray-600 mb-1">Server URL</label>
+                <div class="flex gap-2">
+                    <input type="text" id="wa-server-url" value="https://whatsapp-backend-b60t.onrender.com" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="https://..." />
+                    <button onclick="reconnectSchedulesWa()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded transition-colors text-sm">
+                        Connect
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -263,7 +256,20 @@
                 const idx = programsData.findIndex(x => x.id === programId);
                 if(idx !== -1) {
                     programsData[idx][field] = value === '' ? null : value;
+                    if (field === 'time' || field.startsWith('judge')) {
+                        programsData[idx].judgeAlertSent = false;
+                    }
                     renderSchedulesUI();
+
+                    // Auto-send WhatsApp message if ready
+                    const p = programsData[idx];
+                    let hasJudge = false;
+                    for (let i = 1; i <= (p.judgeCount || 2); i++) {
+                        if (p[`judge${i}Id`]) { hasJudge = true; break; }
+                    }
+                    if (!p.judgeAlertSent && p.time && p.venueId && hasJudge) {
+                        schedulesWaSendSingle(p.id);
+                    }
                 }
 
                 typeof Toastify === 'function' && Toastify({
@@ -395,122 +401,95 @@
 
     <!-- WhatsApp Alert Scripts -->
     <script>
-        var WA_SERVER = 'https://whatsapp-backend-b60t.onrender.com';
+        var schedulesWaSocket = null;
 
-        async function openWaModal() {
+        function openSchedulesWaModal() {
             document.getElementById('wa-modal-overlay').classList.remove('hidden');
-            document.getElementById('wa-log-wrap').classList.add('hidden');
-            document.getElementById('wa-log').innerHTML = '';
-            await waLoadPending();
+            if (!schedulesWaSocket) {
+                reconnectSchedulesWa();
+            }
         }
 
-        function closeWaModal() {
+        function closeSchedulesWaModal() {
             document.getElementById('wa-modal-overlay').classList.add('hidden');
         }
 
-        async function getPendingPrograms() {
-            // A program is pending if: judgeAlertSent is not true, time is set, venue is set, and at least one judge is assigned.
-            return programsData.filter(p => {
-                if (p.judgeAlertSent === true) return false;
-                if (!p.time) return false;
-                
-                // check if any judge is assigned
-                const jCount = p.judgeCount || 2;
-                let hasJudge = false;
-                for (let i = 1; i <= jCount; i++) {
-                    if (p[`judge${i}Id`]) {
-                        hasJudge = true; break;
-                    }
-                }
-                return hasJudge;
-            });
-        }
-
-        async function waLoadPending() {
-            const info = document.getElementById('wa-pending-info');
-            info.innerHTML = '<i class="fi fi-rr-spinner animate-spin text-gray-400"></i> <span>Checking pending programs locally...</span>';
+        function updateSchedulesWaStatus(text, type = 'info') {
+            const statusBox = document.getElementById('wa-status-box');
+            statusBox.textContent = text;
+            statusBox.className = 'py-2 px-4 rounded-lg font-medium text-sm mb-6 inline-block transition-colors ';
             
-            try {
-                const pending = await getPendingPrograms();
-                
-                if (pending.length === 0) {
-                    info.innerHTML = `
-                        <div class="flex items-center gap-2 text-green-600">
-                            <i class="fi fi-rr-check-circle text-lg"></i>
-                            <span class="font-semibold">All alerts already sent — no pending programs.</span>
-                        </div>`;
-                } else {
-                    info.innerHTML = `
-                        <div class="w-full">
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-600 font-black text-[14px]">${pending.length}</span>
-                                <span class="font-semibold text-gray-800">program(s) ready to notify</span>
-                            </div>
-                            <div class="space-y-1.5 max-h-28 overflow-y-auto custom-scrollbar">
-                                ${pending.map(p => `
-                                    <div class="flex items-center gap-2 text-[12px] bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5">
-                                        <span class="font-bold text-orange-600 font-mono">${p.code || '—'}</span>
-                                        <span class="text-gray-700 truncate">${p.name || 'Unnamed'}</span>
-                                        <button onclick="waSendSingle('${p.id}')" class="ml-auto shrink-0 text-[10px] font-bold text-[#25D366] border border-[#25D366] rounded px-2 py-0.5 hover:bg-[#25D366] hover:text-white transition-colors">
-                                            Send
-                                        </button>
-                                    </div>`).join('')}
-                            </div>
-                        </div>`;
-                }
-            } catch (e) {
-                info.innerHTML = `
-                    <div class="w-full">
-                        <div class="flex items-center gap-2 text-red-500 mb-2">
-                            <i class="fi fi-rr-cross-circle text-lg"></i>
-                            <span class="font-semibold">Error processing pending alerts</span>
-                        </div>
-                    </div>`;
-            }
+            if (type === 'info') statusBox.className += 'bg-blue-50 text-blue-700';
+            else if (type === 'success') statusBox.className += 'bg-green-50 text-green-700';
+            else if (type === 'error') statusBox.className += 'bg-red-50 text-red-700';
         }
 
-        function waLog(msg, type = 'info') {
-            const log  = document.getElementById('wa-log');
-            const wrap = document.getElementById('wa-log-wrap');
-            wrap.classList.remove('hidden');
-            const colors = { info: 'text-gray-700', success: 'text-green-600 font-bold', error: 'text-red-500 font-bold', warn: 'text-orange-500' };
-            const icons  = { info: '•', success: '✅', error: '❌', warn: '⚠️' };
-            log.innerHTML += `<div class="${colors[type] || colors.info}">${icons[type] || '•'} ${msg}</div>`;
-            log.scrollTop = log.scrollHeight;
+        function showSchedulesWaQR(qrDataUrl) {
+            document.getElementById('wa-qr-loader').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.add('hidden');
+            
+            const qrImage = document.getElementById('wa-qr-image');
+            qrImage.src = qrDataUrl;
+            qrImage.classList.remove('hidden');
         }
 
-        async function waRunSendAll() {
-            const btn = document.getElementById('wa-btn-send-all');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Sending…';
-            document.getElementById('wa-log').innerHTML = '';
+        function showSchedulesWaConnected() {
+            document.getElementById('wa-qr-loader').classList.add('hidden');
+            document.getElementById('wa-qr-image').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.remove('hidden');
+            document.getElementById('wa-connected-state').classList.add('flex');
+        }
 
-            try {
-                const pending = await getPendingPrograms();
-                let sentCount = 0;
-                
-                for (let p of pending) {
-                    await waSendSingle(p.id, false);
-                    sentCount++;
-                }
-                
-                if (sentCount > 0) {
-                    waLog(`Finished sending alerts for ${sentCount} programs!`, 'success');
-                    typeof Toastify === 'function' && Toastify({
-                        text: `✅ Alerts sent for ${sentCount} programs!`,
-                        duration: 3000, gravity: 'bottom', position: 'right',
-                        style: { background: '#25D366', borderRadius: '8px', fontSize: '13px' }
-                    }).showToast();
-                } else {
-                    waLog('No new alerts were sent.', 'warn');
-                }
-            } catch (e) {
-                waLog('Error during bulk send: ' + e.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fi fi-rr-paper-plane"></i> Send All Pending';
-                await waLoadPending();
-            }
+        function showSchedulesWaLoader() {
+            document.getElementById('wa-qr-loader').classList.remove('hidden');
+            document.getElementById('wa-qr-image').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.remove('flex');
+        }
+
+        function reconnectSchedulesWa() {
+            if (schedulesWaSocket) schedulesWaSocket.disconnect();
+            
+            const serverUrl = document.getElementById('wa-server-url').value;
+            
+            updateSchedulesWaStatus('Connecting...', 'info');
+            showSchedulesWaLoader();
+
+            schedulesWaSocket = io(serverUrl, {
+                reconnectionDelayMax: 10000,
+            });
+
+            schedulesWaSocket.on('connect', () => {
+                updateSchedulesWaStatus('Connected to server. Waiting for WhatsApp...', 'info');
+            });
+
+            schedulesWaSocket.on('qr', (data) => {
+                updateSchedulesWaStatus('Scan the QR code', 'info');
+                showSchedulesWaQR(data.qrUrl);
+            });
+
+            schedulesWaSocket.on('ready', () => {
+                updateSchedulesWaStatus('WhatsApp is Ready!', 'success');
+                showSchedulesWaConnected();
+            });
+
+            schedulesWaSocket.on('authenticated', () => {
+                updateSchedulesWaStatus('Authenticated! Loading...', 'success');
+            });
+
+            schedulesWaSocket.on('auth_failure', () => {
+                updateSchedulesWaStatus('Authentication failed. Try again.', 'error');
+                showSchedulesWaLoader();
+            });
+
+            schedulesWaSocket.on('disconnected', () => {
+                updateSchedulesWaStatus('WhatsApp disconnected. Generating new QR...', 'error');
+                showSchedulesWaLoader();
+            });
+
+            schedulesWaSocket.on('connect_error', () => {
+                updateSchedulesWaStatus('Could not connect to server. Is it running?', 'error');
+            });
         }
 
         function formatDateTime(isoString) {
@@ -519,9 +498,9 @@
             return date.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
 
-        async function waSendSingle(programId, refreshPending = true) {
+        async function schedulesWaSendSingle(programId) {
             const serverUrl = document.getElementById('wa-server-url').value.trim();
-            waLog(`Preparing alert for program ${programId}…`);
+            console.log(`Preparing auto alert for program ${programId}…`);
             
             try {
                 const prog = programsData.find(x => x.id === programId);
@@ -539,7 +518,6 @@
                     if (jId) {
                         const judge = judgesData.find(j => j.id === jId);
                         if (judge && judge.whatsapp) {
-                            // Construct message
                             const concept = prog.conceptNote ? prog.conceptNote : "None provided";
                             const festName = localStorage.getItem('festName') || "Sibaq '25";
                             
@@ -563,7 +541,6 @@
                             const msg = `🚨 *${festName} Judge Alert* 🚨\n\nHello 👋 ${judge.name},\n\n📌 *Program Name:* ${prog.name}\n🔢 *Program Code:* ${prog.code || 'N/A'}\n📍 *Venue:* ${venueName}\n📝 *Concept Note:* ${concept}\n\n${timeText}\n🚨 Please report to the venue immediately. Thank you! 🙏`;
                             
                             // Send to Node API
-                            waLog(`Sending to ${judge.name} (${judge.whatsapp})...`);
                             const res = await fetch(`${serverUrl}/send`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -572,13 +549,11 @@
                             
                             const data = await res.json();
                             if (data.success) {
-                                waLog(`✓ Message sent to ${judge.name}`, 'success');
+                                console.log(`✓ Message sent to ${judge.name}`);
                                 msgsSent++;
                             } else {
-                                waLog(`✗ Failed for ${judge.name}: ${data.error}`, 'error');
+                                console.error(`✗ Failed for ${judge.name}: ${data.error}`);
                             }
-                        } else {
-                            waLog(`✗ Judge #${i} has no valid phone number.`, 'warn');
                         }
                     }
                 }
@@ -586,26 +561,25 @@
                 // Update Firebase
                 if (msgsSent > 0) {
                     await db.collection('programs').doc(programId).update({ judgeAlertSent: true });
-                    // Update local state
                     const idx = programsData.findIndex(x => x.id === programId);
                     if (idx !== -1) programsData[idx].judgeAlertSent = true;
-                    waLog(`Marked program ${prog.code} as Sent in Firebase.`, 'success');
-                } else {
-                    waLog(`No messages were sent for program ${prog.code}.`, 'warn');
-                }
-                
-                if (refreshPending) {
-                    await waLoadPending();
+                    console.log(`Marked program ${prog.code} as Sent in Firebase.`);
+                    
+                    typeof Toastify === 'function' && Toastify({
+                        text: `✅ Auto-Alerts sent to judges for ${prog.code}!`,
+                        duration: 3000, gravity: 'bottom', position: 'right',
+                        style: { background: '#25D366', borderRadius: '8px', fontSize: '13px' }
+                    }).showToast();
                 }
                 
             } catch (e) {
-                waLog('Error: ' + e.message, 'error');
+                console.error('Error auto-sending: ' + e.message);
             }
         }
 
         // Close modal on overlay click
         document.getElementById('wa-modal-overlay').addEventListener('click', function(e) {
-            if (e.target === this) closeWaModal();
+            if (e.target === this) closeSchedulesWaModal();
         });
     </script>
 </body>
