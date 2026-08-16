@@ -538,7 +538,7 @@
                     const jId = prog[`judge${i}Id`];
                     if (jId) {
                         const judge = judgesData.find(j => j.id === jId);
-                        if (judge && judge.phone) {
+                        if (judge && judge.whatsapp) {
                             // Construct message
                             const concept = prog.conceptNote ? prog.conceptNote : "None provided";
                             const festName = localStorage.getItem('festName') || "Sibaq '25";
@@ -563,11 +563,11 @@
                             const msg = `🚨 *${festName} Judge Alert* 🚨\n\nHello 👋 ${judge.name},\n\n📌 *Program Name:* ${prog.name}\n🔢 *Program Code:* ${prog.code || 'N/A'}\n📍 *Venue:* ${venueName}\n📝 *Concept Note:* ${concept}\n\n${timeText}\n🚨 Please report to the venue immediately. Thank you! 🙏`;
                             
                             // Send to Node API
-                            waLog(`Sending to ${judge.name} (${judge.phone})...`);
+                            waLog(`Sending to ${judge.name} (${judge.whatsapp})...`);
                             const res = await fetch(`${serverUrl}/send`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ number: judge.phone, message: msg })
+                                body: JSON.stringify({ number: judge.whatsapp, message: msg })
                             });
                             
                             const data = await res.json();
