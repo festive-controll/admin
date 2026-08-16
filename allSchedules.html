@@ -540,7 +540,27 @@
                         const judge = judgesData.find(j => j.id === jId);
                         if (judge && judge.phone) {
                             // Construct message
-                            const msg = `*Sibaq '25 Judge Alert*\n\nHello ${judge.name},\nYou have been assigned as a judge for the following program:\n\n*Code:* ${prog.code || 'N/A'}\n*Program:* ${prog.name}\n*Venue:* ${venueName}\n*Time:* ${timeStr}\n\nPlease be present at the venue on time. Thank you!`;
+                            const concept = prog.conceptNote ? prog.conceptNote : "None provided";
+                            const festName = localStorage.getItem('festName') || "Sibaq '25";
+                            
+                            let timeText = "⏳ Only 5 minutes remaining!";
+                            if (prog.time) {
+                                const diffMs = new Date(prog.time) - new Date();
+                                if (diffMs > 0) {
+                                    const diffMins = Math.floor(diffMs / 60000);
+                                    if (diffMins < 60) {
+                                        timeText = `⏳ Only ${diffMins} minute(s) remaining!`;
+                                    } else {
+                                        const hours = Math.floor(diffMins / 60);
+                                        const mins = diffMins % 60;
+                                        timeText = `⏳ Starts in ${hours} hour(s) and ${mins} minute(s)!`;
+                                    }
+                                } else {
+                                    timeText = `⏳ Program time has already started!`;
+                                }
+                            }
+                            
+                            const msg = `🚨 *${festName} Judge Alert* 🚨\n\nHello 👋 ${judge.name},\n\n📌 *Program Name:* ${prog.name}\n🔢 *Program Code:* ${prog.code || 'N/A'}\n📍 *Venue:* ${venueName}\n📝 *Concept Note:* ${concept}\n\n${timeText}\n🚨 Please report to the venue immediately. Thank you! 🙏`;
                             
                             // Send to Node API
                             waLog(`Sending to ${judge.name} (${judge.phone})...`);

@@ -17,7 +17,8 @@
         href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -595,6 +596,11 @@
                                         <i
                                             class="fi fi-rr-folder-download text-2xl text-gray-400 mb-3 group-hover:text-gray-600 transition-colors"></i>
                                         <span class="text-[13px] font-semibold text-gray-800">Manage Downloads</span>
+                                    </button>
+                                    <button onclick="openDashboardWaSetup()"
+                                        class="flex flex-col items-center justify-center py-6 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-gray-200 transition-all group">
+                                        <i class="fi fi-rr-smartphone text-2xl text-green-500 mb-3 group-hover:text-green-600 transition-colors"></i>
+                                        <span class="text-[13px] font-semibold text-gray-800">WhatsApp Setup</span>
                                     </button>
                                 </div>
                             </div>
@@ -2175,6 +2181,145 @@
                     registration.unregister();
                     console.log('Service Worker unregistered.');
                 }
+            });
+        }
+    </script>
+    <!-- WhatsApp Setup Modal -->
+    <div id="wa-setup-modal-overlay" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center relative">
+            <button onclick="closeDashboardWaSetup()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+                <i class="fi fi-rr-cross text-sm"></i>
+            </button>
+            
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span class="iconify text-4xl" data-icon="solar:phone-calling-bold"></span>
+            </div>
+
+            <h1 class="text-xl font-bold text-gray-800 mb-2">WhatsApp Sender Setup</h1>
+            <p class="text-gray-500 text-sm mb-6">Scan the QR code to connect your WhatsApp account for sending automated judge alerts.</p>
+
+            <!-- Status Box -->
+            <div id="wa-status-box" class="py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm mb-6 inline-block">
+                Connecting to server...
+            </div>
+
+            <!-- QR Code Container -->
+            <div id="wa-qr-container" class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center min-h-[250px] relative">
+                <div id="wa-qr-loader" class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
+                    <div class="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"></div>
+                </div>
+                
+                <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="hidden w-56 h-56 object-contain" />
+                
+                <div id="wa-connected-state" class="hidden flex-col items-center justify-center w-full h-full text-green-600">
+                    <span class="iconify text-6xl mb-2" data-icon="solar:check-circle-bold"></span>
+                    <span class="font-bold text-lg">WhatsApp Connected!</span>
+                    <p class="text-xs text-gray-500 mt-2 text-center max-w-[200px]">You can now send judge alerts from the schedules page.</p>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="mt-6 text-left">
+                <label class="block text-xs font-bold text-gray-600 mb-1">Server URL</label>
+                <div class="flex gap-2">
+                    <input type="text" id="wa-server-url-input" value="https://whatsapp-backend-b60t.onrender.com" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="https://..." />
+                    <button onclick="reconnectDashboardWa()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded transition-colors text-sm">
+                        Connect
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let waSocket = null;
+
+        function openDashboardWaSetup() {
+            document.getElementById('wa-setup-modal-overlay').classList.remove('hidden');
+            if (!waSocket) {
+                reconnectDashboardWa();
+            }
+        }
+
+        function closeDashboardWaSetup() {
+            document.getElementById('wa-setup-modal-overlay').classList.add('hidden');
+        }
+
+        function updateWaStatus(text, type = 'info') {
+            const statusBox = document.getElementById('wa-status-box');
+            statusBox.textContent = text;
+            statusBox.className = 'py-2 px-4 rounded-lg font-medium text-sm mb-6 inline-block transition-colors ';
+            
+            if (type === 'info') statusBox.className += 'bg-blue-50 text-blue-700';
+            else if (type === 'success') statusBox.className += 'bg-green-50 text-green-700';
+            else if (type === 'error') statusBox.className += 'bg-red-50 text-red-700';
+        }
+
+        function showWaQR(qrDataUrl) {
+            document.getElementById('wa-qr-loader').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.add('hidden');
+            
+            const qrImage = document.getElementById('wa-qr-image');
+            qrImage.src = qrDataUrl;
+            qrImage.classList.remove('hidden');
+        }
+
+        function showWaConnected() {
+            document.getElementById('wa-qr-loader').classList.add('hidden');
+            document.getElementById('wa-qr-image').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.remove('hidden');
+            document.getElementById('wa-connected-state').classList.add('flex');
+        }
+
+        function showWaLoader() {
+            document.getElementById('wa-qr-loader').classList.remove('hidden');
+            document.getElementById('wa-qr-image').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.add('hidden');
+            document.getElementById('wa-connected-state').classList.remove('flex');
+        }
+
+        function reconnectDashboardWa() {
+            if (waSocket) waSocket.disconnect();
+            
+            const serverUrl = document.getElementById('wa-server-url-input').value;
+            
+            updateWaStatus('Connecting...', 'info');
+            showWaLoader();
+
+            waSocket = io(serverUrl, {
+                reconnectionDelayMax: 10000,
+            });
+
+            waSocket.on('connect', () => {
+                updateWaStatus('Connected to server. Waiting for WhatsApp...', 'info');
+            });
+
+            waSocket.on('qr', (data) => {
+                updateWaStatus('Scan the QR code', 'info');
+                showWaQR(data.qrUrl);
+            });
+
+            waSocket.on('ready', () => {
+                updateWaStatus('WhatsApp is Ready!', 'success');
+                showWaConnected();
+            });
+
+            waSocket.on('authenticated', () => {
+                updateWaStatus('Authenticated! Loading...', 'success');
+            });
+
+            waSocket.on('auth_failure', () => {
+                updateWaStatus('Authentication failed. Try again.', 'error');
+                showWaLoader();
+            });
+
+            waSocket.on('disconnected', () => {
+                updateWaStatus('WhatsApp disconnected. Generating new QR...', 'error');
+                showWaLoader();
+            });
+
+            waSocket.on('connect_error', () => {
+                updateWaStatus('Could not connect to server. Is it running?', 'error');
             });
         }
     </script>
