@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judge Registration</title>
+    <!-- Favicon / PWA Setup -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            bg: '#f8f9fc',
+                            border: '#e5e7eb',
+                            textMuted: '#6b7280',
+                            textDark: '#111827',
+                            blue: '#134E8E',
+                            red: '#C00707',
+                            orange: '#FF4400',
+                            yellow: '#FFB33F'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-brand-bg font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div class="bg-brand-blue p-6 text-center">
+            <h1 class="text-2xl font-bold text-white">Judge Registration</h1>
+            <p class="text-blue-100 text-sm mt-1">Register to be a judge for the festival</p>
+        </div>
+        
+        <div id="registration-form-container" class="p-6 md:p-8">
+            <form id="judgeForm" onsubmit="submitRegistration(event)" class="space-y-5">
+                <div>
+                    <label class="block text-[13px] font-semibold text-gray-800 mb-2">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="regName" required placeholder="e.g. John Doe" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-[13px] font-semibold text-gray-800 mb-2">Username <span class="text-red-500">*</span></label>
+                    <input type="text" id="regUsername" required placeholder="e.g. johndoe_judge" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-[13px] font-semibold text-gray-800 mb-2">Password <span class="text-red-500">*</span></label>
+                    <input type="password" id="regPass" required placeholder="Enter a secure password" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                </div>
+                <div>
+                    <label class="block text-[13px] font-semibold text-gray-800 mb-2">WhatsApp Number (with country code) <span class="text-red-500">*</span></label>
+                    <input type="text" id="regWhatsapp" required placeholder="+91 9876543210" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] font-mono-custom focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                </div>
+                
+                <button type="submit" id="btn-submit" class="w-full py-3.5 bg-brand-yellow text-brand-textDark rounded-xl text-[15px] font-bold hover:bg-[#ffaa22] transition-all shadow-md mt-4 flex justify-center items-center gap-2">
+                    Submit Registration
+                </button>
+            </form>
+        </div>
+
+        <div id="success-message" class="hidden p-8 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fi fi-rr-check text-3xl text-green-500"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Message Registered...</h2>
+            <p class="text-gray-500 text-[14px]">Your registration has been submitted and is pending approval.</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function showToast(msg, isError=false) {
+            Toastify({
+                text: msg, duration: 3000, gravity: "top", position: "center",
+                style: { background: isError ? "#fff0f0" : "#fff", color: isError ? "#d32f2f" : "#333", border: isError ? "1px solid #ffcdd2" : "1px solid #eaeaea", borderRadius: "10px", padding: "12px 24px", fontSize: "14px", display: "flex", alignItems: "center" },
+            }).showToast();
+        }
+
+        async function submitRegistration(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('regName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+            const whatsapp = document.getElementById('regWhatsapp').value.trim();
+
+            if(!name || !username || !pass || !whatsapp) {
+                showToast("Please fill all fields", true);
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Submitting...';
+
+            try {
+                // Check if username already exists
+                const existing = await db.collection('judges').where('username', '==', username).get();
+                if (!existing.empty) {
+                    showToast("Username already taken", true);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Submit Registration';
+                    return;
+                }
+
+                const payload = {
+                    name,
+                    username,
+                    pass,
+                    whatsapp,
+                    status: 'pending',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+
+                await db.collection('judges').add(payload);
+                
+                document.getElementById('registration-form-container').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
+                
+            } catch(err) {
+                console.error(err);
+                showToast("Error: " + err.message, true);
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Registration';
+            }
+        }
+    </script>
+</body>
+</html>

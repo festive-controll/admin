@@ -127,6 +127,15 @@
                     <span class="text-[13px]">Users</span>
                 </a>
 
+                <a href="#" data-tab="judges" onclick="event.preventDefault(); showOwnerTab('judges')" id="nav-judges"
+                    class="flex items-center gap-3 px-4 py-2.5 mb-1 rounded-xl text-brand-textMuted hover:bg-gray-50 hover:text-brand-textDark group transition-all">
+                    <div
+                        class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent group-hover:bg-white group-hover:shadow-sm transition-all">
+                        <i class="fi fi-rr-users text-lg group-hover:text-brand-blue"></i>
+                    </div>
+                    <span class="text-[13px] font-semibold">Judges</span>
+                </a>
+
                 <div class="mb-1">
                     <button onclick="toggleSubmenu('owner-submenu-templates', 'owner-icon-submenu-templates')"
                         class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-brand-textMuted hover:bg-gray-50 hover:text-brand-textDark group transition-all text-left outline-none cursor-pointer">
@@ -496,6 +505,12 @@
                 <!-- Pattern Templates Tab -->
                 <div id="tpl-position" class="hidden animate-in fade-in duration-500 w-full h-full">
                     <iframe src="cardsetupPosit.html" class="w-full border-0 rounded-2xl"
+                        style="height: calc(100vh - 100px);" allowtransparency="true"></iframe>
+                </div>
+
+                <!-- Judges Tab -->
+                <div id="tpl-judges" class="hidden animate-in fade-in duration-500 w-full h-full">
+                    <iframe src="judges.html" class="w-full border-0 rounded-2xl"
                         style="height: calc(100vh - 100px);" allowtransparency="true"></iframe>
                 </div>
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,11 @@
     <!-- Favicon / PWA Setup -->
     <link rel="icon" href="favicon.ico" sizes="any">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script>
         tailwind.config = {
@@ -32,19 +36,49 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
-        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .dropdown-enter { animation: drop-in 0.15s ease-out forwards; transform-origin: top right; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        i[class^="fi-"] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .font-mono-custom {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dropdown-enter {
+            animation: drop-in 0.15s ease-out forwards;
+            transform-origin: top right;
+        }
+
         @keyframes drop-in {
-            0% { opacity: 0; transform: scale(0.95) translateY(-5px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(-5px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
     </style>
 </head>
+
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
 
     <div class="max-w-full w-full mx-auto relative animate-in fade-in duration-300">
@@ -54,8 +88,14 @@
                 <h1 class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Judges</h1>
                 <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage festival judges</p>
             </div>
-            <div class="flex items-center ml-4">
-                <button onclick="openJudgeSidebar()" class="flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-[#FFB33F] border border-transparent rounded-full text-[13px] font-bold text-[#111827] hover:bg-opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap p-0">
+            <div class="flex items-center ml-4 gap-3">
+                <button id="btn-shareable-link" onclick="copyShareableLink()"
+                    class="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
+                    <i class="fi fi-rr-link-alt text-sm"></i>
+                    <span class="hidden sm:block">Shareable Link</span>
+                </button>
+                <button onclick="openJudgeSidebar()"
+                    class="flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-[#FFB33F] border border-transparent rounded-full text-[13px] font-bold text-[#111827] hover:bg-opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap p-0">
                     <i class="fi fi-rr-add text-sm sm:text-[13px]"></i>
                     <span class="hidden sm:block">Add Judge</span>
                 </button>
@@ -63,29 +103,36 @@
         </div>
 
         <!-- Main Card Area -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
+        <div
+            class="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
             <!-- Toolbar -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 gap-4 sm:gap-0">
+            <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 gap-4 sm:gap-0">
                 <!-- Search -->
                 <div class="flex items-center gap-3 w-full sm:w-64">
                     <div class="relative w-full">
                         <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input type="text" id="search-judges" oninput="applyJudgeFilters()" placeholder="Search judges..." 
+                        <input type="text" id="search-judges" oninput="applyJudgeFilters()"
+                            placeholder="Search judges..."
                             class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] transition-all">
                     </div>
                 </div>
             </div>
 
             <!-- Bulk Header -->
-            <div id="judge-bulk-header" class="hidden flex items-center justify-between py-2.5 px-6 border-b border-gray-100 bg-blue-50/50">
+            <div id="judge-bulk-header"
+                class="hidden flex items-center justify-between py-2.5 px-6 border-b border-gray-100 bg-blue-50/50">
                 <div class="flex items-center space-x-4">
-                    <div onclick="toggleJudgeSelectAll()" class="w-5 h-5 rounded-full flex items-center justify-center bg-[#FFC107] cursor-pointer shadow-sm hover:scale-105 transition-transform">
+                    <div onclick="toggleJudgeSelectAll()"
+                        class="w-5 h-5 rounded-full flex items-center justify-center bg-[#FFC107] cursor-pointer shadow-sm hover:scale-105 transition-transform">
                         <i class="fi fi-rr-check text-[10px] text-white"></i>
                     </div>
-                    <span class="text-[13px] font-semibold text-gray-800"><span id="judge-selected-count-text">1</span> selected</span>
+                    <span class="text-[13px] font-semibold text-gray-800"><span id="judge-selected-count-text">1</span>
+                        selected</span>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="deleteSelectedJudges()" class="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#DC2626] border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-red-700 shadow-sm transition-colors">
+                    <button onclick="deleteSelectedJudges()"
+                        class="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#DC2626] border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-red-700 shadow-sm transition-colors">
                         <i class="fi fi-rr-trash text-sm"></i> Delete Selected
                     </button>
                 </div>
@@ -94,14 +141,7 @@
             <!-- TABLE VIEW -->
             <div class="overflow-x-auto w-full">
                 <div class="min-w-[700px]">
-                    <div id="judge-standard-header" class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA]">
-                        <div class="col-span-1 flex items-center">
-                            <div onclick="toggleJudgeSelectAll()" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="judge-master-checkbox"></div>
-                        </div>
-                        <div class="col-span-5 text-[13px] font-medium text-gray-700">Judge Name</div>
-                        <div class="col-span-5 text-[13px] font-medium text-gray-700">WhatsApp Number</div>
-                        <div class="col-span-1 text-[13px] font-medium text-gray-700 text-right">Actions</div>
-                    </div>
+                    <div id="judge-standard-header"></div>
                     <div id="judge-table-list"></div>
                 </div>
             </div>
@@ -109,53 +149,110 @@
     </div>
 
     <!-- Judge Sidebar -->
-    <div id="judge-sidebar-overlay" class="hidden fixed inset-0 bg-gray-900/40 z-[110] transition-opacity backdrop-blur-sm" onclick="closeJudgeSidebar()"></div>
-    <div id="judge-sidebar" class="fixed top-0 right-0 h-full w-[400px] max-w-full bg-white shadow-2xl z-[120] transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div id="judge-sidebar-overlay"
+        class="hidden fixed inset-0 bg-gray-900/40 z-[110] transition-opacity backdrop-blur-sm"
+        onclick="closeJudgeSidebar()"></div>
+    <div id="judge-sidebar"
+        class="fixed top-0 right-0 h-full w-[400px] max-w-full bg-white shadow-2xl z-[120] transform translate-x-full transition-transform duration-300 flex flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
             <div>
                 <h2 id="judge-sidebar-title" class="text-lg font-bold text-gray-900">Add Judge</h2>
                 <p class="text-[13px] text-gray-500 mt-1">Enter judge details</p>
             </div>
-            <button onclick="closeJudgeSidebar()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
+            <button onclick="closeJudgeSidebar()"
+                class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
                 <i class="fi fi-rr-cross text-sm"></i>
             </button>
         </div>
         <!-- Body -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
             <div>
-                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Judge Name <span class="text-red-500">*</span></label>
-                <input type="text" id="judgeName" placeholder="e.g. John Doe" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all shadow-sm">
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Judge Name <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="judgeName" placeholder="e.g. John Doe"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all shadow-sm">
             </div>
             <div>
-                <label class="block text-[13px] font-semibold text-gray-800 mb-2">WhatsApp Number <span class="text-red-500">*</span></label>
-                <input type="text" id="judgeWhatsapp" placeholder="e.g. +91 9876543210" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-mono-custom transition-all shadow-sm">
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Username <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="judgeUsername" placeholder="e.g. johndoe_123"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-mono-custom transition-all shadow-sm">
+            </div>
+            <div>
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Password <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="judgePassword" placeholder="Enter password"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-mono-custom transition-all shadow-sm">
+            </div>
+            <div>
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">WhatsApp Number <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="judgeWhatsapp" placeholder="e.g. +91 9876543210"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-mono-custom transition-all shadow-sm">
             </div>
         </div>
         <!-- Footer -->
         <div class="p-5 border-t border-gray-100 bg-white flex justify-end gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-            <button onclick="closeJudgeSidebar()" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-[13px] font-semibold hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
-            <button id="btn-save-judge" onclick="saveJudge()" class="px-6 py-2.5 bg-brand-blue text-white rounded-lg text-[13px] font-semibold hover:bg-opacity-90 transition-all shadow-md flex items-center gap-2">
+            <button onclick="closeJudgeSidebar()"
+                class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-[13px] font-semibold hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
+            <button id="btn-save-judge" onclick="saveJudge()"
+                class="px-6 py-2.5 bg-brand-blue text-white rounded-lg text-[13px] font-semibold hover:bg-opacity-90 transition-all shadow-md flex items-center gap-2">
                 <i class="fi fi-rr-disk text-xs"></i> <span id="btn-save-judge-text">Submit</span>
             </button>
         </div>
     </div>
 
     <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    </script>
+    <script>
+        function showToast(msg) {
+            if (typeof Toastify === 'undefined') {
+                alert(msg);
+                return;
+            }
+            Toastify({
+                text: msg, duration: 2500, gravity: "top", position: "center",
+                style: { background: "#fff", color: "#333", boxShadow: "0 4px 15px -3px rgba(0,0,0,0.1)", borderRadius: "10px", border: "1px solid #eaeaea", padding: "12px 24px", fontSize: "14px", fontFamily: "'Inter',sans-serif", display: "flex", gap: "8px", alignItems: "center" },
+                escapeMarkup: false
+            }).showToast();
+        }
+
+        function copyShareableLink() {
+            const url = new URL('judgeRegistration.html', window.location.href).href;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("✅ Shareable link copied!");
+            }).catch(err => {
+                console.error("Could not copy text: ", err);
+            });
+        }
+
         var judgesData = [];
         var selectedJudgeIds = new Set();
         var editingJudgeId = null;
         var judgeSearchQuery = '';
+    </script>
+    <script>
+        var db = firebase.firestore();
 
-        var db = window.db || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
-
-        if(db) {
+        if (db) {
             db.collection('judges').onSnapshot(snap => {
                 judgesData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                judgesData.sort((a,b) => {
+                judgesData.sort((a, b) => {
                     const tA = (a.createdAt && a.createdAt.seconds) ? a.createdAt.seconds : 0;
                     const tB = (b.createdAt && b.createdAt.seconds) ? b.createdAt.seconds : 0;
                     return tB - tA;
@@ -167,16 +264,20 @@
         function openJudgeSidebar(id = null) {
             editingJudgeId = id;
             document.getElementById('judgeName').value = '';
+            document.getElementById('judgeUsername').value = '';
+            document.getElementById('judgePassword').value = '';
             document.getElementById('judgeWhatsapp').value = '';
             document.getElementById('judge-sidebar-title').innerText = "Add Judge";
             document.getElementById('btn-save-judge-text').innerText = "Submit";
 
-            if(id) {
+            if (id) {
                 document.getElementById('judge-sidebar-title').innerText = "Edit Judge";
                 document.getElementById('btn-save-judge-text').innerText = "Update";
                 const j = judgesData.find(x => x.id === id);
-                if(j) {
+                if (j) {
                     document.getElementById('judgeName').value = j.name || '';
+                    document.getElementById('judgeUsername').value = j.username || '';
+                    document.getElementById('judgePassword').value = j.pass || '';
                     document.getElementById('judgeWhatsapp').value = j.whatsapp || '';
                 }
             }
@@ -196,13 +297,15 @@
         }
 
         async function saveJudge() {
-            if(!db) return typeof showToast === 'function' ? showToast("❌ Database connection error (db is null)") : alert("❌ Database connection error");
-            
+            if (!db) return typeof showToast === 'function' ? showToast("❌ Database connection error (db is null)") : alert("❌ Database connection error");
+
             const name = document.getElementById('judgeName').value.trim();
+            const username = document.getElementById('judgeUsername').value.trim();
+            const pass = document.getElementById('judgePassword').value.trim();
             const whatsapp = document.getElementById('judgeWhatsapp').value.trim();
 
-            if(!name || !whatsapp) {
-                return typeof showToast === 'function' ? showToast("❌ Name and WhatsApp Number are required") : alert("Required fields missing");
+            if (!name || !username || !pass || !whatsapp) {
+                return typeof showToast === 'function' ? showToast("❌ All fields are required") : alert("Required fields missing");
             }
 
             const btn = document.getElementById('btn-save-judge');
@@ -210,11 +313,11 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin text-xs"></i> <span>Saving...</span>';
 
-            const payload = { name, whatsapp };
+            const payload = { name, username, pass, whatsapp };
             payload.updatedAt = new Date();
 
             try {
-                if(editingJudgeId) {
+                if (editingJudgeId) {
                     await db.collection('judges').doc(editingJudgeId).update(payload);
                     typeof showToast === 'function' && showToast("✅ Judge updated!");
                 } else {
@@ -223,7 +326,7 @@
                     typeof showToast === 'function' && showToast("✅ Judge added!");
                 }
                 closeJudgeSidebar();
-            } catch(err) {
+            } catch (err) {
                 typeof showToast === 'function' ? showToast("❌ Error: " + err.message) : alert("❌ Error: " + err.message);
             } finally {
                 btn.disabled = false;
@@ -233,10 +336,11 @@
 
         function renderJudgesUI() {
             const tableList = document.getElementById('judge-table-list');
-            
+            const isInnerDashboard = window.parent !== window && window.parent.location.href.includes('innerDashboard');
+
             let filtered = judgesData;
-            if(judgeSearchQuery) {
-                filtered = judgesData.filter(j => 
+            if (judgeSearchQuery) {
+                filtered = judgesData.filter(j =>
                     (j.name && j.name.toLowerCase().includes(judgeSearchQuery)) ||
                     (j.whatsapp && j.whatsapp.toLowerCase().includes(judgeSearchQuery))
                 );
@@ -244,8 +348,35 @@
 
             const stdHeader = document.getElementById('judge-standard-header');
             const blkHeader = document.getElementById('judge-bulk-header');
-            
-            if(selectedJudgeIds.size > 0) {
+
+            if (isInnerDashboard) {
+                stdHeader.innerHTML = `
+                    <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA]">
+                        <div class="col-span-1 flex items-center">
+                            <div onclick="toggleJudgeSelectAll()" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="judge-master-checkbox"></div>
+                        </div>
+                        <div class="col-span-3 text-[13px] font-medium text-gray-700">Judge Name</div>
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700">Username</div>
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700">Password</div>
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700">WhatsApp Number</div>
+                        <div class="col-span-1 text-[13px] font-medium text-gray-700">Status</div>
+                        <div class="col-span-1 text-[13px] font-medium text-gray-700 text-right">Actions</div>
+                    </div>
+                `;
+            } else {
+                stdHeader.innerHTML = `
+                    <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA]">
+                        <div class="col-span-1 flex items-center">
+                            <div onclick="toggleJudgeSelectAll()" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="judge-master-checkbox"></div>
+                        </div>
+                        <div class="col-span-6 text-[13px] font-medium text-gray-700">Judge Name</div>
+                        <div class="col-span-3 text-[13px] font-medium text-gray-700">WhatsApp Number</div>
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700 text-right">Actions</div>
+                    </div>
+                `;
+            }
+
+            if (selectedJudgeIds.size > 0) {
                 stdHeader.classList.add('hidden');
                 blkHeader.classList.remove('hidden');
                 document.getElementById('judge-selected-count-text').innerText = selectedJudgeIds.size;
@@ -253,6 +384,11 @@
                 stdHeader.classList.remove('hidden');
                 blkHeader.classList.add('hidden');
                 document.getElementById('judge-master-checkbox').outerHTML = `<div onclick="toggleJudgeSelectAll()" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="judge-master-checkbox"></div>`;
+            }
+
+            if (!isInnerDashboard) {
+                const shareBtn = document.getElementById('btn-shareable-link');
+                if (shareBtn) shareBtn.classList.add('hidden');
             }
 
             if (filtered.length === 0) {
@@ -265,42 +401,101 @@
                 const isSel = selectedJudgeIds.has(j.id);
                 const bg = isSel ? 'bg-blue-50/20' : 'bg-white hover:bg-gray-50';
                 const initial = j.name ? j.name.charAt(0).toUpperCase() : 'J';
-                
-                let checkboxHTML = isSel 
+
+                let checkboxHTML = isSel
                     ? `<div onclick="toggleJudgeSelect('${j.id}', event)" class="w-5 h-5 rounded-full flex items-center justify-center bg-[#FFC107] cursor-pointer hover:scale-105 transition-transform"><i class="fi fi-rr-check text-[10px] text-white"></i></div>`
                     : `<div onclick="toggleJudgeSelect('${j.id}', event)" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] bg-white cursor-pointer transition-colors"></div>`;
-                
-                tableHTML += `
-                <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 ${bg} transition-colors group">
-                    <div class="col-span-1">${checkboxHTML}</div>
-                    <div class="col-span-5 flex items-center space-x-3.5">
-                        <div class="w-9 h-9 rounded-full border border-blue-200 flex items-center justify-center bg-blue-50 text-brand-blue font-bold text-[14px] shrink-0 cursor-pointer" onclick="openJudgeSidebar('${j.id}')">
-                            ${initial}
-                        </div>
-                        <span class="text-[14px] font-medium text-gray-900 leading-snug cursor-pointer group-hover:text-brand-blue transition-colors truncate" onclick="openJudgeSidebar('${j.id}')">${j.name}</span>
-                    </div>
-                    <div class="col-span-5">
-                        <span class="text-[13px] text-gray-600 font-medium font-mono-custom">${j.whatsapp}</span>
-                    </div>
-                    <div class="col-span-1 flex justify-end">
+
+                let statusBadge = '';
+                if (j.status === 'pending') {
+                    statusBadge = `<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-[11px] font-bold uppercase tracking-wider">Pending</span>`;
+                } else if (j.status === 'disapproved') {
+                    statusBadge = `<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-[11px] font-bold uppercase tracking-wider">Disapproved</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-[11px] font-bold uppercase tracking-wider">Approved</span>`;
+                }
+
+                const isInnerDashboard = window.parent !== window && window.parent.location.href.includes('innerDashboard');
+                let actionsHTML = '';
+
+                if (isInnerDashboard) {
+                    if (j.status === 'pending') {
+                        actionsHTML = `
+                            <button onclick="approveJudge('${j.id}')" class="px-3 py-1 bg-green-500 text-white rounded-md text-[11px] font-bold hover:bg-green-600 transition-colors mr-1">Approve</button>
+                            <button onclick="disapproveJudge('${j.id}')" class="px-3 py-1 bg-red-500 text-white rounded-md text-[11px] font-bold hover:bg-red-600 transition-colors">Reject</button>
+                        `;
+                    } else {
+                        actionsHTML = `
+                            <button onclick="openJudgeSidebar('${j.id}')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors text-gray-400 hover:text-gray-800"><i class="fi fi-rr-edit text-xs"></i></button>
+                            <button onclick="deleteJudge('${j.id}')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors text-gray-400 hover:text-red-600 ml-1"><i class="fi fi-rr-trash text-xs"></i></button>
+                        `;
+                    }
+                } else {
+                    // Dashboard always has Edit/Delete available
+                    actionsHTML = `
                         <button onclick="openJudgeSidebar('${j.id}')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors text-gray-400 hover:text-gray-800"><i class="fi fi-rr-edit text-xs"></i></button>
                         <button onclick="deleteJudge('${j.id}')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors text-gray-400 hover:text-red-600 ml-1"><i class="fi fi-rr-trash text-xs"></i></button>
-                    </div>
-                </div>`;
+                    `;
+                }
+
+                if (isInnerDashboard) {
+                    tableHTML += `
+                    <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 ${bg} transition-colors group">
+                        <div class="col-span-1">${checkboxHTML}</div>
+                        <div class="col-span-3 flex items-center space-x-3.5">
+                            <div class="w-9 h-9 rounded-full border border-blue-200 flex items-center justify-center bg-blue-50 text-brand-blue font-bold text-[14px] shrink-0 cursor-pointer" onclick="openJudgeSidebar('${j.id}')">
+                                ${initial}
+                            </div>
+                            <span class="text-[14px] font-medium text-gray-900 leading-snug cursor-pointer group-hover:text-brand-blue transition-colors truncate" onclick="openJudgeSidebar('${j.id}')">${j.name}</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-[13px] text-gray-600 font-medium font-mono-custom">${j.username || '-'}</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-[13px] text-gray-600 font-medium font-mono-custom">${j.pass || '-'}</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-[13px] text-gray-600 font-medium font-mono-custom">${j.whatsapp}</span>
+                        </div>
+                        <div class="col-span-1">
+                            ${statusBadge}
+                        </div>
+                        <div class="col-span-1 flex justify-end">
+                            ${actionsHTML}
+                        </div>
+                    </div>`;
+                } else {
+                    tableHTML += `
+                    <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 ${bg} transition-colors group">
+                        <div class="col-span-1">${checkboxHTML}</div>
+                        <div class="col-span-6 flex items-center space-x-3.5">
+                            <div class="w-9 h-9 rounded-full border border-blue-200 flex items-center justify-center bg-blue-50 text-brand-blue font-bold text-[14px] shrink-0 cursor-pointer" onclick="openJudgeSidebar('${j.id}')">
+                                ${initial}
+                            </div>
+                            <span class="text-[14px] font-medium text-gray-900 leading-snug cursor-pointer group-hover:text-brand-blue transition-colors truncate" onclick="openJudgeSidebar('${j.id}')">${j.name}</span>
+                        </div>
+                        <div class="col-span-3">
+                            <span class="text-[13px] text-gray-600 font-medium font-mono-custom">${j.whatsapp}</span>
+                        </div>
+                        <div class="col-span-2 flex justify-end">
+                            ${actionsHTML}
+                        </div>
+                    </div>`;
+                }
             });
             tableList.innerHTML = tableHTML;
         }
 
         function toggleJudgeSelect(id, e) {
             e.stopPropagation();
-            if(selectedJudgeIds.has(id)) selectedJudgeIds.delete(id); 
+            if (selectedJudgeIds.has(id)) selectedJudgeIds.delete(id);
             else selectedJudgeIds.add(id);
             renderJudgesUI();
         }
 
         function toggleJudgeSelectAll() {
-            if(judgesData.length === 0) return;
-            if(selectedJudgeIds.size === judgesData.length) {
+            if (judgesData.length === 0) return;
+            if (selectedJudgeIds.size === judgesData.length) {
                 selectedJudgeIds.clear();
             } else {
                 judgesData.forEach(j => selectedJudgeIds.add(j.id));
@@ -313,21 +508,41 @@
             renderJudgesUI();
         }
 
+        async function approveJudge(id) {
+            try {
+                await db.collection('judges').doc(id).update({ status: 'approved' });
+                showToast("✅ Judge approved");
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function disapproveJudge(id) {
+            if (confirm("Are you sure you want to reject this judge?")) {
+                try {
+                    await db.collection('judges').doc(id).update({ status: 'disapproved' });
+                    showToast("✅ Judge rejected");
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+
         async function deleteJudge(id) {
-            if(confirm("Are you sure you want to delete this judge?")) {
+            if (confirm("Are you sure you want to delete this judge?")) {
                 try {
                     await db.collection('judges').doc(id).delete();
                     selectedJudgeIds.delete(id);
-                    typeof showToast === 'function' && showToast("✅ Judge deleted");
-                } catch(e) {
+                    showToast("✅ Judge deleted");
+                } catch (e) {
                     console.error(e);
                 }
             }
         }
 
         async function deleteSelectedJudges() {
-            if(selectedJudgeIds.size === 0) return;
-            if(confirm(`Delete ${selectedJudgeIds.size} selected judge(s)?`)) {
+            if (selectedJudgeIds.size === 0) return;
+            if (confirm(`Delete ${selectedJudgeIds.size} selected judge(s)?`)) {
                 try {
                     const batch = db.batch();
                     let count = 0;
@@ -339,11 +554,12 @@
                     await batch.commit();
                     selectedJudgeIds.clear();
                     typeof showToast === 'function' && showToast("✅ Selected judges deleted");
-                } catch(e) {
+                } catch (e) {
                     console.error(e);
                 }
             }
         }
     </script>
 </body>
+
 </html>

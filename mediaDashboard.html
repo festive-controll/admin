@@ -364,7 +364,7 @@
                 <!-- Dropzone -->
                 <div id="dropzone" onclick="document.getElementById('modal-file-input').click()"
                     class="w-full border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center gap-4 hover:border-brand-blue/30 hover:bg-blue-50/20 transition-all cursor-pointer group">
-                    <input type="file" id="modal-file-input" class="hidden" multiple accept="image/*,video/*"
+                    <input type="file" id="modal-file-input" class="hidden" multiple accept="image/*,video/*,audio/*"
                         onchange="handleModalFileSelect(event)">
                     <div
                         class="w-16 h-16 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -372,7 +372,7 @@
                     </div>
                     <div class="text-center">
                         <p class="text-sm font-bold text-gray-800">Click to upload or drag and drop</p>
-                        <p class="text-[12px] text-gray-400 mt-1">PNG, JPG, JPEG, MP4 (Max 50MB each)</p>
+                        <p class="text-[12px] text-gray-400 mt-1">PNG, JPG, MP4, MP3, WAV (Max 50MB each)</p>
                     </div>
                 </div>
 
@@ -563,7 +563,7 @@
                 <tr class="hover:bg-gray-50 transition-colors group">
                     <td class="px-6 py-4">
                         <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 shadow-sm relative">
-                            ${m.type === 'video' ? `<video src="${m.url}" class="w-full h-full object-cover"></video><div class="absolute inset-0 flex items-center justify-center bg-black/20"><i class="fi fi-rr-play text-white text-[10px]"></i></div>` : `<img src="${m.url}" class="w-full h-full object-cover">`}
+                            ${(m.type === 'video' || (m.type && m.type.startsWith('video/'))) ? `<video src="${m.url}" class="w-full h-full object-cover"></video><div class="absolute inset-0 flex items-center justify-center bg-black/20"><i class="fi fi-rr-play text-white text-[10px]"></i></div>` : (m.type === 'audio' || (m.type && m.type.startsWith('audio/'))) ? `<div class="w-full h-full flex items-center justify-center bg-blue-50"><i class="fi fi-rr-music-alt text-brand-blue"></i></div>` : `<img src="${m.url}" class="w-full h-full object-cover">`}
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -615,7 +615,7 @@
             container.innerHTML = selectedFiles.map((f, i) => `
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <i class="fi fi-rr-${f.type.startsWith('video') ? 'video-camera-alt' : 'picture'} text-brand-blue"></i>
+                        <i class="fi fi-rr-${f.type.startsWith('video') ? 'video-camera-alt' : f.type.startsWith('audio') ? 'music-alt' : 'picture'} text-brand-blue"></i>
                         <span class="text-[13px] font-medium text-gray-800 truncate">${f.name}</span>
                     </div>
                     <button onclick="removeFile(${i})" class="text-gray-400 hover:text-brand-red"><i class="fi fi-rr-cross-small"></i></button>

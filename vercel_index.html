@@ -907,7 +907,7 @@
         if (ctrlContainer && controllers.length > 0) {
           ctrlContainer.innerHTML = controllers.map(c => {
             const bgStyle = c.imageUrl
-              ? "background-image: url('" + c.imageUrl + "'); background-size: cover; background-position: center;"
+              ? "background-color: " + (c.color || '#EA3650') + "; background-image: url('" + c.imageUrl + "'); background-size: cover; background-position: center;"
               : "background-color: " + (c.color || '#EA3650') + ";";
             const roleText = c.role || 'CONTROLLER';
             const nameText = c.name || '';
@@ -932,7 +932,7 @@
         if (coordContainer && coordinators.length > 0) {
           coordContainer.innerHTML = coordinators.map(c => {
             const bgStyle = c.imageUrl
-              ? "background-image: url('" + c.imageUrl + "'); background-size: cover; background-position: center;"
+              ? "background-color: " + (c.color || '#09ABB1') + "; background-image: url('" + c.imageUrl + "'); background-size: cover; background-position: center;"
               : "background-color: " + (c.color || '#09ABB1') + ";";
             const roleText = c.role || 'COORDINATOR';
             const nameText = c.name || '';

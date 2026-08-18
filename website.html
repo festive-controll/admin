@@ -68,6 +68,7 @@
             }
         }
     </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8 overflow-x-hidden">
@@ -514,7 +515,7 @@
 
     <!-- Core JavaScript Logic -->
     <script>
-        let websiteConfig = {
+        var websiteConfig = {
             isWebsiteOn: true,
             visiblePages: ['home', 'standings', 'downloads', 'updates', 'moments', 'contact'],
             heroSlides: [],
@@ -1009,37 +1010,53 @@
             document.getElementById('coord-color').value = colorHex;
         };
 
+        let cropperInstance = null;
+
         window.handleCoordinatorImageUpload = function (event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function (e) {
-                const img = new Image();
-                img.onload = function () {
-                    const canvas = document.createElement('canvas');
-                    const maxDim = 500;
-                    let w = img.width;
-                    let h = img.height;
-                    if (w > maxDim || h > maxDim) {
-                        if (w > h) {
-                            h = Math.round((h * maxDim) / w);
-                            w = maxDim;
-                        } else {
-                            w = Math.round((w * maxDim) / h);
-                            h = maxDim;
-                        }
-                    }
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-                    const compressedUrl = canvas.toDataURL('image/jpeg', 0.82);
-                    setCoordinatorImagePreview(compressedUrl);
-                };
-                img.src = e.target.result;
+                const imgElement = document.getElementById('cropper-image');
+                imgElement.src = e.target.result;
+                document.getElementById('cropper-modal').classList.remove('hidden');
+
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                }
+
+                cropperInstance = new Cropper(imgElement, {
+                    aspectRatio: 3 / 4,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                });
             };
             reader.readAsDataURL(file);
+            event.target.value = '';
+        };
+
+        window.closeCropperModal = function () {
+            document.getElementById('cropper-modal').classList.add('hidden');
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+        };
+
+        window.cropAndSetImage = function () {
+            if (!cropperInstance) return;
+            
+            const canvas = cropperInstance.getCroppedCanvas({
+                width: 600,
+                height: 800,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+            
+            const compressedUrl = canvas.toDataURL('image/webp', 0.85);
+            setCoordinatorImagePreview(compressedUrl);
+            closeCropperModal();
         };
 
         function setCoordinatorImagePreview(url) {
@@ -1126,6 +1143,26 @@
         window.init = init;
         init();
     </script>
+    
+    <!-- Cropper Modal -->
+    <div id="cropper-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800">Crop Image</h3>
+                <button onclick="closeCropperModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fi fi-rr-cross"></i>
+                </button>
+            </div>
+            <div class="p-4 bg-black flex items-center justify-center h-80 relative">
+                <img id="cropper-image" src="" class="max-w-full max-h-full block">
+            </div>
+            <div class="p-4 border-t flex justify-end gap-3 bg-gray-50">
+                <button onclick="closeCropperModal()" class="px-5 py-2 text-sm font-bold text-gray-600 bg-gray-200 rounded-xl hover:bg-gray-300 transition-colors">Cancel</button>
+                <button onclick="cropAndSetImage()" class="px-5 py-2 text-sm font-bold text-white bg-brand-blue rounded-xl hover:bg-blue-700 transition-colors shadow-md" style="background-color: #2075BC;">Crop & Set</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </body>
 
 </html>
