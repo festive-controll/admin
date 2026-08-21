@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Judge Dashboard — Festival</title>
+    <script src="fest-favicon.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            bg: '#f8f9fc',
+                            blue: '#134E8E',
+                            yellow: '#FFB33F',
+                            red: '#C00707',
+                            border: '#e5e7eb'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .tab-active {
+            color: #134E8E;
+            background: #eff6ff;
+            font-weight: 700;
+            border-color: #134E8E;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body class="bg-brand-bg text-gray-900 font-sans h-[100dvh] overflow-hidden">
+
+    <div class="flex h-full w-full">
+        <!-- Sidebar Navigation -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+        <aside class="bg-white w-64 h-full border-r border-brand-border flex flex-col fixed lg:relative z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3 bg-white p-2">
+                    <div id="sidebar-fest-avatar"
+                        class="flex h-[42px] w-[42px] items-center justify-center rounded-[12px] bg-[#eecb4a] pb-1 text-[22px] font-bold text-white uppercase">
+                        F</div>
+                    <div class="flex flex-col justify-center">
+                        <span id="sidebar-fest-name"
+                            class="leading-tight text-[15px] font-medium text-[#00488f] capitalize">Festival Name</span>
+                        <span id="sidebar-fest-status"
+                            class="mt-0.5 leading-tight text-[13px] text-[#7a8288]">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 py-6 px-4 space-y-2">
+                <div class="px-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Main Menu</div>
+
+                <button onclick="switchTab('dashboard')" id="menu-dashboard"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all tab-active group">
+                    <i class="fi fi-rr-apps text-lg"></i>
+                    <span class="text-[14px]">Dashboard</span>
+                </button>
+
+                <button onclick="switchTab('programs')" id="menu-programs"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-gray-500 hover:bg-gray-50 group">
+                    <i class="fi fi-rr-list text-lg"></i>
+                    <span class="text-[14px]">Assigned Programs</span>
+                </button>
+                
+                <button onclick="switchTab('topic')" id="menu-topic"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-gray-500 hover:bg-gray-50 group">
+                    <i class="fi fi-rr-edit text-lg"></i>
+                    <span class="text-[14px]">Topic Entry</span>
+                </button>
+            </div>
+
+
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+            <!-- Header Area -->
+            <header
+                class="relative z-40 h-20 bg-white/50 backdrop-blur-md border-b border-brand-border flex items-center justify-between px-8 shrink-0">
+                <div class="flex items-center gap-4">
+                    <button class="lg:hidden p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" onclick="toggleSidebar()">
+                        <i class="fi fi-rr-menu-burger text-xl"></i>
+                    </button>
+                    <h1 id="header-title" class="text-xl font-bold text-gray-800 tracking-tight">Judge Dashboard</h1>
+                </div>
+                <div class="flex items-center gap-4 relative">
+                    <div class="flex items-center gap-3 cursor-pointer group" onclick="toggleDropdown()">
+                        <div id="top-avatar"
+                            class="w-8 h-8 rounded-full bg-[#134E8E] flex items-center justify-center text-white font-bold text-xs ring-2 ring-white shadow-sm uppercase">
+                            J</div>
+                        <span id="top-name"
+                            class="text-sm font-semibold hidden md:block text-gray-800 transition-colors uppercase tracking-tight">JUDGE</span>
+                        <i class="fi fi-rr-angle-small-down text-gray-400"></i>
+                    </div>
+
+                    <!-- Profile Dropdown -->
+                    <div id="profileDropdown"
+                        class="hidden absolute top-full mt-2 right-0 w-64 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-gray-100 z-50 overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
+                            <div id="dropdown-avatar"
+                                class="w-10 h-10 rounded-full bg-[#134E8E] flex items-center justify-center text-white font-bold text-lg border border-white shrink-0 uppercase">
+                                J</div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span id="dropdown-name" class="font-bold text-gray-900 leading-none">Judge Name</span>
+                                    <span id="dropdown-role"
+                                        class="text-[9px] font-bold text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full tracking-wider bg-white uppercase">JUDGE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="py-2">
+                            <a href="#" onclick="openCredentialsModal(event)" class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+                                <i class="fi fi-rr-key text-gray-400 text-base"></i> Change Credentials
+                            </a>
+                        </div>
+                        <div class="py-2 border-t border-gray-50 bg-gray-50/30">
+                            <a href="#" onclick="logoutJudge(event)"
+                                class="flex items-center gap-3 px-4 py-2 text-sm font-medium text-brand-red hover:bg-red-50 transition-colors">
+                                <i class="fi fi-rr-sign-out-alt text-brand-red text-base"></i> Sign out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
+
+                <!-- Dashboard Tab Content -->
+                <div id="tab-dashboard" class="animate-fade-in space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-brand-border shadow-sm space-y-4">
+                            <div
+                                class="w-12 h-12 bg-blue-50 text-brand-blue rounded-xl flex items-center justify-center">
+                                <i class="fi fi-rr-list text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Assigned Programs</p>
+                                <h3 id="stat-total-programs" class="text-3xl font-black text-gray-800">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-brand-border shadow-sm space-y-4">
+                            <div
+                                class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                                <i class="fi fi-rr-check text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Evaluated</p>
+                                <h3 id="stat-evaluated" class="text-3xl font-black text-gray-800">0</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl border border-brand-border shadow-sm space-y-4">
+                            <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center">
+                                <i class="fi fi-rr-time-fast text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Pending</p>
+                                <h3 id="stat-pending" class="text-3xl font-black text-gray-800">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assigned Programs Tab Content -->
+                <div id="tab-programs" class="hidden animate-fade-in space-y-6">
+                    <div
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-brand-border shadow-sm">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">Assigned Programs</h2>
+                            <p class="text-sm text-gray-500">View and manage the programs assigned to you for evaluation.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-2xl border border-brand-border shadow-sm overflow-hidden flex flex-col">
+                        <div class="p-4 bg-gray-50 border-b border-brand-border flex items-center justify-between">
+                            <div class="relative w-full max-w-md">
+                                <i
+                                    class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                                <input type="text" id="search-programs" placeholder="Search programs..."
+                                    class="w-full pl-10 pr-4 py-2 bg-white border border-brand-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/10">
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-50 border-b border-brand-border">
+                                    <tr>
+                                        <th class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider">Program Code</th>
+                                        <th class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider">Category</th>
+                                        <th class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="programs-table-body" class="divide-y divide-gray-100">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="empty-programs"
+                            class="hidden flex flex-col items-center justify-center py-20 text-center">
+                            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                <i class="fi fi-rr-list text-3xl text-gray-300"></i>
+                            </div>
+                            <h3 class="font-bold text-gray-800">No programs assigned</h3>
+                            <p class="text-sm text-gray-500">You currently have no assigned programs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic Entry Tab Content -->
+                <div id="tab-topic" class="hidden animate-fade-in space-y-6">
+                    <div
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-brand-border shadow-sm">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">Topic Entry</h2>
+                            <p class="text-sm text-gray-500">Enter topic details for your assigned programs.</p>
+                        </div>
+                    </div>
+
+                    <div id="topic-cards-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- Cards populated dynamically -->
+                        <div class="col-span-full py-10 flex flex-col items-center justify-center text-center opacity-50">
+                            <i class="fi fi-rr-spinner animate-spin text-3xl mb-3 text-gray-400"></i>
+                            <p class="text-sm font-medium">Loading programs...</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Change Credentials Modal -->
+    <div id="credentialsModal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden animate-fade-in relative">
+            <button onclick="closeCredentialsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fi fi-rr-cross text-sm"></i>
+            </button>
+            <div class="p-5 border-b border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800">Change Credentials</h2>
+                <p class="text-xs text-gray-500 mt-1">Update your username and password.</p>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">New Username</label>
+                    <input type="text" id="cred-username" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20" placeholder="Enter new username">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">New Password</label>
+                    <input type="text" id="cred-password" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20" placeholder="Enter new password">
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button onclick="closeCredentialsModal()" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-200 transition-colors">Cancel</button>
+                <button onclick="saveCredentials()" id="btn-save-credentials" class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-blue hover:bg-opacity-90 transition-all flex items-center gap-2">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluate Modal -->
+    <div id="evaluateModal" class="fixed inset-0 bg-black/50 z-[100] hidden flex flex-col justify-end lg:items-center lg:justify-center">
+        <div class="bg-white rounded-t-3xl lg:rounded-2xl shadow-xl w-full max-w-4xl max-h-[90dvh] flex flex-col animate-slide-up lg:animate-fade-in relative overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-gray-50/50">
+                <div>
+                    <div class="text-[10px] font-bold text-brand-blue uppercase tracking-widest mb-1" id="eval-prog-code">CODE</div>
+                    <h2 class="text-xl font-bold text-gray-900 leading-tight" id="eval-prog-name">Program Name</h2>
+                </div>
+                <button onclick="closeEvaluateModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors">
+                    <i class="fi fi-rr-cross text-xs"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50/30 custom-scrollbar" id="eval-candidates-list">
+                <!-- Candidate Cards go here -->
+            </div>
+            
+            <div class="p-4 lg:p-6 bg-white border-t border-gray-100 flex items-center justify-between shrink-0">
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest hidden sm:inline">Result Entry</span>
+                <div class="flex gap-3 w-full sm:w-auto justify-end">
+                    <button onclick="closeEvaluateModal()" class="px-6 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors">Cancel</button>
+                    <button onclick="saveJudgeResults()" id="btn-save-results" class="px-8 py-2.5 rounded-xl text-sm font-semibold text-white bg-brand-blue hover:bg-opacity-90 transition-all shadow-md shadow-brand-blue/20 flex items-center gap-2"><i class="fi fi-rr-disk"></i> Save Results</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="qrScannerModal" class="fixed inset-0 bg-black/90 z-[110] hidden flex flex-col justify-center items-center">
+        <button onclick="closeScannerModal()" class="absolute top-6 right-6 text-white hover:text-gray-300">
+            <i class="fi fi-rr-cross text-2xl"></i>
+        </button>
+        <div class="w-full max-w-sm px-4">
+            <h3 class="text-white text-center font-bold text-lg mb-4">Scan Judgement Sheet QR</h3>
+            <div id="qr-reader" class="w-full rounded-2xl overflow-hidden bg-black border-2 border-brand-yellow shadow-xl shadow-brand-yellow/20"></div>
+            <p class="text-center text-gray-400 text-sm mt-4">Position the QR code within the frame.</p>
+        </div>
+    </div>
+
+    <!-- Registration Confirmation Modal -->
+    <div id="groupRegModal" class="fixed inset-0 bg-black/50 z-[120] hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 overflow-hidden animate-fade-in relative">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-blue-50 text-brand-blue rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fi fi-rr-clip text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900 mb-2">Group Judgement</h2>
+                <p class="text-sm text-gray-500 mb-6">You are requesting access to evaluate this program.</p>
+                
+                <div class="bg-gray-50 p-4 rounded-xl text-left mb-6 border border-gray-100">
+                    <div class="text-[10px] font-bold text-brand-blue uppercase tracking-widest mb-1" id="g-reg-prog-code">CODE</div>
+                    <div class="font-bold text-gray-800 text-sm mb-1" id="g-reg-prog-name">Program Name</div>
+                    <div class="text-xs text-gray-500" id="g-reg-prog-category">Category</div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="document.getElementById('groupRegModal').classList.add('hidden')" class="flex-1 py-3 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
+                    <button onclick="confirmGroupRegistration()" id="btn-confirm-reg" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-blue hover:bg-opacity-90 transition-all shadow-md shadow-brand-blue/20">Register</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase & Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // State
+        let currentTab = 'dashboard';
+        let assignedPrograms = [];
+        let judgeId = localStorage.getItem('festUserId') || '';
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('isLoggedIn') !== 'true') {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // User Data UI
+            const name = localStorage.getItem('festUserName') || 'Judge User';
+            const upperName = name.toUpperCase();
+            const ch = name.charAt(0).toUpperCase();
+            const role = localStorage.getItem('userRole') || 'JUDGE';
+
+            document.getElementById('top-name').innerText = upperName;
+            document.getElementById('dropdown-name').innerText = name;
+            document.getElementById('top-avatar').innerText = ch;
+            document.getElementById('dropdown-avatar').innerText = ch;
+            document.getElementById('dropdown-role').innerText = role;
+
+            // Fest Data UI
+            db.collection('config').doc('festData').onSnapshot(doc => {
+                const d = doc.exists ? doc.data() : { name: 'Festival Name', isActive: true };
+                const festName = d.name || 'Festival Name';
+                const isActive = d.isActive !== false;
+                const mainLogo = d.logo512 || d.logo502 || d.logo192 || d.logo;
+
+                document.getElementById('sidebar-fest-name').innerText = festName;
+                
+                const avatarEl = document.getElementById('sidebar-fest-avatar');
+                if (mainLogo) {
+                    avatarEl.innerHTML = `<img src="${mainLogo}" class="w-full h-full object-contain rounded-[12px] bg-white p-0.5">`;
+                    avatarEl.classList.remove('bg-[#eecb4a]', 'text-white', 'pb-1');
+                    avatarEl.classList.add('bg-transparent');
+                } else {
+                    avatarEl.innerHTML = festName.charAt(0).toUpperCase();
+                }
+
+                const sbStatus = document.getElementById('sidebar-fest-status');
+                if (sbStatus) {
+                    sbStatus.innerText = isActive ? 'Active' : 'Inactive';
+                    sbStatus.className = isActive
+                        ? 'mt-0.5 leading-tight text-[13px] text-[#7a8288]'
+                        : 'mt-0.5 leading-tight text-[13px] text-red-500';
+                }
+            });
+            
+            fetchAssignedPrograms();
+        });
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            if (dropdown) dropdown.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('profileDropdown');
+            const avatarWrap = document.querySelector('.flex.items-center.gap-3.cursor-pointer');
+            if (dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(event.target) && (!avatarWrap || !avatarWrap.contains(event.target))) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        function logoutJudge(e) {
+            if (e) e.preventDefault();
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('festUserId');
+            localStorage.removeItem('festUserName');
+            window.location.href = 'index.html';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('aside');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            ['dashboard', 'programs', 'topic'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+                
+                const menuBtn = document.getElementById(`menu-${t}`);
+                if (t === tab) {
+                    menuBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all tab-active group';
+                } else {
+                    menuBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-gray-500 hover:bg-gray-50 group';
+                }
+            });
+
+            const titles = {
+                'dashboard': 'Judge Dashboard',
+                'programs': 'Assigned Programs',
+                'topic': 'Topic Entry'
+            };
+            document.getElementById('header-title').innerText = titles[tab];
+            
+            if (window.innerWidth < 1024) {
+                const sidebar = document.querySelector('aside');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
+            }
+        }
+
+        async function fetchAssignedPrograms() {
+            if (!judgeId) return;
+            db.collection('programs').onSnapshot(snap => {
+                const allPrograms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                assignedPrograms = allPrograms.filter(p => {
+                    // Check up to a reasonable limit for judge fields, typically judge1Id to judge4Id
+                    for (let i = 1; i <= 10; i++) {
+                        if (p[`judge${i}Id`] === judgeId) return true;
+                    }
+                    return false;
+                });
+                
+                renderProgramsTable();
+                renderTopicCards();
+                updateStats();
+            });
+        }
+
+        function renderProgramsTable() {
+            const tbody = document.getElementById('programs-table-body');
+            const emptyState = document.getElementById('empty-programs');
+
+            if (assignedPrograms.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = assignedPrograms.map(p => `
+                <tr class="hover:bg-gray-50 transition-colors group">
+                    <td class="px-6 py-4">
+                        <span class="text-sm font-bold text-gray-800">${p.code || p.id}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-800">${p.name || 'Unnamed Program'}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-[12px] font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">${p.category || p.section || p.type || 'General'}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <span class="text-[12px] font-bold ${p.evaluated ? 'text-green-600 bg-green-50' : 'text-amber-500 bg-amber-50'} px-3 py-1 rounded-full inline-block mb-2 lg:mb-0 lg:mr-3">
+                            ${p.evaluated ? 'Evaluated' : 'Pending'}
+                        </span>
+                        <button onclick="openEvaluateModal('${p.id}')" class="px-4 py-1.5 bg-brand-blue text-white rounded-lg text-[11px] font-bold hover:bg-opacity-90 transition-all shadow-sm uppercase tracking-wider inline-block">
+                            Evaluate
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTopicCards() {
+            const container = document.getElementById('topic-cards-container');
+            if (assignedPrograms.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <i class="fi fi-rr-folder-open text-3xl text-gray-300"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-800">No programs assigned</h3>
+                        <p class="text-sm text-gray-500">You currently have no assigned programs to enter topics for.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = assignedPrograms.map(p => `
+                <div class="bg-white p-5 rounded-2xl border border-brand-border shadow-sm flex flex-col space-y-4 hover:shadow-md transition-shadow">
+                    <div class="border-b border-gray-100 pb-3">
+                        <div class="text-[11px] font-bold text-brand-blue uppercase tracking-wider mb-1">${p.code || '---'}</div>
+                        <h3 class="text-base font-bold text-gray-800 leading-tight">${p.name || 'Unnamed Program'}</h3>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5">Topic / Details</label>
+                        <textarea id="topic-details-${p.id}" rows="4" placeholder="Enter topic or evaluation details..." class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 custom-scrollbar resize-none transition-all">${p.topic || ''}</textarea>
+                    </div>
+                    <button onclick="saveTopic('${p.id}')" id="btn-topic-${p.id}" class="w-full py-2.5 bg-brand-blue text-white rounded-lg font-semibold hover:bg-opacity-90 transition-all text-sm flex justify-center items-center gap-2">
+                        <i class="fi fi-rr-disk"></i> Save Topic
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('stat-total-programs').innerText = assignedPrograms.length;
+            const evaluatedCount = assignedPrograms.filter(p => p.evaluated).length;
+            document.getElementById('stat-evaluated').innerText = evaluatedCount;
+            document.getElementById('stat-pending').innerText = assignedPrograms.length - evaluatedCount;
+        }
+
+        async function saveTopic(programId) {
+            const textarea = document.getElementById(`topic-details-${programId}`);
+            const btn = document.getElementById(`btn-topic-${programId}`);
+            const topicDetails = textarea.value.trim();
+
+            if (!topicDetails) {
+                showToast("⚠️ Topic details cannot be empty.");
+                textarea.focus();
+                return;
+            }
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                await db.collection('programs').doc(programId).update({
+                    topic: topicDetails,
+                    updatedByJudge: judgeId,
+                    topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast("✅ Topic saved successfully!");
+                btn.innerHTML = '<i class="fi fi-rr-check text-green-300"></i> Saved';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            } catch (err) {
+                console.error("Error saving topic:", err);
+                showToast("❌ Failed to save topic.");
+            }
+        }
+
+        function openCredentialsModal(e) {
+            e.preventDefault();
+            toggleDropdown(); // close dropdown
+            db.collection('judges').doc(judgeId).get().then(doc => {
+                if(doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('cred-username').value = data.username || '';
+                    document.getElementById('cred-password').value = data.pass || '';
+                }
+            });
+            document.getElementById('credentialsModal').classList.remove('hidden');
+        }
+
+        function closeCredentialsModal() {
+            document.getElementById('credentialsModal').classList.add('hidden');
+        }
+
+        async function saveCredentials() {
+            const newUsername = document.getElementById('cred-username').value.trim();
+            const newPassword = document.getElementById('cred-password').value.trim();
+
+            if (!newUsername || !newPassword) {
+                showToast("⚠️ Username and password cannot be empty.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-credentials');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                // Check if username is taken by someone else
+                const snap = await db.collection('judges').where('username', '==', newUsername).get();
+                const taken = snap.docs.some(doc => doc.id !== judgeId);
+                
+                if (taken) {
+                    showToast("❌ Username is already taken.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                await db.collection('judges').doc(judgeId).update({
+                    username: newUsername,
+                    pass: newPassword
+                });
+
+                showToast("✅ Credentials updated successfully!");
+                closeCredentialsModal();
+            } catch (err) {
+                console.error("Error updating credentials:", err);
+                showToast("❌ Failed to update credentials.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function showToast(msg) {
+            Toastify({
+                text: msg,
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                style: { background: "#111827", borderRadius: "12px", fontSize: "14px", fontWeight: "600" }
+            }).showToast();
+        }
+
+        let evalProgramId = null;
+        let gradeTemplates = {};
+        let posTemplates = {};
+
+        // Fetch templates on load
+        db.collection('gradeTemplates').onSnapshot(snap => {
+            snap.forEach(doc => gradeTemplates[doc.id] = doc.data());
+        });
+        db.collection('positionTemplates').onSnapshot(snap => {
+            snap.forEach(doc => posTemplates[doc.id] = doc.data());
+        });
+
+        let html5QrcodeScanner = null;
+        let scanTargetProgramId = null;
+
+        function closeScannerModal() {
+            document.getElementById('qrScannerModal').classList.add('hidden');
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(e => console.error(e));
+                html5QrcodeScanner = null;
+            }
+        }
+
+        async function confirmGroupRegistration() {
+            if (!scanTargetProgramId) return;
+            const btn = document.getElementById('btn-confirm-reg');
+            btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const prog = assignedPrograms.find(p => p.id === scanTargetProgramId);
+                await db.collection('judgementRegistrations').doc(scanTargetProgramId).set({
+                    programId: scanTargetProgramId,
+                    programName: prog.name,
+                    programCode: prog.code,
+                    judgeId: judgeId,
+                    judgeName: document.getElementById('top-name').innerText,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('groupRegModal').classList.add('hidden');
+                showToast("✅ Registration submitted. Waiting for Admin approval.");
+                // Now open the modal in locked state
+                await actuallyOpenEvaluateModal(scanTargetProgramId, 'pending');
+            } catch (err) {
+                console.error("Error registering:", err);
+                showToast("❌ Failed to register.");
+            } finally {
+                btn.innerHTML = 'Register';
+                btn.disabled = false;
+            }
+        }
+
+        async function openEvaluateModal(programId) {
+            evalProgramId = programId;
+            const prog = assignedPrograms.find(p => p.id === programId);
+            if (!prog) return;
+
+            const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+            let judgementType = 'personal';
+            if (prog.venueTypeId && prog.subStageId) {
+                try {
+                    const stDoc = await db.collection('venueTypes').doc(prog.venueTypeId).collection('subStages').doc(prog.subStageId).get();
+                    if (stDoc.exists) judgementType = stDoc.data().judgementType || 'personal';
+                } catch(e) {}
+            }
+
+            if (judgementType === 'group') {
+                // Check if already registered
+                try {
+                    const regDoc = await db.collection('judgementRegistrations').doc(programId).get();
+                    if (regDoc.exists) {
+                        const status = regDoc.data().status; // 'pending' or 'approved'
+                        await actuallyOpenEvaluateModal(programId, status);
+                    } else {
+                        // Unregistered -> Open Scanner
+                        scanTargetProgramId = programId;
+                        document.getElementById('qrScannerModal').classList.remove('hidden');
+                        
+                        html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+                        html5QrcodeScanner.render((decodedText, decodedResult) => {
+                            // decodedText should match programId or programCode
+                            if (decodedText === programId || decodedText.trim().toLowerCase() === (prog.code||'').toLowerCase()) {
+                                closeScannerModal();
+                                // Open Registration Modal
+                                document.getElementById('g-reg-prog-code').innerText = prog.code || '---';
+                                document.getElementById('g-reg-prog-name').innerText = prog.name || 'Unnamed';
+                                document.getElementById('g-reg-prog-category').innerText = prog.section || 'General';
+                                document.getElementById('groupRegModal').classList.remove('hidden');
+                            } else {
+                                showToast("⚠️ QR code does not match this program.");
+                            }
+                        }, (error) => {});
+                    }
+                } catch (err) {
+                    console.error("Error checking registration:", err);
+                    showToast("❌ Failed to verify registration status.");
+                }
+            } else {
+                // Personal judgement -> open directly
+                await actuallyOpenEvaluateModal(programId, 'approved');
+            }
+        }
+
+        async function actuallyOpenEvaluateModal(programId, groupStatus) {
+            const prog = assignedPrograms.find(p => p.id === programId);
+            if (!prog) return;
+
+            document.getElementById('eval-prog-code').innerText = prog.code || '---';
+            document.getElementById('eval-prog-name').innerText = prog.name || 'Unnamed Program';
+            const listEl = document.getElementById('eval-candidates-list');
+            listEl.innerHTML = '<div class="py-20 text-center"><i class="fi fi-rr-spinner animate-spin text-3xl text-gray-300"></i><p class="mt-4 text-sm font-medium text-gray-500">Loading candidates...</p></div>';
+            
+            const modalEl = document.getElementById('evaluateModal');
+            modalEl.classList.remove('hidden');
+
+            const saveBtn = document.getElementById('btn-save-results');
+            if (groupStatus === 'pending') {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fi fi-rr-lock"></i> Waiting Approval';
+                saveBtn.classList.remove('bg-brand-blue');
+                saveBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            } else {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fi fi-rr-disk"></i> Save Results';
+                saveBtn.classList.add('bg-brand-blue');
+                saveBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            }
+
+            try {
+                const regSnap = await db.collection('registrations').where('programId', '==', programId).get();
+                if (regSnap.empty) {
+                    listEl.innerHTML = '<div class="py-20 text-center"><i class="fi fi-rr-box text-4xl text-gray-300"></i><p class="mt-4 text-sm font-bold text-gray-500">No registrations found.</p></div>';
+                    return;
+                }
+
+                const resSnap = await db.collection('programResults').where('programId', '==', programId).get();
+                const existingResults = resSnap.docs.map(d => Object.assign({id: d.id}, d.data()));
+
+                const candSnap = await db.collection('candidates').get();
+                const candidatesMap = {};
+                candSnap.forEach(d => candidatesMap[d.id] = Object.assign({id: d.id}, d.data()));
+
+                const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+
+                let gOpts = '<option value="">None</option>';
+                let pOpts = '<option value="">None</option>';
+                
+                if (prog.gradeTemplateId && gradeTemplates[prog.gradeTemplateId]) {
+                    const template = gradeTemplates[prog.gradeTemplateId];
+                    (template.values || template.grades || template.items || []).forEach(g => {
+                        const lbl = g.label || g.grade || g.name;
+                        const pts = g.points || g.value || 0;
+                        gOpts += `<option value="${pts}|${lbl}">${lbl}</option>`;
+                    });
+                } else {
+                    gOpts += `<option value="5|A">A</option><option value="3|B">B</option><option value="1|C">C</option>`;
+                }
+                
+                if (prog.positionTemplateId && posTemplates[prog.positionTemplateId]) {
+                    const template = posTemplates[prog.positionTemplateId];
+                    (template.values || template.positions || template.items || []).forEach(p => {
+                        const lbl = p.label || p.position || p.name;
+                        const pts = p.points || p.value || 0;
+                        pOpts += `<option value="${pts}|${lbl}">${lbl}</option>`;
+                    });
+                } else {
+                    pOpts += `<option value="5|1st">1st</option><option value="3|2nd">2nd</option><option value="1|3rd">3rd</option>`;
+                }
+
+                let html = '';
+
+                if (isGroup) {
+                    regSnap.forEach(doc => {
+                        const reg = doc.data();
+                        const teamName = reg.team || 'Unknown Team';
+                        const existing = existingResults.find(r => r.team === teamName && r.isGroupResult);
+                        
+                        html += `
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-brand-blue/30 transition-colors mb-4 group-eval-card" data-team="${teamName}">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-brand-blue flex items-center justify-center font-black text-lg shrink-0">${teamName.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900">${teamName}</h4>
+                                        <p class="text-[11px] font-medium text-gray-500 uppercase tracking-widest mt-1">Group Performance</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Grade</label>
+                                    <select class="eval-g-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+                                        ${gOpts}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Position</label>
+                                    <select class="eval-p-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+                                        ${pOpts}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    let candsToEval = [];
+                    regSnap.forEach(doc => {
+                        const reg = doc.data();
+                        const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                        chestsList.forEach(chest => {
+                            const candObj = Object.values(candidatesMap).find(c => String(c.chestNo) === String(chest));
+                            if (candObj) candsToEval.push(candObj);
+                        });
+                    });
+
+                    if (candsToEval.length === 0) {
+                        listEl.innerHTML = '<div class="py-20 text-center"><i class="fi fi-rr-box text-4xl text-gray-300"></i><p class="mt-4 text-sm font-bold text-gray-500">No candidates found.</p></div>';
+                        return;
+                    }
+
+                    candsToEval.forEach(cand => {
+                        const existing = existingResults.find(r => r.candidateId === cand.id);
+                        
+                        html += `
+                        <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-brand-blue/30 transition-colors mb-4 cand-eval-card" data-candid="${cand.id}" data-chest="${cand.chestNo}" data-name="${cand.name}" data-team="${cand.team || ''}">
+                            <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center font-black shrink-0">${cand.name.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900">${cand.name}</h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-bold text-gray-600 uppercase tracking-widest">#${cand.chestNo}</span>
+                                            <span class="text-[11px] font-medium text-gray-500 uppercase tracking-widest">${cand.team || 'Solo'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Grade</label>
+                                    <select class="eval-g-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+                                        ${gOpts}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Position</label>
+                                    <select class="eval-p-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+                                        ${pOpts}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                }
+
+                listEl.innerHTML = html;
+
+                setTimeout(() => {
+                    const cards = isGroup ? document.querySelectorAll('.group-eval-card') : document.querySelectorAll('.cand-eval-card');
+                    cards.forEach(card => {
+                        const teamName = card.getAttribute('data-team');
+                        const candId = card.getAttribute('data-candid');
+                        const gSel = card.querySelector('.eval-g-sel');
+                        const pSel = card.querySelector('.eval-p-sel');
+                        
+                        let ex = null;
+                        if (isGroup) {
+                            ex = existingResults.find(r => r.team === teamName && r.isGroupResult);
+                        } else {
+                            ex = existingResults.find(r => r.candidateId === candId);
+                        }
+
+                        if (ex) {
+                            for(let opt of gSel.options) if (opt.text === ex.gradeLabel) opt.selected = true;
+                            for(let opt of pSel.options) if (opt.text === ex.positionLabel) opt.selected = true;
+                        }
+
+                        if (groupStatus === 'pending') {
+                            gSel.disabled = true;
+                            pSel.disabled = true;
+                            gSel.classList.add('bg-gray-100', 'cursor-not-allowed');
+                            pSel.classList.add('bg-gray-100', 'cursor-not-allowed');
+                        }
+                    });
+                }, 100);
+
+            } catch (err) {
+                console.error("Evaluation loading error:", err);
+                listEl.innerHTML = '<div class="py-20 text-center"><i class="fi fi-rr-triangle-warning text-4xl text-red-300"></i><p class="mt-4 text-sm font-bold text-red-500">Failed to load data.</p></div>';
+            }
+        }
+
+        function closeEvaluateModal() {
+            document.getElementById('evaluateModal').classList.add('hidden');
+            evalProgramId = null;
+        }
+
+        async function saveJudgeResults() {
+            if (!evalProgramId) return;
+            const btn = document.getElementById('btn-save-results');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                const prog = assignedPrograms.find(p => p.id === evalProgramId);
+                const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+                
+                const batch = db.batch();
+
+                if (isGroup) {
+                    const cards = document.querySelectorAll('.group-eval-card');
+                    cards.forEach(card => {
+                        const teamName = card.getAttribute('data-team');
+                        const gSel = card.querySelector('.eval-g-sel');
+                        const pSel = card.querySelector('.eval-p-sel');
+                        
+                        let gPts = 0, pPts = 0, gLbl = '', pLbl = '';
+                        if(gSel.value) { const parts = gSel.value.split('|'); gPts = parseInt(parts[0])||0; gLbl = parts[1]||''; }
+                        if(pSel.value) { const parts = pSel.value.split('|'); pPts = parseInt(parts[0])||0; pLbl = parts[1]||''; }
+
+                        const docId = `${evalProgramId}_group_${teamName.replace(/\s/g,'_')}`;
+                        const docRef = db.collection('programResults').doc(docId);
+
+                        if(!gLbl && !pLbl) {
+                            batch.delete(docRef);
+                        } else {
+                            batch.set(docRef, {
+                                programId: evalProgramId,
+                                isGroupResult: true,
+                                team: teamName,
+                                name: teamName,
+                                gradeLabel: gLbl,
+                                gradePoints: gPts,
+                                positionLabel: pLbl,
+                                positionPoints: pPts,
+                                totalPoints: (gPts + pPts),
+                                updatedAt: new Date(),
+                                evaluatedBy: judgeId
+                            }, {merge: true});
+                        }
+                    });
+                } else {
+                    const cards = document.querySelectorAll('.cand-eval-card');
+                    cards.forEach(card => {
+                        const cId = card.getAttribute('data-candid');
+                        const chestNo = card.getAttribute('data-chest');
+                        const name = card.getAttribute('data-name');
+                        const team = card.getAttribute('data-team');
+                        
+                        const gSel = card.querySelector('.eval-g-sel');
+                        const pSel = card.querySelector('.eval-p-sel');
+                        
+                        let gPts = 0, pPts = 0, gLbl = '', pLbl = '';
+                        if(gSel.value) { const parts = gSel.value.split('|'); gPts = parseInt(parts[0])||0; gLbl = parts[1]||''; }
+                        if(pSel.value) { const parts = pSel.value.split('|'); pPts = parseInt(parts[0])||0; pLbl = parts[1]||''; }
+
+                        const docId = `${evalProgramId}_${cId}`;
+                        const docRef = db.collection('programResults').doc(docId);
+
+                        if(!gLbl && !pLbl) {
+                            batch.delete(docRef);
+                        } else {
+                            batch.set(docRef, {
+                                programId: evalProgramId,
+                                isGroupResult: false,
+                                candidateId: cId,
+                                chestNo: chestNo,
+                                name: name,
+                                team: team,
+                                gradeLabel: gLbl,
+                                gradePoints: gPts,
+                                positionLabel: pLbl,
+                                positionPoints: pPts,
+                                totalPoints: (gPts + pPts),
+                                updatedAt: new Date(),
+                                evaluatedBy: judgeId
+                            }, {merge: true});
+                        }
+                    });
+                }
+
+                batch.update(db.collection('programs').doc(evalProgramId), {
+                    evaluated: true,
+                    resultsUpdatedAt: new Date(),
+                    evaluatedByJudge: judgeId
+                });
+
+                await batch.commit();
+                showToast("✅ Results saved successfully!");
+                closeEvaluateModal();
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast("❌ Failed to save results.");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

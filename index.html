@@ -566,6 +566,8 @@
             const role = localStorage.getItem('userRole');
             if (role === 'Media' || role === 'media') {
                 window.location.href = 'mediaDashboard.html';
+            } else if (role === 'Judge' || role === 'judge') {
+                window.location.href = 'judgeDashboard.html';
             } else {
                 window.location.href = 'dashboard.html';
             }
@@ -906,12 +908,46 @@
                             
                             if (festUser.role === 'Media' || festUser.role === 'media') {
                                 window.location.href = 'mediaDashboard.html';
+                            } else if (festUser.role === 'Judge' || festUser.role === 'judge') {
+                                window.location.href = 'judgeDashboard.html';
                             } else {
                                 window.location.href = 'dashboard.html';
                             }
                         } else {
-                            resetBtn();
-                            showToast('<b>❌</b> Invalid username or password!');
+                            // ── Step 3: Check Judges ─────────────────────────────
+                            firebase.firestore().collection('judges')
+                                .where('username', '==', user)
+                                .where('pass', '==', pass)
+                                .get()
+                                .then((judgeSnap) => {
+                                    if (!judgeSnap.empty) {
+                                        const judgeDoc = judgeSnap.docs[0];
+                                        const judgeData = judgeDoc.data();
+                                        
+                                        if (judgeData.status && judgeData.status !== 'approved' && judgeData.status !== 'APPROVED') {
+                                            resetBtn();
+                                            showToast('<b>🚫</b> Your account is not approved yet.');
+                                            return;
+                                        }
+
+                                        showToast('<b>✅</b> Successfully logged in!');
+                                        localStorage.setItem('isLoggedIn', 'true');
+                                        localStorage.setItem('userRole', 'judge');
+                                        localStorage.setItem('festUserId', judgeDoc.id);
+                                        localStorage.setItem('festUserName', judgeData.name || judgeData.username);
+                                        
+                                        handleRememberMe(user);
+                                        window.location.href = 'judgeDashboard.html';
+                                    } else {
+                                        resetBtn();
+                                        showToast('<b>❌</b> Invalid username or password!');
+                                    }
+                                })
+                                .catch((err) => {
+                                    console.warn('Judge lookup failed:', err);
+                                    resetBtn();
+                                    showToast('<b>❌</b> Invalid username or password!');
+                                });
                         }
                     })
                     .catch((err) => {

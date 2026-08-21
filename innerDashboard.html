@@ -206,6 +206,18 @@
                                 class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                             </div> Section Order
                         </a>
+                        <a href="#" data-tab="venue-type" onclick="event.preventDefault(); showOwnerTab('venue-type')"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                            </div> Venue Type
+                        </a>
+                        <a href="#" data-tab="approvals" onclick="event.preventDefault(); showOwnerTab('approvals'); if(typeof loadPendingApprovals === 'function') loadPendingApprovals();"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                            </div> Judgment Approvals
+                        </a>
                     </div>
                 </div>
 
@@ -492,6 +504,156 @@
                         <div id="section-order-list" class="p-4 flex flex-col gap-2">
                             <!-- Populated dynamically -->
                             <div class="text-center text-sm text-gray-500 py-4">Loading sections...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venue Type Tab -->
+                <div id="tpl-venue-type" class="hidden animate-in fade-in duration-500">
+                    <div
+                        class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                        <div>
+                            <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
+                                    class="fi fi-rr-marker text-brand-blue"></i> Venue Type</h1>
+                            <p class="text-[13px] text-gray-500 mt-1">Add and manage venue types.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                                <form id="venueTypeForm" onsubmit="addVenueType(event)" class="space-y-5">
+                                    <div>
+                                        <label class="block text-sm font-semibold mb-1">Venue Type Name</label>
+                                        <input type="text" id="venueTypeName" required placeholder="Enter venue type name"
+                                            class="w-full border border-gray-200 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-blue/20 outline-none">
+                                    </div>
+                                    <button type="submit"
+                                        class="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold w-full shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                                        <i class="fi fi-rr-plus"></i> Add Venue Type
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                    <h3 class="font-bold text-gray-800 text-[14px]">Venue Types List</h3>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead class="bg-gray-50 text-gray-500 font-bold text-[11px] uppercase tracking-wider">
+                                            <tr>
+                                                <th class="px-6 py-3">#</th>
+                                                <th class="px-6 py-3 w-full">Venue Type Name</th>
+                                                <th class="px-6 py-3 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="venue-types-body" class="divide-y divide-gray-100">
+                                            <!-- Sample rows -->
+                                            <tr>
+                                                <td class="px-6 py-4 text-gray-500">1</td>
+                                                <td class="px-6 py-4 font-semibold text-gray-800">Main Stage</td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <button class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-6 py-4 text-gray-500">2</td>
+                                                <td class="px-6 py-4 font-semibold text-gray-800">Classroom</td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <button class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-6 py-4 text-gray-500">3</td>
+                                                <td class="px-6 py-4 font-semibold text-gray-800">Ground</td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <button class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub Stages Modal -->
+                <div id="subStagesModal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center">
+                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 m-4">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h2 class="text-lg font-bold text-gray-800" id="subStagesModalTitle">Manage Sub Stages</h2>
+                            <button onclick="closeSubStagesModal()" class="text-gray-400 hover:text-gray-800 transition-colors"><i class="fi fi-rr-cross text-sm"></i></button>
+                        </div>
+                        <div class="p-6">
+                            <form id="subStageForm" onsubmit="addSubStage(event)" class="flex flex-col gap-3 mb-6">
+                                <input type="hidden" id="currentVenueTypeId">
+                                <div class="flex gap-3">
+                                    <input type="text" id="subStageName" required placeholder="Enter sub stage name (e.g. Stage 1)"
+                                        class="flex-1 border border-gray-200 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-blue/20 outline-none text-sm">
+                                    <select id="judgementType" required class="border border-gray-200 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-blue/20 outline-none text-sm bg-white min-w-[150px]">
+                                        <option value="personal">Personal Judgment</option>
+                                        <option value="group">Group Judgment</option>
+                                    </select>
+                                    <button type="submit"
+                                        class="bg-brand-blue text-white px-4 py-2.5 rounded-lg font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                                        <i class="fi fi-rr-plus"></i> Add
+                                    </button>
+                                </div>
+                            </form>
+                            <div class="border border-gray-100 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-gray-50 text-gray-500 font-bold text-[11px] uppercase tracking-wider sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-2 w-1/2">Sub Stage Name</th>
+                                            <th class="px-4 py-2 w-1/3">Type</th>
+                                            <th class="px-4 py-2 text-right w-1/6">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sub-stages-body" class="divide-y divide-gray-100">
+                                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approvals Tab -->
+                <div id="tpl-approvals" class="hidden animate-in fade-in duration-500">
+                    <div
+                        class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                        <div>
+                            <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
+                                    class="fi fi-rr-check text-brand-blue"></i> Judgment Approvals</h1>
+                            <p class="text-[13px] text-gray-500 mt-1">Review and approve group judgments before they are finalized.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800 text-[14px]">Pending Approvals</h3>
+                            <button onclick="loadPendingApprovals()" class="text-brand-blue hover:text-blue-700 text-sm font-semibold flex items-center gap-1"><i class="fi fi-rr-refresh"></i> Refresh</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 text-gray-500 font-bold text-[11px] uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-3">Date</th>
+                                        <th class="px-6 py-3">Program</th>
+                                        <th class="px-6 py-3">Requested By (Judge)</th>
+                                        <th class="px-6 py-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="approvals-body" class="divide-y divide-gray-100">
+                                    <tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">Loading pending approvals...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -3192,7 +3354,7 @@
         // BULK IMPORT — CANDIDATE DATA
         // ═══════════════════════════════════════════════════════════════
         let CAND_HEADERS = ['name', 'section', 'admissionNo', 'class', 'status'];
-        const PROG_HEADERS = ['code', 'name', 'section', 'type', 'maxParticipants', 'status', 'progSet', 'gradeTemplate', 'positionTemplate'];
+        const PROG_HEADERS = ['code', 'name', 'section', 'type', 'venueType', 'subStage', 'maxParticipants', 'status', 'progSet', 'gradeTemplate', 'positionTemplate'];
         const GRADE_HEADERS = ['templateName', 'label', 'points'];
         const POS_HEADERS = ['templateName', 'label', 'points'];
 
@@ -3596,6 +3758,8 @@
         let bulkProgramValidSets = [];
         let bulkProgramValidGrades = [];
         let bulkProgramValidPositions = [];
+        let bulkProgramValidVenues = [];
+        let bulkProgramValidSubStages = {}; // map of venueName (lowercase) -> array of subStage names
 
         function validateProgramRow(r) {
             const errs = [];
@@ -3619,6 +3783,18 @@
 
             const ptpl = (r.positiontemplate || r.positionTemplate || '').trim();
             if (ptpl && !bulkProgramValidPositions.some(p => p.toLowerCase() === ptpl.toLowerCase())) errs.push('Unknown pattern template "' + ptpl + '"');
+
+            const vType = (r.venuetype || r.venueType || '').trim();
+            if (vType && !bulkProgramValidVenues.some(v => v.toLowerCase() === vType.toLowerCase())) errs.push('Unknown venue type "' + vType + '"');
+
+            const sStage = (r.substage || r.subStage || '').trim();
+            if (sStage) {
+                if (!vType) errs.push('Sub Stage provided but Venue Type is empty');
+                else {
+                    const validSubs = bulkProgramValidSubStages[vType.toLowerCase()] || [];
+                    if (!validSubs.some(s => s.toLowerCase() === sStage.toLowerCase())) errs.push('Unknown sub stage "' + sStage + '" for venue "' + vType + '"');
+                }
+            }
 
             r._errors = errs;
             r._valid = errs.length === 0;
@@ -3668,12 +3844,13 @@
                     input.value = '';
                     return;
                 }
-                const [secSnap, progSnap, setSnap, gradeSnap, posSnap] = await Promise.all([
+                const [secSnap, progSnap, setSnap, gradeSnap, posSnap, vSnap] = await Promise.all([
                     db.collection('sections').where('isActive', '==', true).get(),
                     db.collection('programs').get(),
                     db.collection('programSets').get(),
                     db.collection('gradeTemplates').get(),
-                    db.collection('positionTemplates').get()
+                    db.collection('positionTemplates').get(),
+                    db.collection('venueTypes').get()
                 ]);
                 bulkProgramValidSections = secSnap.docs.map(d => (d.data().name || '').trim());
                 window.bulkExistingCodes = progSnap.docs.map(d => String(d.data().code).trim().toLowerCase());
@@ -3684,6 +3861,28 @@
 
                 window.bulkPositionTemplatesData = posSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 bulkProgramValidPositions = window.bulkPositionTemplatesData.map(p => (p.name || '').trim());
+
+                window.bulkVenuesMapping = {}; // lower(venueName) -> { id, name }
+                window.bulkSubStagesMapping = {}; // lower(venueName_subStageName) -> { id, name }
+                bulkProgramValidVenues = [];
+                bulkProgramValidSubStages = {};
+
+                const vPromises = vSnap.docs.map(async vDoc => {
+                    const vName = (vDoc.data().name || '').trim();
+                    if (!vName) return;
+                    bulkProgramValidVenues.push(vName);
+                    window.bulkVenuesMapping[vName.toLowerCase()] = { id: vDoc.id, name: vName };
+                    
+                    const subSnap = await db.collection('venueTypes').doc(vDoc.id).collection('subStages').get();
+                    const subs = [];
+                    subSnap.docs.forEach(sDoc => {
+                        const sName = (sDoc.data().name || '').trim();
+                        subs.push(sName);
+                        window.bulkSubStagesMapping[vName.toLowerCase() + '_' + sName.toLowerCase()] = { id: sDoc.id, name: sName };
+                    });
+                    bulkProgramValidSubStages[vName.toLowerCase()] = subs;
+                });
+                await Promise.all(vPromises);
 
                 bulkProgramRows = rows.map((r, i) => {
                     return { ...r, _index: i, _rowNum: i + 2 };
@@ -3761,6 +3960,28 @@
                 if (val && !matched) opts = `<option value="${val}" selected disabled class="text-red-500">Invalid: ${val}</option>` + opts;
                 return `<select class="${baseClass} cursor-pointer" onchange="updateBulkProgramRow(${r._index}, '${field}', this.value)">${opts}</select>`;
             }
+            if (field === 'venuetype' || field === 'venueType') {
+                let opts = `<option value="">Select Venue Type</option>`;
+                let matched = false;
+                bulkProgramValidVenues.forEach(v => {
+                    if (v.toLowerCase() === valLower) matched = true;
+                    opts += `<option value="${v}" ${v.toLowerCase() === valLower ? 'selected' : ''}>${v}</option>`;
+                });
+                if (val && !matched) opts = `<option value="${val}" selected disabled class="text-red-500">Invalid: ${val}</option>` + opts;
+                return `<select class="${baseClass} cursor-pointer" onchange="updateBulkProgramRow(${r._index}, '${field}', this.value); updateBulkProgramRow(${r._index}, 'subStage', '');">${opts}</select>`;
+            }
+            if (field === 'substage' || field === 'subStage') {
+                let opts = `<option value="">Select Sub Stage</option>`;
+                const vTypeRaw = (r.venuetype || r.venueType || '').trim().toLowerCase();
+                const validSubs = bulkProgramValidSubStages[vTypeRaw] || [];
+                let matched = false;
+                validSubs.forEach(s => {
+                    if (s.toLowerCase() === valLower) matched = true;
+                    opts += `<option value="${s}" ${s.toLowerCase() === valLower ? 'selected' : ''}>${s}</option>`;
+                });
+                if (val && !matched) opts = `<option value="${val}" selected disabled class="text-red-500">Invalid: ${val}</option>` + opts;
+                return `<select class="${baseClass} cursor-pointer" onchange="updateBulkProgramRow(${r._index}, '${field}', this.value)" ${!vTypeRaw ? 'disabled' : ''}>${opts}</select>`;
+            }
 
             return `<input type="text" class="${baseClass} placeholder-gray-300" value="${val}" placeholder="${h}" onchange="updateBulkProgramRow(${r._index}, '${field}', this.value)">`;
         }
@@ -3817,6 +4038,12 @@
                 const ptplName = (r.positiontemplate || r.positionTemplate || '').trim();
                 const matchedPos = window.bulkPositionTemplatesData.find(p => p.name.toLowerCase() === ptplName.toLowerCase());
 
+                const vTypeRaw = (r.venuetype || r.venueType || '').trim().toLowerCase();
+                const sStageRaw = (r.substage || r.subStage || '').trim().toLowerCase();
+                
+                const vTypeData = window.bulkVenuesMapping ? window.bulkVenuesMapping[vTypeRaw] : null;
+                const sStageData = window.bulkSubStagesMapping ? window.bulkSubStagesMapping[vTypeRaw + '_' + sStageRaw] : null;
+
                 batch.set(ref, {
                     code: (r.code || '').toUpperCase(),
                     name: r.name,
@@ -3832,6 +4059,11 @@
                     enableScoring: !!matchedPos,
                     positionTemplateId: matchedPos ? matchedPos.id : '',
                     positionTemplate: matchedPos ? matchedPos.name : ptplName,
+                    
+                    venueTypeId: vTypeData ? vTypeData.id : '',
+                    venueTypeName: vTypeData ? vTypeData.name : '',
+                    subStageId: sStageData ? sStageData.id : '',
+                    subStageName: sStageData ? sStageData.name : '',
 
                     maxParticipants: parseInt(r.maxparticipants || r.maxParticipants) || 1,
                     minParticipants: 1,
@@ -4586,10 +4818,257 @@
             }
         }
 
+        // --- Venue Type Logic ---
+        let venueTypesList = [];
+        let venueTypesUnsub = null;
+
+        function loadVenueTypes() {
+            if (typeof db === 'undefined') return;
+            if (venueTypesUnsub) venueTypesUnsub();
+            venueTypesUnsub = db.collection('venueTypes').onSnapshot(snap => {
+                venueTypesList = snap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                venueTypesList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                renderVenueTypesList();
+            }, err => {
+                console.error("Error fetching venue types:", err);
+            });
+        }
+
+        function renderVenueTypesList() {
+            const container = document.getElementById('venue-types-body');
+            if (!container) return;
+            if (venueTypesList.length === 0) {
+                container.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No venue types found.</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            venueTypesList.forEach((vt, idx) => {
+                html += `
+                <tr>
+                    <td class="px-6 py-4 text-gray-500">${idx + 1}</td>
+                    <td class="px-6 py-4 font-semibold text-gray-800">${vt.name}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="openSubStagesModal('${vt.id}', '${vt.name}')" class="text-brand-blue hover:text-blue-700 transition-colors p-1 mr-2" title="Manage Sub Stages"><i class="fi fi-rr-list"></i></button>
+                        <button onclick="deleteVenueType('${vt.id}')" class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function addVenueType(event) {
+            event.preventDefault();
+            const input = document.getElementById('venueTypeName');
+            const name = input.value.trim();
+            if (!name) return;
+            
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('venueTypes').add({
+                        name: name,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    // Fallback for UI if DB is not active
+                    venueTypesList.push({ id: Date.now().toString(), name: name });
+                    renderVenueTypesList();
+                }
+                input.value = '';
+                typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type added successfully!') : alert('Venue Type added!');
+            } catch (err) {
+                console.error("Error adding venue type:", err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to add venue type.') : alert('Failed to add venue type.');
+            }
+        }
+
+        async function deleteVenueType(id) {
+            if (!confirm('Are you sure you want to delete this venue type?')) return;
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('venueTypes').doc(id).delete();
+                } else {
+                    // Fallback for UI
+                    venueTypesList = venueTypesList.filter(vt => vt.id !== id);
+                    renderVenueTypesList();
+                }
+                typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type deleted successfully!') : alert('Venue Type deleted!');
+            } catch (err) {
+                console.error("Error deleting venue type:", err);
+            }
+        }
+
+        // --- Sub Stages Logic ---
+        let subStagesUnsub = null;
+        let currentSubStages = [];
+
+        function openSubStagesModal(venueTypeId, venueTypeName) {
+            document.getElementById('currentVenueTypeId').value = venueTypeId;
+            document.getElementById('subStagesModalTitle').innerText = 'Manage Sub Stages: ' + venueTypeName;
+            document.getElementById('subStagesModal').classList.remove('hidden');
+            
+            // Load sub stages
+            if (subStagesUnsub) subStagesUnsub();
+            if (typeof db === 'undefined') return;
+            
+            subStagesUnsub = db.collection('venueTypes').doc(venueTypeId).collection('subStages').onSnapshot(snap => {
+                currentSubStages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                currentSubStages.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                renderSubStagesList(venueTypeId);
+            });
+        }
+
+        function closeSubStagesModal() {
+            document.getElementById('subStagesModal').classList.add('hidden');
+            document.getElementById('subStageName').value = '';
+            if (subStagesUnsub) {
+                subStagesUnsub();
+                subStagesUnsub = null;
+            }
+        }
+
+        function renderSubStagesList(venueTypeId) {
+            const container = document.getElementById('sub-stages-body');
+            if (!container) return;
+            if (currentSubStages.length === 0) {
+                container.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center text-gray-500 text-xs">No sub stages created yet.</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            currentSubStages.forEach(st => {
+                const jTypeLabel = st.judgementType === 'group' ? '<span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase font-bold">Group</span>' : '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full uppercase font-bold">Personal</span>';
+                html += `
+                <tr>
+                    <td class="px-4 py-3 font-semibold text-gray-800 text-[13px]">${st.name}</td>
+                    <td class="px-4 py-3">${jTypeLabel}</td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="deleteSubStage('${venueTypeId}', '${st.id}')" class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function addSubStage(event) {
+            event.preventDefault();
+            const venueTypeId = document.getElementById('currentVenueTypeId').value;
+            const inputName = document.getElementById('subStageName');
+            const inputType = document.getElementById('judgementType');
+            const name = inputName.value.trim();
+            const jType = inputType.value;
+            if (!name || !venueTypeId) return;
+            
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('venueTypes').doc(venueTypeId).collection('subStages').add({
+                        name: name,
+                        judgementType: jType,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                inputName.value = '';
+                inputType.value = 'personal';
+            } catch (err) {
+                console.error("Error adding sub stage:", err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to add sub stage.') : alert('Failed to add sub stage.');
+            }
+        }
+
+        async function deleteSubStage(venueTypeId, subStageId) {
+            if (!confirm('Delete this sub stage?')) return;
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('venueTypes').doc(venueTypeId).collection('subStages').doc(subStageId).delete();
+                }
+            } catch (err) {
+                console.error("Error deleting sub stage:", err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to delete sub stage.') : alert('Failed to delete sub stage.');
+            }
+        }
+
+        // --- Approvals Logic ---
+        function loadPendingApprovals() {
+            const container = document.getElementById('approvals-body');
+            if (!container) return;
+            
+            if (typeof db === 'undefined') {
+                container.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">Database not connected.</td></tr>';
+                return;
+            }
+            
+            container.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">Loading...</td></tr>';
+            
+            db.collection('judgementRegistrations').where('status', '==', 'pending').get().then(snap => {
+                if (snap.empty) {
+                    container.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">No pending approvals at this time.</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                snap.docs.forEach(doc => {
+                    const data = doc.data();
+                    const dateStr = data.createdAt ? data.createdAt.toDate().toLocaleString() : 'N/A';
+                    html += `
+                    <tr>
+                        <td class="px-6 py-4 text-gray-500">${dateStr}</td>
+                        <td class="px-6 py-4 font-semibold text-gray-800">${data.programName || 'Unknown Program'} <br><span class="text-xs text-brand-blue uppercase">${data.programCode || ''}</span></td>
+                        <td class="px-6 py-4 text-gray-600">${data.judgeName || 'Unknown Judge'}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="approveRegistration('${doc.id}')" class="bg-green-100 text-green-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-green-200 transition-colors mr-2">Approve</button>
+                            <button onclick="rejectRegistration('${doc.id}')" class="bg-red-100 text-red-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-red-200 transition-colors">Reject</button>
+                        </td>
+                    </tr>`;
+                });
+                container.innerHTML = html;
+            }).catch(err => {
+                console.error("Error loading approvals:", err);
+                container.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-red-500">Failed to load approvals.</td></tr>';
+            });
+        }
+
+        async function approveRegistration(id) {
+            if (!confirm('Approve this judge to evaluate this Group Program?')) return;
+            try {
+                await db.collection('judgementRegistrations').doc(id).update({
+                    status: 'approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                typeof showToast === 'function' ? showToast('<b>✅</b> Registration approved!') : alert('Registration approved!');
+                loadPendingApprovals();
+            } catch(err) {
+                console.error(err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to approve.') : alert('Failed to approve.');
+            }
+        }
+        
+        async function rejectRegistration(id) {
+            if (!confirm('Reject this request? The judge will not be able to evaluate the program.')) return;
+            try {
+                await db.collection('judgementRegistrations').doc(id).update({
+                    status: 'rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                typeof showToast === 'function' ? showToast('<b>✅</b> Registration rejected!') : alert('Registration rejected!');
+                loadPendingApprovals();
+            } catch(err) {
+                console.error(err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to reject.') : alert('Failed to reject.');
+            }
+        }
+
         // Initialize section loading
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof db !== 'undefined') {
                 loadSectionOrderData();
+                loadVenueTypes();
+            } else {
+                // If no db, just empty out the sample rows
+                const container = document.getElementById('venue-types-body');
+                if (container) container.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No venue types found.</td></tr>';
             }
         });
 

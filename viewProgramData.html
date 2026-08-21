@@ -1668,24 +1668,6 @@
                     });
                 }
 
-                // Fallback for General/Unlimited programs without explicit registration docs
-                if (Object.keys(teamGroups).length === 0 && allCands.length > 0) {
-                    const secCands = allCands.filter(c => {
-                        const cSec = (c.section || '').toLowerCase().trim();
-                        const pSec = (prog.section || '').toLowerCase().trim();
-                        return cSec && pSec && cSec === pSec;
-                    });
-
-                    (secCands.length > 0 ? secCands : allCands).forEach(cand => {
-                        const tName = cand.team || 'Solo Participant';
-                        if (!teamGroups[tName]) teamGroups[tName] = [];
-                        teamGroups[tName].push({
-                            chestNo: cand.chestNo || '---',
-                            name: cand.name || 'Candidate',
-                            team: tName
-                        });
-                    });
-                }
 
                 let finalCands = [];
                 if (isGroup) {
@@ -1792,7 +1774,7 @@
                     <div id="pdfSingleSheet_${judgeIndex}" style="padding: 24px 28px; background: #ffffff; width: 750px; min-height: 980px; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #0f172a; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #cbd5e1; border-radius: 16px;">
                         <div>
                             <!-- Festival Brand Color Gradient Line -->
-                            <div style="height: 5px; width: 100%; border-top-left-radius: 16px; border-top-right-radius: 16px; background: linear-gradient(90deg, #134E8E 0%, #00A3E0 35%, #09ABB1 60%, #FFC20E 80%, #EA3650 100%); margin-bottom: 2px;"></div>
+                            <div style="height: 5px; width: 100%; border-top-left-radius: 16px; border-top-right-radius: 16px; background: linear-gradient(90deg, #134E8E 0%, #C00707 33%, #FF4400 66%, #FFB33F 100%); margin-bottom: 2px;"></div>
                             
                             <!-- Compact Header with Logo & Name -->
                             <div style="padding: 14px 0 12px 0; margin-bottom: 14px; border-bottom: 2px solid #134E8E; display: flex; justify-content: space-between; align-items: center;">
@@ -1813,7 +1795,7 @@
                                 </div>
 
                                 <div style="display: flex; align-items: center; gap: 10px; shrink-0;">
-                                    <div style="background: #134E8E; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; text-align: center; border-bottom: 2px solid #FFC20E; white-space: nowrap; flex-shrink: 0;">
+                                    <div style="background: #134E8E; color: #ffffff; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; text-align: center; border-bottom: 2px solid #FFB33F; white-space: nowrap; flex-shrink: 0;">
                                         JUDGE ${judgeIndex} OF ${judgeCount}
                                     </div>
                                     <div style="padding: 3px; background: #ffffff; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0;">

@@ -194,7 +194,8 @@
                                 class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors"
                                 id="master-checkbox"></div>
                         </div>
-                        <div class="col-span-5 text-[13px] font-medium text-gray-700">Candidate</div>
+                        <div class="col-span-4 text-[13px] font-medium text-gray-700">Candidate</div>
+                        <div class="col-span-1 text-[13px] font-medium text-gray-700">Chest No</div>
                         <div class="col-span-3 text-[13px] font-medium text-gray-700 text-center">Team</div>
                         <div class="col-span-2 text-[13px] font-medium text-gray-700 text-center">Section</div>
                         <div class="col-span-1 text-[13px] font-medium text-gray-700 text-right">Actions</div>
@@ -637,7 +638,7 @@
                     <div class="col-span-1">
                         ${isSelected ? getCheckedIcon(cand.id) : getUncheckedIcon(cand.id)}
                     </div>
-                    <div class="col-span-5 flex items-center space-x-3.5">
+                    <div class="col-span-4 flex items-center space-x-3.5">
                         <div class="w-9 h-9 rounded-full border border-[#FFD085] flex items-center justify-center bg-[#F8F9FA] text-gray-600 font-medium text-[15px] shrink-0 overflow-hidden">
                             ${avatarContent}
                         </div>
@@ -645,6 +646,9 @@
                             ${nameSpanTable}
                             <div class="text-[12.5px] text-[#6B7280] font-mono-custom mt-0.5 tracking-tight">${subtextTable}</div>
                         </div>
+                    </div>
+                    <div class="col-span-1 flex items-center">
+                        <span class="text-[13px] font-medium text-gray-700">${cand.chestNo || '-'}</span>
                     </div>
                     <div class="col-span-3 flex items-center justify-center space-x-2">
                         <span class="w-[7px] h-[7px] rounded-full" style="background-color: ${teamColorHex}"></span>

@@ -32,7 +32,8 @@
         <div class="overflow-auto w-full flex-1 relative custom-scrollbar">
             <div class="w-full min-w-[700px]">
                 <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA] sticky top-0 z-10 shadow-sm">
-                    <div class="col-span-10 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Candidate Name</div>
+                    <div class="col-span-8 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Candidate Name</div>
+                    <div class="col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Chest No</div>
                     <div class="col-span-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Class</div>
                 </div>
                 <div id="tm-candidates-tbody">
@@ -107,12 +108,13 @@
             
             tbody.innerHTML = filtered.map(c => `
                 <div class="grid grid-cols-12 gap-4 items-center py-2.5 px-6 border-b border-gray-100 bg-white hover:bg-gray-50 transition-colors group">
-                    <div class="col-span-10 flex items-center gap-3">
+                    <div class="col-span-8 flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[13px] shadow-sm border shrink-0 uppercase" style="background-color: ${tColor}15; color: ${tColor}; border-color: ${tColor}30;">
                             ${(c.name || '?').charAt(0)}
                         </div>
                         <span onclick="window.viewCandidateProfile('${c.id}', '${(c.name || '').replace(/'/g, "\\'")}')" class="text-[13.5px] font-medium text-gray-900 hover:text-brand-blue hover:underline cursor-pointer transition-colors">${c.name || '—'}</span>
                     </div>
+                    <div class="col-span-2"><span class="text-[13px] font-medium text-gray-700">${c.chestNo || 'N/A'}</span></div>
                     <div class="col-span-2"><span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[11px] font-medium border border-gray-200">${c.class || 'N/A'}</span></div>
                 </div>
             `).join('');
