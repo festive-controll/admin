@@ -79,6 +79,15 @@
         .animate-fade-in {
             animation: fadeIn 0.3s ease-out forwards;
         }
+
+        @keyframes scanningLaser {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+        .laser-line {
+            animation: scanningLaser 2s infinite linear;
+        }
     </style>
 </head>
 
@@ -224,6 +233,24 @@
                         <div>
                             <h2 class="text-lg font-bold text-gray-800">Assigned Programs</h2>
                             <p class="text-sm text-gray-500">View and manage the programs assigned to you for evaluation.</p>
+                        </div>
+                    </div>
+
+                    <div id="group-scanner-section" class="bg-white rounded-2xl border border-brand-border shadow-sm p-6 mb-6 hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">Scan Group Judgement QR</h3>
+                                <p class="text-sm text-gray-500">Scan the QR code from the judgement sheet to evaluate.</p>
+                            </div>
+                            <button onclick="startUniversalScanner()" id="btn-start-scanner" class="px-4 py-2 bg-brand-blue text-white rounded-xl text-sm font-bold shadow-md shadow-brand-blue/20 hover:bg-opacity-90 flex items-center gap-2">
+                                <i class="fi fi-rr-expand"></i> Start Scanner
+                            </button>
+                        </div>
+                        <div id="universal-qr-reader" class="w-full max-w-sm mx-auto overflow-hidden rounded-2xl border-2 border-brand-blue/20 hidden relative aspect-square bg-black">
+                            <video id="qr-video" class="w-full h-full object-cover" autoplay playsinline></video>
+                            <div id="qr-laser" class="absolute left-0 w-full h-[2px] bg-red-500 shadow-[0_0_8px_2px_rgba(239,68,68,0.8)] z-10 laser-line hidden"></div>
+                            <div class="absolute inset-0 border-[40px] border-black/50 z-0 pointer-events-none"></div>
+                            <canvas id="qr-canvas" class="hidden"></canvas>
                         </div>
                     </div>
 
@@ -514,16 +541,29 @@
 
         async function fetchAssignedPrograms() {
             if (!judgeId) return;
-            db.collection('programs').onSnapshot(snap => {
+            db.collection('programs').onSnapshot(async snap => {
                 const allPrograms = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                assignedPrograms = allPrograms.filter(p => {
+                let assigned = allPrograms.filter(p => {
                     // Check up to a reasonable limit for judge fields, typically judge1Id to judge4Id
                     for (let i = 1; i <= 10; i++) {
                         if (p[`judge${i}Id`] === judgeId) return true;
                     }
                     return false;
                 });
+                
+                // Fetch judgement types for all assigned programs
+                for (let p of assigned) {
+                    p.judgementType = 'personal';
+                    if (p.venueTypeId && p.subStageId) {
+                        try {
+                            const stDoc = await db.collection('venueTypes').doc(p.venueTypeId).collection('subStages').doc(p.subStageId).get();
+                            if (stDoc.exists) p.judgementType = stDoc.data().judgementType || 'personal';
+                        } catch(e) {}
+                    }
+                }
+                
+                assignedPrograms = assigned;
                 
                 renderProgramsTable();
                 renderTopicCards();
@@ -534,15 +574,27 @@
         function renderProgramsTable() {
             const tbody = document.getElementById('programs-table-body');
             const emptyState = document.getElementById('empty-programs');
+            const scannerSection = document.getElementById('group-scanner-section');
 
             if (assignedPrograms.length === 0) {
                 tbody.innerHTML = '';
                 emptyState.classList.remove('hidden');
+                scannerSection.classList.add('hidden');
                 return;
             }
 
             emptyState.classList.add('hidden');
-            tbody.innerHTML = assignedPrograms.map(p => `
+            
+            const hasGroupPrograms = assignedPrograms.some(p => p.judgementType === 'group');
+            if (hasGroupPrograms) {
+                scannerSection.classList.remove('hidden');
+            } else {
+                scannerSection.classList.add('hidden');
+            }
+
+            tbody.innerHTML = assignedPrograms.map(p => {
+                const isGroup = p.judgementType === 'group';
+                return `
                 <tr class="hover:bg-gray-50 transition-colors group">
                     <td class="px-6 py-4">
                         <span class="text-sm font-bold text-gray-800">${p.code || p.id}</span>
@@ -557,12 +609,16 @@
                         <span class="text-[12px] font-bold ${p.evaluated ? 'text-green-600 bg-green-50' : 'text-amber-500 bg-amber-50'} px-3 py-1 rounded-full inline-block mb-2 lg:mb-0 lg:mr-3">
                             ${p.evaluated ? 'Evaluated' : 'Pending'}
                         </span>
-                        <button onclick="openEvaluateModal('${p.id}')" class="px-4 py-1.5 bg-brand-blue text-white rounded-lg text-[11px] font-bold hover:bg-opacity-90 transition-all shadow-sm uppercase tracking-wider inline-block">
+                        ${isGroup ? 
+                        `<span class="text-[11px] font-bold text-brand-blue uppercase tracking-wider inline-block">Use QR Scanner</span>` 
+                        : 
+                        `<button onclick="openEvaluateModal('${p.id}')" class="px-4 py-1.5 bg-brand-blue text-white rounded-lg text-[11px] font-bold hover:bg-opacity-90 transition-all shadow-sm uppercase tracking-wider inline-block">
                             Evaluate
-                        </button>
+                        </button>`
+                        }
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         function renderTopicCards() {
@@ -757,51 +813,138 @@
             }
         }
 
+        let scanInterval = null;
+        let qrStream = null;
+
+        async function startUniversalScanner() {
+            const readerDiv = document.getElementById('universal-qr-reader');
+            const btn = document.getElementById('btn-start-scanner');
+            const video = document.getElementById('qr-video');
+            const laser = document.getElementById('qr-laser');
+            
+            if (qrStream) {
+                // Stop scanner
+                stopScanner();
+                return;
+            }
+            
+            // Start scanner
+            readerDiv.classList.remove('hidden');
+            laser.classList.remove('hidden');
+            btn.innerHTML = '<i class="fi fi-rr-cross"></i> Stop Scanner';
+            btn.classList.remove('bg-brand-blue');
+            btn.classList.add('bg-red-500');
+            
+            try {
+                qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                video.srcObject = qrStream;
+                video.setAttribute("playsinline", true);
+                await video.play();
+
+                scanInterval = setInterval(captureAndDecode, 1500); // Check every 1.5s to avoid API limits
+            } catch (err) {
+                console.error("Camera error:", err);
+                showToast("❌ Unable to access camera.");
+                stopScanner();
+            }
+        }
+
+        function stopScanner() {
+            const readerDiv = document.getElementById('universal-qr-reader');
+            const btn = document.getElementById('btn-start-scanner');
+            const video = document.getElementById('qr-video');
+            const laser = document.getElementById('qr-laser');
+
+            if (scanInterval) clearInterval(scanInterval);
+            scanInterval = null;
+
+            if (qrStream) {
+                qrStream.getTracks().forEach(track => track.stop());
+                qrStream = null;
+            }
+
+            video.srcObject = null;
+            readerDiv.classList.add('hidden');
+            laser.classList.add('hidden');
+            btn.innerHTML = '<i class="fi fi-rr-expand"></i> Start Scanner';
+            btn.classList.remove('bg-red-500');
+            btn.classList.add('bg-brand-blue');
+        }
+
+        async function captureAndDecode() {
+            if (!qrStream) return;
+            const video = document.getElementById('qr-video');
+            const canvas = document.getElementById('qr-canvas');
+            if (video.videoWidth === 0) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Get base64 string
+            const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+            try {
+                const response = await fetch('https://quickchart.io/qr-read', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Image })
+                });
+                const data = await response.json();
+                
+                if (data.text) {
+                    const text = data.text.trim().toLowerCase();
+                    
+                    // Find program by ID or code
+                    const prog = assignedPrograms.find(p => p.id === text || (p.code || '').toLowerCase() === text);
+                    
+                    if (prog) {
+                        if (prog.judgementType === 'group') {
+                            stopScanner();
+                            processGroupProgramEvaluation(prog.id);
+                        } else {
+                            showToast("⚠️ Scanned program is not a group judgement program.");
+                        }
+                    } else {
+                        showToast("⚠️ QR code does not match any assigned program.");
+                    }
+                }
+            } catch (err) {
+                console.error("QuickChart API error:", err);
+            }
+        }
+
+        async function processGroupProgramEvaluation(programId) {
+            const prog = assignedPrograms.find(p => p.id === programId);
+            if (!prog) return;
+            
+            try {
+                const regDoc = await db.collection('judgementRegistrations').doc(programId).get();
+                if (regDoc.exists) {
+                    const status = regDoc.data().status; // 'pending' or 'approved'
+                    await actuallyOpenEvaluateModal(programId, status);
+                } else {
+                    // Unregistered -> Open Registration Modal
+                    scanTargetProgramId = programId;
+                    document.getElementById('g-reg-prog-code').innerText = prog.code || '---';
+                    document.getElementById('g-reg-prog-name').innerText = prog.name || 'Unnamed';
+                    document.getElementById('g-reg-prog-category').innerText = prog.section || 'General';
+                    document.getElementById('groupRegModal').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Error checking registration:", err);
+                showToast("❌ Failed to verify registration status.");
+            }
+        }
+
         async function openEvaluateModal(programId) {
             evalProgramId = programId;
             const prog = assignedPrograms.find(p => p.id === programId);
             if (!prog) return;
 
-            const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
-            let judgementType = 'personal';
-            if (prog.venueTypeId && prog.subStageId) {
-                try {
-                    const stDoc = await db.collection('venueTypes').doc(prog.venueTypeId).collection('subStages').doc(prog.subStageId).get();
-                    if (stDoc.exists) judgementType = stDoc.data().judgementType || 'personal';
-                } catch(e) {}
-            }
-
-            if (judgementType === 'group') {
-                // Check if already registered
-                try {
-                    const regDoc = await db.collection('judgementRegistrations').doc(programId).get();
-                    if (regDoc.exists) {
-                        const status = regDoc.data().status; // 'pending' or 'approved'
-                        await actuallyOpenEvaluateModal(programId, status);
-                    } else {
-                        // Unregistered -> Open Scanner
-                        scanTargetProgramId = programId;
-                        document.getElementById('qrScannerModal').classList.remove('hidden');
-                        
-                        html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
-                        html5QrcodeScanner.render((decodedText, decodedResult) => {
-                            // decodedText should match programId or programCode
-                            if (decodedText === programId || decodedText.trim().toLowerCase() === (prog.code||'').toLowerCase()) {
-                                closeScannerModal();
-                                // Open Registration Modal
-                                document.getElementById('g-reg-prog-code').innerText = prog.code || '---';
-                                document.getElementById('g-reg-prog-name').innerText = prog.name || 'Unnamed';
-                                document.getElementById('g-reg-prog-category').innerText = prog.section || 'General';
-                                document.getElementById('groupRegModal').classList.remove('hidden');
-                            } else {
-                                showToast("⚠️ QR code does not match this program.");
-                            }
-                        }, (error) => {});
-                    }
-                } catch (err) {
-                    console.error("Error checking registration:", err);
-                    showToast("❌ Failed to verify registration status.");
-                }
+            if (prog.judgementType === 'group') {
+                processGroupProgramEvaluation(programId);
             } else {
                 // Personal judgement -> open directly
                 await actuallyOpenEvaluateModal(programId, 'approved');
