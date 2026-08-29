@@ -813,16 +813,13 @@
             }
         }
 
-        let scanInterval = null;
-        let qrStream = null;
+        let html5QrCode = null;
 
         async function startUniversalScanner() {
             const readerDiv = document.getElementById('universal-qr-reader');
             const btn = document.getElementById('btn-start-scanner');
-            const video = document.getElementById('qr-video');
-            const laser = document.getElementById('qr-laser');
             
-            if (qrStream) {
+            if (html5QrCode) {
                 // Stop scanner
                 stopScanner();
                 return;
@@ -830,18 +827,38 @@
             
             // Start scanner
             readerDiv.classList.remove('hidden');
-            laser.classList.remove('hidden');
             btn.innerHTML = '<i class="fi fi-rr-cross"></i> Stop Scanner';
             btn.classList.remove('bg-brand-blue');
             btn.classList.add('bg-red-500');
             
+            // Clear out any old manual html from readerDiv
+            readerDiv.innerHTML = '';
+            
+            html5QrCode = new Html5Qrcode("universal-qr-reader");
+            
             try {
-                qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                video.srcObject = qrStream;
-                video.setAttribute("playsinline", true);
-                await video.play();
-
-                scanInterval = setInterval(captureAndDecode, 1500); // Check every 1.5s to avoid API limits
+                await html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText, decodedResult) => {
+                        const text = decodedText.trim().toLowerCase();
+                        const prog = assignedPrograms.find(p => p.id.toLowerCase() === text || (p.code || '').toLowerCase() === text);
+                        
+                        if (prog) {
+                            if (prog.judgementType === 'group') {
+                                stopScanner();
+                                processGroupProgramEvaluation(prog.id);
+                            } else {
+                                showToast("⚠️ Scanned program is not a group judgement program.");
+                            }
+                        } else {
+                            showToast("⚠️ QR code does not match any assigned program.");
+                        }
+                    },
+                    (errorMessage) => {
+                        // ignore failures during scan
+                    }
+                );
             } catch (err) {
                 console.error("Camera error:", err);
                 showToast("❌ Unable to access camera.");
@@ -852,67 +869,21 @@
         function stopScanner() {
             const readerDiv = document.getElementById('universal-qr-reader');
             const btn = document.getElementById('btn-start-scanner');
-            const video = document.getElementById('qr-video');
-            const laser = document.getElementById('qr-laser');
 
-            if (scanInterval) clearInterval(scanInterval);
-            scanInterval = null;
-
-            if (qrStream) {
-                qrStream.getTracks().forEach(track => track.stop());
-                qrStream = null;
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch(err => {
+                    console.error("Failed to stop scanner", err);
+                    html5QrCode = null;
+                });
             }
 
-            video.srcObject = null;
             readerDiv.classList.add('hidden');
-            laser.classList.add('hidden');
             btn.innerHTML = '<i class="fi fi-rr-expand"></i> Start Scanner';
             btn.classList.remove('bg-red-500');
             btn.classList.add('bg-brand-blue');
-        }
-
-        async function captureAndDecode() {
-            if (!qrStream) return;
-            const video = document.getElementById('qr-video');
-            const canvas = document.getElementById('qr-canvas');
-            if (video.videoWidth === 0) return;
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Get base64 string
-            const base64Image = canvas.toDataURL('image/jpeg', 0.8);
-
-            try {
-                const response = await fetch('https://quickchart.io/qr-read', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: base64Image })
-                });
-                const data = await response.json();
-                
-                if (data.text) {
-                    const text = data.text.trim().toLowerCase();
-                    
-                    // Find program by ID or code
-                    const prog = assignedPrograms.find(p => p.id === text || (p.code || '').toLowerCase() === text);
-                    
-                    if (prog) {
-                        if (prog.judgementType === 'group') {
-                            stopScanner();
-                            processGroupProgramEvaluation(prog.id);
-                        } else {
-                            showToast("⚠️ Scanned program is not a group judgement program.");
-                        }
-                    } else {
-                        showToast("⚠️ QR code does not match any assigned program.");
-                    }
-                }
-            } catch (err) {
-                console.error("QuickChart API error:", err);
-            }
         }
 
         async function processGroupProgramEvaluation(programId) {
