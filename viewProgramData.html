@@ -1765,8 +1765,7 @@
                     tbHtml += '</tr>';
                 });
 
-                let cleanUrl = window.location.href.split('?')[0]; 
-                const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(cleanUrl + "?id=" + pId + "&src=qr");
+                const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(pId);
 
                 // Helper to create HTML for a single judge sheet (Compact Reduced Size)
                 const createSingleSheetHtml = (judgeIndex) => {
