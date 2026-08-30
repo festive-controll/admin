@@ -146,7 +146,7 @@
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
                     <div class="mb-4">
                         <div class="flex items-center justify-between gap-2 mb-2">
-                            <span class="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full shadow-sm">${prog.code} &bull; ${prog.type}</span>
+                            <span class="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full shadow-sm">${prog.code} &bull; ${prog.type}${prog.section ? ' &bull; ' + prog.section : ''}</span>
                             ${statusBadge}
                         </div>
                         <h3 class="text-[15px] font-bold text-gray-900 leading-tight pr-4">${prog.name}</h3>

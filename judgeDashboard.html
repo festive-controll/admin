@@ -651,8 +651,12 @@
             container.innerHTML = assignedPrograms.map(p => `
                 <div class="bg-white p-5 rounded-2xl border border-brand-border shadow-sm flex flex-col space-y-4 hover:shadow-md transition-shadow">
                     <div class="border-b border-gray-100 pb-3">
-                        <div class="text-[11px] font-bold text-brand-blue uppercase tracking-wider mb-1">${p.code || '---'}</div>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="text-[11px] font-bold text-brand-blue uppercase tracking-wider">${p.code || '---'}</span>
+                            ${p.section ? `<span class="px-2 py-0.5 bg-blue-50 text-brand-blue border border-blue-100 text-[10px] font-bold rounded-md uppercase tracking-wider">${p.section}</span>` : ''}
+                        </div>
                         <h3 class="text-base font-bold text-gray-800 leading-tight">${p.name || 'Unnamed Program'}</h3>
+                        <p class="text-[12px] font-medium text-gray-400 mt-0.5">${p.section || ''}</p>
                     </div>
                     <div class="flex-1">
                         <label class="block text-xs font-semibold text-gray-600 mb-1.5">Topic / Details</label>

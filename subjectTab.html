@@ -36,189 +36,271 @@
     </script>
 
     <!-- Google Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
-        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
-        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-8px); }
-            40%, 80% { transform: translateX(8px); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fc;
         }
-        .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+        i[class^="fi-"] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .font-mono-custom {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-8px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(8px);
+            }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+        }
     </style>
 </head>
 
 <body class="bg-[#f8f9fc] min-h-screen text-gray-800 p-4 sm:p-6 lg:p-8">
 
-    <!-- Passcode Lock Modal Overlay -->
-    <div id="subjectPasscodeModalOverlay" class="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-white border border-gray-100 rounded-3xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300">
-            <div class="w-16 h-16 bg-blue-50 text-brand-blue rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-sm border border-blue-100">
-                <i class="fi fi-rr-lock"></i>
-            </div>
-            <div>
-                <h2 class="text-xl font-bold text-gray-900">Protected Area</h2>
-                <p class="text-xs text-gray-500 mt-1">Enter passcode to unlock Subject Tab.</p>
-            </div>
-            <div class="space-y-3">
-                <input type="password" id="subjectPasscodeInput" maxlength="10" placeholder="Passcode"
-                    class="w-full text-center tracking-[0.5em] text-2xl font-bold py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all"
-                    onkeydown="if(event.key==='Enter') window.checkSubjectPasscode()">
-                
-                <p id="passcodeErrorMsg" class="text-xs font-semibold text-red-500 hidden"></p>
+    <div class="relative w-full min-h-[500px]">
+        <!-- Passcode Section Lock Container -->
+        <div id="subjectPasscodeModalBox"
+            class="absolute inset-0 z-30 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 rounded-3xl min-h-[450px]">
+            <div
+                class="bg-white border border-gray-100 rounded-3xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-6 animate-in fade-in zoom-in duration-300">
+                <div
+                    class="w-16 h-16 bg-blue-50 text-brand-blue rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-sm border border-blue-100">
+                    <i class="fi fi-rr-lock"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Subject Tab Locked</h2>
+                    <p class="text-xs text-gray-500 mt-1">Enter passcode to view subject details.</p>
+                </div>
+                <div class="space-y-3">
+                    <input type="password" id="subjectPasscodeInput" maxlength="10" placeholder="Passcode"
+                        class="w-full text-center tracking-[0.5em] text-2xl font-bold py-3 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all"
+                        onkeydown="if(event.key==='Enter') window.checkSubjectPasscode()">
 
-                <button onclick="window.checkSubjectPasscode()" id="btnSubmitPasscode"
-                    class="w-full py-3 bg-brand-blue hover:bg-blue-700 active:scale-95 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
-                    <i class="fi fi-rr-key text-xs"></i>
-                    <span>Unlock Subject Tab</span>
-                </button>
-            </div>
-            <div class="pt-2 text-[11px] text-gray-400 flex items-center justify-center gap-1">
-                <i class="fi fi-rr-time-fast text-xs text-amber-500"></i>
-                <span>Access stays unlocked for 5 minutes</span>
-            </div>
-        </div>
-    </div>
+                    <p id="passcodeErrorMsg" class="text-xs font-semibold text-red-500 hidden"></p>
 
-    <div id="subjectTabMainContent" class="max-w-7xl mx-auto space-y-6 transition-all duration-300">
-
-        <!-- Page Header -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">Programme Management</span>
+                    <button onclick="window.checkSubjectPasscode()" id="btnSubmitPasscode"
+                        class="w-full py-3 bg-brand-blue hover:bg-blue-700 active:scale-95 text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                        <i class="fi fi-rr-key text-xs"></i>
+                        <span>Unlock Subject Tab</span>
+                    </button>
                 </div>
-                <h1 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">Subject Tab (Judge Saved Topics)</h1>
-                <p class="text-[13px] text-gray-500 mt-1 font-medium">View and manage all topic &amp; subject details saved by judges for festival programs.</p>
-            </div>
-            
-            <!-- Quick Stats -->
-            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
-                <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-center min-w-[90px]">
-                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
-                    <p id="stat-total" class="text-lg font-black text-gray-800">0</p>
-                </div>
-                <div class="bg-green-50/70 border border-green-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
-                    <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider flex items-center justify-center gap-1">
-                        <i class="fi fi-rr-check-circle text-[10px]"></i> Topic Saved
-                    </p>
-                    <p id="stat-saved" class="text-lg font-black text-green-700">0</p>
-                </div>
-                <div class="bg-amber-50/70 border border-amber-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
-                    <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider flex items-center justify-center gap-1">
-                        <i class="fi fi-rr-clock text-[10px]"></i> Pending
-                    </p>
-                    <p id="stat-pending" class="text-lg font-black text-amber-700">0</p>
-                </div>
-                <div class="bg-blue-50/70 border border-blue-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
-                    <p class="text-[11px] font-bold text-brand-blue uppercase tracking-wider flex items-center justify-center gap-1">
-                        <i class="fi fi-rr-users-alt text-[10px]"></i> Judges
-                    </p>
-                    <p id="stat-judges" class="text-lg font-black text-brand-blue">0</p>
+                <div class="pt-2 text-[11px] text-gray-400 flex items-center justify-center gap-1">
+                    <i class="fi fi-rr-time-fast text-xs text-amber-500"></i>
+                    <span>Access stays unlocked for 5 minutes</span>
                 </div>
             </div>
         </div>
 
-        <!-- Controls & Filters Bar -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-            
-            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-                
-                <!-- Status Filter Tabs -->
-                <div class="flex bg-gray-100/80 p-1 rounded-xl items-center overflow-x-auto no-scrollbar border border-gray-200/60">
-                    <button id="tab-all" onclick="filterByStatus('ALL')" class="bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
-                        All Programs
-                    </button>
-                    <button id="tab-saved" onclick="filterByStatus('SAVED')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
-                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Topic Saved
-                    </button>
-                    <button id="tab-pending" onclick="filterByStatus('PENDING')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
-                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending Topic
-                    </button>
+        <div id="subjectTabMainContent" class="max-w-7xl mx-auto space-y-6 transition-all duration-300">
+
+            <!-- Page Header -->
+            <div
+                class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span
+                            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">Programme
+                            Management</span>
+                        <div id="subjectUnlockStatusContainer" class="flex items-center gap-2">
+                            <span id="subjectUnlockTimerBadge"
+                                class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center gap-1">
+                                <i class="fi fi-rr-time-fast text-[10px]"></i>
+                                <span id="subjectUnlockTimerText">Auto-locks in 5:00</span>
+                            </span>
+                            <button onclick="window.manualLockSubjectTab()" id="btn-manual-lock-subject"
+                                title="Lock Subject Tab Now"
+                                class="flex items-center gap-1 px-2.5 py-0.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200/80 rounded-full text-[10px] font-bold transition-all shadow-2xs active:scale-95 cursor-pointer">
+                                <i class="fi fi-rr-lock text-[10px]"></i>
+                                <span>Lock Now</span>
+                            </button>
+                        </div>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">Subject Tab (Judge Saved
+                        Topics)</h1>
+                    <p class="text-[13px] text-gray-500 mt-1 font-medium">View and manage all topic &amp; subject
+                        details saved by judges for festival programs.</p>
                 </div>
 
-                <div class="flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-xl">
-                    <!-- Section Filter Dropdown -->
-                    <select id="sectionFilter" onchange="onSectionChange(this.value)" class="w-full sm:w-44 px-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
-                        <option value="ALL">All Sections</option>
-                    </select>
-
-                    <!-- Search Input -->
-                    <div class="relative flex-1 w-full">
-                        <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input type="text" id="searchInput" oninput="onSearchChange(this.value)" 
-                            placeholder="Search program, section, judge, or subject topic..." 
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                <!-- Quick Stats -->
+                <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                    <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-center min-w-[90px]">
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                        <p id="stat-total" class="text-lg font-black text-gray-800">0</p>
+                    </div>
+                    <div
+                        class="bg-green-50/70 border border-green-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                        <p
+                            class="text-[11px] font-bold text-green-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                            <i class="fi fi-rr-check-circle text-[10px]"></i> Topic Saved
+                        </p>
+                        <p id="stat-saved" class="text-lg font-black text-green-700">0</p>
+                    </div>
+                    <div
+                        class="bg-amber-50/70 border border-amber-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                        <p
+                            class="text-[11px] font-bold text-amber-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                            <i class="fi fi-rr-clock text-[10px]"></i> Pending
+                        </p>
+                        <p id="stat-pending" class="text-lg font-black text-amber-700">0</p>
+                    </div>
+                    <div class="bg-blue-50/70 border border-blue-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                        <p
+                            class="text-[11px] font-bold text-brand-blue uppercase tracking-wider flex items-center justify-center gap-1">
+                            <i class="fi fi-rr-users-alt text-[10px]"></i> Judges
+                        </p>
+                        <p id="stat-judges" class="text-lg font-black text-brand-blue">0</p>
                     </div>
                 </div>
-
             </div>
-        </div>
 
-        <!-- Topics Table Container -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-50/80 border-b border-gray-100 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                            <th class="py-4 px-5">Program Details</th>
-                            <th class="py-4 px-5">Assigned Judges</th>
-                            <th class="py-4 px-5">Judge Saved Subject / Topic</th>
-                            <th class="py-4 px-5 text-center">Status</th>
-                            <th class="py-4 px-5 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="subject-tbody" class="divide-y divide-gray-100 text-[13px]">
-                        <tr>
-                            <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <div class="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Loading judge saved topics...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            <!-- Controls & Filters Bar -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
 
-    </div>
+                <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
 
-    <!-- Edit Topic Modal -->
-    <div id="editTopicModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
-            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-                <div>
-                    <h3 id="modalProgTitle" class="text-base font-bold text-gray-900 leading-tight">Edit Saved Subject Topic</h3>
-                    <p id="modalProgCode" class="text-xs text-brand-blue font-bold mt-0.5">Program Details</p>
+                    <!-- Status Filter Tabs -->
+                    <div
+                        class="flex bg-gray-100/80 p-1 rounded-xl items-center overflow-x-auto no-scrollbar border border-gray-200/60">
+                        <button id="tab-all" onclick="filterByStatus('ALL')"
+                            class="bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                            All Programs
+                        </button>
+                        <button id="tab-saved" onclick="filterByStatus('SAVED')"
+                            class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Topic Saved
+                        </button>
+                        <button id="tab-pending" onclick="filterByStatus('PENDING')"
+                            class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending Topic
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-xl">
+                        <!-- Section Filter Dropdown -->
+                        <select id="sectionFilter" onchange="onSectionChange(this.value)"
+                            class="w-full sm:w-44 px-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+                            <option value="ALL">All Sections</option>
+                        </select>
+
+                        <!-- Search Input -->
+                        <div class="relative flex-1 w-full">
+                            <i
+                                class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="text" id="searchInput" oninput="onSearchChange(this.value)"
+                                placeholder="Search program, section, judge, or subject topic..."
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                        </div>
+                    </div>
+
                 </div>
-                <button type="button" onclick="closeEditModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 flex items-center justify-center transition-colors">
-                    <i class="fi fi-rr-cross text-xs"></i>
-                </button>
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Topic / Subject Text</label>
-                <textarea id="modalTopicInput" rows="5" placeholder="Enter subject topic text..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 resize-none transition-all"></textarea>
+
+            <!-- Topics Table Container -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-gray-50/80 border-b border-gray-100 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                                <th class="py-4 px-5">Program Details</th>
+                                <th class="py-4 px-5">Assigned Judges</th>
+                                <th class="py-4 px-5">Judge Saved Subject / Topic</th>
+                                <th class="py-4 px-5 text-center">Status</th>
+                                <th class="py-4 px-5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subject-tbody" class="divide-y divide-gray-100 text-[13px]">
+                            <tr>
+                                <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                                    <div class="flex flex-col items-center justify-center gap-2">
+                                        <div
+                                            class="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin">
+                                        </div>
+                                        <span>Loading judge saved topics...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="flex items-center justify-between gap-3 pt-2">
-                <button type="button" onclick="saveModalTopic(true)" class="px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors">
-                    Clear Topic
-                </button>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeEditModal()" class="px-4 py-2.5 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
-                        Cancel
+
+        </div>
+
+        <!-- Edit Topic Modal -->
+        <div id="editTopicModalOverlay"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 id="modalProgTitle" class="text-base font-bold text-gray-900 leading-tight">Edit Saved
+                            Subject Topic</h3>
+                        <p id="modalProgCode" class="text-xs text-brand-blue font-bold mt-0.5">Program Details</p>
+                    </div>
+                    <button type="button" onclick="closeEditModal()"
+                        class="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 flex items-center justify-center transition-colors">
+                        <i class="fi fi-rr-cross text-xs"></i>
                     </button>
-                    <button type="button" id="btn-modal-save" onclick="saveModalTopic(false)" class="px-5 py-2.5 bg-brand-blue hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
-                        Save Topic
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Topic / Subject Text</label>
+                    <textarea id="modalTopicInput" rows="5" placeholder="Enter subject topic text..."
+                        class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 resize-none transition-all"></textarea>
+                </div>
+                <div class="flex items-center justify-between gap-3 pt-2">
+                    <button type="button" onclick="saveModalTopic(true)"
+                        class="px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                        Clear Topic
                     </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeEditModal()"
+                            class="px-4 py-2.5 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" id="btn-modal-save" onclick="saveModalTopic(false)"
+                            class="px-5 py-2.5 bg-brand-blue hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                            Save Topic
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -229,213 +311,213 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-        (function () {
-            var db = window.db || (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+            (function () {
+                var db = window.db || (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
 
-            if (!db && typeof firebase !== 'undefined') {
-                const firebaseConfig = {
-                    authDomain: "festie-s1u2h3.firebaseapp.com",
-                    projectId: "festie-s1u2h3",
-                    storageBucket: "festie-s1u2h3.firebasestorage.app",
-                    messagingSenderId: "305105260195",
-                    appId: "1:305105260195:web:53177651a556fb404771c9"
-                };
-                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-            }
-
-            let allPrograms = [];
-            let allJudgesMap = {};
-            let currentStatusFilter = 'ALL';
-            let currentSectionFilter = 'ALL';
-            let searchQuery = '';
-            let activeEditProgId = null;
-
-            function showToast(msg, type = 'success') {
-                if (typeof Toastify === 'function') {
-                    Toastify({
-                        text: msg,
-                        duration: 3000,
-                        gravity: "top",
-                        position: "right",
-                        style: {
-                            background: type === 'error' ? "#EF4444" : (type === 'warning' ? "#F59E0B" : "#10B981")
-                        }
-                    }).showToast();
-                } else {
-                    alert(msg);
-                }
-            }
-
-            if (!db) {
-                renderEmptyState("Database connection unavailable");
-                return;
-            }
-
-            // Fetch Judges Map then listen to Programs
-            db.collection('judges').onSnapshot(jSnap => {
-                allJudgesMap = {};
-                jSnap.docs.forEach(d => {
-                    allJudgesMap[d.id] = { id: d.id, ...d.data() };
-                });
-                document.getElementById('stat-judges').innerText = Object.keys(allJudgesMap).length;
-                renderUI();
-            }, err => {
-                console.error("Error fetching judges:", err);
-            });
-
-            db.collection('programs').onSnapshot(snap => {
-                allPrograms = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                populateSectionDropdown();
-                renderUI();
-            }, err => {
-                console.error("Error loading programs:", err);
-                renderEmptyState("Error loading program topics");
-            });
-
-            function populateSectionDropdown() {
-                const select = document.getElementById('sectionFilter');
-                if (!select) return;
-
-                const sectionsSet = new Set();
-                allPrograms.forEach(p => {
-                    if (p.section && p.section.trim()) sectionsSet.add(p.section.trim());
-                });
-
-                const currentVal = select.value || 'ALL';
-                let html = '<option value="ALL">All Sections</option>';
-                Array.from(sectionsSet).sort().forEach(sec => {
-                    html += `<option value="${sec}">${sec}</option>`;
-                });
-                select.innerHTML = html;
-                select.value = currentVal;
-            }
-
-            window.filterByStatus = function(status) {
-                currentStatusFilter = status;
-                ['all', 'saved', 'pending'].forEach(tab => {
-                    const btn = document.getElementById('tab-' + tab);
-                    if (btn) {
-                        if (tab.toUpperCase() === status) {
-                            btn.className = "bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all border border-gray-200/60";
-                        } else {
-                            btn.className = "text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all";
-                        }
-                    }
-                });
-                renderUI();
-            };
-
-            window.onSectionChange = function(sec) {
-                currentSectionFilter = sec;
-                renderUI();
-            };
-
-            window.onSearchChange = function(val) {
-                searchQuery = (val || '').toLowerCase().trim();
-                renderUI();
-            };
-
-            function renderUI() {
-                const tbody = document.getElementById('subject-tbody');
-                if (!tbody) return;
-
-                // Update Stats
-                const totalProgs = allPrograms.length;
-                let savedCount = 0;
-                let pendingCount = 0;
-
-                allPrograms.forEach(p => {
-                    if (p.topic && p.topic.trim()) savedCount++;
-                    else pendingCount++;
-                });
-
-                document.getElementById('stat-total').innerText = totalProgs;
-                document.getElementById('stat-saved').innerText = savedCount;
-                document.getElementById('stat-pending').innerText = pendingCount;
-
-                // Filter programs
-                let filtered = [...allPrograms];
-
-                // Filter by Status
-                if (currentStatusFilter === 'SAVED') {
-                    filtered = filtered.filter(p => p.topic && p.topic.trim());
-                } else if (currentStatusFilter === 'PENDING') {
-                    filtered = filtered.filter(p => !p.topic || !p.topic.trim());
+                if (!db && typeof firebase !== 'undefined') {
+                    const firebaseConfig = {
+                        authDomain: "festie-s1u2h3.firebaseapp.com",
+                        projectId: "festie-s1u2h3",
+                        storageBucket: "festie-s1u2h3.firebasestorage.app",
+                        messagingSenderId: "305105260195",
+                        appId: "1:305105260195:web:53177651a556fb404771c9"
+                    };
+                    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                    db = firebase.firestore();
                 }
 
-                // Filter by Section
-                if (currentSectionFilter !== 'ALL') {
-                    filtered = filtered.filter(p => (p.section || '').trim() === currentSectionFilter);
-                }
+                let allPrograms = [];
+                let allJudgesMap = {};
+                let currentStatusFilter = 'ALL';
+                let currentSectionFilter = 'ALL';
+                let searchQuery = '';
+                let activeEditProgId = null;
 
-                // Filter by Search Query
-                if (searchQuery) {
-                    filtered = filtered.filter(p => {
-                        const code = (p.code || '').toLowerCase();
-                        const name = (p.name || '').toLowerCase();
-                        const sec = (p.section || '').toLowerCase();
-                        const cat = (p.category || p.type || '').toLowerCase();
-                        const topic = (p.topic || '').toLowerCase();
-
-                        // Match assigned judge names
-                        let judgeMatch = false;
-                        for (let i = 1; i <= 10; i++) {
-                            const jId = p[`judge${i}Id`];
-                            if (jId && allJudgesMap[jId]) {
-                                const jName = (allJudgesMap[jId].name || '').toLowerCase();
-                                if (jName.includes(searchQuery)) {
-                                    judgeMatch = true;
-                                    break;
-                                }
+                function showToast(msg, type = 'success') {
+                    if (typeof Toastify === 'function') {
+                        Toastify({
+                            text: msg,
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            style: {
+                                background: type === 'error' ? "#EF4444" : (type === 'warning' ? "#F59E0B" : "#10B981")
                             }
-                        }
-
-                        const updatedBy = (p.updatedByJudge || '').toLowerCase();
-
-                        return code.includes(searchQuery) ||
-                               name.includes(searchQuery) ||
-                               sec.includes(searchQuery) ||
-                               cat.includes(searchQuery) ||
-                               topic.includes(searchQuery) ||
-                               updatedBy.includes(searchQuery) ||
-                               judgeMatch;
-                    });
+                        }).showToast();
+                    } else {
+                        alert(msg);
+                    }
                 }
 
-                if (filtered.length === 0) {
-                    renderEmptyState("No matching judge topics found");
+                if (!db) {
+                    renderEmptyState("Database connection unavailable");
                     return;
                 }
 
-                // Render rows
-                tbody.innerHTML = filtered.map(p => {
-                    const hasTopic = p.topic && p.topic.trim();
-                    const topicText = hasTopic ? p.topic.trim() : 'No topic entered by judge yet.';
-                    const updatedByJudgeId = p.updatedByJudge || '';
-                    const updatedByJudgeObj = allJudgesMap[updatedByJudgeId];
-                    const updatedByName = updatedByJudgeObj ? updatedByJudgeObj.name : (updatedByJudgeId || 'Panel Judge');
+                // Fetch Judges Map then listen to Programs
+                db.collection('judges').onSnapshot(jSnap => {
+                    allJudgesMap = {};
+                    jSnap.docs.forEach(d => {
+                        allJudgesMap[d.id] = { id: d.id, ...d.data() };
+                    });
+                    document.getElementById('stat-judges').innerText = Object.keys(allJudgesMap).length;
+                    renderUI();
+                }, err => {
+                    console.error("Error fetching judges:", err);
+                });
 
-                    let formattedTime = '';
-                    if (p.topicUpdatedAt) {
-                        try {
-                            const d = p.topicUpdatedAt.toDate ? p.topicUpdatedAt.toDate() : new Date(p.topicUpdatedAt);
-                            formattedTime = d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                        } catch(e) {}
-                    }
+                db.collection('programs').onSnapshot(snap => {
+                    allPrograms = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    populateSectionDropdown();
+                    renderUI();
+                }, err => {
+                    console.error("Error loading programs:", err);
+                    renderEmptyState("Error loading program topics");
+                });
 
-                    // Collect assigned judges
-                    let assignedJudges = [];
-                    for (let i = 1; i <= 10; i++) {
-                        const jId = p[`judge${i}Id`];
-                        if (jId && allJudgesMap[jId]) {
-                            assignedJudges.push(allJudgesMap[jId]);
+                function populateSectionDropdown() {
+                    const select = document.getElementById('sectionFilter');
+                    if (!select) return;
+
+                    const sectionsSet = new Set();
+                    allPrograms.forEach(p => {
+                        if (p.section && p.section.trim()) sectionsSet.add(p.section.trim());
+                    });
+
+                    const currentVal = select.value || 'ALL';
+                    let html = '<option value="ALL">All Sections</option>';
+                    Array.from(sectionsSet).sort().forEach(sec => {
+                        html += `<option value="${sec}">${sec}</option>`;
+                    });
+                    select.innerHTML = html;
+                    select.value = currentVal;
+                }
+
+                window.filterByStatus = function (status) {
+                    currentStatusFilter = status;
+                    ['all', 'saved', 'pending'].forEach(tab => {
+                        const btn = document.getElementById('tab-' + tab);
+                        if (btn) {
+                            if (tab.toUpperCase() === status) {
+                                btn.className = "bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all border border-gray-200/60";
+                            } else {
+                                btn.className = "text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all";
+                            }
                         }
+                    });
+                    renderUI();
+                };
+
+                window.onSectionChange = function (sec) {
+                    currentSectionFilter = sec;
+                    renderUI();
+                };
+
+                window.onSearchChange = function (val) {
+                    searchQuery = (val || '').toLowerCase().trim();
+                    renderUI();
+                };
+
+                function renderUI() {
+                    const tbody = document.getElementById('subject-tbody');
+                    if (!tbody) return;
+
+                    // Update Stats
+                    const totalProgs = allPrograms.length;
+                    let savedCount = 0;
+                    let pendingCount = 0;
+
+                    allPrograms.forEach(p => {
+                        if (p.topic && p.topic.trim()) savedCount++;
+                        else pendingCount++;
+                    });
+
+                    document.getElementById('stat-total').innerText = totalProgs;
+                    document.getElementById('stat-saved').innerText = savedCount;
+                    document.getElementById('stat-pending').innerText = pendingCount;
+
+                    // Filter programs
+                    let filtered = [...allPrograms];
+
+                    // Filter by Status
+                    if (currentStatusFilter === 'SAVED') {
+                        filtered = filtered.filter(p => p.topic && p.topic.trim());
+                    } else if (currentStatusFilter === 'PENDING') {
+                        filtered = filtered.filter(p => !p.topic || !p.topic.trim());
                     }
 
-                    let judgesHtml = '';
-                    if (assignedJudges.length > 0) {
-                        judgesHtml = `<div class="flex flex-wrap gap-1.5 max-w-xs">
+                    // Filter by Section
+                    if (currentSectionFilter !== 'ALL') {
+                        filtered = filtered.filter(p => (p.section || '').trim() === currentSectionFilter);
+                    }
+
+                    // Filter by Search Query
+                    if (searchQuery) {
+                        filtered = filtered.filter(p => {
+                            const code = (p.code || '').toLowerCase();
+                            const name = (p.name || '').toLowerCase();
+                            const sec = (p.section || '').toLowerCase();
+                            const cat = (p.category || p.type || '').toLowerCase();
+                            const topic = (p.topic || '').toLowerCase();
+
+                            // Match assigned judge names
+                            let judgeMatch = false;
+                            for (let i = 1; i <= 10; i++) {
+                                const jId = p[`judge${i}Id`];
+                                if (jId && allJudgesMap[jId]) {
+                                    const jName = (allJudgesMap[jId].name || '').toLowerCase();
+                                    if (jName.includes(searchQuery)) {
+                                        judgeMatch = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            const updatedBy = (p.updatedByJudge || '').toLowerCase();
+
+                            return code.includes(searchQuery) ||
+                                name.includes(searchQuery) ||
+                                sec.includes(searchQuery) ||
+                                cat.includes(searchQuery) ||
+                                topic.includes(searchQuery) ||
+                                updatedBy.includes(searchQuery) ||
+                                judgeMatch;
+                        });
+                    }
+
+                    if (filtered.length === 0) {
+                        renderEmptyState("No matching judge topics found");
+                        return;
+                    }
+
+                    // Render rows
+                    tbody.innerHTML = filtered.map(p => {
+                        const hasTopic = p.topic && p.topic.trim();
+                        const topicText = hasTopic ? p.topic.trim() : 'No topic entered by judge yet.';
+                        const updatedByJudgeId = p.updatedByJudge || '';
+                        const updatedByJudgeObj = allJudgesMap[updatedByJudgeId];
+                        const updatedByName = updatedByJudgeObj ? updatedByJudgeObj.name : (updatedByJudgeId || 'Panel Judge');
+
+                        let formattedTime = '';
+                        if (p.topicUpdatedAt) {
+                            try {
+                                const d = p.topicUpdatedAt.toDate ? p.topicUpdatedAt.toDate() : new Date(p.topicUpdatedAt);
+                                formattedTime = d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                            } catch (e) { }
+                        }
+
+                        // Collect assigned judges
+                        let assignedJudges = [];
+                        for (let i = 1; i <= 10; i++) {
+                            const jId = p[`judge${i}Id`];
+                            if (jId && allJudgesMap[jId]) {
+                                assignedJudges.push(allJudgesMap[jId]);
+                            }
+                        }
+
+                        let judgesHtml = '';
+                        if (assignedJudges.length > 0) {
+                            judgesHtml = `<div class="flex flex-wrap gap-1.5 max-w-xs">
                             ${assignedJudges.map(j => `
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
                                     <span class="w-4 h-4 rounded-full bg-brand-blue text-white text-[9px] font-bold flex items-center justify-center uppercase shrink-0">${(j.name || 'J').charAt(0)}</span>
@@ -443,19 +525,19 @@
                                 </span>
                             `).join('')}
                         </div>`;
-                    } else {
-                        judgesHtml = `<span class="text-xs text-gray-400 font-medium italic">No judges assigned</span>`;
-                    }
+                        } else {
+                            judgesHtml = `<span class="text-xs text-gray-400 font-medium italic">No judges assigned</span>`;
+                        }
 
-                    const badgeHtml = hasTopic ? 
-                        `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                        const badgeHtml = hasTopic ?
+                            `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
                             <i class="fi fi-rr-check-circle text-xs"></i> Saved
                         </span>` :
-                        `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                             <i class="fi fi-rr-clock text-xs"></i> Pending
                         </span>`;
 
-                    return `
+                        return `
                     <tr class="hover:bg-gray-50/70 transition-colors">
                         <td class="py-4 px-5 align-top">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider inline-block mb-1">${p.code || 'PRG'}</span>
@@ -495,13 +577,13 @@
                             </div>
                         </td>
                     </tr>`;
-                }).join('');
-            }
+                    }).join('');
+                }
 
-            function renderEmptyState(message) {
-                const tbody = document.getElementById('subject-tbody');
-                if (tbody) {
-                    tbody.innerHTML = `
+                function renderEmptyState(message) {
+                    const tbody = document.getElementById('subject-tbody');
+                    if (tbody) {
+                        tbody.innerHTML = `
                     <tr>
                         <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
                             <div class="flex flex-col items-center justify-center gap-2">
@@ -510,173 +592,201 @@
                             </div>
                         </td>
                     </tr>`;
-                }
-            }
-
-            window.copyTopic = function(progId) {
-                const prog = allPrograms.find(p => p.id === progId);
-                if (prog && prog.topic) {
-                    navigator.clipboard.writeText(prog.topic).then(() => {
-                        showToast("✅ Topic copied to clipboard!");
-                    }).catch(() => {
-                        showToast("Topic: " + prog.topic);
-                    });
-                }
-            };
-
-            window.openEditModal = function(progId) {
-                const prog = allPrograms.find(p => p.id === progId);
-                if (!prog) return;
-
-                activeEditProgId = progId;
-                document.getElementById('modalProgTitle').innerText = prog.name || 'Edit Saved Topic';
-                document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} • ${prog.section || 'General'}`;
-                document.getElementById('modalTopicInput').value = prog.topic || '';
-
-                const overlay = document.getElementById('editTopicModalOverlay');
-                if (overlay) {
-                    overlay.classList.remove('hidden');
-                    overlay.classList.add('flex');
-                }
-            };
-
-            window.closeEditModal = function() {
-                activeEditProgId = null;
-                const overlay = document.getElementById('editTopicModalOverlay');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                    overlay.classList.remove('flex');
-                }
-            };
-
-            window.saveModalTopic = function(isClear = false) {
-                if (!activeEditProgId || !db) return;
-
-                const textInput = document.getElementById('modalTopicInput');
-                const topicVal = isClear ? '' : (textInput ? textInput.value.trim() : '');
-
-                const btn = document.getElementById('btn-modal-save');
-                if (btn) btn.disabled = true;
-
-                db.collection('programs').doc(activeEditProgId).update({
-                    topic: topicVal,
-                    updatedByJudge: 'Admin',
-                    topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    showToast(isClear ? "Topic cleared successfully!" : "✅ Topic updated successfully!");
-                    closeEditModal();
-                    if (btn) btn.disabled = false;
-                }).catch(err => {
-                    console.error("Error updating topic:", err);
-                    showToast("❌ Error updating topic: " + err.message, "error");
-                    if (btn) btn.disabled = false;
-                });
-            };
-
-            window.viewProgram = function(progId) {
-                localStorage.setItem('viewProgramId', progId);
-                if (window.parent && typeof window.parent.loadModule === 'function') {
-                    window.parent.loadModule('viewProgramData');
-                } else if (typeof loadModule === 'function') {
-                    loadModule('viewProgramData');
-                } else {
-                    window.location.href = 'viewProgramData.html?id=' + progId;
-                }
-            };
-
-            // Passcode & 5-minute Auto-Lock Logic
-            (function initSubjectPasscode() {
-                const LOCK_DURATION = 5 * 60 * 1000; // 5 minutes (300,000 ms)
-                const REQUIRED_PASSCODE = "340";
-                let lockTimerInterval = null;
-
-                function isUnlocked() {
-                    const expiry = localStorage.getItem('subjectTabUnlockExpiry');
-                    if (!expiry) return false;
-                    return Date.now() < parseInt(expiry, 10);
+                    }
                 }
 
-                function showLockScreen() {
-                    const overlay = document.getElementById('subjectPasscodeModalOverlay');
-                    const mainContent = document.getElementById('subjectTabMainContent');
+                window.copyTopic = function (progId) {
+                    const prog = allPrograms.find(p => p.id === progId);
+                    if (prog && prog.topic) {
+                        navigator.clipboard.writeText(prog.topic).then(() => {
+                            showToast("✅ Topic copied to clipboard!");
+                        }).catch(() => {
+                            showToast("Topic: " + prog.topic);
+                        });
+                    }
+                };
+
+                window.openEditModal = function (progId) {
+                    const prog = allPrograms.find(p => p.id === progId);
+                    if (!prog) return;
+
+                    activeEditProgId = progId;
+                    document.getElementById('modalProgTitle').innerText = prog.name || 'Edit Saved Topic';
+                    document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} • ${prog.section || 'General'}`;
+                    document.getElementById('modalTopicInput').value = prog.topic || '';
+
+                    const overlay = document.getElementById('editTopicModalOverlay');
                     if (overlay) {
                         overlay.classList.remove('hidden');
                         overlay.classList.add('flex');
                     }
-                    if (mainContent) {
-                        mainContent.classList.add('blur-md', 'pointer-events-none', 'select-none');
-                    }
-                    const input = document.getElementById('subjectPasscodeInput');
-                    if (input) {
-                        input.value = '';
-                        setTimeout(() => input.focus(), 150);
-                    }
-                    const errorMsg = document.getElementById('passcodeErrorMsg');
-                    if (errorMsg) errorMsg.classList.add('hidden');
-                }
+                };
 
-                function hideLockScreen() {
-                    const overlay = document.getElementById('subjectPasscodeModalOverlay');
-                    const mainContent = document.getElementById('subjectTabMainContent');
+                window.closeEditModal = function () {
+                    activeEditProgId = null;
+                    const overlay = document.getElementById('editTopicModalOverlay');
                     if (overlay) {
                         overlay.classList.add('hidden');
                         overlay.classList.remove('flex');
                     }
-                    if (mainContent) {
-                        mainContent.classList.remove('blur-md', 'pointer-events-none', 'select-none');
-                    }
-                }
+                };
 
-                window.checkSubjectPasscode = function() {
-                    const input = document.getElementById('subjectPasscodeInput');
-                    const errorMsg = document.getElementById('passcodeErrorMsg');
-                    const val = input ? input.value.trim() : '';
+                window.saveModalTopic = function (isClear = false) {
+                    if (!activeEditProgId || !db) return;
 
-                    if (val === REQUIRED_PASSCODE) {
-                        const expiryTime = Date.now() + LOCK_DURATION;
-                        localStorage.setItem('subjectTabUnlockExpiry', expiryTime.toString());
-                        if (errorMsg) errorMsg.classList.add('hidden');
-                        hideLockScreen();
-                        startAutoLockTimer();
-                        if (typeof showToast === 'function') {
-                            showToast("🔓 Access Granted! Unlocked for 5 minutes.");
-                        }
+                    const textInput = document.getElementById('modalTopicInput');
+                    const topicVal = isClear ? '' : (textInput ? textInput.value.trim() : '');
+
+                    const btn = document.getElementById('btn-modal-save');
+                    if (btn) btn.disabled = true;
+
+                    db.collection('programs').doc(activeEditProgId).update({
+                        topic: topicVal,
+                        updatedByJudge: 'Admin',
+                        topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        showToast(isClear ? "Topic cleared successfully!" : "✅ Topic updated successfully!");
+                        closeEditModal();
+                        if (btn) btn.disabled = false;
+                    }).catch(err => {
+                        console.error("Error updating topic:", err);
+                        showToast("❌ Error updating topic: " + err.message, "error");
+                        if (btn) btn.disabled = false;
+                    });
+                };
+
+                window.viewProgram = function (progId) {
+                    localStorage.setItem('viewProgramId', progId);
+                    if (window.parent && typeof window.parent.loadModule === 'function') {
+                        window.parent.loadModule('viewProgramData');
+                    } else if (typeof loadModule === 'function') {
+                        loadModule('viewProgramData');
                     } else {
-                        if (errorMsg) {
-                            errorMsg.innerText = "❌ Incorrect passcode! Please try again.";
-                            errorMsg.classList.remove('hidden');
-                        }
-                        if (input) {
-                            input.value = '';
-                            input.focus();
-                            input.classList.add('border-red-500', 'animate-shake');
-                            setTimeout(() => input.classList.remove('border-red-500', 'animate-shake'), 1000);
-                        }
+                        window.location.href = 'viewProgramData.html?id=' + progId;
                     }
                 };
 
-                function startAutoLockTimer() {
-                    if (lockTimerInterval) clearInterval(lockTimerInterval);
-                    lockTimerInterval = setInterval(() => {
-                        if (!isUnlocked()) {
-                            clearInterval(lockTimerInterval);
-                            showLockScreen();
+                // Passcode & 5-minute Auto-Lock Logic
+                (function initSubjectPasscode() {
+                    const LOCK_DURATION = 5 * 60 * 1000; // 5 minutes (300,000 ms)
+                    const REQUIRED_PASSCODE = "340";
+                    let lockTimerInterval = null;
+
+                    function isUnlocked() {
+                        const expiry = localStorage.getItem('subjectTabUnlockExpiry');
+                        if (!expiry) return false;
+                        return Date.now() < parseInt(expiry, 10);
+                    }
+
+                    function showLockScreen() {
+                        const lockBox = document.getElementById('subjectPasscodeModalBox');
+                        const mainContent = document.getElementById('subjectTabMainContent');
+                        if (lockBox) {
+                            lockBox.classList.remove('hidden');
+                            lockBox.classList.add('flex');
+                        }
+                        if (mainContent) {
+                            mainContent.classList.add('blur-md', 'pointer-events-none', 'select-none');
+                        }
+                        const input = document.getElementById('subjectPasscodeInput');
+                        if (input) {
+                            input.value = '';
+                            setTimeout(() => input.focus(), 150);
+                        }
+                        const errorMsg = document.getElementById('passcodeErrorMsg');
+                        if (errorMsg) errorMsg.classList.add('hidden');
+                    }
+
+                    function hideLockScreen() {
+                        const lockBox = document.getElementById('subjectPasscodeModalBox');
+                        const mainContent = document.getElementById('subjectTabMainContent');
+                        if (lockBox) {
+                            lockBox.classList.add('hidden');
+                            lockBox.classList.remove('flex');
+                        }
+                        if (mainContent) {
+                            mainContent.classList.remove('blur-md', 'pointer-events-none', 'select-none');
+                        }
+                    }
+
+                    window.checkSubjectPasscode = function () {
+                        const input = document.getElementById('subjectPasscodeInput');
+                        const errorMsg = document.getElementById('passcodeErrorMsg');
+                        const val = input ? input.value.trim() : '';
+
+                        if (val === REQUIRED_PASSCODE) {
+                            const expiryTime = Date.now() + LOCK_DURATION;
+                            localStorage.setItem('subjectTabUnlockExpiry', expiryTime.toString());
+                            if (errorMsg) errorMsg.classList.add('hidden');
+                            hideLockScreen();
+                            startAutoLockTimer();
                             if (typeof showToast === 'function') {
-                                showToast("🔒 Session expired. Subject Tab re-locked.");
+                                showToast("🔓 Access Granted! Unlocked for 5 minutes.");
+                            }
+                        } else {
+                            if (errorMsg) {
+                                errorMsg.innerText = "❌ Incorrect passcode! Please try again.";
+                                errorMsg.classList.remove('hidden');
+                            }
+                            if (input) {
+                                input.value = '';
+                                input.focus();
+                                input.classList.add('border-red-500', 'animate-shake');
+                                setTimeout(() => input.classList.remove('border-red-500', 'animate-shake'), 1000);
                             }
                         }
-                    }, 1000);
-                }
+                    };
 
-                if (isUnlocked()) {
-                    hideLockScreen();
-                    startAutoLockTimer();
-                } else {
-                    showLockScreen();
-                }
+                    window.manualLockSubjectTab = function () {
+                        localStorage.removeItem('subjectTabUnlockExpiry');
+                        if (lockTimerInterval) clearInterval(lockTimerInterval);
+                        showLockScreen();
+                        if (typeof showToast === 'function') {
+                            showToast("🔒 Subject Tab locked manually.");
+                        }
+                    };
+
+                    function updateUnlockTimerBadge() {
+                        const expiry = localStorage.getItem('subjectTabUnlockExpiry');
+                        const badgeText = document.getElementById('subjectUnlockTimerText');
+                        if (!expiry || !badgeText) return;
+
+                        const remainingMs = parseInt(expiry, 10) - Date.now();
+                        if (remainingMs <= 0) {
+                            badgeText.innerText = 'Expired';
+                            return;
+                        }
+                        const totalSec = Math.floor(remainingMs / 1000);
+                        const mins = Math.floor(totalSec / 60);
+                        const secs = totalSec % 60;
+                        badgeText.innerText = `Auto-locks in ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                    }
+
+                    function startAutoLockTimer() {
+                        if (lockTimerInterval) clearInterval(lockTimerInterval);
+                        updateUnlockTimerBadge();
+                        lockTimerInterval = setInterval(() => {
+                            if (!isUnlocked()) {
+                                clearInterval(lockTimerInterval);
+                                showLockScreen();
+                                if (typeof showToast === 'function') {
+                                    showToast("🔒 Session expired. Subject Tab re-locked.");
+                                }
+                            } else {
+                                updateUnlockTimerBadge();
+                            }
+                        }, 1000);
+                    }
+
+                    if (isUnlocked()) {
+                        hideLockScreen();
+                        startAutoLockTimer();
+                    } else {
+                        showLockScreen();
+                    }
+                })();
+
             })();
-
-        })();
     </script>
 </body>
 
