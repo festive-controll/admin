@@ -187,6 +187,7 @@
             document.getElementById('venueType').value = 'Stage';
             document.getElementById('venuePlace').value = '';
             document.getElementById('venueVolunteers').value = '';
+            document.getElementById('venueSendWa').checked = true;
             document.getElementById('venue-sidebar-title').innerText = "Add Venue";
             document.getElementById('btn-save-venue-text').innerText = "Submit";
 
@@ -198,6 +199,7 @@
                     document.getElementById('venueName').value = v.name || '';
                     document.getElementById('venueType').value = v.type || 'Stage';
                     document.getElementById('venuePlace').value = v.place || '';
+                    document.getElementById('venueSendWa').checked = v.sendWaAlerts !== false;
                     
                     if (Array.isArray(v.volunteers)) {
                         document.getElementById('venueVolunteers').value = v.volunteers.join(', ');
@@ -228,6 +230,7 @@
             const type = document.getElementById('venueType').value;
             const place = document.getElementById('venuePlace').value.trim();
             const volunteersStr = document.getElementById('venueVolunteers').value.trim();
+            const sendWaAlerts = document.getElementById('venueSendWa').checked;
 
             if(!name || !place) {
                 return typeof showToast === 'function' ? showToast("❌ Name and Place are required") : alert("Required fields missing");
@@ -240,11 +243,11 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin text-xs"></i> <span>Saving...</span>';
 
-            // Instead of saving arrays, we can save them as strings or arrays; arrays are cleaner.
             const payload = { 
                 name, 
                 type,
                 place, 
+                sendWaAlerts,
                 volunteers: volunteersArray 
             };
             
@@ -277,6 +280,7 @@
                     const volsStr = Array.isArray(v.volunteers) ? v.volunteers.join(' ') : (v.volunteers || '');
                     return (v.name && v.name.toLowerCase().includes(venueSearchQuery)) ||
                            (v.place && v.place.toLowerCase().includes(venueSearchQuery)) ||
+                           (v.subVenue && v.subVenue.toLowerCase().includes(venueSearchQuery)) ||
                            (volsStr.toLowerCase().includes(venueSearchQuery));
                 });
             }
@@ -335,7 +339,7 @@
                         <span class="text-[14px] font-medium text-gray-900 leading-snug cursor-pointer group-hover:text-brand-blue transition-colors truncate" onclick="openVenueSidebar('${v.id}')">${v.name}</span>
                     </div>
                     <div class="col-span-3">
-                        <span class="text-[13px] text-gray-700 font-medium truncate flex items-center gap-1.5">
+                        <span class="text-[13px] text-gray-700 font-medium truncate flex items-center gap-1.5 flex-wrap">
                             <i class="fi fi-rr-marker text-gray-400 text-[10px]"></i> ${v.place}
                             <span class="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[9px] font-bold uppercase tracking-wider shrink-0">${v.type || 'Stage'}</span>
                         </span>

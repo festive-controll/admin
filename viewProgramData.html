@@ -503,6 +503,7 @@
                                                 class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer">
                                                 <option value="Individual">Individual</option>
                                                 <option value="Group">Group</option>
+                                                <option value="General">General</option>
                                             </select>
                                             <i
                                                 class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
@@ -531,11 +532,17 @@
                                     <div>
                                         <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Venue Type</label>
                                         <div class="relative">
-                                            <select id="progVenueType" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                            <select id="progVenueType" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer" onchange="updateSubStageDropdown(this.value)">
                                                 <option value="" disabled selected>Select Venue Type</option>
-                                                <option value="Stage">Stage</option>
-                                                <option value="Non-Stage">Non-Stage</option>
-                                                <option value="Sports">Sports</option>
+                                            </select>
+                                            <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Sub Stage</label>
+                                        <div class="relative">
+                                            <select id="progSubStage" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer" disabled>
+                                                <option value="" disabled selected>Select Sub Stage</option>
                                             </select>
                                             <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                         </div>
@@ -827,16 +834,21 @@
             <div class="py-5 space-y-5">
                 <!-- Program Mode Info Card -->
                 <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                    <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2 mb-3">
                         <div>
                             <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Program Format</div>
-                            <div id="jsm-prog-mode-title" class="text-sm font-bold text-slate-800 mt-0.5">Detecting mode...</div>
+                            <div class="text-sm font-bold text-slate-800 mt-0.5">Judgement Sheet Type</div>
                         </div>
-                        <span id="jsm-prog-mode-badge" class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200 shrink-0">
-                            Auto Mode
-                        </span>
                     </div>
-                    <p id="jsm-prog-mode-desc" class="text-xs text-slate-500 mt-2 leading-relaxed font-medium">
+                    <div class="relative">
+                        <select id="jsmProgFormatOverride" onchange="window.updateJsmProgFormatInfo()" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none cursor-pointer shadow-sm">
+                            <option value="auto" id="jsm-prog-mode-auto-opt">Auto (Detecting...)</option>
+                            <option value="individual">Individual Mode (Separate Chests)</option>
+                            <option value="group">Group Mode (Comma Separated)</option>
+                        </select>
+                        <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                    <p id="jsm-prog-mode-desc" class="text-xs text-slate-500 mt-3 leading-relaxed font-medium">
                         Loading format configuration...
                     </p>
                 </div>
@@ -1446,7 +1458,7 @@
             }
         };
 
-        window.openJudgeSheetModal = function() {
+        window.openJudgeSheetModal = async function() {
             const overlay = document.getElementById('judgesheetModalOverlay');
             const content = document.getElementById('judgesheetModalContent');
             if (!overlay || !content) {
@@ -1454,37 +1466,54 @@
                 return;
             }
 
-            const p = window.currentProgram || {};
-            const isGroup = (p.type || '').toLowerCase() === 'group' || (p.section || '').toLowerCase() === 'kulliya';
-
-            const titleEl = document.getElementById('jsm-prog-mode-title');
-            const badgeEl = document.getElementById('jsm-prog-mode-badge');
-            const descEl = document.getElementById('jsm-prog-mode-desc');
-
-            if (isGroup) {
-                if (titleEl) titleEl.innerText = "Group Program";
-                if (badgeEl) {
-                    badgeEl.innerText = "Group Mode (Comma Separated)";
-                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-700 border border-purple-200 shrink-0";
-                }
-                if (descEl) descEl.innerText = "Group registrations will be listed as entry codes (A, B, C...) with candidate names joined by commas (e.g. Candidate 1, Candidate 2).";
-            } else {
-                if (titleEl) titleEl.innerText = "General / Individual Program";
-                if (badgeEl) {
-                    badgeEl.innerText = "Individual Mode";
-                    badgeEl.className = "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200 shrink-0";
-                }
-                if (descEl) descEl.innerText = "Candidates will be listed individually with separate chest numbers and unique code letters.";
-            }
-
-            window.selectJudgeCount(2);
-
+            // Show modal immediately so user sees it opening
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
             setTimeout(() => {
                 content.classList.remove('scale-95');
                 content.classList.add('scale-100');
             }, 10);
+
+            const p = window.currentProgram || {};
+
+            // Base detection from program type/section
+            let isGroup = (p.type || '').toLowerCase() === 'group' || (p.section || '').toLowerCase() === 'kulliya';
+
+            // Also check sub-stage judgementType from Firestore (same as judgeDashboard.html)
+            if (window.db) {
+                const venueTypeId = p.venueTypeId;
+                const subStageId = p.subStageId || p.subStage;
+                if (venueTypeId && subStageId) {
+                    try {
+                        const stDoc = await window.db.collection('venueTypes').doc(venueTypeId).collection('subStages').doc(subStageId).get();
+                        if (stDoc.exists && stDoc.data().judgementType === 'group') {
+                            isGroup = true;
+                        }
+                    } catch(e) {}
+                }
+            }
+
+            const autoOpt = document.getElementById('jsm-prog-mode-auto-opt');
+            if (autoOpt) {
+                autoOpt.innerText = `Auto Mode (${isGroup ? 'Group' : 'Individual'})`;
+            }
+
+            const overrideSelect = document.getElementById('jsmProgFormatOverride');
+            if (overrideSelect) overrideSelect.value = 'auto';
+
+            window.updateJsmProgFormatInfo = function() {
+                const val = document.getElementById('jsmProgFormatOverride').value;
+                const isGroupEffective = val === 'auto' ? isGroup : (val === 'group');
+                const descEl = document.getElementById('jsm-prog-mode-desc');
+                if (isGroupEffective) {
+                    if (descEl) descEl.innerText = 'Group registrations will be listed as entry codes (A, B, C...) with candidate names joined by commas (e.g. Candidate 1, Candidate 2).';
+                } else {
+                    if (descEl) descEl.innerText = 'Candidates will be listed individually with separate chest numbers and unique code letters.';
+                }
+            };
+            window.updateJsmProgFormatInfo();
+
+            window.selectJudgeCount(2);
         };
 
         window.closeJudgeSheetModal = function() {
@@ -1633,7 +1662,12 @@
                 const prog = pDoc.exists ? pDoc.data() : {name: 'Unknown', code: 'PRG', section: 'Unknown'};
 
                 // Determine group program mode
-                const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+                let isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+                
+                const overrideSelect = document.getElementById('jsmProgFormatOverride');
+                if (overrideSelect && overrideSelect.value !== 'auto') {
+                    isGroup = overrideSelect.value === 'group';
+                }
 
                 // Fetch candidates & registrations
                 const candSnap = await db.collection('candidates').get();
@@ -2112,6 +2146,64 @@
             const userRole = localStorage.getItem('userRole');
             const isTeamManager = userRole === 'Team Manager';
 
+            // --- Venue Type & Sub Stage logic ---
+            window.updateSubStageDropdown = function(venueTypeId, pendingVal = null) {
+                const el = document.getElementById('progSubStage');
+                if (!el) return;
+                if (!venueTypeId) {
+                    el.innerHTML = '<option value="" disabled selected>Select Sub Stage</option>';
+                    el.disabled = true;
+                    return;
+                }
+
+                // Resolve venueTypeId — if stored as a name string, convert to doc ID
+                let resolvedId = venueTypeId;
+                if (window.dynamicVenueTypes) {
+                    const byId = window.dynamicVenueTypes.find(v => v.id === venueTypeId);
+                    if (!byId) {
+                        const byName = window.dynamicVenueTypes.find(v => v.name.toLowerCase() === venueTypeId.toLowerCase());
+                        if (byName) resolvedId = byName.id;
+                    }
+                }
+
+                el.disabled = false;
+                el.innerHTML = '<option value="" disabled selected>Loading...</option>';
+                
+                window.db.collection('venueTypes').doc(resolvedId).collection('subStages').get().then(snap => {
+                    let html = '<option value="" disabled selected>Select Sub Stage</option>';
+                    const subDocs = snap.docs.map(d => ({ id: d.id, name: d.data().name }));
+                    subDocs.forEach(d => {
+                        html += `<option value="${d.id}">${d.name}</option>`;
+                    });
+                    el.innerHTML = html;
+                    const target = pendingVal || el.getAttribute('data-pending-val');
+                    if (target) {
+                        let matched = false;
+                        for (let opt of el.options) {
+                            if (opt.value.toLowerCase() === target.toLowerCase() || opt.text.toLowerCase() === target.toLowerCase()) {
+                                el.value = opt.value;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) {
+                            const opt = document.createElement('option');
+                            opt.value = target;
+                            opt.textContent = target;
+                            el.appendChild(opt);
+                            el.value = target;
+                        }
+                    }
+                    el.removeAttribute('data-pending-val');
+                    if (snap.empty) {
+                        el.disabled = true;
+                    }
+                }).catch(err => {
+                    console.error("Error fetching sub stages:", err);
+                    el.innerHTML = '<option value="" disabled selected>Error loading sub stages</option>';
+                });
+            };
+
             // Save Settings
             window.saveProgramSettings = function () {
                 // Get db at call-time (dashboard sets window.db after login)
@@ -2139,6 +2231,7 @@
                     code: code, name: name, section: section,
                     type: document.getElementById('progType').value,
                     venueType: document.getElementById('progVenueType') ? document.getElementById('progVenueType').value : '',
+                    subStage: document.getElementById('progSubStage') ? document.getElementById('progSubStage').value : '',
                     groupSetsCount: parseInt(document.getElementById('progGroupSets').value) || null,
                     groupParticipantsPerSet: parseInt(document.getElementById('progGroupParticipants').value) || null,
                     setId: setId,
@@ -2380,18 +2473,60 @@
             let savedProgSet = null;
             let savedGradeTemplate = null;
             let savedPositionTemplate = null;
+            let savedVenueType = null;
+            let savedSubStage = null;
+
+            window.applyVenueTypeAndSubStage = function() {
+                const vtEl = document.getElementById('progVenueType');
+                if (!vtEl) return;
+                const targetVt = savedVenueType || vtEl.getAttribute('data-pending-val') || vtEl.value;
+                if (targetVt && window.dynamicVenueTypes && window.dynamicVenueTypes.length > 0) {
+                    let matchedId = null;
+                    const byId = window.dynamicVenueTypes.find(v => v.id === targetVt);
+                    if (byId) {
+                        matchedId = byId.id;
+                    } else {
+                        const byName = window.dynamicVenueTypes.find(v => v.name.toLowerCase() === targetVt.toLowerCase());
+                        if (byName) matchedId = byName.id;
+                    }
+                    if (matchedId) {
+                        vtEl.value = matchedId;
+                        vtEl.removeAttribute('data-pending-val');
+                        const subEl = document.getElementById('progSubStage');
+                        const targetSub = savedSubStage || subEl?.getAttribute('data-pending-val') || subEl?.value;
+                        window.updateSubStageDropdown(matchedId, targetSub);
+                    }
+                }
+            };
 
             // Fetch dropdown data
             db.collection('sections').where('isActive', '==', true).onSnapshot(snap => {
                 const secSelect = document.getElementById('progSection');
                 if(secSelect) {
-                    const current = savedSection || secSelect.value;
+                    const current = secSelect.getAttribute('data-pending-val') || savedSection || secSelect.value;
                     let opts = '<option value="" disabled selected>Select Section</option>';
                     snap.forEach(doc => {
                         opts += `<option value="${doc.data().name}">${doc.data().name}</option>`;
                     });
                     secSelect.innerHTML = opts;
-                    if (current) secSelect.value = current;
+                    if (current) {
+                        let matched = false;
+                        for (let opt of secSelect.options) {
+                            if (opt.value.toLowerCase() === current.toLowerCase() || opt.text.toLowerCase() === current.toLowerCase()) {
+                                secSelect.value = opt.value;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) {
+                            const opt = document.createElement('option');
+                            opt.value = current;
+                            opt.textContent = current;
+                            secSelect.appendChild(opt);
+                            secSelect.value = current;
+                        }
+                        secSelect.removeAttribute('data-pending-val');
+                    }
                 }
             });
 
@@ -2416,7 +2551,37 @@
                         html += `<option value="${d.id}">${d.data().name}</option>`; 
                     });
                     el.innerHTML = html;
-                    if (cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
+                    if (cur) {
+                        let matched = false;
+                        for (let opt of el.options) {
+                            if (opt.value.toLowerCase() === cur.toLowerCase() || opt.text.toLowerCase() === cur.toLowerCase()) {
+                                el.value = opt.value;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) {
+                            const opt = document.createElement('option');
+                            opt.value = cur;
+                            opt.textContent = cur;
+                            el.appendChild(opt);
+                            el.value = cur;
+                        }
+                        el.removeAttribute('data-pending-val');
+                    }
+                }
+            });
+
+            db.collection('venueTypes').onSnapshot(snap => {
+                window.dynamicVenueTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const el = document.getElementById('progVenueType');
+                if(el) {
+                    let html = '<option value="" disabled selected>Select Venue Type</option>';
+                    window.dynamicVenueTypes.forEach(v => {
+                        html += `<option value="${v.id}">${v.name}</option>`;
+                    });
+                    el.innerHTML = html;
+                    window.applyVenueTypeAndSubStage();
                 }
             });
 
@@ -2427,7 +2592,14 @@
                     let html = '<option value="">— None —</option>';
                     snap.forEach(d => { html += `<option value="${d.id}">${d.data().name}</option>`; });
                     el.innerHTML = html;
-                    if (cur) el.value = cur;
+                    if (cur) {
+                        for (let opt of el.options) {
+                            if (opt.value.toLowerCase() === cur.toLowerCase() || opt.text.toLowerCase() === cur.toLowerCase()) {
+                                el.value = opt.value;
+                                break;
+                            }
+                        }
+                    }
                 }
             });
 
@@ -2438,7 +2610,14 @@
                     let html = '<option value="">— None —</option>';
                     snap.forEach(d => { html += `<option value="${d.id}">${d.data().name}</option>`; });
                     el.innerHTML = html;
-                    if (cur) el.value = cur;
+                    if (cur) {
+                        for (let opt of el.options) {
+                            if (opt.value.toLowerCase() === cur.toLowerCase() || opt.text.toLowerCase() === cur.toLowerCase()) {
+                                el.value = opt.value;
+                                break;
+                            }
+                        }
+                    }
                 }
             });
 
@@ -2451,9 +2630,11 @@
                     if (window.updateResultsStatusUI) window.updateResultsStatusUI();
 
                     savedSection = p.section || null;
-                    savedProgSet = p.setId || p.progSet;
+                    savedProgSet = p.setId || p.progSet || null;
                     savedGradeTemplate = p.gradeTemplateId || p.gradeTemplate || null;
                     savedPositionTemplate = p.positionTemplateId || p.positionTemplate || null;
+                    savedVenueType = p.venueType || p.venueTypeId || p.venueTypeName || null;
+                    savedSubStage = p.subStage || p.subStageId || p.subStageName || null;
 
                     document.getElementById('vp-name').innerText = p.name || 'Unnamed Program';
                     document.getElementById('vp-code').innerText = p.code || '---';
@@ -2475,9 +2656,15 @@
                     document.getElementById('vp-time-limit').innerText = p.timeLimit || '—';
                     document.getElementById('vp-skill').innerText = p.skillRequired || '—';
                     document.getElementById('vp-section').innerText = p.section || '—';
-                    document.getElementById('vp-venue-type').innerText = p.venueType || '—';
+                    document.getElementById('vp-venue-type').innerText = p.venueType ? (p.subStage ? p.venueType + ' (' + p.subStage + ')' : p.venueType) : '—';
                     
-                    if (document.getElementById('progVenueType')) document.getElementById('progVenueType').value = p.venueType || '';
+                    if (document.getElementById('progVenueType')) {
+                        document.getElementById('progVenueType').setAttribute('data-pending-val', savedVenueType || '');
+                    }
+                    if (document.getElementById('progSubStage')) {
+                        document.getElementById('progSubStage').setAttribute('data-pending-val', savedSubStage || '');
+                    }
+                    window.applyVenueTypeAndSubStage();
                     
                     if (p.venueId) {
                         db.collection('venues').doc(p.venueId).get().then(vDoc => {
@@ -2531,7 +2718,7 @@
                     } else {
                         document.getElementById('vp-judges-count').innerText = `0 Panel Members`;
                         document.getElementById('vp-judges-list').innerHTML = `
-                            <i class="fi fi-rr-users-alt text-4xl mb-4 text-gray-500"></i>
+                            <i class="fi fi-rr-users-alt text-4xl mb-4 text-gray-400"></i>
                             <p class="text-[13px] font-medium text-gray-500">No judges assigned yet</p>
                         `;
                         document.getElementById('vp-judges-list').className = 'flex flex-col items-center justify-center py-24 opacity-40';
@@ -2542,8 +2729,41 @@
                     // Bind to form inputs
                     document.getElementById('progCode').value = p.code || '';
                     document.getElementById('progName').value = p.name || '';
-                    if (p.section) document.getElementById('progSection').value = p.section;
-                    document.getElementById('progType').value = p.type || 'Individual';
+                    
+                    const secSelect = document.getElementById('progSection');
+                    if (secSelect && p.section) {
+                        let matched = false;
+                        for (let opt of secSelect.options) {
+                            if (opt.value.toLowerCase() === p.section.toLowerCase() || opt.text.toLowerCase() === p.section.toLowerCase()) {
+                                secSelect.value = opt.value;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) {
+                            secSelect.setAttribute('data-pending-val', p.section);
+                        }
+                    }
+
+                    const targetType = p.type || 'Individual';
+                    const progTypeEl = document.getElementById('progType');
+                    if (progTypeEl) {
+                        let matched = false;
+                        for (let opt of progTypeEl.options) {
+                            if (opt.value.toLowerCase() === targetType.toLowerCase() || opt.text.toLowerCase() === targetType.toLowerCase()) {
+                                progTypeEl.value = opt.value;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched && targetType) {
+                            const opt = document.createElement('option');
+                            opt.value = targetType;
+                            opt.textContent = targetType;
+                            progTypeEl.appendChild(opt);
+                            progTypeEl.value = targetType;
+                        }
+                    }
                     toggleGroupFields();
                     if (typeof window.handleSectionChange === 'function') window.handleSectionChange('progSection', 'progType');
 
@@ -2554,8 +2774,20 @@
                     document.getElementById('progStatus').value = p.status !== false ? 'active' : 'inactive';
                     if (p.setId || p.progSet) {
                         const setVal = p.setId || p.progSet;
-                        document.getElementById('progSet').value = setVal;
-                        document.getElementById('progSet').setAttribute('data-pending-val', setVal);
+                        const setEl = document.getElementById('progSet');
+                        if (setEl) {
+                            let matched = false;
+                            for (let opt of setEl.options) {
+                                if (opt.value.toLowerCase() === setVal.toLowerCase() || opt.text.toLowerCase() === setVal.toLowerCase()) {
+                                    setEl.value = opt.value;
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                            if (!matched) {
+                                setEl.setAttribute('data-pending-val', setVal);
+                            }
+                        }
                     } else {
                         document.getElementById('progSet').value = "";
                         document.getElementById('progSet').removeAttribute('data-pending-val');
@@ -2571,10 +2803,32 @@
 
                     document.getElementById('progTopicReg').checked = !!p.topicRegistration;
                     document.getElementById('progGrading').checked = !!p.enableGrading;
-                    if (p.enableGrading && p.gradeTemplateId) document.getElementById('progGradeTemplate').value = p.gradeTemplateId;
+                    if (p.enableGrading && (p.gradeTemplateId || p.gradeTemplate)) {
+                        const gVal = p.gradeTemplateId || p.gradeTemplate;
+                        const gEl = document.getElementById('progGradeTemplate');
+                        if (gEl) {
+                            for (let opt of gEl.options) {
+                                if (opt.value.toLowerCase() === gVal.toLowerCase() || opt.text.toLowerCase() === gVal.toLowerCase()) {
+                                    gEl.value = opt.value;
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
                     document.getElementById('progScoring').checked = !!p.enableScoring;
-                    if (p.enableScoring && p.positionTemplateId) document.getElementById('progScoreTemplate').value = p.positionTemplateId;
+                    if (p.enableScoring && (p.positionTemplateId || p.positionTemplate)) {
+                        const posVal = p.positionTemplateId || p.positionTemplate;
+                        const posEl = document.getElementById('progScoreTemplate');
+                        if (posEl) {
+                            for (let opt of posEl.options) {
+                                if (opt.value.toLowerCase() === posVal.toLowerCase() || opt.text.toLowerCase() === posVal.toLowerCase()) {
+                                    posEl.value = opt.value;
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
                     document.getElementById('progTimeLimit').value = p.timeLimit || '';
                     document.getElementById('progSkill').value = p.skillRequired || '';

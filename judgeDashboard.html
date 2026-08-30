@@ -841,7 +841,19 @@
                     { facingMode: "environment" }, 
                     { fps: 10, qrbox: { width: 250, height: 250 } },
                     (decodedText, decodedResult) => {
-                        const text = decodedText.trim().toLowerCase();
+                        let text = decodedText.trim();
+                        try {
+                            if (text.startsWith('http')) {
+                                const url = new URL(text);
+                                const idParam = url.searchParams.get('id');
+                                if (idParam) {
+                                    text = idParam;
+                                }
+                            }
+                        } catch (e) {}
+
+                        text = text.toLowerCase();
+                        
                         const prog = assignedPrograms.find(p => p.id.toLowerCase() === text || (p.code || '').toLowerCase() === text);
                         
                         if (prog) {

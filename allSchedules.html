@@ -73,6 +73,10 @@
                 <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage program times, venues, and judges</p>
             </div>
             <div class="flex items-center ml-4 gap-2">
+                <button onclick="window.location.href='innerDashboard.html?tab=bulk-schedule'" class="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold rounded-lg shadow transition-all" title="Bulk Upload Schedules">
+                    <i class="fi fi-rr-file-upload"></i>
+                    <span class="hidden sm:inline">Bulk Schedule Upload</span>
+                </button>
                 <button onclick="loadData()" class="w-9 h-9 flex items-center justify-center bg-white border border-gray-200 shadow-sm rounded-lg text-gray-500 hover:bg-gray-50 hover:text-brand-blue transition-colors" title="Refresh">
                     <i class="fi fi-rr-refresh"></i>
                 </button>
@@ -167,7 +171,7 @@
             <div class="mt-6 text-left">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Server URL</label>
                 <div class="flex gap-2">
-                    <input type="text" id="wa-server-url" value="https://whatsapp-backend-b60t.onrender.com" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="https://..." />
+                    <input type="text" id="wa-server-url" value="http://localhost:8000" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="e.g. http://localhost:8000" />
                     <button onclick="reconnectSchedulesWa()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded transition-colors text-sm">
                         Connect
                     </button>
@@ -222,18 +226,108 @@
                 });
 
                 renderSchedulesUI();
+                checkUpcomingPrograms5Min();
             } catch(e) {
                 console.error(e);
                 document.getElementById('schedule-table-list').innerHTML = `<div class="flex justify-center items-center py-20"><span class="text-[14px] text-red-500 font-medium">Failed to load data.</span></div>`;
             }
         }
 
-        if(db) loadData();
-
-
-
         // Initialize data loading
         if(db) loadData();
+
+        // Check for programs starting in <= 5 minutes and group them into 1 message per judge
+        function checkUpcomingPrograms5Min() {
+            if (!programsData || programsData.length === 0) return;
+            
+            const now = new Date();
+            const toAlertIds = [];
+
+            programsData.forEach(p => {
+                if (!p.time || p.judgeAlertSent) return;
+
+                const diffMs = new Date(p.time) - now;
+                const diffMins = Math.floor(diffMs / 60000);
+
+                // Auto-trigger if program starts in 5 minutes or less
+                if (diffMins >= 0 && diffMins <= 5) {
+                    // Check if venue or venue type has WhatsApp alerts enabled
+                    if (p.venueId) {
+                        const vObj = venuesData.find(v => v.id === p.venueId);
+                        if (vObj) {
+                            if (vObj.sendWaAlerts === false) {
+                                console.log(`🚫 WhatsApp alert skipped for ${p.code}: Venue '${vObj.name}' has WhatsApp alerts unticked.`);
+                                return;
+                            }
+                            if (typeof venueTypesData !== 'undefined' && Array.isArray(venueTypesData)) {
+                                const vtObj = venueTypesData.find(vt => vt.name === vObj.type || vt.id === vObj.typeId);
+                                if (vtObj && vtObj.sendWaAlerts === false) {
+                                    console.log(`🚫 WhatsApp alert skipped for ${p.code}: Venue Type '${vtObj.name}' has WhatsApp alerts unticked.`);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
+                    let hasJudge = false;
+                    for (let i = 1; i <= (p.judgeCount || 2); i++) {
+                        if (p[`judge${i}Id`]) { hasJudge = true; break; }
+                    }
+                    if (p.venueId && hasJudge) {
+                        toAlertIds.push(p.id);
+                    }
+                }
+            });
+
+            if (toAlertIds.length > 0) {
+                console.log(`⏰ Consolidated 5-minute alert triggered for ${toAlertIds.length} program(s)...`);
+                schedulesWaSendBatch(toAlertIds);
+            }
+        }
+
+        // Run interval check every 60 seconds for whatsapp trigger
+        setInterval(checkUpcomingPrograms5Min, 60000);
+
+        // Live ticking countdown timer (05:00 down to 00:00 continuously)
+        function updateLiveTimers() {
+            if (!programsData || programsData.length === 0) return;
+
+            const now = new Date();
+            programsData.forEach(p => {
+                const timerEl = document.getElementById(`live-timer-${p.id}`);
+                if (!timerEl) return;
+
+                if (!p.time) {
+                    timerEl.innerHTML = '';
+                    return;
+                }
+
+                const diffMs = new Date(p.time) - now;
+
+                if (diffMs > 0 && diffMs <= 5 * 60 * 1000) {
+                    // <= 5 minutes remaining: Show live mm:ss ticking countdown
+                    const totalSecs = Math.floor(diffMs / 1000);
+                    const m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+                    const s = String(totalSecs % 60).padStart(2, '0');
+                    timerEl.innerHTML = `<span class="inline-flex items-center gap-1 text-[11px] font-bold font-mono-custom text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md animate-pulse">⏳ Only ${m}:${s} remaining!</span>`;
+                } else if (diffMs > 5 * 60 * 1000) {
+                    // > 5 minutes remaining
+                    const totalMins = Math.floor(diffMs / 60000);
+                    const hrs = Math.floor(totalMins / 60);
+                    const mins = totalMins % 60;
+                    const text = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                    timerEl.innerHTML = `<span class="text-[10.5px] font-medium font-mono-custom text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">⏳ Starts in ${text}</span>`;
+                } else if (diffMs <= 0 && diffMs >= -30 * 60 * 1000) {
+                    // Already started (00:00)
+                    timerEl.innerHTML = `<span class="text-[10.5px] font-bold font-mono-custom text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">🏁 Started (00:00)</span>`;
+                } else {
+                    timerEl.innerHTML = '';
+                }
+            });
+        }
+
+        // Ticking interval every 1 second
+        setInterval(updateLiveTimers, 1000);
 
         function applyScheduleFilters() {
             scheduleSearchQuery = document.getElementById('search-schedules').value.toLowerCase().trim();
@@ -316,7 +410,8 @@
 
                 let pVenueOpts = `<option value="">-- No Venue --</option>`;
                 venuesData.forEach(v => {
-                    pVenueOpts += `<option value="${v.id}" ${v.id === currentVenue ? 'selected' : ''}>${v.name}</option>`;
+                    const typeLabel = v.type ? ` (${v.type})` : '';
+                    pVenueOpts += `<option value="${v.id}" ${v.id === currentVenue ? 'selected' : ''}>${v.name}${typeLabel}</option>`;
                 });
 
                 // VALIDATION LOGIC
@@ -376,6 +471,7 @@
 
                     <div class="col-span-2 pr-3 pt-1">
                         <input type="datetime-local" onchange="updateProgSchedule('${p.id}', 'time', this.value)" value="${p.time || ''}" class="w-full text-[11.5px] font-medium text-gray-700 ${warnings.length > 0 ? 'bg-red-50 border-red-300 ring-2 ring-red-100' : 'bg-green-50/30 border-green-200 hover:border-green-400'} rounded-md py-1.5 px-2 transition-all outline-none focus:ring-1 focus:ring-green-500 cursor-pointer">
+                        <div id="live-timer-${p.id}" class="mt-1"></div>
                         ${warnings.map(w => `<p class="text-[9px] font-bold text-red-500 mt-1 uppercase leading-tight">${w}</p>`).join('')}
                     </div>
 
@@ -383,6 +479,10 @@
                         <select onchange="updateProgSchedule('${p.id}', 'venueId', this.value)" class="w-full text-[12px] font-medium bg-blue-50/50 text-gray-700 border-blue-200 hover:border-blue-400 rounded-md py-1.5 pl-3 table-select transition-all outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                             ${pVenueOpts}
                         </select>
+                        ${(function(){
+                            const vObj = venuesData.find(x => x.id === currentVenue);
+                            return vObj && vObj.type ? `<span class="mt-1 inline-block text-[9px] font-black text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 uppercase tracking-wider">${vObj.type}</span>` : '';
+                        })()}
                     </div>
 
                     <div class="col-span-1 pr-3 pt-1 text-center">
@@ -395,6 +495,7 @@
                 </div>`;
             });
             tableList.innerHTML = tableHTML;
+            updateLiveTimers();
         }
 
     </script>
@@ -450,7 +551,8 @@
         function reconnectSchedulesWa() {
             if (schedulesWaSocket) schedulesWaSocket.disconnect();
             
-            const serverUrl = document.getElementById('wa-server-url').value;
+            const serverUrl = document.getElementById('wa-server-url').value.trim() || 'http://localhost:8000';
+            localStorage.setItem('waServerUrl', serverUrl);
             
             updateSchedulesWaStatus('Connecting...', 'info');
             showSchedulesWaLoader();
@@ -492,88 +594,170 @@
             });
         }
 
+        // Restore saved server URL on init
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUrl = localStorage.getItem('waServerUrl');
+            const inputEl = document.getElementById('wa-server-url');
+            if (savedUrl && inputEl) inputEl.value = savedUrl;
+        });
+
         function formatDateTime(isoString) {
             if (!isoString) return 'TBD';
             const date = new Date(isoString);
             return date.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
 
-        async function schedulesWaSendSingle(programId) {
-            const serverUrl = document.getElementById('wa-server-url').value.trim();
-            console.log(`Preparing auto alert for program ${programId}…`);
-            
-            try {
-                const prog = programsData.find(x => x.id === programId);
-                if (!prog) throw new Error("Program not found");
-                
-                const venueObj = venuesData.find(v => v.id === prog.venueId);
-                const venueName = venueObj ? venueObj.name : "TBD";
-                const timeStr = formatDateTime(prog.time);
-                
-                const jCount = prog.judgeCount || 2;
-                let msgsSent = 0;
-                
+        function schedulesWaSendSingle(programId) {
+            return schedulesWaSendBatch([programId]);
+        }
+
+        async function schedulesWaSendBatch(programIds) {
+            if (!Array.isArray(programIds)) programIds = [programIds];
+            if (programIds.length === 0) return;
+
+            const serverUrlInput = document.getElementById('wa-server-url');
+            const serverUrl = (serverUrlInput && serverUrlInput.value.trim()) ? serverUrlInput.value.trim() : (localStorage.getItem('waServerUrl') || "http://localhost:8000");
+
+            const festName = localStorage.getItem('festName') || "Sibaq '25";
+
+            // Group programs by assigned judge ID
+            const judgeMap = {};
+            const missingNumbers = [];
+
+            programIds.forEach(id => {
+                const p = programsData.find(x => x.id === id);
+                if (!p) return;
+
+                // Check if venue has WhatsApp alerts unticked
+                if (p.venueId) {
+                    const vObj = venuesData.find(v => v.id === p.venueId);
+                    if (vObj && vObj.sendWaAlerts === false) {
+                        console.log(`🚫 WhatsApp alert skipped for program ${p.code}: Venue '${vObj.name}' has WhatsApp alerts unticked.`);
+                        return;
+                    }
+                }
+
+                const jCount = p.judgeCount || 2;
                 for (let i = 1; i <= jCount; i++) {
-                    const jId = prog[`judge${i}Id`];
+                    const jId = p[`judge${i}Id`];
                     if (jId) {
                         const judge = judgesData.find(j => j.id === jId);
-                        if (judge && judge.whatsapp) {
-                            const concept = prog.conceptNote ? prog.conceptNote : "None provided";
-                            const festName = localStorage.getItem('festName') || "Sibaq '25";
-                            
-                            let timeText = "⏳ Only 5 minutes remaining!";
-                            if (prog.time) {
-                                const diffMs = new Date(prog.time) - new Date();
-                                if (diffMs > 0) {
-                                    const diffMins = Math.floor(diffMs / 60000);
-                                    if (diffMins < 60) {
-                                        timeText = `⏳ Only ${diffMins} minute(s) remaining!`;
-                                    } else {
-                                        const hours = Math.floor(diffMins / 60);
-                                        const mins = diffMins % 60;
-                                        timeText = `⏳ Starts in ${hours} hour(s) and ${mins} minute(s)!`;
-                                    }
-                                } else {
-                                    timeText = `⏳ Program time has already started!`;
-                                }
-                            }
-                            
-                            const msg = `🚨 *${festName} Judge Alert* 🚨\n\nHello 👋 ${judge.name},\n\n📌 *Program Name:* ${prog.name}\n🔢 *Program Code:* ${prog.code || 'N/A'}\n📍 *Venue:* ${venueName}\n📝 *Concept Note:* ${concept}\n\n${timeText}\n🚨 Please report to the venue immediately. Thank you! 🙏`;
-                            
-                            // Send to Node API
-                            const res = await fetch(`${serverUrl}/send`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ number: judge.whatsapp, message: msg })
-                            });
-                            
-                            const data = await res.json();
-                            if (data.success) {
-                                console.log(`✓ Message sent to ${judge.name}`);
-                                msgsSent++;
-                            } else {
-                                console.error(`✗ Failed for ${judge.name}: ${data.error}`);
-                            }
+                        if (!judge) continue;
+
+                        const rawNumber = (judge.whatsapp || '').toString().trim();
+                        const cleanNumber = rawNumber.replace(/\D/g, '');
+
+                        if (!cleanNumber) {
+                            if (!missingNumbers.includes(judge.name)) missingNumbers.push(judge.name);
+                            continue;
+                        }
+
+                        if (!judgeMap[jId]) {
+                            judgeMap[jId] = { judge, cleanNumber, progs: [] };
+                        }
+                        if (!judgeMap[jId].progs.some(x => x.id === p.id)) {
+                            judgeMap[jId].progs.push(p);
                         }
                     }
                 }
-                
-                // Update Firebase
-                if (msgsSent > 0) {
-                    await db.collection('programs').doc(programId).update({ judgeAlertSent: true });
-                    const idx = programsData.findIndex(x => x.id === programId);
-                    if (idx !== -1) programsData[idx].judgeAlertSent = true;
-                    console.log(`Marked program ${prog.code} as Sent in Firebase.`);
-                    
+            });
+
+            if (missingNumbers.length > 0) {
+                typeof Toastify === 'function' && Toastify({
+                    text: `⚠️ Cannot send alert: Judge(s) [${missingNumbers.join(', ')}] have no WhatsApp number saved!`,
+                    duration: 5000, gravity: 'bottom', position: 'right',
+                    style: { background: '#F59E0B', borderRadius: '8px', fontSize: '12px' }
+                }).showToast();
+            }
+
+            const successfullyAlertedProgIds = new Set();
+
+            // Build ONE consolidated message per judge
+            for (const jId in judgeMap) {
+                const { judge, cleanNumber, progs } = judgeMap[jId];
+
+                let msg = `🚨 *${festName} Judge Schedule Alert* 🚨\n\nHello 👋 ${judge.name},\n\nYou have *${progs.length} assigned program(s)* starting soon:\n\n`;
+
+                progs.forEach((prog, index) => {
+                    const venueObj = venuesData.find(v => v.id === prog.venueId);
+                    let venueName = "TBD";
+                    if (venueObj) {
+                        venueName = venueObj.name + (venueObj.subVenue ? ` (${venueObj.subVenue})` : '');
+                    }
+                    const concept = prog.conceptNote ? prog.conceptNote : "None provided";
+
+                    let timeText = "⏳ Only 05:00 remaining!";
+                    if (prog.time) {
+                        const diffMs = new Date(prog.time) - new Date();
+                        if (diffMs > 0) {
+                            const totalSecs = Math.floor(diffMs / 1000);
+                            const diffMins = Math.floor(diffMs / 60000);
+                            if (diffMins < 5) {
+                                const m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+                                const s = String(totalSecs % 60).padStart(2, '0');
+                                timeText = `⏳ Only ${m}:${s} remaining!`;
+                            } else if (diffMins < 60) {
+                                timeText = `⏳ Starts in ${diffMins} minute(s)!`;
+                            } else {
+                                const hours = Math.floor(diffMins / 60);
+                                const mins = diffMins % 60;
+                                timeText = `⏳ Starts in ${hours} hour(s) and ${mins} minute(s)!`;
+                            }
+                        } else {
+                            timeText = `⏳ Program time has already started! (00:00)`;
+                        }
+                    }
+
+                    msg += `${index + 1}️⃣ *${prog.name}* (Code: ${prog.code || 'N/A'})\n📍 *Venue:* ${venueName}\n📝 *Concept:* ${concept}\n${timeText}\n\n`;
+                });
+
+                msg += `🚨 Please report to your venue(s) immediately. Thank you! 🙏`;
+
+                try {
+                    const res = await fetch(`${serverUrl}/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ number: cleanNumber, message: msg })
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        console.log(`✓ Consolidated message sent to ${judge.name} (${progs.length} program(s))`);
+                        progs.forEach(p => successfullyAlertedProgIds.add(p.id));
+                    } else {
+                        console.error(`✗ Failed for ${judge.name}: ${data.error}`);
+                        typeof Toastify === 'function' && Toastify({
+                            text: `❌ WhatsApp error for ${judge.name}: ${data.error}`,
+                            duration: 5000, gravity: 'bottom', position: 'right',
+                            style: { background: '#EF4444', borderRadius: '8px', fontSize: '12px' }
+                        }).showToast();
+                    }
+                } catch (e) {
+                    console.error(`Error sending batch to ${judge.name}:`, e.message);
+                }
+            }
+
+            // Batch update Firebase for all sent programs
+            if (successfullyAlertedProgIds.size > 0 && db) {
+                try {
+                    const batch = db.batch();
+                    successfullyAlertedProgIds.forEach(id => {
+                        const ref = db.collection('programs').doc(id);
+                        batch.update(ref, { judgeAlertSent: true });
+
+                        const idx = programsData.findIndex(x => x.id === id);
+                        if (idx !== -1) programsData[idx].judgeAlertSent = true;
+                    });
+                    await batch.commit();
+
                     typeof Toastify === 'function' && Toastify({
-                        text: `✅ Auto-Alerts sent to judges for ${prog.code}!`,
+                        text: `✅ Consolidated WhatsApp alert sent to judge(s)!`,
                         duration: 3000, gravity: 'bottom', position: 'right',
                         style: { background: '#25D366', borderRadius: '8px', fontSize: '13px' }
                     }).showToast();
+                } catch (e) {
+                    console.error("Firebase update error:", e);
                 }
-                
-            } catch (e) {
-                console.error('Error auto-sending: ' + e.message);
             }
         }
 

@@ -273,6 +273,13 @@
                                 class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                             </div> Program Data
                         </a>
+                        <a href="#" data-tab="bulk-schedule"
+                            onclick="event.preventDefault(); showOwnerTab('bulk-schedule')"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                            </div> Schedule Data
+                        </a>
                         <a href="#" data-tab="bulk-grade-tpl"
                             onclick="event.preventDefault(); showOwnerTab('bulk-grade-tpl')"
                             class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
@@ -286,6 +293,13 @@
                             <div
                                 class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                             </div> Pattern Template
+                        </a>
+                        <a href="#" data-tab="bulk-judgement"
+                            onclick="event.preventDefault(); showOwnerTab('bulk-judgement')"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                            </div> Judgment Data
                         </a>
                     </div>
                 </div>
@@ -529,6 +543,10 @@
                                         <input type="text" id="venueTypeName" required placeholder="Enter venue type name"
                                             class="w-full border border-gray-200 p-2.5 rounded-lg focus:ring-2 focus:ring-brand-blue/20 outline-none">
                                     </div>
+                                    <div class="flex items-center gap-2 pt-1">
+                                        <input type="checkbox" id="venueTypeSendWa" checked class="w-4 h-4 rounded text-brand-blue border-gray-300 focus:ring-brand-blue/20 cursor-pointer">
+                                        <label for="venueTypeSendWa" class="text-xs font-semibold text-gray-700 cursor-pointer select-none">Send WhatsApp Alert for this Stage Type</label>
+                                    </div>
                                     <button type="submit"
                                         class="bg-brand-blue text-white px-6 py-3 rounded-xl font-bold w-full shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2">
                                         <i class="fi fi-rr-plus"></i> Add Venue Type
@@ -545,34 +563,25 @@
                                 </div>
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-left text-sm">
-                                        <thead class="bg-gray-50 text-gray-500 font-bold text-[11px] uppercase tracking-wider">
+                                        <thead class="bg-gray-50 text-gray-500 font-bold text-[11px] uppercase tracking-wider border-b border-gray-100">
                                             <tr>
                                                 <th class="px-6 py-3">#</th>
                                                 <th class="px-6 py-3 w-full">Venue Type Name</th>
-                                                <th class="px-6 py-3 text-right">Actions</th>
+                                                <th class="px-4 py-3 whitespace-nowrap">WA Alert</th>
+                                                <th class="px-6 py-3 text-right whitespace-nowrap">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody id="venue-types-body" class="divide-y divide-gray-100">
                                             <!-- Sample rows -->
                                             <tr>
-                                                <td class="px-6 py-4 text-gray-500">1</td>
-                                                <td class="px-6 py-4 font-semibold text-gray-800">Main Stage</td>
-                                                <td class="px-6 py-4 text-right">
-                                                    <button class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-6 py-4 text-gray-500">2</td>
-                                                <td class="px-6 py-4 font-semibold text-gray-800">Classroom</td>
-                                                <td class="px-6 py-4 text-right">
-                                                    <button class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td class="px-6 py-4 text-gray-500">3</td>
-                                                <td class="px-6 py-4 font-semibold text-gray-800">Ground</td>
-                                                <td class="px-6 py-4 text-right">
-                                                    <button class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                                                <td class="px-6 py-3.5 text-gray-500 font-mono text-xs">1</td>
+                                                <td class="px-6 py-3.5 font-semibold text-gray-800 text-[13.5px]">Main Stage</td>
+                                                <td class="px-4 py-3.5 whitespace-nowrap"><span class="px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-bold">📱 On</span></td>
+                                                <td class="px-6 py-3.5 text-right whitespace-nowrap">
+                                                    <div class="flex items-center justify-end gap-1.5">
+                                                        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-brand-blue bg-blue-50 hover:bg-blue-100 transition-all shadow-sm"><i class="fi fi-rr-list text-xs"></i></button>
+                                                        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-all shadow-sm"><i class="fi fi-rr-trash text-xs"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -604,6 +613,10 @@
                                         class="bg-brand-blue text-white px-4 py-2.5 rounded-lg font-bold shadow-md hover:opacity-90 transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap">
                                         <i class="fi fi-rr-plus"></i> Add
                                     </button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="subStageSendWa" checked class="w-4 h-4 rounded text-brand-blue border-gray-300 focus:ring-brand-blue/20 cursor-pointer">
+                                    <label for="subStageSendWa" class="text-xs font-semibold text-gray-700 cursor-pointer select-none">Send WhatsApp Alert for this Sub Stage</label>
                                 </div>
                             </form>
                             <div class="border border-gray-100 rounded-xl overflow-hidden max-h-[300px] overflow-y-auto">
@@ -1513,6 +1526,102 @@
                             </div>
                             <div id="bulk-pos-errors" class="mb-4"></div>
                             <div id="bulk-pos-table"
+                                class="overflow-x-auto rounded-xl border border-gray-100 w-full max-h-[400px]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== BULK ENTRY: Schedule Data ===== -->
+                <div id="tpl-bulk-schedule" class="hidden animate-in fade-in duration-500">
+                    <div
+                        class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
+                                    class="fi fi-rr-calendar-clock text-blue-600"></i> Bulk Schedule Import</h1>
+                            <p class="text-[13px] text-gray-500 mt-1">Download an Excel or CSV template, fill in program codes, date & time, venue, judge count, and assigned judges to update program schedules in bulk.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadExcel(SCHEDULE_HEADERS, 'schedule_template.xlsx')"
+                                class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="downloadScheduleTemplate()"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full mb-8">
+                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled File (.xlsx, .xls, .csv)</label>
+                        <div class="max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all"
+                            onclick="document.getElementById('bulk-sched-file').click()">
+                            <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
+                            <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (programCode, dateTime, venue, judgeCount, judge1, judge2, judge3)</p>
+                            <input type="file" id="bulk-sched-file" accept=".csv, .xlsx, .xls" class="hidden"
+                                onchange="handleScheduleCSV(this)">
+                        </div>
+                        <div id="bulk-sched-preview" class="mt-8 hidden">
+                            <div
+                                class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                                <h3 class="text-[14px] font-bold text-gray-700">Preview <span id="bulk-sched-count"
+                                        class="text-blue-600 ml-2 font-medium"></span></h3>
+                                <button onclick="importSchedules()" id="btn-import-sched"
+                                    class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-blue text-white rounded-xl text-[13px] font-bold hover:bg-opacity-90 shadow-md transition-all">
+                                    <i class="fi fi-rr-upload"></i> Import All Valid
+                                </button>
+                            </div>
+                            <div id="bulk-sched-errors" class="mb-4"></div>
+                            <div id="bulk-sched-table"
+                                class="overflow-x-auto rounded-xl border border-gray-100 w-full max-h-[400px]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== BULK ENTRY: Judgment Data ===== -->
+                <div id="tpl-bulk-judgement" class="hidden animate-in fade-in duration-500">
+                    <div
+                        class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
+                                    class="fi fi-rr-star text-purple-600"></i> Bulk Judgment Import</h1>
+                            <p class="text-[13px] text-gray-500 mt-1">Download an Excel or CSV template, fill in program codes, candidate chest numbers/teams, grades, and positions to import judgment data at once.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadExcel(JUDGEMENT_HEADERS, 'judgment_template.xlsx')"
+                                class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="downloadJudgementTemplate()"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
+                                <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 w-full mb-8">
+                        <label class="block text-sm font-bold text-gray-700 mb-4 text-center">Upload Filled File (.xlsx, .xls, .csv)</label>
+                        <div class="max-w-2xl mx-auto border-2 border-dashed border-gray-200 rounded-xl p-8 sm:p-12 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-50/30 transition-all"
+                            onclick="document.getElementById('bulk-judg-file').click()">
+                            <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
+                            <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (Program Code, Chest No / Team, Grade, Position)</p>
+                            <input type="file" id="bulk-judg-file" accept=".csv, .xlsx, .xls" class="hidden"
+                                onchange="handleJudgementCSV(this)">
+                        </div>
+                        <div id="bulk-judg-preview" class="mt-8 hidden">
+                            <div
+                                class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                                <h3 class="text-[14px] font-bold text-gray-700">Preview <span id="bulk-judg-count"
+                                        class="text-purple-600 ml-2 font-medium"></span></h3>
+                                <button onclick="importJudgements()" id="btn-import-judg"
+                                    class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-blue text-white rounded-xl text-[13px] font-bold hover:bg-opacity-90 shadow-md transition-all">
+                                    <i class="fi fi-rr-upload"></i> Import All Valid
+                                </button>
+                            </div>
+                            <div id="bulk-judg-errors" class="mb-4"></div>
+                            <div id="bulk-judg-table"
                                 class="overflow-x-auto rounded-xl border border-gray-100 w-full max-h-[400px]"></div>
                         </div>
                     </div>
@@ -2662,8 +2771,10 @@
                 'limits': 'Set Limits',
                 'bulk-candidates': 'Bulk Candidate Import',
                 'bulk-programs': 'Bulk Program Import',
+                'bulk-schedule': 'Bulk Schedule Import',
                 'bulk-grade-tpl': 'Bulk Grade Template Import',
                 'bulk-pos-tpl': 'Bulk Pattern Template Import',
+                'bulk-judgement': 'Bulk Judgment Import',
                 'grade': 'Grade Templates',
                 'position': 'Pattern Templates',
                 'alerts': 'System Alerts',
@@ -3355,8 +3466,10 @@
         // ═══════════════════════════════════════════════════════════════
         let CAND_HEADERS = ['name', 'section', 'admissionNo', 'class', 'status'];
         const PROG_HEADERS = ['code', 'name', 'section', 'type', 'venueType', 'subStage', 'maxParticipants', 'status', 'progSet', 'gradeTemplate', 'positionTemplate'];
+        const SCHEDULE_HEADERS = ['programCode', 'dateTime', 'venue', 'judgeCount', 'judge1', 'judge2', 'judge3'];
         const GRADE_HEADERS = ['templateName', 'label', 'points'];
         const POS_HEADERS = ['templateName', 'label', 'points'];
+        const JUDGEMENT_HEADERS = ['programCode', 'chestNo', 'team', 'gradeLabel', 'gradePoints', 'positionLabel', 'positionPoints'];
 
         function downloadCandidateTemplate() {
             const csv = CAND_HEADERS.join(',') + '\n';
@@ -3366,6 +3479,10 @@
             const csv = PROG_HEADERS.join(',') + '\n';
             downloadCSV(csv, 'program_template.csv');
         }
+        function downloadScheduleTemplate() {
+            const csv = SCHEDULE_HEADERS.join(',') + '\n';
+            downloadCSV(csv, 'schedule_template.csv');
+        }
         function downloadGradeTemplate() {
             const csv = GRADE_HEADERS.join(',') + '\n';
             downloadCSV(csv, 'grade_template.csv');
@@ -3373,6 +3490,10 @@
         function downloadPositionTemplate() {
             const csv = POS_HEADERS.join(',') + '\n';
             downloadCSV(csv, 'pattern_template.csv');
+        }
+        function downloadJudgementTemplate() {
+            const csv = JUDGEMENT_HEADERS.join(',') + '\n';
+            downloadCSV(csv, 'judgment_template.csv');
         }
         function downloadExcel(headers, filename) {
             if (typeof XLSX !== 'undefined') {
@@ -4221,92 +4342,594 @@
             }
         }
 
-        async function handleScheduleCSV(input) {
+        // ═══════════════════════════════════════════════════════════════
+        // BULK IMPORT — JUDGMENT DATA
+        // ═══════════════════════════════════════════════════════════════
+        let bulkJudgementRows = [];
+        let bulkJudgementPrograms = {};
+        let bulkJudgementCandidates = {};
+        let bulkJudgementTeams = [];
+        let bulkJudgementGradeTemplates = {};
+        let bulkJudgementPosTemplates = {};
+
+        function validateJudgementRow(r) {
+            const errs = [];
+            const code = String(r.programcode || r.programCode || r.code || '').trim();
+            const chestNo = String(r.chestno || r.chestNo || '').trim();
+            const team = String(r.team || '').trim();
+            const gLbl = String(r.gradelabel || r.gradeLabel || r.grade || '').trim();
+            const gPtsRaw = r.gradepoints !== undefined && r.gradepoints !== '' ? r.gradepoints : r.gradePoints;
+            const pLbl = String(r.positionlabel || r.positionLabel || r.position || '').trim();
+            const pPtsRaw = r.positionpoints !== undefined && r.positionpoints !== '' ? r.positionpoints : r.positionPoints;
+
+            if (!code) {
+                errs.push('Program Code is required');
+            } else {
+                const prog = bulkJudgementPrograms[code.toLowerCase()];
+                if (!prog) {
+                    errs.push(`Program Code "${code}" not found`);
+                } else {
+                    r._progObj = prog;
+                    const isGroup = (prog.type || '').toLowerCase() === 'group';
+                    if (isGroup) {
+                        if (!team) {
+                            errs.push('Team Name is required for Group program');
+                        } else if (!bulkJudgementTeams.some(t => t.toLowerCase() === team.toLowerCase())) {
+                            errs.push(`Team "${team}" not found`);
+                        }
+                    } else {
+                        if (!chestNo) {
+                            errs.push('Chest No is required for Individual program');
+                        } else {
+                            const cand = bulkJudgementCandidates[chestNo];
+                            if (!cand) {
+                                errs.push(`Chest No "${chestNo}" not found`);
+                            } else {
+                                r._candObj = cand;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!gLbl && !pLbl && (gPtsRaw === undefined || gPtsRaw === '') && (pPtsRaw === undefined || pPtsRaw === '')) {
+                errs.push('At least Grade or Position must be provided');
+            }
+
+            if (gPtsRaw !== undefined && gPtsRaw !== '' && isNaN(gPtsRaw)) {
+                errs.push('Grade Points must be a number');
+            }
+            if (pPtsRaw !== undefined && pPtsRaw !== '' && isNaN(pPtsRaw)) {
+                errs.push('Position Points must be a number');
+            }
+
+            r._errors = errs;
+            r._valid = errs.length === 0;
+        }
+
+        window.updateBulkJudgementRow = function (index, field, value) {
+            bulkJudgementRows[index][field] = value;
+            revalidateAllJudgementRows();
+        };
+
+        window.removeBulkJudgementRow = function (index) {
+            bulkJudgementRows.splice(index, 1);
+            bulkJudgementRows.forEach((r, i) => r._index = i);
+            revalidateAllJudgementRows();
+        };
+
+        function revalidateAllJudgementRows() {
+            bulkJudgementRows.forEach(r => validateJudgementRow(r));
+            renderJudgementPreview();
+        }
+
+        function handleJudgementCSV(input) {
+            const file = input.files[0];
+            if (!file) return;
+            readExcelOrCSV(file, async function ({ headers, rows }) {
+                const hasProgCode = headers.some(hdr => {
+                    const normH = hdr.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return normH === 'programcode' || normH === 'code';
+                });
+                if (!hasProgCode) {
+                    showToast('<b>❌</b> Missing column: programCode');
+                    input.value = '';
+                    return;
+                }
+
+                const [progSnap, candSnap, teamSnap, gSnap, pSnap] = await Promise.all([
+                    db.collection('programs').get(),
+                    db.collection('candidates').get(),
+                    db.collection('teams').get(),
+                    db.collection('gradeTemplates').get(),
+                    db.collection('positionTemplates').get()
+                ]);
+
+                bulkJudgementPrograms = {};
+                progSnap.docs.forEach(d => {
+                    const data = { id: d.id, ...d.data() };
+                    if (data.code) bulkJudgementPrograms[String(data.code).trim().toLowerCase()] = data;
+                });
+
+                bulkJudgementCandidates = {};
+                candSnap.docs.forEach(d => {
+                    const data = { id: d.id, ...d.data() };
+                    if (data.chestNo) bulkJudgementCandidates[String(data.chestNo).trim()] = data;
+                });
+
+                bulkJudgementTeams = teamSnap.docs.map(d => (d.data().name || '').trim());
+
+                bulkJudgementGradeTemplates = {};
+                gSnap.docs.forEach(d => {
+                    bulkJudgementGradeTemplates[d.id] = d.data().values || [];
+                });
+
+                bulkJudgementPosTemplates = {};
+                pSnap.docs.forEach(d => {
+                    bulkJudgementPosTemplates[d.id] = d.data().values || [];
+                });
+
+                bulkJudgementRows = rows.map((r, i) => {
+                    return { ...r, _index: i, _rowNum: i + 2 };
+                });
+
+                revalidateAllJudgementRows();
+                input.value = '';
+            });
+        }
+
+        function renderJudgementPreview() {
+            const preview = document.getElementById('bulk-judg-preview');
+            const errBox = document.getElementById('bulk-judg-errors');
+            const tableBox = document.getElementById('bulk-judg-table');
+            const countEl = document.getElementById('bulk-judg-count');
+            if (!preview) return;
+
+            preview.classList.remove('hidden');
+            const totalValid = bulkJudgementRows.filter(r => r._valid).length;
+            const totalError = bulkJudgementRows.length - totalValid;
+            countEl.innerText = `(${bulkJudgementRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+
+            const errorRows = bulkJudgementRows.filter(r => !r._valid);
+            errBox.innerHTML = errorRows.length ? `
+                <div class="bg-red-50 border border-red-100 rounded-xl p-4 space-y-1">
+                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors:</div>
+                    ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
+                </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All rows are valid!</div>';
+
+            const headers = JUDGEMENT_HEADERS;
+            tableBox.innerHTML = `
+                <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wide sticky top-0 shadow-sm z-10">
+                    <tr>${headers.map(h => `<th class="px-3 py-3 border-b border-gray-200">${h}</th>`).join('')}<th class="px-3 py-3 border-b border-gray-200 text-center">Status</th><th class="px-3 py-3 border-b border-gray-200 text-center">Action</th></tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                ${bulkJudgementRows.map((r, i) => `
+                    <tr class="hover:bg-gray-50/50 transition-colors ${r._valid ? '' : 'bg-red-50/30'}">
+                        ${headers.map(h => `<td class="px-2 py-2">${getBulkJudgementField(r, h)}</td>`).join('')}
+                        <td class="px-3 py-2 text-center align-middle">${r._valid ? '<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600" title="Valid"><i class="fi fi-rr-check text-[10px]"></i></span>' : `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 cursor-help" title="${r._errors.join(', ')}"><i class="fi fi-rr-exclamation text-[10px]"></i></span>`}</td>
+                        <td class="px-3 py-2 text-center align-middle"><button onclick="removeBulkJudgementRow(${r._index})" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fi fi-rr-trash text-[10px]"></i></button></td>
+                    </tr>`).join('')}
+                </tbody>
+                </table>`;
+        }
+
+        function getBulkJudgementField(r, h) {
+            const fieldKey = h.toLowerCase();
+            let val = (r[fieldKey] || r[h] || '').toString().replace(/"/g, '&quot;');
+            if (fieldKey === 'gradelabel' && !val) val = (r.grade || '').toString().replace(/"/g, '&quot;');
+            if (fieldKey === 'gradepoints' && !val) val = (r.gradepoints || r.gradePoints || '').toString().replace(/"/g, '&quot;');
+            if (fieldKey === 'positionlabel' && !val) val = (r.position || '').toString().replace(/"/g, '&quot;');
+            if (fieldKey === 'positionpoints' && !val) val = (r.positionpoints || r.positionPoints || '').toString().replace(/"/g, '&quot;');
+
+            const borderClass = r._valid ? 'border-gray-200' : 'border-red-300';
+            const baseClass = `w-full bg-white border ${borderClass} rounded-lg px-2.5 py-1.5 text-[12px] text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all`;
+
+            return `<input type="text" class="${baseClass} placeholder-gray-300" value="${val}" placeholder="${h}" onchange="updateBulkJudgementRow(${r._index}, '${fieldKey}', this.value)">`;
+        }
+
+        async function importJudgements() {
+            const validRows = bulkJudgementRows.filter(r => r._valid);
+            if (!validRows.length) return showToast('<b>⚠️</b> No valid rows to import.');
+
+            const btn = document.getElementById('btn-import-judg');
+            btn.disabled = true; btn.innerText = 'Importing...';
+
+            try {
+                const batch = db.batch();
+                const ts = new Date();
+                const currentUserId = localStorage.getItem('festUserId') || 'bulk_import';
+
+                const updatedProgIds = new Set();
+
+                validRows.forEach(r => {
+                    const prog = r._progObj;
+                    const isGroup = (prog.type || '').toLowerCase() === 'group';
+
+                    let gLbl = String(r.gradelabel || r.gradeLabel || r.grade || '').trim();
+                    let gPts = parseInt(r.gradepoints !== undefined && r.gradepoints !== '' ? r.gradepoints : r.gradePoints);
+                    let pLbl = String(r.positionlabel || r.positionLabel || r.position || '').trim();
+                    let pPts = parseInt(r.positionpoints !== undefined && r.positionpoints !== '' ? r.positionpoints : r.positionPoints);
+
+                    if (gLbl && isNaN(gPts) && prog.gradeTemplateId && bulkJudgementGradeTemplates[prog.gradeTemplateId]) {
+                        const match = bulkJudgementGradeTemplates[prog.gradeTemplateId].find(v => (v.label || '').toLowerCase() === gLbl.toLowerCase());
+                        if (match) gPts = parseInt(match.points) || 0;
+                    }
+                    if (isNaN(gPts)) gPts = 0;
+
+                    if (pLbl && isNaN(pPts) && prog.positionTemplateId && bulkJudgementPosTemplates[prog.positionTemplateId]) {
+                        const match = bulkJudgementPosTemplates[prog.positionTemplateId].find(v => (v.label || '').toLowerCase() === pLbl.toLowerCase());
+                        if (match) pPts = parseInt(match.points) || 0;
+                    }
+                    if (isNaN(pPts)) pPts = 0;
+
+                    if (isGroup) {
+                        const teamName = String(r.team || '').trim();
+                        const docId = `${prog.id}_group_${teamName.replace(/\s/g, '_')}`;
+                        const docRef = db.collection('programResults').doc(docId);
+
+                        batch.set(docRef, {
+                            programId: prog.id,
+                            isGroupResult: true,
+                            team: teamName,
+                            name: teamName,
+                            gradeLabel: gLbl,
+                            gradePoints: gPts,
+                            positionLabel: pLbl,
+                            positionPoints: pPts,
+                            totalPoints: (gPts + pPts),
+                            updatedAt: ts,
+                            evaluatedBy: currentUserId
+                        }, { merge: true });
+                    } else {
+                        const cand = r._candObj;
+                        const cId = cand ? cand.id : '';
+                        const chestNo = cand ? cand.chestNo : String(r.chestno || r.chestNo || '').trim();
+                        const name = cand ? cand.name : '';
+                        const team = cand ? cand.team : String(r.team || '').trim();
+
+                        const docId = `${prog.id}_${cId}`;
+                        const docRef = db.collection('programResults').doc(docId);
+
+                        batch.set(docRef, {
+                            programId: prog.id,
+                            isGroupResult: false,
+                            candidateId: cId,
+                            chestNo: chestNo,
+                            name: name,
+                            team: team,
+                            gradeLabel: gLbl,
+                            gradePoints: gPts,
+                            positionLabel: pLbl,
+                            positionPoints: pPts,
+                            totalPoints: (gPts + pPts),
+                            createdAt: ts,
+                            updatedAt: ts,
+                            evaluatedBy: currentUserId
+                        }, { merge: true });
+                    }
+
+                    updatedProgIds.add(prog.id);
+                });
+
+                updatedProgIds.forEach(pId => {
+                    batch.update(db.collection('programs').doc(pId), {
+                        evaluated: true,
+                        resultsUpdatedAt: ts,
+                        evaluatedByJudge: currentUserId
+                    });
+                });
+
+                await batch.commit();
+                showToast(`<b>✅</b> ${validRows.length} judgment entries imported successfully!`);
+                bulkJudgementRows = [];
+                renderJudgementPreview();
+            } catch (err) {
+                console.error("Import judgements error:", err);
+                showToast('<b>❌</b> ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // BULK IMPORT — SCHEDULE DATA
+        // ═══════════════════════════════════════════════════════════════
+        let bulkScheduleRows = [];
+        let bulkSchedulePrograms = {};
+        let bulkScheduleVenuesMap = {};
+        let bulkScheduleJudgesMap = {};
+        let bulkScheduleVenuesList = [];
+        let bulkScheduleJudgesList = [];
+
+        function formatDateTimeLocal(dtStr) {
+            if (!dtStr) return '';
+            dtStr = dtStr.trim();
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dtStr)) {
+                return dtStr.substring(0, 16);
+            }
+            const d = new Date(dtStr);
+            if (!isNaN(d.getTime())) {
+                const pad = n => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            }
+            return dtStr;
+        }
+
+        function validateScheduleRow(r) {
+            const errs = [];
+            const code = String(r.programCode || r.programcode || r.code || '').trim();
+            const venueVal = String(r.venue || r.venuename || r.venueName || '').trim();
+
+            if (!code) {
+                errs.push('Program Code is required');
+            } else {
+                const prog = bulkSchedulePrograms[code.toLowerCase()];
+                if (!prog) {
+                    errs.push(`Program Code "${code}" not found`);
+                } else {
+                    r._progObj = prog;
+                }
+            }
+
+            if (venueVal) {
+                const matchedVenue = bulkScheduleVenuesMap[venueVal.toLowerCase()];
+                if (matchedVenue) {
+                    r._venueObj = matchedVenue;
+                } else {
+                    errs.push(`Venue "${venueVal}" not found`);
+                }
+            } else {
+                r._venueObj = null;
+            }
+
+            const jCount = Math.max(1, Math.min(10, parseInt(r.judgeCount) || 2));
+            r.judgeCount = jCount;
+
+            for (let i = 1; i <= Math.min(3, jCount); i++) {
+                const jVal = String(r[`judge${i}`] || '').trim();
+                if (jVal) {
+                    const matchedJ = bulkScheduleJudgesMap[jVal.toLowerCase()];
+                    if (matchedJ) {
+                        r[`_judge${i}Obj`] = matchedJ;
+                    } else {
+                        errs.push(`Judge ${i} "${jVal}" not found`);
+                    }
+                } else {
+                    r[`_judge${i}Obj`] = null;
+                }
+            }
+
+            r._errors = errs;
+            r._valid = errs.length === 0;
+        }
+
+        window.updateBulkScheduleRow = function (index, field, value) {
+            bulkScheduleRows[index][field] = value;
+            revalidateAllScheduleRows();
+        };
+
+        window.removeBulkScheduleRow = function (index) {
+            bulkScheduleRows.splice(index, 1);
+            bulkScheduleRows.forEach((r, i) => r._index = i);
+            revalidateAllScheduleRows();
+        };
+
+        function revalidateAllScheduleRows() {
+            bulkScheduleRows.forEach(r => validateScheduleRow(r));
+            renderSchedulePreview();
+        }
+
+        function handleScheduleCSV(input) {
             const file = input.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-                const text = e.target.result;
-                const rows = text.split('\n');
-                if (rows.length < 2) {
-                    return typeof showToast === 'function' ? showToast("❌ Invalid CSV format") : alert("Invalid CSV");
+            readExcelOrCSV(file, async function ({ headers, rows }) {
+                const hasProgCode = headers.some(hdr => {
+                    const normH = hdr.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return normH === 'programcode' || normH === 'code';
+                });
+                if (!hasProgCode) {
+                    typeof showToast === 'function' ? showToast('<b>❌</b> Missing column: programCode') : alert('Missing column: programCode');
+                    input.value = '';
+                    return;
                 }
-
-                typeof showToast === 'function' ? showToast("⏳ Loading databases for Schedule Upload...") : console.log("Processing...");
 
                 try {
-                    const pSnap = await db.collection('programs').get();
-                    const vSnap = await db.collection('venues').get();
-                    const jSnap = await db.collection('judges').get();
+                    const [progSnap, vSnap, jSnap] = await Promise.all([
+                        db.collection('programs').get(),
+                        db.collection('venues').get(),
+                        db.collection('judges').get()
+                    ]);
 
-                    const programsData = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    const venuesData = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    const judgesData = jSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    bulkSchedulePrograms = {};
+                    progSnap.docs.forEach(d => {
+                        const data = { id: d.id, ...d.data() };
+                        if (data.code) bulkSchedulePrograms[String(data.code).trim().toLowerCase()] = data;
+                    });
 
-                    let successCount = 0, skipCount = 0, notFoundCount = 0;
-                    const batch = db.batch();
-                    let batchCount = 0;
+                    bulkScheduleVenuesList = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    bulkScheduleVenuesMap = {};
+                    bulkScheduleVenuesList.forEach(v => {
+                        if (v.id) bulkScheduleVenuesMap[String(v.id).trim().toLowerCase()] = v;
+                        if (v.name) bulkScheduleVenuesMap[String(v.name).trim().toLowerCase()] = v;
+                    });
 
-                    for (let i = 1; i < rows.length; i++) {
-                        const line = rows[i].trim();
-                        if (!line) continue;
+                    bulkScheduleJudgesList = jSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    bulkScheduleJudgesMap = {};
+                    bulkScheduleJudgesList.forEach(j => {
+                        if (j.id) bulkScheduleJudgesMap[String(j.id).trim().toLowerCase()] = j;
+                        if (j.name) bulkScheduleJudgesMap[String(j.name).trim().toLowerCase()] = j;
+                    });
 
-                        // Parse standard CSV splitting correctly
-                        const cols = line.split(',');
-                        const progCode = cols[0] ? cols[0].trim().toUpperCase() : '';
-                        const venueName = cols[1] ? cols[1].trim() : '';
-                        const j1Name = cols[2] ? cols[2].trim() : '';
-                        const j2Name = cols[3] ? cols[3].trim() : '';
+                    bulkScheduleRows = rows.map((r, i) => {
+                        const programCode = String(r.programcode || r.programCode || r.code || '').trim();
+                        const dateTime = String(r.datetime || r.dateTime || r.date || r.time || '').trim();
+                        const venue = String(r.venue || r.venuename || r.venueName || '').trim();
+                        const judgeCount = parseInt(r.judgecount || r.judgeCount || 2) || 2;
+                        const judge1 = String(r.judge1 || r.j1 || r.judge1name || r.judge1Name || '').trim();
+                        const judge2 = String(r.judge2 || r.j2 || r.judge2name || r.judge2Name || '').trim();
+                        const judge3 = String(r.judge3 || r.j3 || r.judge3name || r.judge3Name || '').trim();
 
-                        if (!progCode) { skipCount++; continue; }
+                        return {
+                            programCode,
+                            dateTime: formatDateTimeLocal(dateTime),
+                            venue,
+                            judgeCount,
+                            judge1,
+                            judge2,
+                            judge3,
+                            _index: i,
+                            _rowNum: i + 2
+                        };
+                    });
 
-                        const prog = programsData.find(p => p.code && p.code.toUpperCase() === progCode);
-                        if (!prog) { notFoundCount++; continue; }
-
-                        const ts = typeof firebase !== 'undefined' ? firebase.firestore.FieldValue.serverTimestamp() : new Date();
-                        const updateData = { updatedAt: ts };
-                        let hasUpdate = false;
-
-                        if (venueName) {
-                            const venue = venuesData.find(v => v.name && v.name.toLowerCase() === venueName.toLowerCase());
-                            if (venue) { updateData.venueId = venue.id; hasUpdate = true; }
-                        }
-                        if (j1Name) {
-                            const j1 = judgesData.find(j => j.name && j.name.toLowerCase() === j1Name.toLowerCase());
-                            if (j1) { updateData.judge1Id = j1.id; hasUpdate = true; }
-                        }
-                        if (j2Name) {
-                            const j2 = judgesData.find(j => j.name && j.name.toLowerCase() === j2Name.toLowerCase());
-                            if (j2) { updateData.judge2Id = j2.id; hasUpdate = true; }
-                        }
-
-                        if (hasUpdate) {
-                            const docRef = db.collection('programs').doc(prog.id);
-                            batch.update(docRef, updateData);
-                            successCount++;
-                            batchCount++;
-
-                            if (batchCount === 450) {
-                                await batch.commit();
-                                batchCount = 0;
-                            }
-                        } else {
-                            skipCount++;
-                        }
-                    }
-
-                    if (batchCount > 0) await batch.commit();
-
-                    input.value = ''; // reset file input
-                    const msg = `✅ Upload complete! Updated: ${successCount}, Skipped: ${skipCount}, Code Not Found: ${notFoundCount}`;
-                    typeof showToast === 'function' ? showToast(msg) : alert(msg);
+                    revalidateAllScheduleRows();
                 } catch (err) {
-                    console.error(err);
-                    typeof showToast === 'function' ? showToast("❌ Error: " + err.message) : alert("❌ Error");
+                    console.error("Error loading schedule upload data:", err);
+                    typeof showToast === 'function' ? showToast('<b>❌</b> Error loading data: ' + err.message) : alert(err.message);
+                } finally {
+                    input.value = '';
                 }
-            };
-            reader.readAsText(file);
+            });
+        }
+
+        function renderSchedulePreview() {
+            const preview = document.getElementById('bulk-sched-preview');
+            const errBox = document.getElementById('bulk-sched-errors');
+            const tableBox = document.getElementById('bulk-sched-table');
+            const countEl = document.getElementById('bulk-sched-count');
+            if (!preview) return;
+
+            preview.classList.remove('hidden');
+            const totalValid = bulkScheduleRows.filter(r => r._valid).length;
+            const totalError = bulkScheduleRows.length - totalValid;
+            countEl.innerText = `(${bulkScheduleRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+
+            const errorRows = bulkScheduleRows.filter(r => !r._valid);
+            errBox.innerHTML = errorRows.length ? `
+                <div class="bg-red-50 border border-red-100 rounded-xl p-4 space-y-1">
+                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors:</div>
+                    ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
+                </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All schedule rows are valid!</div>';
+
+            const headers = ['Program Code', 'Date & Time', 'Venue', 'Judges Count', 'Judge 1', 'Judge 2', 'Judge 3'];
+
+            tableBox.innerHTML = `
+                <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead class="bg-gray-50 text-[11px] font-bold text-gray-500 uppercase tracking-wide sticky top-0 shadow-sm z-10">
+                    <tr>
+                        ${headers.map(h => `<th class="px-3 py-3 border-b border-gray-200">${h}</th>`).join('')}
+                        <th class="px-3 py-3 border-b border-gray-200 text-center">Status</th>
+                        <th class="px-3 py-3 border-b border-gray-200 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                ${bulkScheduleRows.map((r, i) => `
+                    <tr class="hover:bg-gray-50/50 transition-colors ${r._valid ? '' : 'bg-red-50/30'}">
+                        <td class="px-2 py-2">
+                            <input type="text" class="w-28 bg-white border ${r._progObj ? 'border-gray-200' : 'border-red-300'} rounded-lg px-2 py-1.5 text-[12px] font-mono" value="${r.programCode.replace(/"/g, '&quot;')}" placeholder="Code" onchange="updateBulkScheduleRow(${r._index}, 'programCode', this.value)">
+                        </td>
+                        <td class="px-2 py-2">
+                            <input type="datetime-local" class="w-44 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[11.5px]" value="${r.dateTime || ''}" onchange="updateBulkScheduleRow(${r._index}, 'dateTime', this.value)">
+                        </td>
+                        <td class="px-2 py-2">
+                            <select onchange="updateBulkScheduleRow(${r._index}, 'venue', this.value)" class="w-36 bg-white border ${r.venue && !r._venueObj ? 'border-red-300' : 'border-gray-200'} rounded-lg px-2 py-1 text-[12px]">
+                                <option value="">-- Select Venue --</option>
+                                ${bulkScheduleVenuesList.map(v => `<option value="${v.name}" ${(r.venue && (r.venue.toLowerCase() === v.name.toLowerCase() || r.venue === v.id)) ? 'selected' : ''}>${v.name}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="px-2 py-2 text-center">
+                            <select onchange="updateBulkScheduleRow(${r._index}, 'judgeCount', parseInt(this.value))" class="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[12px] text-center">
+                                ${[1,2,3,4,5,6,7,8,9,10].map(num => `<option value="${num}" ${r.judgeCount === num ? 'selected' : ''}>${num}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="px-2 py-2">
+                            <select onchange="updateBulkScheduleRow(${r._index}, 'judge1', this.value)" class="w-36 bg-white border ${r.judge1 && !r._judge1Obj ? 'border-red-300' : 'border-gray-200'} rounded-lg px-2 py-1 text-[12px]">
+                                <option value="">-- Judge 1 --</option>
+                                ${bulkScheduleJudgesList.map(j => `<option value="${j.name}" ${(r.judge1 && (r.judge1.toLowerCase() === j.name.toLowerCase() || r.judge1 === j.id)) ? 'selected' : ''}>${j.name}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="px-2 py-2">
+                            <select onchange="updateBulkScheduleRow(${r._index}, 'judge2', this.value)" class="w-36 bg-white border ${r.judge2 && !r._judge2Obj ? 'border-red-300' : 'border-gray-200'} rounded-lg px-2 py-1 text-[12px]">
+                                <option value="">-- Judge 2 --</option>
+                                ${bulkScheduleJudgesList.map(j => `<option value="${j.name}" ${(r.judge2 && (r.judge2.toLowerCase() === j.name.toLowerCase() || r.judge2 === j.id)) ? 'selected' : ''}>${j.name}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="px-2 py-2">
+                            <select onchange="updateBulkScheduleRow(${r._index}, 'judge3', this.value)" class="w-36 bg-white border ${r.judge3 && !r._judge3Obj ? 'border-red-300' : 'border-gray-200'} rounded-lg px-2 py-1 text-[12px]">
+                                <option value="">-- Judge 3 --</option>
+                                ${bulkScheduleJudgesList.map(j => `<option value="${j.name}" ${(r.judge3 && (r.judge3.toLowerCase() === j.name.toLowerCase() || r.judge3 === j.id)) ? 'selected' : ''}>${j.name}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="px-3 py-2 text-center align-middle">
+                            ${r._valid ? '<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 text-green-600" title="Valid"><i class="fi fi-rr-check text-[10px]"></i></span>' : `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 cursor-help" title="${r._errors.join(', ')}"><i class="fi fi-rr-exclamation text-[10px]"></i></span>`}
+                        </td>
+                        <td class="px-3 py-2 text-center align-middle">
+                            <button onclick="removeBulkScheduleRow(${r._index})" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fi fi-rr-trash text-[10px]"></i></button>
+                        </td>
+                    </tr>`).join('')}
+                </tbody>
+                </table>`;
+        }
+
+        async function importSchedules() {
+            const validRows = bulkScheduleRows.filter(r => r._valid);
+            if (!validRows.length) return typeof showToast === 'function' ? showToast('<b>⚠️</b> No valid rows to import.') : alert('No valid rows to import.');
+
+            const btn = document.getElementById('btn-import-sched');
+            btn.disabled = true; btn.innerText = 'Importing...';
+
+            try {
+                let batch = db.batch();
+                let batchCount = 0;
+                let updatedCount = 0;
+                const ts = typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue ? firebase.firestore.FieldValue.serverTimestamp() : new Date();
+
+                for (let r of validRows) {
+                    const prog = r._progObj;
+                    if (!prog) continue;
+
+                    const docRef = db.collection('programs').doc(prog.id);
+                    const updateData = {
+                        updatedAt: ts,
+                        judgeAlertSent: false
+                    };
+
+                    if (r.dateTime !== undefined && r.dateTime !== '') updateData.time = r.dateTime;
+                    if (r._venueObj) updateData.venueId = r._venueObj.id;
+                    if (r.judgeCount) updateData.judgeCount = parseInt(r.judgeCount);
+
+                    if (r._judge1Obj) updateData.judge1Id = r._judge1Obj.id;
+                    if (r._judge2Obj) updateData.judge2Id = r._judge2Obj.id;
+                    if (r._judge3Obj) updateData.judge3Id = r._judge3Obj.id;
+
+                    batch.update(docRef, updateData);
+                    batchCount++;
+                    updatedCount++;
+
+                    if (batchCount === 450) {
+                        await batch.commit();
+                        batch = db.batch();
+                        batchCount = 0;
+                    }
+                }
+
+                if (batchCount > 0) {
+                    await batch.commit();
+                }
+
+                typeof showToast === 'function' ? showToast(`<b>✅</b> ${updatedCount} program schedule(s) updated successfully!`) : alert(`${updatedCount} program schedule(s) updated!`);
+                bulkScheduleRows = [];
+                renderSchedulePreview();
+            } catch (err) {
+                console.error("Import schedules error:", err);
+                typeof showToast === 'function' ? showToast('<b>❌</b> ' + err.message) : alert(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
+            }
         }
 
         window.onclick = function (e) {
@@ -4841,43 +5464,70 @@
             const container = document.getElementById('venue-types-body');
             if (!container) return;
             if (venueTypesList.length === 0) {
-                container.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No venue types found.</td></tr>';
+                container.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No venue types found.</td></tr>';
                 return;
             }
             
             let html = '';
             venueTypesList.forEach((vt, idx) => {
+                const isChecked = vt.sendWaAlerts !== false;
                 html += `
                 <tr>
-                    <td class="px-6 py-4 text-gray-500">${idx + 1}</td>
-                    <td class="px-6 py-4 font-semibold text-gray-800">${vt.name}</td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="openSubStagesModal('${vt.id}', '${vt.name}')" class="text-brand-blue hover:text-blue-700 transition-colors p-1 mr-2" title="Manage Sub Stages"><i class="fi fi-rr-list"></i></button>
-                        <button onclick="deleteVenueType('${vt.id}')" class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
+                    <td class="px-6 py-3.5 text-gray-500 font-mono text-xs">${idx + 1}</td>
+                    <td class="px-6 py-3.5 font-semibold text-gray-800 text-[13.5px]">${vt.name}</td>
+                    <td class="px-4 py-3.5 whitespace-nowrap">
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input type="checkbox" onchange="toggleVenueTypeWaAlert('${vt.id}', this.checked)" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-brand-blue border-gray-300 focus:ring-brand-blue/20 cursor-pointer">
+                            <span class="text-xs font-semibold ${isChecked ? 'text-green-600' : 'text-gray-400'}">${isChecked ? 'On' : 'Off'}</span>
+                        </label>
+                    </td>
+                    <td class="px-6 py-3.5 text-right whitespace-nowrap">
+                        <div class="flex items-center justify-end gap-1.5">
+                            <button onclick="openSubStagesModal('${vt.id}', '${vt.name}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-brand-blue bg-blue-50 hover:bg-blue-100 transition-all shadow-sm" title="Manage Sub Stages">
+                                <i class="fi fi-rr-list text-xs"></i>
+                            </button>
+                            <button onclick="deleteVenueType('${vt.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-all shadow-sm" title="Delete">
+                                <i class="fi fi-rr-trash text-xs"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
             });
             container.innerHTML = html;
         }
 
+        async function toggleVenueTypeWaAlert(id, checked) {
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('venueTypes').doc(id).update({ sendWaAlerts: checked });
+                    typeof showToast === 'function' && showToast(`WhatsApp alert ${checked ? 'enabled' : 'disabled'} for venue type.`);
+                }
+            } catch (err) {
+                console.error("Error updating venue type WA alert:", err);
+            }
+        }
+
         async function addVenueType(event) {
             event.preventDefault();
             const input = document.getElementById('venueTypeName');
+            const waCheckbox = document.getElementById('venueTypeSendWa');
             const name = input.value.trim();
+            const sendWaAlerts = waCheckbox ? waCheckbox.checked : true;
             if (!name) return;
             
             try {
                 if (typeof db !== 'undefined') {
                     await db.collection('venueTypes').add({
                         name: name,
+                        sendWaAlerts: sendWaAlerts,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
-                    // Fallback for UI if DB is not active
-                    venueTypesList.push({ id: Date.now().toString(), name: name });
+                    venueTypesList.push({ id: Date.now().toString(), name: name, sendWaAlerts: sendWaAlerts });
                     renderVenueTypesList();
                 }
                 input.value = '';
+                if (waCheckbox) waCheckbox.checked = true;
                 typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type added successfully!') : alert('Venue Type added!');
             } catch (err) {
                 console.error("Error adding venue type:", err);
@@ -4891,7 +5541,6 @@
                 if (typeof db !== 'undefined') {
                     await db.collection('venueTypes').doc(id).delete();
                 } else {
-                    // Fallback for UI
                     venueTypesList = venueTypesList.filter(vt => vt.id !== id);
                     renderVenueTypesList();
                 }
@@ -4910,7 +5559,6 @@
             document.getElementById('subStagesModalTitle').innerText = 'Manage Sub Stages: ' + venueTypeName;
             document.getElementById('subStagesModal').classList.remove('hidden');
             
-            // Load sub stages
             if (subStagesUnsub) subStagesUnsub();
             if (typeof db === 'undefined') return;
             
@@ -4934,17 +5582,24 @@
             const container = document.getElementById('sub-stages-body');
             if (!container) return;
             if (currentSubStages.length === 0) {
-                container.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center text-gray-500 text-xs">No sub stages created yet.</td></tr>';
+                container.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500 text-xs">No sub stages created yet.</td></tr>';
                 return;
             }
             
             let html = '';
             currentSubStages.forEach(st => {
                 const jTypeLabel = st.judgementType === 'group' ? '<span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase font-bold">Group</span>' : '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full uppercase font-bold">Personal</span>';
+                const isChecked = st.sendWaAlerts !== false;
                 html += `
                 <tr>
                     <td class="px-4 py-3 font-semibold text-gray-800 text-[13px]">${st.name}</td>
                     <td class="px-4 py-3">${jTypeLabel}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input type="checkbox" onchange="toggleSubStageWaAlert('${venueTypeId}', '${st.id}', this.checked)" ${isChecked ? 'checked' : ''} class="w-4 h-4 rounded text-brand-blue border-gray-300 focus:ring-brand-blue/20 cursor-pointer">
+                            <span class="text-xs font-semibold ${isChecked ? 'text-green-600' : 'text-gray-400'}">${isChecked ? 'On' : 'Off'}</span>
+                        </label>
+                    </td>
                     <td class="px-4 py-3 text-right">
                         <button onclick="deleteSubStage('${venueTypeId}', '${st.id}')" class="text-brand-red hover:text-red-700 transition-colors p-1"><i class="fi fi-rr-trash"></i></button>
                     </td>
@@ -4953,13 +5608,26 @@
             container.innerHTML = html;
         }
 
+        async function toggleSubStageWaAlert(venueTypeId, subStageId, checked) {
+            try {
+                if (typeof db !== 'undefined') {
+                    await db.collection('venueTypes').doc(venueTypeId).collection('subStages').doc(subStageId).update({ sendWaAlerts: checked });
+                    typeof showToast === 'function' && showToast(`WhatsApp alert ${checked ? 'enabled' : 'disabled'} for sub stage.`);
+                }
+            } catch (err) {
+                console.error("Error updating sub stage WA alert:", err);
+            }
+        }
+
         async function addSubStage(event) {
             event.preventDefault();
             const venueTypeId = document.getElementById('currentVenueTypeId').value;
             const inputName = document.getElementById('subStageName');
             const inputType = document.getElementById('judgementType');
+            const waCheckbox = document.getElementById('subStageSendWa');
             const name = inputName.value.trim();
             const jType = inputType.value;
+            const sendWaAlerts = waCheckbox ? waCheckbox.checked : true;
             if (!name || !venueTypeId) return;
             
             try {
@@ -4967,11 +5635,13 @@
                     await db.collection('venueTypes').doc(venueTypeId).collection('subStages').add({
                         name: name,
                         judgementType: jType,
+                        sendWaAlerts: sendWaAlerts,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
                 inputName.value = '';
                 inputType.value = 'personal';
+                if (waCheckbox) waCheckbox.checked = true;
             } catch (err) {
                 console.error("Error adding sub stage:", err);
                 typeof showToast === 'function' ? showToast('<b>❌</b> Failed to add sub stage.') : alert('Failed to add sub stage.');

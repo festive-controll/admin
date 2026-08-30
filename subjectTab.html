@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject Tab — Judge Saved Topics</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="logo-192.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#f8f9fc',
+                            border: '#e5e7eb',
+                            textMuted: '#6b7280',
+                            textDark: '#111827',
+                            blue: '#134E8E',
+                            red: '#C00707',
+                            yellow: '#FFB33F'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
+        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="bg-[#f8f9fc] min-h-screen text-gray-800 p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Page Header -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider">Programme Management</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">Subject Tab (Judge Saved Topics)</h1>
+                <p class="text-[13px] text-gray-500 mt-1 font-medium">View and manage all topic &amp; subject details saved by judges for festival programs.</p>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                <div class="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-center min-w-[90px]">
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                    <p id="stat-total" class="text-lg font-black text-gray-800">0</p>
+                </div>
+                <div class="bg-green-50/70 border border-green-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                    <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-check-circle text-[10px]"></i> Topic Saved
+                    </p>
+                    <p id="stat-saved" class="text-lg font-black text-green-700">0</p>
+                </div>
+                <div class="bg-amber-50/70 border border-amber-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                    <p class="text-[11px] font-bold text-amber-600 uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-clock text-[10px]"></i> Pending
+                    </p>
+                    <p id="stat-pending" class="text-lg font-black text-amber-700">0</p>
+                </div>
+                <div class="bg-blue-50/70 border border-blue-100 rounded-xl px-4 py-2.5 text-center min-w-[110px]">
+                    <p class="text-[11px] font-bold text-brand-blue uppercase tracking-wider flex items-center justify-center gap-1">
+                        <i class="fi fi-rr-users-alt text-[10px]"></i> Judges
+                    </p>
+                    <p id="stat-judges" class="text-lg font-black text-brand-blue">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Filters Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                
+                <!-- Status Filter Tabs -->
+                <div class="flex bg-gray-100/80 p-1 rounded-xl items-center overflow-x-auto no-scrollbar border border-gray-200/60">
+                    <button id="tab-all" onclick="filterByStatus('ALL')" class="bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        All Programs
+                    </button>
+                    <button id="tab-saved" onclick="filterByStatus('SAVED')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> Topic Saved
+                    </button>
+                    <button id="tab-pending" onclick="filterByStatus('PENDING')" class="text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending Topic
+                    </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-xl">
+                    <!-- Section Filter Dropdown -->
+                    <select id="sectionFilter" onchange="onSectionChange(this.value)" class="w-full sm:w-44 px-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+                        <option value="ALL">All Sections</option>
+                    </select>
+
+                    <!-- Search Input -->
+                    <div class="relative flex-1 w-full">
+                        <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="searchInput" oninput="onSearchChange(this.value)" 
+                            placeholder="Search program, section, judge, or subject topic..." 
+                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Topics Table Container -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/80 border-b border-gray-100 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                            <th class="py-4 px-5">Program Details</th>
+                            <th class="py-4 px-5">Assigned Judges</th>
+                            <th class="py-4 px-5">Judge Saved Subject / Topic</th>
+                            <th class="py-4 px-5 text-center">Status</th>
+                            <th class="py-4 px-5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subject-tbody" class="divide-y divide-gray-100 text-[13px]">
+                        <tr>
+                            <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <div class="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
+                                    <span>Loading judge saved topics...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Edit Topic Modal -->
+    <div id="editTopicModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div>
+                    <h3 id="modalProgTitle" class="text-base font-bold text-gray-900 leading-tight">Edit Saved Subject Topic</h3>
+                    <p id="modalProgCode" class="text-xs text-brand-blue font-bold mt-0.5">Program Details</p>
+                </div>
+                <button type="button" onclick="closeEditModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 text-gray-400 flex items-center justify-center transition-colors">
+                    <i class="fi fi-rr-cross text-xs"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5">Topic / Subject Text</label>
+                <textarea id="modalTopicInput" rows="5" placeholder="Enter subject topic text..." class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 resize-none transition-all"></textarea>
+            </div>
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button type="button" onclick="saveModalTopic(true)" class="px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors">
+                    Clear Topic
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2.5 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" id="btn-modal-save" onclick="saveModalTopic(false)" class="px-5 py-2.5 bg-brand-blue hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                        Save Topic
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Version 8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        (function () {
+            var db = window.db || (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+
+            if (!db && typeof firebase !== 'undefined') {
+                const firebaseConfig = {
+                    authDomain: "festie-s1u2h3.firebaseapp.com",
+                    projectId: "festie-s1u2h3",
+                    storageBucket: "festie-s1u2h3.firebasestorage.app",
+                    messagingSenderId: "305105260195",
+                    appId: "1:305105260195:web:53177651a556fb404771c9"
+                };
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+            }
+
+            let allPrograms = [];
+            let allJudgesMap = {};
+            let currentStatusFilter = 'ALL';
+            let currentSectionFilter = 'ALL';
+            let searchQuery = '';
+            let activeEditProgId = null;
+
+            function showToast(msg, type = 'success') {
+                if (typeof Toastify === 'function') {
+                    Toastify({
+                        text: msg,
+                        duration: 3000,
+                        gravity: "top",
+                        position: "right",
+                        style: {
+                            background: type === 'error' ? "#EF4444" : (type === 'warning' ? "#F59E0B" : "#10B981")
+                        }
+                    }).showToast();
+                } else {
+                    alert(msg);
+                }
+            }
+
+            if (!db) {
+                renderEmptyState("Database connection unavailable");
+                return;
+            }
+
+            // Fetch Judges Map then listen to Programs
+            db.collection('judges').onSnapshot(jSnap => {
+                allJudgesMap = {};
+                jSnap.docs.forEach(d => {
+                    allJudgesMap[d.id] = { id: d.id, ...d.data() };
+                });
+                document.getElementById('stat-judges').innerText = Object.keys(allJudgesMap).length;
+                renderUI();
+            }, err => {
+                console.error("Error fetching judges:", err);
+            });
+
+            db.collection('programs').onSnapshot(snap => {
+                allPrograms = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                populateSectionDropdown();
+                renderUI();
+            }, err => {
+                console.error("Error loading programs:", err);
+                renderEmptyState("Error loading program topics");
+            });
+
+            function populateSectionDropdown() {
+                const select = document.getElementById('sectionFilter');
+                if (!select) return;
+
+                const sectionsSet = new Set();
+                allPrograms.forEach(p => {
+                    if (p.section && p.section.trim()) sectionsSet.add(p.section.trim());
+                });
+
+                const currentVal = select.value || 'ALL';
+                let html = '<option value="ALL">All Sections</option>';
+                Array.from(sectionsSet).sort().forEach(sec => {
+                    html += `<option value="${sec}">${sec}</option>`;
+                });
+                select.innerHTML = html;
+                select.value = currentVal;
+            }
+
+            window.filterByStatus = function(status) {
+                currentStatusFilter = status;
+                ['all', 'saved', 'pending'].forEach(tab => {
+                    const btn = document.getElementById('tab-' + tab);
+                    if (btn) {
+                        if (tab.toUpperCase() === status) {
+                            btn.className = "bg-white shadow-sm text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all border border-gray-200/60";
+                        } else {
+                            btn.className = "text-gray-500 hover:text-gray-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all";
+                        }
+                    }
+                });
+                renderUI();
+            };
+
+            window.onSectionChange = function(sec) {
+                currentSectionFilter = sec;
+                renderUI();
+            };
+
+            window.onSearchChange = function(val) {
+                searchQuery = (val || '').toLowerCase().trim();
+                renderUI();
+            };
+
+            function renderUI() {
+                const tbody = document.getElementById('subject-tbody');
+                if (!tbody) return;
+
+                // Update Stats
+                const totalProgs = allPrograms.length;
+                let savedCount = 0;
+                let pendingCount = 0;
+
+                allPrograms.forEach(p => {
+                    if (p.topic && p.topic.trim()) savedCount++;
+                    else pendingCount++;
+                });
+
+                document.getElementById('stat-total').innerText = totalProgs;
+                document.getElementById('stat-saved').innerText = savedCount;
+                document.getElementById('stat-pending').innerText = pendingCount;
+
+                // Filter programs
+                let filtered = [...allPrograms];
+
+                // Filter by Status
+                if (currentStatusFilter === 'SAVED') {
+                    filtered = filtered.filter(p => p.topic && p.topic.trim());
+                } else if (currentStatusFilter === 'PENDING') {
+                    filtered = filtered.filter(p => !p.topic || !p.topic.trim());
+                }
+
+                // Filter by Section
+                if (currentSectionFilter !== 'ALL') {
+                    filtered = filtered.filter(p => (p.section || '').trim() === currentSectionFilter);
+                }
+
+                // Filter by Search Query
+                if (searchQuery) {
+                    filtered = filtered.filter(p => {
+                        const code = (p.code || '').toLowerCase();
+                        const name = (p.name || '').toLowerCase();
+                        const sec = (p.section || '').toLowerCase();
+                        const cat = (p.category || p.type || '').toLowerCase();
+                        const topic = (p.topic || '').toLowerCase();
+
+                        // Match assigned judge names
+                        let judgeMatch = false;
+                        for (let i = 1; i <= 10; i++) {
+                            const jId = p[`judge${i}Id`];
+                            if (jId && allJudgesMap[jId]) {
+                                const jName = (allJudgesMap[jId].name || '').toLowerCase();
+                                if (jName.includes(searchQuery)) {
+                                    judgeMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        const updatedBy = (p.updatedByJudge || '').toLowerCase();
+
+                        return code.includes(searchQuery) ||
+                               name.includes(searchQuery) ||
+                               sec.includes(searchQuery) ||
+                               cat.includes(searchQuery) ||
+                               topic.includes(searchQuery) ||
+                               updatedBy.includes(searchQuery) ||
+                               judgeMatch;
+                    });
+                }
+
+                if (filtered.length === 0) {
+                    renderEmptyState("No matching judge topics found");
+                    return;
+                }
+
+                // Render rows
+                tbody.innerHTML = filtered.map(p => {
+                    const hasTopic = p.topic && p.topic.trim();
+                    const topicText = hasTopic ? p.topic.trim() : 'No topic entered by judge yet.';
+                    const updatedByJudgeId = p.updatedByJudge || '';
+                    const updatedByJudgeObj = allJudgesMap[updatedByJudgeId];
+                    const updatedByName = updatedByJudgeObj ? updatedByJudgeObj.name : (updatedByJudgeId || 'Panel Judge');
+
+                    let formattedTime = '';
+                    if (p.topicUpdatedAt) {
+                        try {
+                            const d = p.topicUpdatedAt.toDate ? p.topicUpdatedAt.toDate() : new Date(p.topicUpdatedAt);
+                            formattedTime = d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        } catch(e) {}
+                    }
+
+                    // Collect assigned judges
+                    let assignedJudges = [];
+                    for (let i = 1; i <= 10; i++) {
+                        const jId = p[`judge${i}Id`];
+                        if (jId && allJudgesMap[jId]) {
+                            assignedJudges.push(allJudgesMap[jId]);
+                        }
+                    }
+
+                    let judgesHtml = '';
+                    if (assignedJudges.length > 0) {
+                        judgesHtml = `<div class="flex flex-wrap gap-1.5 max-w-xs">
+                            ${assignedJudges.map(j => `
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                    <span class="w-4 h-4 rounded-full bg-brand-blue text-white text-[9px] font-bold flex items-center justify-center uppercase shrink-0">${(j.name || 'J').charAt(0)}</span>
+                                    <span class="truncate max-w-[100px]">${j.name}</span>
+                                </span>
+                            `).join('')}
+                        </div>`;
+                    } else {
+                        judgesHtml = `<span class="text-xs text-gray-400 font-medium italic">No judges assigned</span>`;
+                    }
+
+                    const badgeHtml = hasTopic ? 
+                        `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                            <i class="fi fi-rr-check-circle text-xs"></i> Saved
+                        </span>` :
+                        `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <i class="fi fi-rr-clock text-xs"></i> Pending
+                        </span>`;
+
+                    return `
+                    <tr class="hover:bg-gray-50/70 transition-colors">
+                        <td class="py-4 px-5 align-top">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider inline-block mb-1">${p.code || 'PRG'}</span>
+                            <div class="font-bold text-gray-900 text-[14px] leading-tight">${p.name || 'Unnamed Program'}</div>
+                            <div class="text-[11px] text-gray-400 font-medium mt-0.5">${p.section || 'General'} ${p.category ? '• ' + p.category : ''}</div>
+                        </td>
+                        <td class="py-4 px-5 align-top">
+                            ${judgesHtml}
+                        </td>
+                        <td class="py-4 px-5 align-top">
+                            <div class="text-xs text-gray-800 leading-relaxed ${hasTopic ? 'bg-gray-50 p-3 rounded-xl border border-gray-100 font-medium' : 'text-gray-400 italic'}">
+                                ${topicText}
+                            </div>
+                            ${hasTopic ? `
+                                <div class="flex items-center justify-between text-[11px] text-gray-400 font-medium mt-1.5 px-1">
+                                    <span><i class="fi fi-rr-user text-[10px] text-brand-blue"></i> ${updatedByName}</span>
+                                    ${formattedTime ? `<span><i class="fi fi-rr-clock text-[10px]"></i> ${formattedTime}</span>` : ''}
+                                </div>
+                            ` : ''}
+                        </td>
+                        <td class="py-4 px-5 align-top text-center">
+                            ${badgeHtml}
+                        </td>
+                        <td class="py-4 px-5 align-top text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                                ${hasTopic ? `
+                                    <button onclick="copyTopic('${p.id}')" title="Copy Topic Text" class="p-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-xs font-bold transition-all border border-gray-200">
+                                        <i class="fi fi-rr-copy"></i>
+                                    </button>
+                                ` : ''}
+                                <button onclick="openEditModal('${p.id}')" title="Edit / Set Topic" class="px-3 py-1.5 bg-blue-50 hover:bg-brand-blue text-brand-blue hover:text-white border border-blue-100 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                                    <i class="fi fi-rr-edit"></i> Edit Topic
+                                </button>
+                                <button onclick="viewProgram('${p.id}')" title="View Program Details" class="p-2 bg-gray-50 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-bold transition-all border border-gray-200">
+                                    <i class="fi fi-rr-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+
+            function renderEmptyState(message) {
+                const tbody = document.getElementById('subject-tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <i class="fi fi-rr-book-alt text-4xl text-gray-300"></i>
+                                <span>${message}</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
+            }
+
+            window.copyTopic = function(progId) {
+                const prog = allPrograms.find(p => p.id === progId);
+                if (prog && prog.topic) {
+                    navigator.clipboard.writeText(prog.topic).then(() => {
+                        showToast("✅ Topic copied to clipboard!");
+                    }).catch(() => {
+                        showToast("Topic: " + prog.topic);
+                    });
+                }
+            };
+
+            window.openEditModal = function(progId) {
+                const prog = allPrograms.find(p => p.id === progId);
+                if (!prog) return;
+
+                activeEditProgId = progId;
+                document.getElementById('modalProgTitle').innerText = prog.name || 'Edit Saved Topic';
+                document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} • ${prog.section || 'General'}`;
+                document.getElementById('modalTopicInput').value = prog.topic || '';
+
+                const overlay = document.getElementById('editTopicModalOverlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                }
+            };
+
+            window.closeEditModal = function() {
+                activeEditProgId = null;
+                const overlay = document.getElementById('editTopicModalOverlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }
+            };
+
+            window.saveModalTopic = function(isClear = false) {
+                if (!activeEditProgId || !db) return;
+
+                const textInput = document.getElementById('modalTopicInput');
+                const topicVal = isClear ? '' : (textInput ? textInput.value.trim() : '');
+
+                const btn = document.getElementById('btn-modal-save');
+                if (btn) btn.disabled = true;
+
+                db.collection('programs').doc(activeEditProgId).update({
+                    topic: topicVal,
+                    updatedByJudge: 'Admin',
+                    topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    showToast(isClear ? "Topic cleared successfully!" : "✅ Topic updated successfully!");
+                    closeEditModal();
+                    if (btn) btn.disabled = false;
+                }).catch(err => {
+                    console.error("Error updating topic:", err);
+                    showToast("❌ Error updating topic: " + err.message, "error");
+                    if (btn) btn.disabled = false;
+                });
+            };
+
+            window.viewProgram = function(progId) {
+                localStorage.setItem('viewProgramId', progId);
+                if (window.parent && typeof window.parent.loadModule === 'function') {
+                    window.parent.loadModule('viewProgramData');
+                } else if (typeof loadModule === 'function') {
+                    loadModule('viewProgramData');
+                } else {
+                    window.location.href = 'viewProgramData.html?id=' + progId;
+                }
+            };
+
+        })();
+    </script>
+</body>
+
+</html>

@@ -142,6 +142,9 @@
         const icon192Url = logo192 ? logo192 : new URL("./logo-192.svg", window.location.href).href;
         const icon512Url = logo512 ? logo512 : new URL("./logo-512.svg", window.location.href).href;
 
+        const is192Svg = !logo192 || logo192.includes('.svg') || logo192.includes('image/svg+xml');
+        const is512Svg = !logo512 || logo512.includes('.svg') || logo512.includes('image/svg+xml');
+
         const manifestObj = {
             "name": name + " Admin Panel",
             "short_name": name,
@@ -153,13 +156,13 @@
             "icons": [
                 {
                     "src": icon192Url,
-                    "sizes": "any",
+                    "sizes": is192Svg ? "any" : "192x192",
                     "type": logo192 ? (logo192.includes('image/webp') ? 'image/webp' : 'image/png') : "image/svg+xml",
                     "purpose": "any maskable"
                 },
                 {
                     "src": icon512Url,
-                    "sizes": "any",
+                    "sizes": is512Svg ? "any" : "512x512",
                     "type": logo512 ? (logo512.includes('image/webp') ? 'image/webp' : 'image/png') : "image/svg+xml",
                     "purpose": "any maskable"
                 }

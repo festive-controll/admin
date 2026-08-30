@@ -230,6 +230,12 @@
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                                 </div> Registered Topics
                             </a>
+                            <a href="#" onclick="event.preventDefault(); loadModule('subjectTab')"
+                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                                <div
+                                    class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                                </div> Subject Tab
+                            </a>
                             <a href="#" onclick="event.preventDefault(); loadModule('substitutions')"
                                 class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
                                 <div
@@ -270,7 +276,7 @@
                                 class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
                                 <div
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
-                                </div> Venues
+                                </div> Venues (Stage / Off-Stage)
                             </a>
                         </div>
                     </div>
@@ -1251,10 +1257,9 @@
                         document.body.appendChild(el);
                     });
 
-                    // Collect inline body scripts from parsed doc BEFORE innerHTML re-serialization
-                    // This avoids double-encode issues caused by innerHTML getter/setter round-trip
-                    const parsedBodyScripts = Array.from(doc.querySelector('body')?.querySelectorAll('script') || []);
-                    const scriptTexts = parsedBodyScripts
+                    // Collect inline scripts from parsed doc BEFORE innerHTML re-serialization
+                    const parsedScripts = Array.from(doc.querySelectorAll('script') || []);
+                    const scriptTexts = parsedScripts
                         .filter(s => !s.src) // skip external src scripts (already loaded by dashboard)
                         .map(s => s.textContent);
 
@@ -1268,8 +1273,8 @@
                     // Execute collected inline scripts
                     scriptTexts.forEach(code => {
                         if (!code || !code.trim()) return;
-                        // Skip tailwind config and firebase re-init blocks (already set up by dashboard)
-                        if (code.includes('tailwind.config') || code.includes('firebase.initializeApp')) return;
+                        // Skip tailwind config setup block (already set up by dashboard)
+                        if (code.includes('tailwind.config =')) return;
                         try {
                             const newScript = document.createElement('script');
                             newScript.appendChild(document.createTextNode(code));
@@ -1294,6 +1299,7 @@
                         'registrdProgram': 'Registration',
                         'topicRegistration': 'Topic Registration',
                         'registeredTopics': 'Registered Topics',
+                        'subjectTab': 'Subject Tab',
                         'substitutions': 'Substitutions',
                         'allSchedules': 'All Schedules',
                         'judges': 'Judges',
@@ -2223,7 +2229,7 @@
             <div class="mt-6 text-left">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Server URL</label>
                 <div class="flex gap-2">
-                    <input type="text" id="wa-server-url-input" value="https://whatsapp-backend-b60t.onrender.com" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="https://..." />
+                    <input type="text" id="wa-server-url-input" value="http://localhost:8000" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="e.g. http://localhost:8000" />
                     <button onclick="reconnectDashboardWa()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded transition-colors text-sm">
                         Connect
                     </button>
