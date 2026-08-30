@@ -606,7 +606,8 @@
                                     </button>
                                     <button onclick="openDashboardWaSetup()"
                                         class="flex flex-col items-center justify-center py-6 bg-white border border-gray-100 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-gray-200 transition-all group">
-                                        <i class="fi fi-rr-smartphone text-2xl text-green-500 mb-3 group-hover:text-green-600 transition-colors"></i>
+                                        <i
+                                            class="fi fi-rr-smartphone text-2xl text-green-500 mb-3 group-hover:text-green-600 transition-colors"></i>
                                         <span class="text-[13px] font-semibold text-gray-800">WhatsApp Setup</span>
                                     </button>
                                 </div>
@@ -1279,7 +1280,7 @@
                             const newScript = document.createElement('script');
                             newScript.appendChild(document.createTextNode(code));
                             container.appendChild(newScript);
-                        } catch(e) { console.error('Module script error:', e); }
+                        } catch (e) { console.error('Module script error:', e); }
                     });
 
                     loader.classList.add('hidden');
@@ -1667,7 +1668,7 @@
                 const file502 = document.getElementById('input-logo502').files[0];
 
                 const updateData = { name, year, isActive };
-                
+
                 const resizeImage = (file, maxWidth, maxHeight) => new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -1675,7 +1676,7 @@
                         img.onload = () => {
                             let width = img.width;
                             let height = img.height;
-                            
+
                             if (width > height) {
                                 if (width > maxWidth) {
                                     height = Math.round(height * (maxWidth / width));
@@ -1687,7 +1688,7 @@
                                     height = maxHeight;
                                 }
                             }
-                            
+
                             const canvas = document.createElement('canvas');
                             canvas.width = width;
                             canvas.height = height;
@@ -1704,12 +1705,12 @@
                 });
 
                 if (file192) {
-                    try { updateData.logo192 = await resizeImage(file192, 192, 192); } 
+                    try { updateData.logo192 = await resizeImage(file192, 192, 192); }
                     catch (e) { console.error("Error resizing logo192", e); }
                 }
 
                 if (file502) {
-                    try { updateData.logo502 = await resizeImage(file502, 502, 502); } 
+                    try { updateData.logo502 = await resizeImage(file502, 502, 502); }
                     catch (e) { console.error("Error resizing logo502", e); }
                 }
 
@@ -1913,7 +1914,7 @@
                 const d = doc.exists ? doc.data() : { name: 'Festival Name', isActive: true };
                 const mainLogo = d.logo512 || d.logo502 || d.logo192 || d.logo;
                 updateFestDataUI(d.name, d.isActive, d.logo192, d.logo502, mainLogo);
-                
+
                 // Admin Offline Gate
                 if (d.isActive === false) {
                     let overlay = document.getElementById('admin-offline-overlay');
@@ -1921,7 +1922,7 @@
                         overlay = document.createElement('div');
                         overlay.id = 'admin-offline-overlay';
                         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:linear-gradient(-45deg, #fdfbfb, #ffffff, #f8f9fa, #fdfbfb);background-size:400% 400%;animation:bg-pan 15s ease infinite;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;';
-                        
+
                         const style = document.createElement('style');
                         style.id = 'admin-offline-style';
                         style.innerHTML = `
@@ -2111,10 +2112,10 @@
                 } else {
                     let overlay = document.getElementById('admin-offline-overlay');
                     if (overlay) overlay.remove();
-                    
+
                     const style = document.getElementById('admin-offline-style');
                     if (style) style.remove();
-                    
+
                     if (window.dashboardMatrixInterval) {
                         clearInterval(window.dashboardMatrixInterval);
                         window.dashboardMatrixInterval = null;
@@ -2192,36 +2193,45 @@
         }
     </script>
     <!-- WhatsApp Setup Modal -->
-    <div id="wa-setup-modal-overlay" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+    <div id="wa-setup-modal-overlay"
+        class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center relative">
-            <button onclick="closeDashboardWaSetup()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
+            <button onclick="closeDashboardWaSetup()"
+                class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors">
                 <i class="fi fi-rr-cross text-sm"></i>
             </button>
-            
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+
+            <div
+                class="w-16 h-16 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span class="iconify text-4xl" data-icon="solar:phone-calling-bold"></span>
             </div>
 
             <h1 class="text-xl font-bold text-gray-800 mb-2">WhatsApp Sender Setup</h1>
-            <p class="text-gray-500 text-sm mb-6">Scan the QR code to connect your WhatsApp account for sending automated judge alerts.</p>
+            <p class="text-gray-500 text-sm mb-6">Scan the QR code to connect your WhatsApp account for sending
+                automated judge alerts.</p>
 
             <!-- Status Box -->
-            <div id="wa-status-box" class="py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm mb-6 inline-block">
+            <div id="wa-status-box"
+                class="py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm mb-6 inline-block">
                 Connecting to server...
             </div>
 
             <!-- QR Code Container -->
-            <div id="wa-qr-container" class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center min-h-[250px] relative">
-                <div id="wa-qr-loader" class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
+            <div id="wa-qr-container"
+                class="border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center min-h-[250px] relative">
+                <div id="wa-qr-loader"
+                    class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl z-10">
                     <div class="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full"></div>
                 </div>
-                
+
                 <img id="wa-qr-image" src="" alt="WhatsApp QR Code" class="hidden w-56 h-56 object-contain" />
-                
-                <div id="wa-connected-state" class="hidden flex-col items-center justify-center w-full h-full text-green-600">
+
+                <div id="wa-connected-state"
+                    class="hidden flex-col items-center justify-center w-full h-full text-green-600">
                     <span class="iconify text-6xl mb-2" data-icon="solar:check-circle-bold"></span>
                     <span class="font-bold text-lg">WhatsApp Connected!</span>
-                    <p class="text-xs text-gray-500 mt-2 text-center max-w-[200px]">You can now send judge alerts from the schedules page.</p>
+                    <p class="text-xs text-gray-500 mt-2 text-center max-w-[200px]">You can now send judge alerts from
+                        the schedules page.</p>
                 </div>
             </div>
 
@@ -2229,8 +2239,11 @@
             <div class="mt-6 text-left">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Server URL</label>
                 <div class="flex gap-2">
-                    <input type="text" id="wa-server-url-input" value="http://localhost:8000" class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500" placeholder="e.g. http://localhost:8000" />
-                    <button onclick="reconnectDashboardWa()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded transition-colors text-sm">
+                    <input type="text" id="wa-server-url-input" value="http://localhost:8000"
+                        class="w-full text-sm p-2 border border-gray-300 rounded focus:outline-none focus:border-green-500"
+                        placeholder="e.g. http://localhost:8000" />
+                    <button onclick="reconnectDashboardWa()"
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 rounded transition-colors text-sm">
                         Connect
                     </button>
                 </div>
@@ -2256,7 +2269,7 @@
             const statusBox = document.getElementById('wa-status-box');
             statusBox.textContent = text;
             statusBox.className = 'py-2 px-4 rounded-lg font-medium text-sm mb-6 inline-block transition-colors ';
-            
+
             if (type === 'info') statusBox.className += 'bg-blue-50 text-blue-700';
             else if (type === 'success') statusBox.className += 'bg-green-50 text-green-700';
             else if (type === 'error') statusBox.className += 'bg-red-50 text-red-700';
@@ -2265,7 +2278,7 @@
         function showWaQR(qrDataUrl) {
             document.getElementById('wa-qr-loader').classList.add('hidden');
             document.getElementById('wa-connected-state').classList.add('hidden');
-            
+
             const qrImage = document.getElementById('wa-qr-image');
             qrImage.src = qrDataUrl;
             qrImage.classList.remove('hidden');
@@ -2287,9 +2300,9 @@
 
         function reconnectDashboardWa() {
             if (waSocket) waSocket.disconnect();
-            
+
             const serverUrl = document.getElementById('wa-server-url-input').value;
-            
+
             updateWaStatus('Connecting...', 'info');
             showWaLoader();
 
@@ -2332,4 +2345,5 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </body>
+
 </html>

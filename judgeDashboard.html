@@ -148,7 +148,13 @@
                     </button>
                     <h1 id="header-title" class="text-xl font-bold text-gray-800 tracking-tight">Judge Dashboard</h1>
                 </div>
-                <div class="flex items-center gap-4 relative">
+                <div class="flex items-center gap-3 relative">
+                    <!-- Mobile Topic Entry Button for Judges -->
+                    <button onclick="switchTab('topic')" id="btn-mobile-judge-topic" title="Go to Topic Entry"
+                        class="lg:hidden flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
+                        <i class="fi fi-rr-edit text-xs"></i>
+                        <span>Topic Entry</span>
+                    </button>
                     <div class="flex items-center gap-3 cursor-pointer group" onclick="toggleDropdown()">
                         <div id="top-avatar"
                             class="w-8 h-8 rounded-full bg-[#134E8E] flex items-center justify-center text-white font-bold text-xs ring-2 ring-white shadow-sm uppercase">
@@ -187,6 +193,13 @@
                     </div>
                 </div>
             </header>
+
+            <!-- Mobile Floating Topic Entry Button for Judges -->
+            <button onclick="switchTab('topic')" id="fab-judge-topic-entry" title="Go to Topic Entry"
+                class="lg:hidden fixed bottom-6 right-6 z-40 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white font-bold text-xs px-4 py-3 rounded-full shadow-xl border border-purple-400/40 flex items-center gap-2 transition-all">
+                <i class="fi fi-rr-edit text-sm"></i>
+                <span>Topic Entry</span>
+            </button>
 
             <!-- Scrollable Content -->
             <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">

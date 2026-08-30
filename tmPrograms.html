@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Team Programs Manager</title>
@@ -8,22 +9,26 @@
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
 </head>
+
 <body>
     <div class="mb-6 shrink-0 pt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 id="tmp-section-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Programs</h1>
+            <h1 id="tmp-section-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Programs
+            </h1>
             <p class="text-[13px] text-gray-500 mt-1">Register candidates for programs in your team</p>
         </div>
         <div class="relative w-full sm:w-64">
             <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[13px]"></i>
-            <input type="text" id="tmp-search-input" oninput="window.renderTMPrograms()" placeholder="Search programs..." 
+            <input type="text" id="tmp-search-input" oninput="window.renderTMPrograms()"
+                placeholder="Search programs..."
                 class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all shadow-sm">
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6" id="tmp-programs-list">
         <div class="col-span-full py-16 text-center text-[13px] text-gray-400">
-            <div class="w-6 h-6 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-3"></div>
+            <div class="w-6 h-6 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-3">
+            </div>
             Fetching active programs...
         </div>
     </div>
@@ -32,7 +37,7 @@
         document.getElementById('tmp-section-title').innerText = (window.currentTMSection || 'Section') + ' Programs';
         var section = window.currentTMSection;
         var team = localStorage.getItem('managerTeam');
-        
+
         window.tmTeamCandidates = [];
         window.tmProgramsList = [];
         window.tmRegistrationsList = [];
@@ -43,20 +48,20 @@
             let candQuery = db.collection('candidates').where('team', '==', team);
             if (section !== 'Kulliya') candQuery = candQuery.where('section', '==', section);
             candQuery.get().then(snap => {
-                window.tmTeamCandidates = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                
+                window.tmTeamCandidates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
                 // Fetch Programs
                 return db.collection('programs').where('section', '==', section).where('status', '==', true).get();
             }).then(snap => {
-                window.tmProgramsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                
+                window.tmProgramsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
                 return db.collection('programSets').get();
             }).then(snap => {
-                window.programSetsData = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                window.programSetsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 // Fetch Registrations Realtime
-                if(window.tmProgUnsub) window.tmProgUnsub();
+                if (window.tmProgUnsub) window.tmProgUnsub();
                 window.tmProgUnsub = db.collection('registrations').where('team', '==', team).where('section', '==', section).onSnapshot(regSnap => {
-                    window.tmRegistrationsList = regSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                    window.tmRegistrationsList = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                     window.renderTMPrograms();
                 });
             });
@@ -64,10 +69,10 @@
 
 
 
-        window.renderTMPrograms = function() {
+        window.renderTMPrograms = function () {
             const container = document.getElementById('tmp-programs-list');
             const searchQ = (document.getElementById('tmp-search-input')?.value || '').toLowerCase().trim();
-            
+
             let filtered = window.tmProgramsList || [];
             if (searchQ) {
                 filtered = filtered.filter(p => (p.name && p.name.toLowerCase().includes(searchQ)) || (p.code && p.code.toLowerCase().includes(searchQ)));
@@ -85,7 +90,7 @@
                 const prefilledChests = reg ? (reg.chestNumbers || []) : [];
                 const maxP = p.maxParticipants || 1;
                 const minP = p.minParticipants || 1;
-                
+
                 let inputsHTML = '';
                 if (isUnlimited) {
                     inputsHTML = `
@@ -99,16 +104,16 @@
                 } else if (isGroup) {
                     const groupSets = p.groupSetsCount || 1;
                     const groupParts = p.groupParticipantsPerSet || 1;
-                    
+
                     let tabsHeader = '<div class="flex border-b border-gray-100 overflow-x-auto no-scrollbar mb-3">';
                     let tabsContent = '<div>';
-                    
+
                     let globalIndex = 0;
                     for (let s = 1; s <= groupSets; s++) {
                         const isActive = s === 1;
                         const btnClass = isActive ? 'border-brand-blue text-brand-blue bg-blue-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50';
                         tabsHeader += `<button type="button" onclick="window.switchGroupTab('${p.id}', ${s}, ${groupSets})" id="tab-btn-${p.id}-${s}" class="px-4 py-2 text-[12px] font-bold border-b-2 transition-all whitespace-nowrap ${btnClass}">Set ${s}</button>`;
-                        
+
                         const contentClass = isActive ? 'block' : 'hidden';
                         let chestInputs = '';
                         for (let c = 1; c <= groupParts; c++) {
@@ -117,25 +122,25 @@
                             chestInputs += `<input type="text" value="${val}" class="prog-input-group-${p.id} w-full px-3 py-2 ${borderClass} rounded-lg text-[13px] font-mono-custom focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center placeholder:font-sans placeholder:text-gray-300" placeholder="Chest No ${c}" oninput="window.validateChest(this)">`;
                             globalIndex++;
                         }
-                        
+
                         tabsContent += `<div id="tab-content-${p.id}-${s}" class="${contentClass}"><div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">${chestInputs}</div></div>`;
                     }
                     tabsHeader += '</div>';
                     tabsContent += '</div>';
-                    
+
                     inputsHTML = `<div class="space-y-1">${tabsHeader}${tabsContent}</div>`;
                 } else {
                     let chestInputs = '';
-                    for(let i=0; i<maxP; i++) {
+                    for (let i = 0; i < maxP; i++) {
                         const val = prefilledChests[i] || '';
                         const borderClass = val ? 'border-green-500 bg-green-50/20' : 'border-gray-200';
-                        chestInputs += `<input type="text" value="${val}" class="prog-input-${p.id} w-full px-3 py-2 ${borderClass} rounded-lg text-[13px] font-mono-custom focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center placeholder:font-sans placeholder:text-gray-300" placeholder="Chest No ${i+1}" oninput="window.validateChest(this)">`;
+                        chestInputs += `<input type="text" value="${val}" class="prog-input-${p.id} w-full px-3 py-2 ${borderClass} rounded-lg text-[13px] font-mono-custom focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-center placeholder:font-sans placeholder:text-gray-300" placeholder="Chest No ${i + 1}" oninput="window.validateChest(this)">`;
                     }
                     inputsHTML = `<div class="grid grid-cols-2 gap-2.5">${chestInputs}</div>`;
                 }
 
                 const setInfo = p.progSet ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full mb-2 inline-block shadow-sm ml-1">${p.progSet}</span>` : '';
-                
+
                 let limitText = `Max: ${maxP}`;
                 if (isUnlimited) {
                     limitText = `Limits: Unlimited Participants`;
@@ -143,7 +148,7 @@
                     const groupSets = p.groupSetsCount || 1;
                     const groupParts = p.groupParticipantsPerSet || 1;
                     const totalGroupMembers = groupSets * groupParts;
-                    limitText = `Members: ${totalGroupMembers} (${groupSets} Set${groupSets>1?'s':''} x ${groupParts})`;
+                    limitText = `Members: ${totalGroupMembers} (${groupSets} Set${groupSets > 1 ? 's' : ''} x ${groupParts})`;
                 }
 
                 const saveBtnHTML = isUnlimited ? '' : `
@@ -170,50 +175,50 @@
             }).join('');
         };
 
-        window.validateUnlimitedChests = function(textarea, progId) {
+        window.validateUnlimitedChests = function (textarea, progId) {
             const val = textarea.value.trim();
             const feedback = document.getElementById('unlimited-feedback-' + progId);
             textarea.classList.remove('border-gray-200', 'border-red-500', 'border-green-500', 'bg-red-50/20', 'bg-green-50/20');
-            
-            if(!val) { 
-                textarea.classList.add('border-gray-200'); 
-                if(feedback) feedback.innerHTML = '';
-                return; 
+
+            if (!val) {
+                textarea.classList.add('border-gray-200');
+                if (feedback) feedback.innerHTML = '';
+                return;
             }
-            
+
             const chests = val.split(',').map(s => s.trim()).filter(s => s);
             let invalid = [];
             chests.forEach(c => {
-                if(!window.tmTeamCandidates.find(cand => cand.chestNo === c)) invalid.push(c);
+                if (!window.tmTeamCandidates.find(cand => cand.chestNo === c)) invalid.push(c);
             });
 
-            if(invalid.length > 0) {
+            if (invalid.length > 0) {
                 textarea.classList.add('border-red-500', 'bg-red-50/20');
-                if(feedback) feedback.innerHTML = `<span class="text-red-500 font-medium">Invalid Chest No(s): ${invalid.join(', ')}</span>`;
+                if (feedback) feedback.innerHTML = `<span class="text-red-500 font-medium">Invalid Chest No(s): ${invalid.join(', ')}</span>`;
             } else {
                 textarea.classList.add('border-green-500', 'bg-green-50/20');
-                if(feedback) feedback.innerHTML = `<span class="text-green-600 font-medium">All ${chests.length} candidates valid</span>`;
+                if (feedback) feedback.innerHTML = `<span class="text-green-600 font-medium">All ${chests.length} candidates valid</span>`;
             }
         };
 
-        window.validateGroupChests = function(textarea, progId) {
+        window.validateGroupChests = function (textarea, progId) {
             const val = textarea.value.trim();
             const feedback = document.getElementById('group-feedback-' + progId);
             textarea.classList.remove('border-gray-200', 'border-red-500', 'border-green-500', 'bg-red-50/20', 'bg-green-50/20');
-            
-            if(!val) { 
-                textarea.classList.add('border-gray-200'); 
+
+            if (!val) {
+                textarea.classList.add('border-gray-200');
                 feedback.innerHTML = '';
-                return; 
+                return;
             }
-            
+
             const chests = val.split(',').map(s => s.trim()).filter(s => s);
             let invalid = [];
             chests.forEach(c => {
-                if(!window.tmTeamCandidates.find(cand => cand.chestNo === c)) invalid.push(c);
+                if (!window.tmTeamCandidates.find(cand => cand.chestNo === c)) invalid.push(c);
             });
 
-            if(invalid.length > 0) {
+            if (invalid.length > 0) {
                 textarea.classList.add('border-red-500', 'bg-red-50/20');
                 feedback.innerHTML = `<span class="text-red-500">Invalid: ${invalid.join(', ')}</span>`;
             } else {
@@ -222,21 +227,21 @@
             }
         };
 
-        window.validateChest = function(inputEl) {
+        window.validateChest = function (inputEl) {
             const val = inputEl.value.trim();
             inputEl.classList.remove('border-gray-200', 'border-red-500', 'border-green-500', 'bg-red-50/20', 'bg-green-50/20');
-            if(!val) { inputEl.classList.add('border-gray-200'); return; }
-            
+            if (!val) { inputEl.classList.add('border-gray-200'); return; }
+
             const found = window.tmTeamCandidates.find(c => c.chestNo === val);
-            if(found) inputEl.classList.add('border-green-500', 'bg-green-50/20');
+            if (found) inputEl.classList.add('border-green-500', 'bg-green-50/20');
             else inputEl.classList.add('border-red-500', 'bg-red-50/20');
         };
 
-        window.switchGroupTab = function(progId, activeSet, totalSets) {
-            for(let s=1; s<=totalSets; s++) {
+        window.switchGroupTab = function (progId, activeSet, totalSets) {
+            for (let s = 1; s <= totalSets; s++) {
                 const btn = document.getElementById(`tab-btn-${progId}-${s}`);
                 const content = document.getElementById(`tab-content-${progId}-${s}`);
-                if(s === activeSet) {
+                if (s === activeSet) {
                     btn.classList.add('border-brand-blue', 'text-brand-blue', 'bg-blue-50/50');
                     btn.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-50');
                     content.classList.remove('hidden');
@@ -250,7 +255,7 @@
             }
         };
 
-        window.saveRegistration = function(progId) {
+        window.saveRegistration = function (progId) {
             const prog = window.tmProgramsList.find(p => p.id === progId);
             const isUnlimited = !!prog.isUnlimited || prog.maxParticipants === 'unlimited';
             const isGroup = !isUnlimited && (prog.type || '').toLowerCase().includes('group');
@@ -280,12 +285,12 @@
                 const inputs = document.querySelectorAll('.prog-input-group-' + progId);
                 inputs.forEach(inp => {
                     const val = inp.value.trim();
-                    if(val) {
+                    if (val) {
                         const found = window.tmTeamCandidates.find(c => c.chestNo === val);
-                        if(found) { 
-                            chestNumbers.push(val); 
-                            candidateIds.push(found.id); 
-                            filledCount++; 
+                        if (found) {
+                            chestNumbers.push(val);
+                            candidateIds.push(found.id);
+                            filledCount++;
                         } else {
                             valid = false;
                         }
@@ -297,9 +302,9 @@
                 const inputs = document.querySelectorAll('.prog-input-' + progId);
                 inputs.forEach(inp => {
                     const val = inp.value.trim();
-                    if(val) {
+                    if (val) {
                         const found = window.tmTeamCandidates.find(c => c.chestNo === val);
-                        if(found) { chestNumbers.push(val); candidateIds.push(found.id); filledCount++; } 
+                        if (found) { chestNumbers.push(val); candidateIds.push(found.id); filledCount++; }
                         else valid = false;
                     }
                 });
@@ -308,16 +313,16 @@
             const btn = document.getElementById('btn-save-' + progId);
             const existing = window.tmRegistrationsList.find(r => r.programId === progId);
 
-            if(!valid) return typeof showToast === 'function' && showToast("❌ Contains invalid chest numbers. Must belong to your team & section.");
+            if (!valid) return typeof showToast === 'function' && showToast("❌ Contains invalid chest numbers. Must belong to your team & section.");
 
-            if(new Set(chestNumbers).size !== chestNumbers.length) return typeof showToast === 'function' && showToast("❌ Duplicate chest numbers found.");
+            if (new Set(chestNumbers).size !== chestNumbers.length) return typeof showToast === 'function' && showToast("❌ Duplicate chest numbers found.");
 
             if (isGroup && memberCount > 0) {
                 const groupSets = prog.groupSetsCount || 1;
                 const groupParts = prog.groupParticipantsPerSet || 1;
                 const expectedTotal = groupSets * groupParts;
                 if (memberCount !== expectedTotal) {
-                    return typeof showToast === 'function' && showToast(`❌ Member count must be exactly ${expectedTotal} (${groupSets} Set${groupSets>1?'s':''} of ${groupParts}).`);
+                    return typeof showToast === 'function' && showToast(`❌ Member count must be exactly ${expectedTotal} (${groupSets} Set${groupSets > 1 ? 's' : ''} of ${groupParts}).`);
                 }
             }
 
@@ -325,7 +330,7 @@
                 const setRule = window.programSetsData.find(s => s.name === prog.progSet);
                 if (setRule) {
                     const maxLimit = parseInt(setRule.maxCount) || 999;
-                    for(let chest of chestNumbers) {
+                    for (let chest of chestNumbers) {
                         let currentSetCount = 0;
                         window.tmRegistrationsList.forEach(r => {
                             if (r.programId !== progId && r.chestNumbers && r.chestNumbers.includes(chest)) {
@@ -340,24 +345,25 @@
                 }
             }
 
-            const payload = { 
-                programId: progId, 
-                programName: prog.name, 
-                programCode: prog.code, 
-                team: team, 
-                section: section, 
-                chestNumbers: chestNumbers, 
-                candidateIds: candidateIds, 
+            const payload = {
+                programId: progId,
+                programName: prog.name,
+                programCode: prog.code,
+                team: team,
+                section: section,
+                chestNumbers: chestNumbers,
+                candidateIds: candidateIds,
                 memberCount: memberCount,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
 
-            
+
             btn.innerHTML = '<div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>'; btn.disabled = true;
-            if(existing) db.collection('registrations').doc(existing.id).update(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Updated!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; });
+            if (existing) db.collection('registrations').doc(existing.id).update(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Updated!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; });
             else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); db.collection('registrations').add(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Successful!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; }); }
         };
     </script>
 </body>
+
 </html>
