@@ -12,9 +12,12 @@
     <div class="mb-6 shrink-0 pt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 id="tmt-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Topic Registration</h1>
-            <p class="text-[13px] text-gray-500 mt-1">Submit topics for programs that strictly require it.</p>
+            <p class="text-[13px] text-gray-500 mt-1">Submit topics for programs based on participant/set count.</p>
         </div>
     </div>
+
+    <!-- Status Banner Container -->
+    <div id="tmt-status-banner"></div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6" id="tmt-list">
         <div class="col-span-full py-16 text-center text-[13px] text-gray-400">
@@ -32,8 +35,44 @@
         window.tmtRegistrationsList = [];
         window.tmtCandidates = [];
         window.tmtActiveTabs = {};
+        window.tmtConfig = null;
+
+        function checkTopicWindowUnlocked(config) {
+            if (!config) return false;
+            const { start, end } = config;
+            if (!start && !end) return false;
+            
+            const now = new Date();
+            const startDate = start ? new Date(start) : null;
+            const endDate = end ? new Date(end) : null;
+            
+            if (startDate && endDate) return now >= startDate && now <= endDate;
+            if (startDate && !endDate) return now >= startDate;
+            if (!startDate && endDate) return now <= endDate;
+            return false;
+        }
+
+        function formatTopicWindowDate(dtStr) {
+            if (!dtStr) return '';
+            const d = new Date(dtStr);
+            if (isNaN(d.getTime())) return dtStr;
+            return d.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
 
         if (typeof db !== 'undefined' && section && team) {
+            // Listen to topic registration time window config
+            db.collection('config').doc('topicReg').onSnapshot(doc => {
+                window.tmtConfig = doc.exists ? doc.data() : null;
+                if (window.tmtProgramsList && window.tmtProgramsList.length > 0) window.renderTMTopics();
+            });
+
             db.collection('candidates').where('team', '==', team).where('section', '==', section).get().then(snap => {
                 window.tmtCandidates = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 return db.collection('programs').where('section', '==', section).where('status', '==', true).where('topicRegistration', '==', true).get();
@@ -48,21 +87,21 @@
             });
         }
 
-        window.switchTMTTab = function(regId, chestNo) {
-            window.tmtActiveTabs[regId] = chestNo;
+        window.switchTMTTab = function(progId, slotNum) {
+            window.tmtActiveTabs[progId] = slotNum;
             
-            // Hide all tab contents for this reg
-            document.querySelectorAll(`.tmt-inputs-${regId}`).forEach(el => el.classList.add('hidden'));
+            // Hide all tab contents for this prog
+            document.querySelectorAll(`.tmt-inputs-${progId}`).forEach(el => el.classList.add('hidden'));
             // Show selected
-            const target = document.getElementById(`tmt-inputs-${regId}-${chestNo}`);
+            const target = document.getElementById(`tmt-inputs-${progId}-${slotNum}`);
             if (target) target.classList.remove('hidden');
             
             // Update button styles
-            document.querySelectorAll(`.tmt-tab-btn-${regId}`).forEach(btn => {
+            document.querySelectorAll(`.tmt-tab-btn-${progId}`).forEach(btn => {
                 btn.classList.remove('text-brand-blue', 'border-brand-blue');
                 btn.classList.add('text-gray-400', 'border-transparent');
             });
-            const activeBtn = document.getElementById(`tmt-tab-btn-${regId}-${chestNo}`);
+            const activeBtn = document.getElementById(`tmt-tab-btn-${progId}-${slotNum}`);
             if (activeBtn) {
                 activeBtn.classList.add('text-brand-blue', 'border-brand-blue');
                 activeBtn.classList.remove('text-gray-400', 'border-transparent');
@@ -70,36 +109,91 @@
         };
 
         window.renderTMTopics = function() {
+            const bannerContainer = document.getElementById('tmt-status-banner');
             const container = document.getElementById('tmt-list');
-            const filteredRegs = window.tmtRegistrationsList.filter(r => window.tmtProgramsList.some(p => p.id === r.programId));
 
-            if (filteredRegs.length === 0) {
-                container.innerHTML = '<div class="col-span-full py-16 text-center text-[13px] text-gray-500 font-medium bg-white rounded-2xl shadow-sm border border-gray-100">You have no registered programs that require topics.</div>';
+            const isUnlocked = checkTopicWindowUnlocked(window.tmtConfig);
+            const cfg = window.tmtConfig || {};
+            const now = new Date();
+            const startDate = cfg.start ? new Date(cfg.start) : null;
+            const endDate = cfg.end ? new Date(cfg.end) : null;
+
+            if (bannerContainer) {
+                if (isUnlocked) {
+                    const timeRangeStr = (cfg.start && cfg.end) 
+                        ? `${formatTopicWindowDate(cfg.start)} &ndash; ${formatTopicWindowDate(cfg.end)}`
+                        : (cfg.end ? `Closes on ${formatTopicWindowDate(cfg.end)}` : `Opened on ${formatTopicWindowDate(cfg.start)}`);
+
+                    bannerContainer.innerHTML = `
+                        <div class="mb-5 p-4 rounded-2xl bg-green-50/80 border border-green-200/80 text-green-900 flex items-center justify-between gap-3 shadow-xs">
+                            <div class="flex items-center gap-2.5 text-[13px] font-semibold">
+                                <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                                <span>Topic Registration Window Open (${timeRangeStr})</span>
+                            </div>
+                            <span class="text-[10px] font-bold text-green-800 bg-green-100 border border-green-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">Active</span>
+                        </div>
+                    `;
+                } else {
+                    let closedReason = "Topic registration window has not been configured by administration.";
+                    if (startDate && now < startDate) {
+                        closedReason = `Topic registration will open on <strong>${formatTopicWindowDate(cfg.start)}</strong>.`;
+                    } else if (endDate && now > endDate) {
+                        closedReason = `Topic registration window closed on <strong>${formatTopicWindowDate(cfg.end)}</strong>.`;
+                    }
+
+                    bannerContainer.innerHTML = `
+                        <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-3 shadow-xs">
+                            <div class="flex items-center gap-2.5 text-[13px]">
+                                <i class="fi fi-rr-lock text-amber-600 text-base"></i>
+                                <span><strong>Topic Registration Closed:</strong> ${closedReason}</span>
+                            </div>
+                            <span class="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">Locked</span>
+                        </div>
+                    `;
+                }
+            }
+
+            if (!window.tmtProgramsList || window.tmtProgramsList.length === 0) {
+                container.innerHTML = '<div class="col-span-full py-16 text-center text-[13px] text-gray-500 font-medium bg-white rounded-2xl shadow-sm border border-gray-100">No programs in this section require topic registration.</div>';
                 return;
             }
 
-            container.innerHTML = filteredRegs.map(reg => {
-                const prog = window.tmtProgramsList.find(p => p.id === reg.programId) || { code: 'Unknown', name: 'Unknown Program', type: 'Individual' };
-                const chests = reg.chestNumbers || [];
+            container.innerHTML = window.tmtProgramsList.map(prog => {
+                const reg = window.tmtRegistrationsList.find(r => r.programId === prog.id);
                 const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
                 
-                // Initialize active tab if not set
-                const defaultTab = isGroup ? 'group' : (chests[0] || '');
-                if (!window.tmtActiveTabs[reg.id]) window.tmtActiveTabs[reg.id] = defaultTab;
-                const activeChest = window.tmtActiveTabs[reg.id];
+                let totalSlots = 1;
+                if (isGroup) {
+                    totalSlots = parseInt(prog.groupSetsCount) || 1;
+                } else {
+                    totalSlots = (prog.maxParticipants && prog.maxParticipants !== 'unlimited') ? (parseInt(prog.maxParticipants) || 1) : 1;
+                }
+                if (totalSlots < 1) totalSlots = 1;
+
+                const regChests = reg ? (reg.chestNumbers || []) : [];
+
+                if (!window.tmtActiveTabs[prog.id]) {
+                    window.tmtActiveTabs[prog.id] = 1;
+                }
+                const activeSlot = window.tmtActiveTabs[prog.id];
 
                 let tabsHTML = '';
-                if (!isGroup && chests.length > 0) {
+                if (totalSlots > 1) {
                     tabsHTML = `
                         <div class="flex overflow-x-auto no-scrollbar border-b border-gray-100 mb-4 gap-4 scroll-smooth">
-                            ${chests.map(c => {
-                                const cand = window.tmtCandidates.find(can => can.chestNo === c);
-                                const active = activeChest === c;
+                            ${Array.from({length: totalSlots}, (_, idx) => {
+                                const slotNum = idx + 1;
+                                const chestNo = regChests[idx] || null;
+                                const cand = chestNo ? window.tmtCandidates.find(can => can.chestNo === chestNo) : null;
+                                
+                                let tabLabel = isGroup ? `Set ${slotNum}` : (chestNo ? `#${chestNo} ${cand ? cand.name.split(' ')[0] : ''}` : `Set ${slotNum}`);
+                                const active = activeSlot === slotNum;
                                 const activeClass = active ? 'text-brand-blue border-brand-blue' : 'text-gray-400 border-transparent';
+                                
                                 return `
-                                    <button onclick="window.switchTMTTab('${reg.id}', '${c}')" id="tmt-tab-btn-${reg.id}-${c}" 
-                                        class="tmt-tab-btn-${reg.id} pb-2 text-[10px] font-bold uppercase tracking-wider ${activeClass} border-b-2 transition-all whitespace-nowrap outline-none">
-                                        #${c} ${cand ? cand.name.split(' ')[0] : ''}
+                                    <button onclick="window.switchTMTTab('${prog.id}', ${slotNum})" id="tmt-tab-btn-${prog.id}-${slotNum}" 
+                                        class="tmt-tab-btn-${prog.id} pb-2 text-[10px] font-bold uppercase tracking-wider ${activeClass} border-b-2 transition-all whitespace-nowrap outline-none">
+                                        ${tabLabel}
                                     </button>`;
                             }).join('')}
                         </div>
@@ -107,40 +201,41 @@
                 }
 
                 let contentsHTML = '';
-                if (isGroup) {
-                    contentsHTML = `
-                        <div id="tmt-inputs-${reg.id}-group" class="space-y-3">
-                            ${renderTopicInputs(reg.id, 'group', reg.topicName, reg.topicAuthor, reg.topicContent)}
-                        </div>`;
-                } else {
-                    chests.forEach(c => {
-                        const topicData = (reg.topics && reg.topics[c]) || {};
-                        // Fallback for first candidate if topics map is missing or for legacy data
-                        const name = topicData.name || (c === chests[0] ? reg.topicName : '');
-                        const author = topicData.author || (c === chests[0] ? reg.topicAuthor : '');
-                        const content = topicData.content || (c === chests[0] ? reg.topicContent : '');
-                        
-                        const isHidden = activeChest === c ? '' : 'hidden';
-                        contentsHTML += `
-                            <div id="tmt-inputs-${reg.id}-${c}" class="tmt-inputs-${reg.id} ${isHidden} space-y-3">
-                                ${renderTopicInputs(reg.id, c, name, author, content)}
-                            </div>`;
-                    });
-                    // Fallback if no chests
-                    if (chests.length === 0) {
-                        contentsHTML = `<div class="text-center py-4 text-gray-400 text-[12px]">No candidates registered.</div>`;
+                for (let slotNum = 1; slotNum <= totalSlots; slotNum++) {
+                    const chestNo = regChests[slotNum - 1] || null;
+                    let topicData = {};
+                    if (reg && reg.topics) {
+                        topicData = (chestNo && reg.topics[chestNo]) || reg.topics[slotNum] || reg.topics['set' + slotNum] || {};
                     }
+                    const name = topicData.name || (slotNum === 1 && reg ? reg.topicName : '');
+                    const author = topicData.author || (slotNum === 1 && reg ? reg.topicAuthor : '');
+                    const content = topicData.content || (slotNum === 1 && reg ? reg.topicContent : '');
+                    
+                    const isHidden = (totalSlots > 1 && activeSlot !== slotNum) ? 'hidden' : '';
+
+                    contentsHTML += `
+                        <div id="tmt-inputs-${prog.id}-${slotNum}" class="tmt-inputs-${prog.id} ${isHidden} space-y-3">
+                            ${renderTopicInputs(prog.id, slotNum, name, author, content, !isUnlocked)}
+                        </div>`;
                 }
 
-                const status = reg.topicStatus || 'Pending';
+                const status = (reg && reg.topicStatus) || 'Not Submitted';
                 let statusBadge = '';
                 if (status.toLowerCase() === 'approved' || status.toLowerCase() === 'accepted') {
                     statusBadge = `<span class="text-[10px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-check-circle text-[9px] mr-1"></i>Approved</span>`;
                 } else if (status.toLowerCase() === 'rejected') {
                     statusBadge = `<span class="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-cross-circle text-[9px] mr-1"></i>Rejected</span>`;
-                } else {
+                } else if (status.toLowerCase() === 'pending') {
                     statusBadge = `<span class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-clock text-[9px] mr-1"></i>Pending Approval</span>`;
+                } else {
+                    statusBadge = `<span class="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-edit text-[9px] mr-1"></i>Not Submitted</span>`;
                 }
+
+                const limitInfo = totalSlots > 1 ? `${totalSlots} Sets / Slots` : '1 Topic Set';
+
+                const btnClass = isUnlocked
+                    ? 'bg-gray-50 hover:bg-[#FFB33F] text-gray-800 border border-gray-200 hover:border-transparent cursor-pointer'
+                    : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed';
 
                 return `
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
@@ -150,98 +245,137 @@
                             ${statusBadge}
                         </div>
                         <h3 class="text-[15px] font-bold text-gray-900 leading-tight pr-4">${prog.name}</h3>
-                        <p class="text-[11px] text-gray-500 mt-1 font-medium">${isGroup ? 'Group Registration' : chests.length + ' Registered Candidates'}</p>
+                        <p class="text-[11px] text-gray-500 mt-1 font-medium">${limitInfo} &bull; ${reg && reg.chestNumbers && reg.chestNumbers.length > 0 ? reg.chestNumbers.length + ' Candidates Registered' : 'No Candidates Registered'}</p>
                     </div>
                     ${tabsHTML}
                     <div class="mt-auto">
                         ${contentsHTML}
-                        <button id="tmt-btn-${reg.id}" onclick="window.saveTMTopic('${reg.id}')" class="w-full mt-4 bg-gray-50 hover:bg-[#FFB33F] text-gray-800 border border-gray-200 hover:border-transparent font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
-                            <i class="fi fi-rr-disk text-xs"></i> Save Topic Details
+                        <button id="tmt-btn-${prog.id}" onclick="window.saveTMTopic('${prog.id}')" ${!isUnlocked ? 'disabled' : ''} class="w-full mt-4 ${btnClass} font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fi fi-${isUnlocked ? 'rr-disk' : 'rr-lock'} text-xs"></i> ${!isUnlocked ? 'Registration Closed' : (reg ? 'Update' : 'Save') + ' Topic Details'}
                         </button>
                     </div>
                 </div>`;
             }).join('');
         };
 
-        function renderTopicInputs(regId, chestNo, name, author, content) {
+        function renderTopicInputs(progId, slotNum, name, author, content, disabled = false) {
+            const disabledAttr = disabled ? 'disabled' : '';
+            const inputBg = disabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-800';
+
             return `
                 <div class="flex flex-col gap-1.5">
                     <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Topic Name</label>
-                    <input type="text" id="tmt-name-${regId}-${chestNo}" value="${name || ''}" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm" placeholder="Enter topic title">
+                    <input type="text" id="tmt-name-${progId}-${slotNum}" value="${name || ''}" ${disabledAttr} class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm" placeholder="${disabled ? 'Registration closed' : 'Enter topic title'}">
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Author</label>
-                    <input type="text" id="tmt-author-${regId}-${chestNo}" value="${author || ''}" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm" placeholder="Enter author name">
+                    <input type="text" id="tmt-author-${progId}-${slotNum}" value="${author || ''}" ${disabledAttr} class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm" placeholder="${disabled ? 'Registration closed' : 'Enter author name'}">
                 </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Topic Description</label>
-                    <textarea id="tmt-content-${regId}-${chestNo}" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm" placeholder="Enter details...">${content || ''}</textarea>
+                    <textarea id="tmt-content-${progId}-${slotNum}" rows="3" ${disabledAttr} class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] ${inputBg} focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all shadow-sm" placeholder="${disabled ? 'Registration closed' : 'Enter details...'}">${content || ''}</textarea>
                 </div>
             `;
         }
 
-        window.saveTMTopic = function(regId) {
-            const reg = window.tmtRegistrationsList.find(r => r.id === regId);
-            if (!reg) return;
-            const prog = window.tmtProgramsList.find(p => p.id === reg.programId) || { type: 'Individual' };
-            const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
-            const chests = reg.chestNumbers || [];
+        window.saveTMTopic = function(progId) {
+            if (!checkTopicWindowUnlocked(window.tmtConfig)) {
+                return typeof showToast === 'function' && showToast("🔒 Topic Registration is currently closed by the admin.");
+            }
+
+            const prog = window.tmtProgramsList.find(p => p.id === progId);
+            if (!prog) return;
             
+            const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
+            let totalSlots = 1;
+            if (isGroup) {
+                totalSlots = parseInt(prog.groupSetsCount) || 1;
+            } else {
+                totalSlots = (prog.maxParticipants && prog.maxParticipants !== 'unlimited') ? (parseInt(prog.maxParticipants) || 1) : 1;
+            }
+            if (totalSlots < 1) totalSlots = 1;
+
+            const reg = window.tmtRegistrationsList.find(r => r.programId === progId);
+            const regChests = reg ? (reg.chestNumbers || []) : [];
+
+            let topics = reg && reg.topics ? { ...reg.topics } : {};
+            let firstName = '', firstAuthor = '', firstContent = '';
+            let hasAtLeastOne = false;
+
+            for (let slotNum = 1; slotNum <= totalSlots; slotNum++) {
+                const chestNo = regChests[slotNum - 1] || null;
+                const slotKey = chestNo ? chestNo : slotNum;
+
+                const nameEl = document.getElementById(`tmt-name-${progId}-${slotNum}`);
+                const authorEl = document.getElementById(`tmt-author-${progId}-${slotNum}`);
+                const contentEl = document.getElementById(`tmt-content-${progId}-${slotNum}`);
+
+                const name = nameEl ? nameEl.value.trim() : '';
+                const author = authorEl ? authorEl.value.trim() : '';
+                const content = contentEl ? contentEl.value.trim() : '';
+
+                if (name || author || content) {
+                    hasAtLeastOne = true;
+                }
+
+                const prevStatus = topics[slotKey] && topics[slotKey].status ? topics[slotKey].status : (reg && reg.topicStatus ? reg.topicStatus : 'Pending');
+                topics[slotKey] = { name, author, content, status: prevStatus };
+
+                if (slotNum === 1) {
+                    firstName = name;
+                    firstAuthor = author;
+                    firstContent = content;
+                }
+            }
+
+            if (!hasAtLeastOne) {
+                return typeof showToast === 'function' && showToast("❌ Topic Name cannot be empty.");
+            }
+
             let updateData = {
-                topicStatus: reg.topicStatus || 'Pending',
+                programId: progId,
+                programName: prog.name,
+                programCode: prog.code,
+                team: team,
+                section: section,
+                topics: topics,
+                topicName: firstName,
+                topicAuthor: firstAuthor,
+                topicContent: firstContent,
+                topicStatus: (reg && reg.topicStatus) || 'Pending',
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            if (isGroup) {
-                const name = document.getElementById(`tmt-name-${regId}-group`).value.trim();
-                const author = document.getElementById(`tmt-author-${regId}-group`).value.trim();
-                const content = document.getElementById(`tmt-content-${regId}-group`).value.trim();
-                
-                if(!name) return typeof showToast === 'function' && showToast("❌ Topic Name cannot be empty.");
-                
-                updateData.topicName = name;
-                updateData.topicAuthor = author;
-                updateData.topicContent = content;
-            } else {
-                let topics = reg.topics || {};
-                let firstName = '', firstAuthor = '', firstContent = '';
-                
-                chests.forEach((c, idx) => {
-                    const name = document.getElementById(`tmt-name-${regId}-${c}`).value.trim();
-                    const author = document.getElementById(`tmt-author-${regId}-${c}`).value.trim();
-                    const content = document.getElementById(`tmt-content-${regId}-${c}`).value.trim();
-                    
-                    const prevStatus = (reg.topics && reg.topics[c] && reg.topics[c].status) ? reg.topics[c].status : 'Pending';
-                    topics[c] = { name, author, content, status: prevStatus };
-                    
-                    if (idx === 0) {
-                        firstName = name;
-                        firstAuthor = author;
-                        firstContent = content;
-                    }
-                });
-                
-                updateData.topics = topics;
-                // Backwards compatibility for root fields (use first candidate)
-                updateData.topicName = firstName;
-                updateData.topicAuthor = firstAuthor;
-                updateData.topicContent = firstContent;
-            }
-            
-            const btn = document.getElementById('tmt-btn-' + regId);
+            const btn = document.getElementById('tmt-btn-' + progId);
             btn.innerHTML = '<div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>'; btn.disabled = true;
-            
-            db.collection('registrations').doc(regId).update(updateData).then(() => { 
-                typeof showToast === 'function' && showToast("✅ Topic Saved Successfully!"); 
-                btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
-                btn.disabled = false; 
-            }).catch(err => {
-                console.error(err);
-                typeof showToast === 'function' && showToast("❌ Error saving topic.");
-                btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
-                btn.disabled = false;
-            });
-        }
+
+            if (reg) {
+                db.collection('registrations').doc(reg.id).update(updateData).then(() => { 
+                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!"); 
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    btn.disabled = false; 
+                }).catch(err => {
+                    console.error(err);
+                    typeof showToast === 'function' && showToast("❌ Error saving topic.");
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    btn.disabled = false;
+                });
+            } else {
+                updateData.chestNumbers = [];
+                updateData.candidateIds = [];
+                updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                db.collection('registrations').add(updateData).then(() => {
+                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!"); 
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    btn.disabled = false;
+                }).catch(err => {
+                    console.error(err);
+                    typeof showToast === 'function' && showToast("❌ Error saving topic.");
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    btn.disabled = false;
+                });
+            }
+        };
     </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Portal Control Center</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="https://festive-sfadc.vercel.app/asset/5Rect.png">
+    <link rel="icon" type="image/png" href="https://festive-sfadc.vercel.app/asset/logoR.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
@@ -69,6 +69,7 @@
         }
     </style>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8 overflow-x-hidden">
@@ -361,7 +362,7 @@
                 </div>
 
                 <!-- List of People Cards -->
-                <div id="coordinators-list" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div id="coordinators-list" class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4">
                     <!-- Injected via JS -->
                 </div>
             </div>
@@ -495,15 +496,20 @@
                 <div>
                     <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Card Accent Color (Fallback)</label>
                     <div class="flex items-center gap-3">
-                        <input type="color" id="coord-color" value="#EA3650" class="w-10 h-10 rounded-xl cursor-pointer border border-gray-200 p-0.5">
+                        <input type="color" id="coord-color" value="#37314F" oninput="setCoordColor(this.value)" class="w-10 h-10 rounded-xl cursor-pointer border border-gray-200 p-0.5">
                         <div class="flex items-center gap-2">
-                            <button type="button" onclick="setCoordColor('#EA3650')" class="w-6 h-6 rounded-full bg-[#EA3650] border border-gray-200 hover:scale-110 transition-transform"></button>
-                            <button type="button" onclick="setCoordColor('#EA8F23')" class="w-6 h-6 rounded-full bg-[#EA8F23] border border-gray-200 hover:scale-110 transition-transform"></button>
-                            <button type="button" onclick="setCoordColor('#00A3E0')" class="w-6 h-6 rounded-full bg-[#00A3E0] border border-gray-200 hover:scale-110 transition-transform"></button>
-                            <button type="button" onclick="setCoordColor('#09ABB1')" class="w-6 h-6 rounded-full bg-[#09ABB1] border border-gray-200 hover:scale-110 transition-transform"></button>
-                            <button type="button" onclick="setCoordColor('#2075BC')" class="w-6 h-6 rounded-full bg-[#2075BC] border border-gray-200 hover:scale-110 transition-transform"></button>
+                            <button type="button" onclick="setCoordColor('#37314F')" class="w-6 h-6 rounded-full bg-[#37314F] border border-gray-200 hover:scale-110 transition-transform" title="#37314F"></button>
+                            <button type="button" onclick="setCoordColor('#C0912B')" class="w-6 h-6 rounded-full bg-[#C0912B] border border-gray-200 hover:scale-110 transition-transform" title="#C0912B"></button>
+                            <button type="button" onclick="setCoordColor('#17635F')" class="w-6 h-6 rounded-full bg-[#17635F] border border-gray-200 hover:scale-110 transition-transform" title="#17635F"></button>
+                            <button type="button" onclick="setCoordColor('#92205D')" class="w-6 h-6 rounded-full bg-[#92205D] border border-gray-200 hover:scale-110 transition-transform" title="#92205D"></button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Display Order Number -->
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Display Order Number</label>
+                    <input type="number" id="coord-order" placeholder="e.g. 1" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue transition-all">
                 </div>
             </div>
             <div class="p-6 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
@@ -834,9 +840,10 @@
             if (!selectedFileForSlide || !selectedFileForSlide.url) return;
 
             if (isPickingImageForCoordinator) {
-                setCoordinatorImagePreview(selectedFileForSlide.url);
+                const url = selectedFileForSlide.url;
                 isPickingImageForCoordinator = false;
                 closeSlidePicker();
+                openCropperModal(url);
             } else {
                 if (!websiteConfig.heroSlides) websiteConfig.heroSlides = [];
                 websiteConfig.heroSlides.push(selectedFileForSlide.url);
@@ -921,9 +928,26 @@
             }, e => console.error("Coordinators sync error:", e));
         }
 
+        function getRoleRank(role) {
+            const r = (role || '').toLowerCase().trim();
+            if (r.includes('chief') || r.includes('cheif')) return 1;
+            if (r.includes('assistant') || r.includes('asst')) return 2;
+            if (r.includes('financial') || r.includes('finance') || r.includes('finiancial')) return 3;
+            return 4;
+        }
+
+        function getItemSortScore(item, index = 0) {
+            if (typeof item.order === 'number' && !isNaN(item.order)) {
+                return item.order;
+            }
+            return (getRoleRank(item.role) * 100) + index;
+        }
+
         function renderCoordinatorsList() {
             const container = document.getElementById('coordinators-list');
             if (!container) return;
+
+            coordinatorsData.sort((a, b) => getItemSortScore(a) - getItemSortScore(b));
 
             if (coordinatorsData.length === 0) {
                 container.innerHTML = `
@@ -937,18 +961,24 @@
                 return;
             }
 
-            container.innerHTML = coordinatorsData.map(c => {
-                const color = c.color || '#EA3650';
-                const bgStyle = c.imageUrl 
-                    ? `background-image: url('${c.imageUrl}'); background-size: cover; background-position: center;` 
-                    : `background-color: ${color};`;
+            container.innerHTML = coordinatorsData.map((c, index) => {
+                const color = c.color || '#37314F';
+                const bgStyle = `background-color: ${color}; ` + (c.imageUrl ? `background-image: url('${c.imageUrl}'); background-size: cover; background-position: center;` : '');
 
                 return `
-                    <div class="bg-white border border-gray-100 rounded-2xl p-3 flex flex-col justify-between group hover:shadow-md hover:border-brand-blue/30 transition-all relative">
+                    <div class="bg-white border border-gray-100 rounded-2xl p-3 flex flex-col justify-between group hover:shadow-md hover:border-brand-blue/30 transition-all relative cursor-grab active:cursor-grabbing"
+                         draggable="true" 
+                         ondragstart="handleCoordinatorDragStart(event, '${c.id}')" 
+                         ondragend="handleCoordinatorDragEnd(event)" 
+                         ondragover="handleCoordinatorDragOver(event)" 
+                         ondrop="handleCoordinatorDrop(event, '${c.id}')">
                         <div>
                             <div class="w-full aspect-[3/4] rounded-xl overflow-hidden mb-2.5 relative border border-gray-100" style="${bgStyle}">
                                 ${c.imageUrl ? '<div class="absolute inset-0 bg-black/10"></div>' : ''}
-                                <div class="absolute bottom-2 right-2 bg-white text-gray-900 text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-full uppercase shadow-sm">
+                                <div class="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <i class="fi fi-rr-menu-dots text-[10px]"></i> #${getItemSortScore(c, index)}
+                                </div>
+                                <div class="absolute bottom-2 right-2 bg-white text-gray-900 text-[8px] font-normal tracking-wider px-1.5 py-0.5 rounded-full uppercase shadow-sm">
                                     ${c.role || c.group || 'MEMBER'}
                                 </div>
                             </div>
@@ -958,13 +988,23 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end gap-1.5 mt-3 pt-2 border-t border-gray-50">
-                            <button onclick="editCoordinator('${c.id}')" class="w-7 h-7 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-brand-blue transition-colors flex items-center justify-center">
-                                <i class="fi fi-rr-edit text-xs"></i>
-                            </button>
-                            <button onclick="deleteCoordinator('${c.id}')" class="w-7 h-7 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center">
-                                <i class="fi fi-rr-trash text-xs"></i>
-                            </button>
+                        <div class="flex items-center justify-between gap-1 mt-3 pt-2 border-t border-gray-50">
+                            <div class="flex items-center gap-0.5">
+                                <button type="button" onclick="moveCoordinator('${c.id}', -1)" title="Move Left" class="w-7 h-7 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center">
+                                    <i class="fi fi-rr-arrow-left text-[11px]"></i>
+                                </button>
+                                <button type="button" onclick="moveCoordinator('${c.id}', 1)" title="Move Right" class="w-7 h-7 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center">
+                                    <i class="fi fi-rr-arrow-right text-[11px]"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-0.5">
+                                <button type="button" onclick="editCoordinator('${c.id}')" title="Edit" class="w-7 h-7 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-brand-blue transition-colors flex items-center justify-center">
+                                    <i class="fi fi-rr-edit text-xs"></i>
+                                </button>
+                                <button type="button" onclick="deleteCoordinator('${c.id}')" title="Delete" class="w-7 h-7 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center">
+                                    <i class="fi fi-rr-trash text-xs"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -984,7 +1024,8 @@
                 document.getElementById('coord-location').value = c.location || '';
                 document.getElementById('coord-group').value = c.group || 'controller';
                 document.getElementById('coord-role').value = c.role || '';
-                document.getElementById('coord-color').value = c.color || '#EA3650';
+                document.getElementById('coord-color').value = c.color || '#37314F';
+                document.getElementById('coord-order').value = c.order !== undefined && c.order !== null ? c.order : '';
                 setCoordinatorImagePreview(c.imageUrl || '');
             } else {
                 titleEl.innerText = "Add Person";
@@ -993,7 +1034,8 @@
                 document.getElementById('coord-location').value = '';
                 document.getElementById('coord-group').value = 'controller';
                 document.getElementById('coord-role').value = '';
-                document.getElementById('coord-color').value = '#EA3650';
+                document.getElementById('coord-color').value = '#37314F';
+                document.getElementById('coord-order').value = (coordinatorsData.length + 1) * 10;
                 setCoordinatorImagePreview('');
             }
         };
@@ -1006,11 +1048,125 @@
             document.getElementById('coordinator-modal-overlay').classList.add('hidden');
         };
 
+        let draggedCoordId = null;
+
+        window.handleCoordinatorDragStart = function (e, id) {
+            draggedCoordId = id;
+            e.dataTransfer.effectAllowed = 'move';
+            e.currentTarget.classList.add('opacity-40');
+        };
+
+        window.handleCoordinatorDragEnd = function (e) {
+            e.currentTarget.classList.remove('opacity-40');
+        };
+
+        window.handleCoordinatorDragOver = function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        };
+
+        window.handleCoordinatorDrop = async function (e, targetId) {
+            e.preventDefault();
+            if (!draggedCoordId || draggedCoordId === targetId) return;
+
+            coordinatorsData.sort((a, b) => getItemSortScore(a) - getItemSortScore(b));
+
+            const fromIndex = coordinatorsData.findIndex(i => i.id === draggedCoordId);
+            const toIndex = coordinatorsData.findIndex(i => i.id === targetId);
+
+            if (fromIndex === -1 || toIndex === -1) return;
+
+            const [movedItem] = coordinatorsData.splice(fromIndex, 1);
+            coordinatorsData.splice(toIndex, 0, movedItem);
+
+            const batch = db.batch();
+            coordinatorsData.forEach((item, idx) => {
+                const newOrder = (idx + 1) * 10;
+                item.order = newOrder;
+                batch.update(db.collection('coordinators').doc(item.id), { order: newOrder });
+            });
+
+            try {
+                await batch.commit();
+                renderCoordinatorsList();
+                if (window.showToast) showToast("✅ Reordered successfully!");
+            } catch (err) {
+                console.error("Error saving order batch:", err);
+            }
+        };
+
+        window.moveCoordinator = async function (id, direction) {
+            coordinatorsData.sort((a, b) => getItemSortScore(a) - getItemSortScore(b));
+
+            const index = coordinatorsData.findIndex(item => item.id === id);
+            if (index === -1) return;
+
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= coordinatorsData.length) return;
+
+            const currentItem = coordinatorsData[index];
+            const targetItem = coordinatorsData[targetIndex];
+
+            const currentScore = getItemSortScore(currentItem, index);
+            const targetScore = getItemSortScore(targetItem, targetIndex);
+
+            currentItem.order = targetScore;
+            targetItem.order = currentScore === targetScore ? currentScore + direction : currentScore;
+
+            try {
+                const batch = db.batch();
+                batch.update(db.collection('coordinators').doc(currentItem.id), { order: currentItem.order });
+                batch.update(db.collection('coordinators').doc(targetItem.id), { order: targetItem.order });
+                await batch.commit();
+                renderCoordinatorsList();
+                if (window.showToast) showToast("✅ Order updated!");
+            } catch (err) {
+                console.error("Error moving coordinator:", err);
+            }
+        };
+
         window.setCoordColor = function (colorHex) {
             document.getElementById('coord-color').value = colorHex;
+            const previewBox = document.getElementById('coord-img-preview-box');
+            if (previewBox) previewBox.style.backgroundColor = colorHex;
+            const cropperBg = document.getElementById('cropper-image-container');
+            if (cropperBg) cropperBg.style.backgroundColor = colorHex;
         };
 
         let cropperInstance = null;
+
+        window.openCropperModal = function (imageUrl) {
+            const modal = document.getElementById('cropper-modal');
+            const imgElement = document.getElementById('cropper-image');
+            const selectedColor = document.getElementById('coord-color').value || '#37314F';
+            const cropperBg = document.getElementById('cropper-image-container');
+            if (cropperBg) cropperBg.style.backgroundColor = selectedColor;
+            
+            modal.classList.remove('hidden');
+
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+
+            imgElement.onload = function () {
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                }
+                cropperInstance = new Cropper(imgElement, {
+                    aspectRatio: 3 / 4,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true,
+                    background: false
+                });
+            };
+
+            imgElement.src = imageUrl;
+            if (imgElement.complete && imgElement.naturalWidth !== 0) {
+                imgElement.onload();
+            }
+        };
 
         window.handleCoordinatorImageUpload = function (event) {
             const file = event.target.files[0];
@@ -1018,22 +1174,28 @@
 
             const reader = new FileReader();
             reader.onload = function (e) {
-                const imgElement = document.getElementById('cropper-image');
-                imgElement.src = e.target.result;
-                document.getElementById('cropper-modal').classList.remove('hidden');
-
-                if (cropperInstance) {
-                    cropperInstance.destroy();
-                }
-
-                cropperInstance = new Cropper(imgElement, {
-                    aspectRatio: 3 / 4,
-                    viewMode: 1,
-                    autoCropArea: 1,
-                });
+                openCropperModal(e.target.result);
             };
             reader.readAsDataURL(file);
             event.target.value = '';
+        };
+
+        window.setCropperAspect = function (aspect) {
+            if (cropperInstance) {
+                cropperInstance.setAspectRatio(aspect);
+            }
+        };
+
+        window.rotateCropper = function (degree) {
+            if (cropperInstance) {
+                cropperInstance.rotate(degree);
+            }
+        };
+
+        window.resetCropper = function () {
+            if (cropperInstance) {
+                cropperInstance.reset();
+            }
         };
 
         window.closeCropperModal = function () {
@@ -1053,8 +1215,20 @@
                 imageSmoothingEnabled: true,
                 imageSmoothingQuality: 'high',
             });
+
+            const selectedColor = document.getElementById('coord-color').value || '#37314F';
+
+            // Composite cropped image over selected accent color background
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = canvas.width;
+            finalCanvas.height = canvas.height;
+            const ctx = finalCanvas.getContext('2d');
             
-            const compressedUrl = canvas.toDataURL('image/webp', 0.85);
+            ctx.fillStyle = selectedColor;
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            ctx.drawImage(canvas, 0, 0);
+            
+            const compressedUrl = finalCanvas.toDataURL('image/jpeg', 0.88);
             setCoordinatorImagePreview(compressedUrl);
             closeCropperModal();
         };
@@ -1064,7 +1238,10 @@
             const placeholder = document.getElementById('coord-img-placeholder');
             const removeBtn = document.getElementById('coord-img-remove-btn');
             const inputUrl = document.getElementById('coord-image-url');
+            const previewBox = document.getElementById('coord-img-preview-box');
+            const selectedColor = document.getElementById('coord-color').value || '#37314F';
 
+            if (previewBox) previewBox.style.backgroundColor = selectedColor;
             inputUrl.value = url || '';
             if (url) {
                 preview.src = url;
@@ -1097,6 +1274,7 @@
             const role = document.getElementById('coord-role').value.trim();
             const color = document.getElementById('coord-color').value;
             const imageUrl = document.getElementById('coord-image-url').value;
+            const orderVal = parseInt(document.getElementById('coord-order').value, 10);
 
             if (!name) {
                 alert("Please enter full name.");
@@ -1108,10 +1286,14 @@
                 location: location || 'Odamala',
                 group: group || 'controller',
                 role: role || (group === 'controller' ? 'CONTROLLER' : 'COORDINATOR'),
-                color: color || '#EA3650',
+                color: color || '#37314F',
                 imageUrl: imageUrl || '',
                 updatedAt: new Date()
             };
+
+            if (!isNaN(orderVal)) {
+                payload.order = orderVal;
+            }
 
             try {
                 if (id) {
@@ -1145,20 +1327,43 @@
     </script>
     
     <!-- Cropper Modal -->
-    <div id="cropper-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col shadow-2xl">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-800">Crop Image</h3>
-                <button onclick="closeCropperModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fi fi-rr-cross"></i>
+    <div id="cropper-modal" class="fixed inset-0 bg-black/80 z-[2000] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg overflow-hidden flex flex-col shadow-2xl border border-gray-100">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50/80">
+                <h3 class="font-extrabold text-gray-900 text-lg flex items-center gap-2">
+                    <i class="fi fi-rr-crop text-brand-blue"></i> Crop Photo
+                </h3>
+                <button onclick="closeCropperModal()" class="w-8 h-8 rounded-full hover:bg-gray-200 flex items-center justify-center text-gray-400 transition-colors">
+                    <i class="fi fi-rr-cross-small text-xl"></i>
                 </button>
             </div>
-            <div class="p-4 bg-black flex items-center justify-center h-80 relative">
+            
+            <div id="cropper-image-container" class="p-4 flex items-center justify-center h-80 relative overflow-hidden transition-colors duration-200">
                 <img id="cropper-image" src="" class="max-w-full max-h-full block">
             </div>
-            <div class="p-4 border-t flex justify-end gap-3 bg-gray-50">
-                <button onclick="closeCropperModal()" class="px-5 py-2 text-sm font-bold text-gray-600 bg-gray-200 rounded-xl hover:bg-gray-300 transition-colors">Cancel</button>
-                <button onclick="cropAndSetImage()" class="px-5 py-2 text-sm font-bold text-white bg-brand-blue rounded-xl hover:bg-blue-700 transition-colors shadow-md" style="background-color: #2075BC;">Crop & Set</button>
+
+            <!-- Toolbar Controls -->
+            <div class="p-3 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-1">
+                    <span class="text-gray-400 font-bold uppercase text-[10px] mr-1">Aspect:</span>
+                    <button type="button" onclick="setCropperAspect(3/4)" class="px-2.5 py-1 bg-white border border-gray-200 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-all">3:4</button>
+                    <button type="button" onclick="setCropperAspect(1)" class="px-2.5 py-1 bg-white border border-gray-200 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-all">1:1</button>
+                    <button type="button" onclick="setCropperAspect(NaN)" class="px-2.5 py-1 bg-white border border-gray-200 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-all">Free</button>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="rotateCropper(-90)" title="Rotate Left" class="px-2 py-1 bg-white border border-gray-200 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-all flex items-center gap-1">
+                        <i class="fi fi-rr-undo text-xs"></i> 90°
+                    </button>
+                    <button type="button" onclick="rotateCropper(90)" title="Rotate Right" class="px-2 py-1 bg-white border border-gray-200 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-all flex items-center gap-1">
+                        <i class="fi fi-rr-redo text-xs"></i> 90°
+                    </button>
+                    <button type="button" onclick="resetCropper()" title="Reset" class="px-2.5 py-1 bg-white border border-gray-200 rounded-lg font-semibold text-gray-700 hover:bg-gray-100 transition-all">Reset</button>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+                <button onclick="closeCropperModal()" class="px-5 py-2.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">Cancel</button>
+                <button onclick="cropAndSetImage()" class="px-6 py-2.5 text-xs font-bold text-white bg-brand-blue rounded-xl hover:bg-blue-700 transition-all shadow-md" style="background-color: #2075BC;">Crop & Set Photo</button>
             </div>
         </div>
     </div>

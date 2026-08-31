@@ -97,7 +97,18 @@
                 <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage candidate teams</p>
             </div>
 
-            <div class="flex items-center ml-4">
+            <div class="flex items-center ml-4 gap-2 sm:gap-3">
+                <a href="teamApproval.html" id="btn-team-approvals"
+                    class="flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2.5 bg-amber-500 hover:bg-amber-600 border border-transparent rounded-full text-[13px] font-bold text-white transition-all shadow-sm whitespace-nowrap">
+                    <i class="fi fi-rr-shield-check text-sm"></i>
+                    <span class="hidden sm:inline">Team Approvals</span>
+                    <span id="header-pending-badge" class="hidden bg-white text-amber-600 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold leading-none">0</span>
+                </a>
+                <button id="btn-shareable-link" onclick="copyTeamShareableLink()"
+                    class="flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2.5 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm whitespace-nowrap">
+                    <i class="fi fi-rr-link-alt text-sm"></i>
+                    <span class="hidden sm:block">Shareable Link</span>
+                </button>
                 <!-- Add Team Button -->
                 <button onclick="window.openTeamSidebar()"
                     class="flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-[#FFB33F] border border-transparent rounded-full text-[13px] font-bold text-[#111827] hover:bg-opacity-90 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap p-0">
@@ -878,6 +889,16 @@
             }
         };
 
+        function copyTeamShareableLink() {
+            const url = new URL('teamRegister.html', window.location.href).href;
+            navigator.clipboard.writeText(url).then(() => {
+                if (typeof showToast === 'function') showToast("✅ Shareable team registration link copied!");
+                else alert("✅ Shareable link copied: " + url);
+            }).catch(err => {
+                console.error("Could not copy text: ", err);
+            });
+        }
+
         // Initial render
         renderTeamsUI();
 
@@ -888,6 +909,20 @@
                 teamsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderTeamsUI();
                 autoSyncAllTeamsCaptains();
+            });
+
+            // Listen to pending team approvals
+            db.collection('festUsers').where('role', '==', 'Team Manager').onSnapshot(snap => {
+                const pendingCount = snap.docs.filter(d => {
+                    const data = d.data();
+                    return data.approvalStatus === 'pending' || (data.approvalStatus === undefined && data.isActive === false);
+                }).length;
+                const badge = document.getElementById('header-pending-badge');
+                if (badge) {
+                    badge.textContent = pendingCount;
+                    if (pendingCount > 0) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
+                }
             });
         }
     </script>

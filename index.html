@@ -877,10 +877,16 @@
                             const festUserDoc = snapshot.docs[0];
                             const festUser = festUserDoc.data();
 
-                            // ── Deactivation check ─────────────────────────────
+                            // ── Deactivation / Approval check ──────────────────
                             if (festUser.isActive === false) {
                                 resetBtn();
-                                showToast('<b>🚫</b> Your account has been deactivated. Please contact the owner.');
+                                if (festUser.approvalStatus === 'pending') {
+                                    showToast('<b>⏳</b> Your account registration is pending Admin approval.');
+                                } else if (festUser.approvalStatus === 'rejected') {
+                                    showToast('<b>❌</b> Your team registration request was rejected by Admin.');
+                                } else {
+                                    showToast('<b>🚫</b> Your account has been deactivated. Please contact the owner.');
+                                }
                                 return;
                             }
 

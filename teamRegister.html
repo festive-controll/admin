@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Registration — Festival Management</title>
+    <!-- Favicon / PWA Setup -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="logo-192.png">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts & Flaticon Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'] 
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#f8f9fc',
+                            border: '#e5e7eb',
+                            textMuted: '#6b7280',
+                            textDark: '#111827',
+                            blue: '#134E8E',
+                            blueHover: '#0e3b6d',
+                            yellow: '#FFB33F'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+    </style>
+</head>
+<body class="bg-brand-bg font-sans min-h-screen text-brand-textDark antialiased flex flex-col justify-between p-4 sm:p-6 md:p-10">
+
+    <!-- Top Header -->
+    <header class="max-w-xl w-full mx-auto flex items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white shadow-md shadow-brand-blue/20">
+                <i class="fi fi-rr-users-alt text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-base sm:text-lg font-bold text-gray-900 leading-tight">Team Portal</h1>
+                <p class="text-[12px] text-gray-500">Festival Team Registration</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-xl w-full mx-auto my-auto">
+        
+        <!-- Registration Form Card -->
+        <div id="card-register" class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-300">
+            
+            <!-- Header Banner -->
+            <div class="bg-brand-blue p-6 sm:p-8 text-white relative overflow-hidden">
+                <div class="flex items-center gap-2 text-xs font-semibold text-blue-200 uppercase tracking-wider mb-1">
+                    <span class="w-2 h-2 rounded-full bg-brand-yellow"></span> Team Registration
+                </div>
+                <h2 class="text-2xl font-extrabold tracking-tight">Register Team Account</h2>
+                <p class="text-blue-100 text-xs sm:text-sm mt-1">Submit your team credentials for Admin approval.</p>
+            </div>
+
+            <!-- Form Content (Only 4 Fields) -->
+            <form id="teamRegisterForm" onsubmit="handleRegistrationSubmit(event)" class="p-6 sm:p-8 space-y-5">
+                
+                <!-- 1. Team Selection Dropdown -->
+                <div>
+                    <label class="block text-[13px] font-bold text-gray-800 mb-1.5">
+                        Team <span class="text-red-500">*</span>
+                    </label>
+
+                    <div id="team-select-wrapper" class="relative">
+                        <select id="regTeamSelect" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] font-medium text-gray-800 focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none cursor-pointer">
+                            <option value="" disabled selected>Select your team...</option>
+                        </select>
+                        <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- 2. Username -->
+                <div>
+                    <label class="block text-[13px] font-bold text-gray-800 mb-1.5 flex items-center justify-between">
+                        <span>Username <span class="text-red-500">*</span></span>
+                        <span id="username-feedback" class="text-[11px] font-semibold text-gray-400"></span>
+                    </label>
+                    <div class="relative">
+                        <i class="fi fi-rr-at absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="regUsername" required oninput="checkUsernameAvailability()" placeholder="e.g. team_emerald" class="w-full pl-11 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] font-mono text-gray-800 focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                        <span id="username-status-icon" class="absolute right-4 top-1/2 -translate-y-1/2 hidden"></span>
+                    </div>
+                </div>
+
+                <!-- 3. Password -->
+                <div>
+                    <label class="block text-[13px] font-bold text-gray-800 mb-1.5">
+                        Password <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fi fi-rr-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="password" id="regPassword" required placeholder="Enter password" class="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] text-gray-800 focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                        <button type="button" onclick="togglePassVisibility('regPassword', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <i class="fi fi-rr-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. WhatsApp Number -->
+                <div>
+                    <label class="block text-[13px] font-bold text-gray-800 mb-1.5">
+                        WhatsApp Number <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <i class="fi fi-rr-phone-call absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="tel" id="regPhone" required placeholder="+91 9876543210" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] font-mono text-gray-800 focus:outline-none focus:bg-white focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="btn-submit-reg" class="w-full py-3.5 bg-brand-yellow text-gray-900 rounded-xl text-[15px] font-bold hover:bg-[#ffa41c] active:scale-[0.99] transition-all shadow-md shadow-brand-yellow/20 flex items-center justify-center gap-2 mt-4">
+                    <i class="fi fi-rr-paper-plane text-sm"></i>
+                    <span>Submit Registration</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="card-success" class="hidden bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden text-center p-8 sm:p-10 animate-in fade-in zoom-in duration-300">
+            <div class="w-16 h-16 bg-amber-50 border-4 border-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fi fi-rr-clock text-3xl text-amber-500"></i>
+            </div>
+            
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold mb-3">
+                STATUS: PENDING APPROVAL
+            </div>
+
+            <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2">Registration Submitted!</h2>
+            <p class="text-gray-500 text-xs sm:text-sm max-w-sm mx-auto mb-6">
+                Your team registration has been sent to the Festival Admin. Once approved, your account will activate.
+            </p>
+
+            <div class="flex items-center justify-center">
+                <button onclick="resetRegForm()" class="px-6 py-2.5 bg-brand-blue text-white rounded-xl text-xs font-bold hover:bg-brand-blueHover transition-all shadow-sm">
+                    Submit Another Registration
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-xl w-full mx-auto text-center mt-6 text-xs text-gray-400">
+        &copy; Festival Management System
+    </footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let existingUsernames = new Set();
+        let registeredTeamNames = new Set();
+        let usernameCheckTimeout = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            listenToExistingUsernamesAndTeams();
+        });
+
+        function listenToExistingUsernamesAndTeams() {
+            db.collection('festUsers').onSnapshot(snapshot => {
+                existingUsernames.clear();
+                registeredTeamNames.clear();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.username) existingUsernames.add(data.username.toLowerCase());
+                    if (data.role === 'Team Manager' && data.team && data.approvalStatus !== 'rejected') {
+                        registeredTeamNames.add(data.team.trim().toLowerCase());
+                    }
+                });
+                loadAvailableTeams();
+            });
+        }
+
+        function loadAvailableTeams() {
+            const select = document.getElementById('regTeamSelect');
+            db.collection('teams').where('isActive', '==', true).onSnapshot(snapshot => {
+                let optionsHTML = '<option value="" disabled selected>Select your team...</option>';
+                if (snapshot.empty) {
+                    optionsHTML += '<option value="" disabled>No teams found</option>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const team = doc.data();
+                        const tName = (team.name || '').trim();
+                        const isAlreadyRegistered = registeredTeamNames.has(tName.toLowerCase());
+                        if (isAlreadyRegistered) {
+                            optionsHTML += `<option value="${tName}" disabled class="text-gray-400 font-normal">${tName} (Already Registered)</option>`;
+                        } else {
+                            optionsHTML += `<option value="${tName}">${tName}</option>`;
+                        }
+                    });
+                }
+                select.innerHTML = optionsHTML;
+            });
+        }
+
+        function toggleCustomTeamInput() {
+            const selectWrapper = document.getElementById('team-select-wrapper');
+            const customWrapper = document.getElementById('team-custom-wrapper');
+            const toggleBtn = document.getElementById('toggle-team-btn');
+
+            if (customWrapper.classList.contains('hidden')) {
+                customWrapper.classList.remove('hidden');
+                selectWrapper.classList.add('hidden');
+                toggleBtn.textContent = '← Select List';
+            } else {
+                customWrapper.classList.add('hidden');
+                selectWrapper.classList.remove('hidden');
+                toggleBtn.textContent = '+ Custom Team';
+            }
+        }
+
+        function checkUsernameAvailability() {
+            clearTimeout(usernameCheckTimeout);
+            const input = document.getElementById('regUsername');
+            const rawVal = input.value.trim().toLowerCase();
+            const icon = document.getElementById('username-status-icon');
+            const feedback = document.getElementById('username-feedback');
+
+            if (!rawVal) {
+                icon.classList.add('hidden');
+                feedback.textContent = '';
+                return;
+            }
+
+            usernameCheckTimeout = setTimeout(() => {
+                if (existingUsernames.has(rawVal)) {
+                    feedback.textContent = 'Already taken';
+                    feedback.className = 'text-[11px] font-semibold text-red-500';
+                    icon.innerHTML = '<i class="fi fi-rr-cross-circle text-red-500 text-sm"></i>';
+                    icon.classList.remove('hidden');
+                } else {
+                    feedback.textContent = 'Available';
+                    feedback.className = 'text-[11px] font-semibold text-green-600';
+                    icon.innerHTML = '<i class="fi fi-rr-check-circle text-green-500 text-sm"></i>';
+                    icon.classList.remove('hidden');
+                }
+            }, 200);
+        }
+
+        function togglePassVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fi fi-rr-eye-crossed text-sm';
+            } else {
+                input.type = 'password';
+                icon.className = 'fi fi-rr-eye text-sm';
+            }
+        }
+
+        async function handleRegistrationSubmit(e) {
+            e.preventDefault();
+
+            const teamName = document.getElementById('regTeamSelect').value;
+            const username = document.getElementById('regUsername').value.trim().toLowerCase();
+            const password = document.getElementById('regPassword').value;
+            const phone = document.getElementById('regPhone').value.trim();
+
+            if (!teamName) return showToast('❌ Please select or enter a Team', true);
+            if (!username) return showToast('❌ Username is required', true);
+            if (!password) return showToast('❌ Password is required', true);
+            if (!phone) return showToast('❌ WhatsApp Number is required', true);
+
+            const btn = document.getElementById('btn-submit-reg');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-gray-900/40 border-t-gray-900 rounded-full animate-spin"></div> Submitting...';
+
+            try {
+                // Check if username is taken
+                const existingSnap = await db.collection('festUsers').where('username', '==', username).get();
+                if (!existingSnap.empty) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Submit Registration';
+                    return showToast('❌ Username already taken', true);
+                }
+
+                // Check if Team has already registered an account
+                const teamSnap = await db.collection('festUsers')
+                    .where('role', '==', 'Team Manager')
+                    .where('team', '==', teamName)
+                    .get();
+
+                const isAlreadyReg = teamSnap.docs.some(doc => doc.data().approvalStatus !== 'rejected');
+                if (isAlreadyReg) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Submit Registration';
+                    return showToast(`❌ "${teamName}" has already registered an account!`, true);
+                }
+
+                const payload = {
+                    team: teamName,
+                    name: teamName + ' Manager',
+                    username: username,
+                    password: password,
+                    phone: phone,
+                    role: 'Team Manager',
+                    isActive: false,
+                    approvalStatus: 'pending',
+                    assignedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    registeredAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    permissions: { userManagement: false, resultManagement: false, semiOwner: false }
+                };
+
+                await db.collection('festUsers').add(payload);
+
+                document.getElementById('card-register').classList.add('hidden');
+                document.getElementById('card-success').classList.remove('hidden');
+
+                showToast('✅ Registration submitted! Pending admin approval.');
+            } catch (err) {
+                console.error("Error:", err);
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Registration';
+                showToast('❌ Error: ' + err.message, true);
+            }
+        }
+
+        function resetRegForm() {
+            document.getElementById('teamRegisterForm').reset();
+            document.getElementById('card-success').classList.add('hidden');
+            document.getElementById('card-register').classList.remove('hidden');
+        }
+
+        function showToast(msg, isError = false) {
+            Toastify({
+                text: msg,
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                escapeHTML: false,
+                style: { background: isError ? "#C00707" : "#134E8E", borderRadius: "10px", fontSize: "13px", fontWeight: "600" }
+            }).showToast();
+        }
+    </script>
+</body>
+</html>

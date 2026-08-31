@@ -252,23 +252,36 @@
                     const teamName = r.team || 'Solo Participant';
                     const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
 
-                    if (r.topics && Object.keys(r.topics).length > 0 && !isGroup) {
-                        // Individual candidate topics map (handles 2 or more candidate responses in 1 registration)
-                        Object.keys(r.topics).forEach(chestNo => {
-                            const tData = r.topics[chestNo];
+                    if (r.topics && Object.keys(r.topics).length > 0) {
+                        Object.keys(r.topics).forEach(slotKey => {
+                            const tData = r.topics[slotKey];
                             if (tData && (tData.name || tData.author || tData.content)) {
-                                const cand = Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(chestNo).trim() && c.team === r.team);
-                                const candName = cand ? cand.name : (r.candidateName || r.name || `Candidate #${chestNo}`);
-                                
+                                const cand = Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(slotKey).trim() && c.team === r.team);
+                                let candName = cand ? cand.name : null;
+                                let chestDisplay = cand ? '#' + slotKey : null;
+
+                                if (!cand) {
+                                    const idx = parseInt(slotKey) - 1;
+                                    if (!isNaN(idx) && r.chestNumbers && r.chestNumbers[idx]) {
+                                        const chestNo = r.chestNumbers[idx];
+                                        const matchedCand = Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(chestNo).trim() && c.team === r.team);
+                                        candName = matchedCand ? matchedCand.name : `Participant #${chestNo}`;
+                                        chestDisplay = '#' + chestNo;
+                                    } else {
+                                        candName = isGroup ? `Set ${slotKey}` : `Participant / Set ${slotKey}`;
+                                        chestDisplay = `Set ${slotKey}`;
+                                    }
+                                }
+
                                 topicItems.push({
                                     regId: r.id,
-                                    chestNo: chestNo,
+                                    chestNo: slotKey,
                                     isMultiTopic: true,
                                     programId: r.programId,
                                     prog: prog,
                                     team: teamName,
                                     candidateName: candName,
-                                    chestDisplay: '#' + chestNo,
+                                    chestDisplay: chestDisplay,
                                     topicName: tData.name || 'Untitled Topic',
                                     topicAuthor: tData.author || '',
                                     topicContent: tData.content || '',
@@ -278,7 +291,7 @@
                         });
                     } else if (r.topicName || r.topicContent || r.topicAuthor) {
                         // Single root topic or Group program topic
-                        const chestDisplay = Array.isArray(r.chestNumbers) && r.chestNumbers.length > 0 ? '#' + r.chestNumbers.join(', #') : (r.chestNo ? '#' + r.chestNo : '--');
+                        const chestDisplay = Array.isArray(r.chestNumbers) && r.chestNumbers.length > 0 ? '#' + r.chestNumbers.join(', #') : (r.chestNo ? '#' + r.chestNo : 'Set 1');
                         const candidateDisplay = r.candidateName || r.name || (isGroup ? 'Group Entry' : 'Participant');
 
                         topicItems.push({
