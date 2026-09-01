@@ -43,6 +43,8 @@
         href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
         body {
@@ -229,6 +231,13 @@
                                 placeholder="Search program, section, judge, or subject topic..."
                                 class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
                         </div>
+
+                        <!-- Export Excel Button -->
+                        <button onclick="exportSubjectTopicsToExcel()" title="Export Judge Saved Topics (Non-Stage) as Excel"
+                            class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+                            <i class="fi fi-rr-file-excel text-sm"></i>
+                            <span>Export Excel</span>
+                        </button>
                     </div>
 
                 </div>
@@ -663,6 +672,163 @@
                         loadModule('viewProgramData');
                     } else {
                         window.location.href = 'viewProgramData.html?id=' + progId;
+                    }
+                };
+
+                function loadScriptAsync(src) {
+                    return new Promise((resolve) => {
+                        const s = document.createElement('script');
+                        s.src = src;
+                        s.onload = () => resolve(true);
+                        s.onerror = () => resolve(false);
+                        document.head.appendChild(s);
+                    });
+                }
+
+                async function ensureXLSXLoaded() {
+                    if (typeof XLSX !== 'undefined') return true;
+                    const cdns = [
+                        "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+                        "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
+                        "https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"
+                    ];
+                    for (let cdn of cdns) {
+                        const ok = await loadScriptAsync(cdn);
+                        if (ok && typeof XLSX !== 'undefined') return true;
+                    }
+                    return typeof XLSX !== 'undefined';
+                }
+
+                function exportRowsToCSV(rows, filename) {
+                    if (!rows || rows.length === 0) return;
+                    const headers = Object.keys(rows[0]);
+                    const csvLines = [
+                        headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+                        ...rows.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
+                    ];
+                    const csvString = csvLines.join('\n');
+                    const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filename.replace(/\.xlsx$/i, '.csv');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+
+                window.exportSubjectTopicsToExcel = async function () {
+                    if (!allPrograms || allPrograms.length === 0) {
+                        showToast("⚠️ No program topics available to export", "warning");
+                        return;
+                    }
+
+                    // Helper to check if program is non-stage or non-stage related
+                    function checkIsNonStage(p) {
+                        if (p.isNonStage === true || p.isStage === false) return true;
+                        const str = `${p.venueTypeName || ''} ${p.venue || ''} ${p.category || ''} ${p.progSet || ''} ${p.type || ''} ${p.section || ''}`.toLowerCase();
+                        if (str.includes('non-stage') || str.includes('non stage') || str.includes('nonstage') || str.includes('non_stage')) return true;
+                        return false;
+                    }
+
+                    let listToExport = [...allPrograms];
+
+                    // Filter non-stage programs first if non-stage tags exist, otherwise use all programs in subject tab
+                    let nonStageList = listToExport.filter(checkIsNonStage);
+                    if (nonStageList.length === 0) {
+                        nonStageList = listToExport;
+                    }
+
+                    // Apply current active status and section filters if set
+                    if (currentStatusFilter === 'SAVED') {
+                        nonStageList = nonStageList.filter(p => p.topic && p.topic.trim());
+                    } else if (currentStatusFilter === 'PENDING') {
+                        nonStageList = nonStageList.filter(p => !p.topic || !p.topic.trim());
+                    }
+
+                    if (currentSectionFilter && currentSectionFilter !== 'ALL') {
+                        nonStageList = nonStageList.filter(p => (p.section || '').trim() === currentSectionFilter);
+                    }
+
+                    if (searchQuery) {
+                        nonStageList = nonStageList.filter(p => {
+                            const code = (p.code || '').toLowerCase();
+                            const name = (p.name || '').toLowerCase();
+                            const sec = (p.section || '').toLowerCase();
+                            const cat = (p.category || p.type || '').toLowerCase();
+                            const topic = (p.topic || '').toLowerCase();
+                            return code.includes(searchQuery) || name.includes(searchQuery) || sec.includes(searchQuery) || cat.includes(searchQuery) || topic.includes(searchQuery);
+                        });
+                    }
+
+                    if (nonStageList.length === 0) {
+                        showToast("⚠️ No matching topics found for export", "warning");
+                        return;
+                    }
+
+                    const excelRows = nonStageList.map((p, idx) => {
+                        const hasTopic = p.topic && p.topic.trim();
+                        const updatedByJudgeId = p.updatedByJudge || '';
+                        const updatedByJudgeObj = allJudgesMap[updatedByJudgeId];
+                        const updatedByName = updatedByJudgeObj ? updatedByJudgeObj.name : (updatedByJudgeId || '-');
+
+                        let formattedTime = '-';
+                        if (p.topicUpdatedAt) {
+                            try {
+                                const d = p.topicUpdatedAt.toDate ? p.topicUpdatedAt.toDate() : new Date(p.topicUpdatedAt);
+                                formattedTime = d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                            } catch (e) { }
+                        }
+
+                        // Collect assigned judges
+                        let assignedJudges = [];
+                        for (let i = 1; i <= 10; i++) {
+                            const jId = p[`judge${i}Id`];
+                            if (jId && allJudgesMap[jId]) {
+                                assignedJudges.push(allJudgesMap[jId].name || jId);
+                            }
+                        }
+                        const judgesStr = assignedJudges.length > 0 ? assignedJudges.join(', ') : 'No judges assigned';
+
+                        return {
+                            "Sl No": idx + 1,
+                            "Program Code": p.code || 'PRG',
+                            "Program Name": p.name || 'Unnamed Program',
+                            "Section": p.section || 'General',
+                            "Category": p.category || p.type || '-',
+                            "Assigned Judges": judgesStr,
+                            "Judge Saved Subject / Topic": hasTopic ? p.topic.trim() : 'Pending Topic',
+                            "Updated By Judge": hasTopic ? updatedByName : '-',
+                            "Topic Saved At": hasTopic ? formattedTime : '-',
+                            "Status": hasTopic ? 'Topic Saved' : 'Pending'
+                        };
+                    });
+
+                    const dateStr = new Date().toISOString().slice(0, 10);
+                    const fileName = `Judge_Saved_Topics_NonStage_${dateStr}.xlsx`;
+
+                    const isLoaded = await ensureXLSXLoaded();
+                    if (isLoaded && typeof XLSX !== 'undefined') {
+                        const worksheet = XLSX.utils.json_to_sheet(excelRows);
+                        worksheet['!cols'] = [
+                            { wch: 8 },  // Sl No
+                            { wch: 16 }, // Program Code
+                            { wch: 32 }, // Program Name
+                            { wch: 16 }, // Section
+                            { wch: 18 }, // Category
+                            { wch: 32 }, // Assigned Judges
+                            { wch: 50 }, // Subject / Topic
+                            { wch: 22 }, // Updated By Judge
+                            { wch: 24 }, // Topic Saved At
+                            { wch: 14 }  // Status
+                        ];
+
+                        const workbook = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(workbook, worksheet, "Non-Stage Saved Topics");
+                        XLSX.writeFile(workbook, fileName);
+                        showToast("✅ Non-Stage Judge Saved Topics exported to Excel!");
+                    } else {
+                        exportRowsToCSV(excelRows, fileName);
+                        showToast("✅ Exported as CSV (Excel compatible)!");
                     }
                 };
 

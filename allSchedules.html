@@ -73,6 +73,10 @@
                 <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage program times, venues, and judges</p>
             </div>
             <div class="flex items-center ml-4 gap-2">
+                <button onclick="exportSchedulesWithJudgesToExcel()" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-bold rounded-lg shadow transition-all cursor-pointer" title="Export Programs with Assigned Judges as Excel">
+                    <i class="fi fi-rr-file-excel"></i>
+                    <span class="hidden sm:inline">Export Excel</span>
+                </button>
                 <button onclick="window.location.href='innerDashboard.html?tab=bulk-schedule'" class="flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold rounded-lg shadow transition-all" title="Bulk Upload Schedules">
                     <i class="fi fi-rr-file-upload"></i>
                     <span class="hidden sm:inline">Bulk Schedule Upload</span>
@@ -88,6 +92,7 @@
                     </svg>
                     <span class="hidden sm:inline">WhatsApp Setup</span>
                 </button>
+            </div>
             </div>
         </div>
 
@@ -182,6 +187,8 @@
 
     <!-- Scripts -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
         var programsData = [];
@@ -190,6 +197,184 @@
         var setsData = [];
         var registrationsData = [];
         var scheduleSearchQuery = '';
+
+        function loadScriptAsync(src) {
+            return new Promise((resolve) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = () => resolve(true);
+                s.onerror = () => resolve(false);
+                document.head.appendChild(s);
+            });
+        }
+
+        async function ensureXLSXLoaded() {
+            if (typeof XLSX !== 'undefined') return true;
+            const cdns = [
+                "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+                "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
+                "https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"
+            ];
+            for (let cdn of cdns) {
+                const ok = await loadScriptAsync(cdn);
+                if (ok && typeof XLSX !== 'undefined') return true;
+            }
+            return typeof XLSX !== 'undefined';
+        }
+
+        function exportRowsToCSV(rows, filename) {
+            if (!rows || rows.length === 0) return;
+            const headers = Object.keys(rows[0]);
+            const csvLines = [
+                headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+                ...rows.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','))
+            ];
+            const csvString = csvLines.join('\n');
+            const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename.replace(/\.xlsx$/i, '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function exportSchedulesWithJudgesToExcel() {
+            if (!programsData || programsData.length === 0) {
+                typeof Toastify === 'function' ? Toastify({
+                    text: "⚠️ No programs data loaded to export",
+                    duration: 3000,
+                    gravity: "bottom",
+                    position: "right",
+                    style: { background: "#F59E0B" }
+                }).showToast() : alert("⚠️ No programs data loaded to export");
+                return;
+            }
+
+            // Filter programs that have at least one assigned judge
+            const programsWithJudges = programsData.filter(p => {
+                const count = p.judgeCount || 10;
+                for (let i = 1; i <= count; i++) {
+                    if (p[`judge${i}Id`]) return true;
+                }
+                return false;
+            });
+
+            if (programsWithJudges.length === 0) {
+                typeof Toastify === 'function' ? Toastify({
+                    text: "⚠️ No programs with assigned judges found!",
+                    duration: 3000,
+                    gravity: "bottom",
+                    position: "right",
+                    style: { background: "#F59E0B" }
+                }).showToast() : alert("⚠️ No programs with assigned judges found!");
+                return;
+            }
+
+            // Sort by program code
+            programsWithJudges.sort((a, b) => {
+                const cA = a.code || '';
+                const cB = b.code || '';
+                return cA.localeCompare(cB, undefined, { numeric: true });
+            });
+
+            const excelRows = programsWithJudges.map((p, idx) => {
+                // Resolve Venue Name
+                const vObj = venuesData ? venuesData.find(v => v.id === p.venueId) : null;
+                const venueName = vObj ? vObj.name : (p.venue || 'Unassigned');
+
+                // Resolve Schedule Time
+                let formattedTime = 'Not Scheduled';
+                if (p.time) {
+                    try {
+                        const d = new Date(p.time);
+                        formattedTime = d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+                    } catch (e) {
+                        formattedTime = p.time;
+                    }
+                }
+
+                // Collect Assigned Judges
+                const assignedJudgeNames = [];
+                const judgeMapObj = {};
+                const maxJudges = p.judgeCount || 5;
+
+                for (let i = 1; i <= 10; i++) {
+                    const jId = p[`judge${i}Id`];
+                    let jName = '-';
+                    if (jId && judgesData) {
+                        const jObj = judgesData.find(j => j.id === jId);
+                        if (jObj) {
+                            jName = jObj.name || jId;
+                            if (i <= maxJudges) {
+                                assignedJudgeNames.push(jName);
+                            }
+                        }
+                    }
+                    if (i <= 5) {
+                        judgeMapObj[`Judge ${i}`] = jName;
+                    }
+                }
+
+                return {
+                    "Sl No": idx + 1,
+                    "Program Code": p.code || 'PRG',
+                    "Program Name": p.name || 'Unnamed Program',
+                    "Section": p.section || '-',
+                    "Schedule Date & Time": formattedTime,
+                    "Venue": venueName,
+                    "Total Judges Count": p.judgeCount || assignedJudgeNames.length,
+                    "Assigned Judges": assignedJudgeNames.length > 0 ? assignedJudgeNames.join(', ') : 'None',
+                    ...judgeMapObj
+                };
+            });
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const fileName = `Schedules_Assigned_Judges_${dateStr}.xlsx`;
+
+            const isLoaded = await ensureXLSXLoaded();
+            if (isLoaded && typeof XLSX !== 'undefined') {
+                const worksheet = XLSX.utils.json_to_sheet(excelRows);
+
+                // Auto-fit columns
+                worksheet['!cols'] = [
+                    { wch: 8 },  // Sl No
+                    { wch: 14 }, // Code
+                    { wch: 32 }, // Name
+                    { wch: 16 }, // Section
+                    { wch: 24 }, // Time
+                    { wch: 22 }, // Venue
+                    { wch: 18 }, // Total Judges Count
+                    { wch: 40 }, // Assigned Judges
+                    { wch: 22 }, // Judge 1
+                    { wch: 22 }, // Judge 2
+                    { wch: 22 }, // Judge 3
+                    { wch: 22 }, // Judge 4
+                    { wch: 22 }  // Judge 5
+                ];
+
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Assigned Judges Schedules");
+                XLSX.writeFile(workbook, fileName);
+
+                typeof Toastify === 'function' && Toastify({
+                    text: `✅ Exported ${programsWithJudges.length} program(s) with assigned judges to Excel!`,
+                    duration: 3000,
+                    gravity: "bottom",
+                    position: "right",
+                    style: { background: "#10B981" }
+                }).showToast();
+            } else {
+                exportRowsToCSV(excelRows, fileName);
+                typeof Toastify === 'function' && Toastify({
+                    text: `✅ Exported ${programsWithJudges.length} program(s) as CSV (Excel compatible)!`,
+                    duration: 3000,
+                    gravity: "bottom",
+                    position: "right",
+                    style: { background: "#10B981" }
+                }).showToast();
+            }
+        }
 
         var db = window.db || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
 

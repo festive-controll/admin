@@ -17,11 +17,23 @@
             </h1>
             <p class="text-[13px] text-gray-500 mt-1">Register candidates for programs in your team</p>
         </div>
-        <div class="relative w-full sm:w-64">
-            <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[13px]"></i>
-            <input type="text" id="tmp-search-input" oninput="window.renderTMPrograms()"
-                placeholder="Search programs..."
-                class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all shadow-sm">
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <!-- Section Selection Dropdown -->
+            <div class="relative w-full sm:w-48">
+                <i class="fi fi-rr-apps absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[13px]"></i>
+                <select id="tmp-section-select" onchange="window.handleTMSectionChange(this.value)"
+                    class="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all shadow-sm appearance-none cursor-pointer">
+                    <option value="">All Sections</option>
+                </select>
+                <i class="fi fi-rr-angle-small-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+            </div>
+            <!-- Search Input -->
+            <div class="relative w-full sm:w-64">
+                <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-[13px]"></i>
+                <input type="text" id="tmp-search-input" oninput="window.renderTMPrograms()"
+                    placeholder="Search programs..."
+                    class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all shadow-sm">
+            </div>
         </div>
     </div>
 
@@ -34,38 +46,129 @@
     </div>
 
     <script>
-        document.getElementById('tmp-section-title').innerText = (window.currentTMSection || 'Section') + ' Programs';
-        var section = window.currentTMSection;
-        var team = localStorage.getItem('managerTeam');
-
         window.tmTeamCandidates = [];
         window.tmProgramsList = [];
         window.tmRegistrationsList = [];
         window.programSetsData = [];
 
-        if (typeof db !== 'undefined' && section && team) {
+        window.fetchTMSectionData = function (sectionName) {
+            window.currentTMSection = sectionName;
+            const team = localStorage.getItem('managerTeam');
+            const container = document.getElementById('tmp-programs-list');
+            if (container) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-[13px] text-gray-400">
+                        <div class="w-6 h-6 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-3"></div>
+                        Fetching programs...
+                    </div>`;
+            }
+
+            if (typeof db === 'undefined' || !db || !team) return;
+
             // Fetch Candidates
             let candQuery = db.collection('candidates').where('team', '==', team);
-            if (section !== 'Kulliya') candQuery = candQuery.where('section', '==', section);
+            if (sectionName && sectionName !== 'Kulliya') {
+                candQuery = candQuery.where('section', '==', sectionName);
+            }
+
             candQuery.get().then(snap => {
                 window.tmTeamCandidates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
                 // Fetch Programs
-                return db.collection('programs').where('section', '==', section).where('status', '==', true).get();
+                let progQuery = db.collection('programs').where('status', '==', true);
+                if (sectionName) {
+                    progQuery = progQuery.where('section', '==', sectionName);
+                }
+                return progQuery.get();
             }).then(snap => {
                 window.tmProgramsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
                 return db.collection('programSets').get();
             }).then(snap => {
                 window.programSetsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
                 // Fetch Registrations Realtime
                 if (window.tmProgUnsub) window.tmProgUnsub();
-                window.tmProgUnsub = db.collection('registrations').where('team', '==', team).where('section', '==', section).onSnapshot(regSnap => {
+                let regQuery = db.collection('registrations').where('team', '==', team);
+                if (sectionName) {
+                    regQuery = regQuery.where('section', '==', sectionName);
+                }
+                window.tmProgUnsub = regQuery.onSnapshot(regSnap => {
                     window.tmRegistrationsList = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                     window.renderTMPrograms();
+                }, err => {
+                    console.error("Registrations snapshot error:", err);
+                    window.renderTMPrograms();
                 });
+            }).catch(err => {
+                console.error("Error fetching TM Section data:", err);
+                if (container) {
+                    container.innerHTML = '<div class="col-span-full py-16 text-center text-[13px] text-red-500 font-medium bg-white rounded-2xl p-6 border border-red-100">Failed to load programs for selected section.</div>';
+                }
             });
-        }
+        };
+
+        window.handleTMSectionChange = function (newSec) {
+            window.currentTMSection = newSec;
+            const titleEl = document.getElementById('tmp-section-title');
+            if (titleEl) {
+                titleEl.innerText = newSec ? newSec + ' Programs' : 'All Programs';
+            }
+            const currentCrumb = document.getElementById('breadcrumb-current');
+            if (currentCrumb) {
+                currentCrumb.innerText = (newSec ? newSec : 'All') + ' Programs';
+            }
+            if (window.history && window.location) {
+                const url = new URL(window.location);
+                if (newSec) {
+                    url.searchParams.set('tab', 'tm-prog-' + newSec);
+                } else {
+                    url.searchParams.set('tab', 'tm-prog');
+                }
+                window.history.pushState({}, '', url);
+            }
+            window.fetchTMSectionData(newSec);
+        };
+
+        window.initTMSectionSelect = function () {
+            const selectEl = document.getElementById('tmp-section-select');
+            if (!selectEl) return;
+
+            if (typeof db !== 'undefined' && db) {
+                db.collection('sections').where('isActive', '==', true).get().then(snap => {
+                    const activeSections = snap.docs.map(d => d.data().name).filter(Boolean);
+                    let optionsHTML = '<option value="">All Sections</option>';
+                    activeSections.forEach(secName => {
+                        optionsHTML += `<option value="${secName}">${secName}</option>`;
+                    });
+                    selectEl.innerHTML = optionsHTML;
+
+                    let initialSec = window.currentTMSection || '';
+                    if (initialSec && activeSections.includes(initialSec)) {
+                        selectEl.value = initialSec;
+                    } else if (!initialSec && activeSections.length > 0) {
+                        initialSec = activeSections[0];
+                        selectEl.value = initialSec;
+                        window.currentTMSection = initialSec;
+                    }
+
+                    const titleEl = document.getElementById('tmp-section-title');
+                    if (titleEl) {
+                        titleEl.innerText = (selectEl.value ? selectEl.value + ' Programs' : 'All Programs');
+                    }
+
+                    window.fetchTMSectionData(selectEl.value);
+                }).catch(err => {
+                    console.error("Error loading sections dropdown:", err);
+                    window.fetchTMSectionData(window.currentTMSection || '');
+                });
+            } else {
+                window.fetchTMSectionData(window.currentTMSection || '');
+            }
+        };
+
+        // Initialize Section Dropdown and Data
+        window.initTMSectionSelect();
 
 
 
@@ -350,7 +453,7 @@
                 programName: prog.name,
                 programCode: prog.code,
                 team: team,
-                section: section,
+                section: window.currentTMSection || prog.section || '',
                 chestNumbers: chestNumbers,
                 candidateIds: candidateIds,
                 memberCount: memberCount,

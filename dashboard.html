@@ -1392,10 +1392,16 @@
                 toggleSidebar();
             }
 
-            window.currentTMSection = sectionName;
+            if (typeof sectionName !== 'undefined') {
+                window.currentTMSection = sectionName;
+            }
 
             const url = new URL(window.location);
-            url.searchParams.set('tab', 'tm-prog-' + sectionName);
+            if (window.currentTMSection) {
+                url.searchParams.set('tab', 'tm-prog-' + window.currentTMSection);
+            } else {
+                url.searchParams.set('tab', 'tm-prog');
+            }
             window.history.pushState({}, '', url);
 
             const dashboard = document.getElementById('main-dashboard-content');
@@ -1437,7 +1443,10 @@
                     document.getElementById('breadcrumb-middle')?.classList.add('hidden');
                     document.getElementById('breadcrumb-separator-2')?.classList.add('hidden');
                     const currentCrumb = document.getElementById('breadcrumb-current');
-                    if (currentCrumb) { currentCrumb.classList.remove('hidden'); currentCrumb.innerText = sectionName + ' Programs'; }
+                    if (currentCrumb) { 
+                        currentCrumb.classList.remove('hidden'); 
+                        currentCrumb.innerText = (window.currentTMSection ? window.currentTMSection + ' ' : '') + 'Programs'; 
+                    }
 
                     loader.classList.add('hidden');
 
@@ -1902,7 +1911,8 @@
             const tabParam = urlParams.get('tab');
             if (tabParam) {
                 if (tabParam.startsWith('tm-') && role === 'Team Manager') {
-                    if (tabParam.startsWith('tm-prog-')) loadTMPrograms(tabParam.substring(8));
+                    if (tabParam === 'tm-prog') loadTMPrograms();
+                    else if (tabParam.startsWith('tm-prog-')) loadTMPrograms(tabParam.substring(8));
                     else if (tabParam.startsWith('tm-topic-')) loadTMTopicReg(tabParam.substring(9));
                     else loadTMSection(tabParam.substring(3));
                 } else {

@@ -1446,7 +1446,7 @@
                                 then upload
                                 to add multiple programs at once.</p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <button onclick="downloadExcel(PROG_HEADERS, 'program_template.xlsx')"
                                 class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-full text-[12px] font-bold hover:bg-emerald-700 shadow-sm transition-all">
                                 <i class="fi fi-rr-file-download"></i> Excel (.xlsx)
@@ -1454,6 +1454,11 @@
                             <button onclick="downloadProgramTemplate()"
                                 class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full text-[12px] font-bold hover:bg-blue-700 shadow-sm transition-all">
                                 <i class="fi fi-rr-file-download"></i> CSV (.csv)
+                            </button>
+                            <button onclick="clearAllProgramsFromFirebase()" id="btn-clear-progs"
+                                class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full text-[12px] font-bold hover:bg-red-700 shadow-sm transition-all"
+                                title="Delete all existing programs from database">
+                                <i class="fi fi-rr-trash"></i> Clear Existing Programs
                             </button>
                         </div>
                     </div>
@@ -1475,10 +1480,16 @@
                                 class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
                                 <h3 class="text-[14px] font-bold text-gray-700">Preview <span id="bulk-prog-count"
                                         class="text-brand-orange ml-2 font-medium"></span></h3>
-                                <button onclick="importPrograms()" id="btn-import-progs"
-                                    class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-blue text-white rounded-xl text-[13px] font-bold hover:bg-opacity-90 shadow-md transition-all">
-                                    <i class="fi fi-rr-upload"></i> Import All Valid
-                                </button>
+                                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                    <label class="flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 hover:bg-gray-100 transition-colors select-none">
+                                        <input type="checkbox" id="chk-overwrite-prog" onchange="revalidateAllProgramRows()" class="rounded text-brand-blue focus:ring-brand-blue">
+                                        <span>Overwrite matching codes</span>
+                                    </label>
+                                    <button onclick="importPrograms()" id="btn-import-progs"
+                                        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-blue text-white rounded-xl text-[13px] font-bold hover:bg-opacity-90 shadow-md transition-all">
+                                        <i class="fi fi-rr-upload"></i> Import All Valid
+                                    </button>
+                                </div>
                             </div>
                             <div id="bulk-prog-errors" class="mb-4"></div>
                             <div id="bulk-prog-table"
@@ -3955,9 +3966,11 @@
             const errs = [];
             const sec = (r.section || '').trim();
             const code = String(r.code || '').trim();
+            const allowOverwrite = document.getElementById('chk-overwrite-prog')?.checked;
+
             if (!(r.code || '').trim()) errs.push('Code is required');
             else {
-                if (window.bulkExistingCodes && window.bulkExistingCodes.includes(code.toLowerCase())) errs.push('Program Code already exists in database');
+                if (!allowOverwrite && window.bulkExistingCodes && window.bulkExistingCodes.includes(code.toLowerCase())) errs.push('Program Code already exists in database');
                 if (r._duplicateInCSV) errs.push('Duplicate Code in CSV');
             }
             if (!(r.name || '').trim()) errs.push('Name is required');
@@ -3989,6 +4002,55 @@
             r._errors = errs;
             r._valid = errs.length === 0;
         }
+
+        window.clearAllProgramsFromFirebase = async function () {
+            if (!confirm("⚠️ Are you sure you want to PERMANENTLY delete ALL existing programs from Firebase database? This action cannot be undone.")) return;
+
+            const btn = document.getElementById('btn-clear-progs');
+            if (btn) { btn.disabled = true; btn.innerText = 'Deleting...'; }
+
+            try {
+                const snap = await db.collection('programs').get();
+                if (snap.empty) {
+                    showToast('<b>ℹ️</b> No existing programs found in Firebase database.');
+                    return;
+                }
+
+                let batch = db.batch();
+                let count = 0;
+                let deletedCount = 0;
+
+                for (const doc of snap.docs) {
+                    batch.delete(doc.ref);
+                    count++;
+                    deletedCount++;
+                    if (count === 450) {
+                        await batch.commit();
+                        batch = db.batch();
+                        count = 0;
+                    }
+                }
+                if (count > 0) {
+                    await batch.commit();
+                }
+
+                window.bulkExistingCodesMap = {};
+                window.bulkExistingCodes = [];
+                showToast(`<b>✅</b> Successfully deleted ${deletedCount} program(s) from Firebase!`);
+
+                if (typeof bulkProgramRows !== 'undefined' && bulkProgramRows.length > 0) {
+                    revalidateAllProgramRows();
+                }
+            } catch (err) {
+                console.error("Error clearing programs:", err);
+                showToast('<b>❌</b> Failed to delete programs: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fi fi-rr-trash"></i> Clear Existing Programs';
+                }
+            }
+        };
 
         window.updateBulkProgramRow = function (index, field, value) {
             bulkProgramRows[index][field] = value;
@@ -4043,7 +4105,12 @@
                     db.collection('venueTypes').get()
                 ]);
                 bulkProgramValidSections = secSnap.docs.map(d => (d.data().name || '').trim());
-                window.bulkExistingCodes = progSnap.docs.map(d => String(d.data().code).trim().toLowerCase());
+                window.bulkExistingCodesMap = {};
+                progSnap.docs.forEach(d => {
+                    const c = String(d.data().code || '').trim().toLowerCase();
+                    if (c) window.bulkExistingCodesMap[c] = d.id;
+                });
+                window.bulkExistingCodes = Object.keys(window.bulkExistingCodesMap);
                 bulkProgramValidSets = setSnap.docs.map(d => (d.data().name || '').trim());
 
                 window.bulkGradeTemplatesData = gradeSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -4211,73 +4278,92 @@
                 </table>`;
         }
 
-        function importPrograms() {
+        async function importPrograms() {
             const validRows = bulkProgramRows.filter(r => r._valid);
             if (!validRows.length) { showToast('<b>⚠️</b> No valid rows to import.'); return; }
             const btn = document.getElementById('btn-import-progs');
             btn.disabled = true; btn.innerText = 'Importing...';
-            const batch = db.batch();
-            const ts = firebase.firestore.FieldValue.serverTimestamp();
-            validRows.forEach(r => {
-                const ref = db.collection('programs').doc();
-                const matchedSet = allLimits.find(l => l.name.toLowerCase() === (r.progset || '').toLowerCase().trim());
+            const allowOverwrite = document.getElementById('chk-overwrite-prog')?.checked;
 
-                const gtplName = (r.gradetemplate || r.gradeTemplate || '').trim();
-                const matchedGrade = window.bulkGradeTemplatesData.find(g => g.name.toLowerCase() === gtplName.toLowerCase());
+            try {
+                let batch = db.batch();
+                let batchCount = 0;
+                let importedCount = 0;
+                const ts = firebase.firestore.FieldValue.serverTimestamp();
 
-                const ptplName = (r.positiontemplate || r.positionTemplate || '').trim();
-                const matchedPos = window.bulkPositionTemplatesData.find(p => p.name.toLowerCase() === ptplName.toLowerCase());
+                for (const r of validRows) {
+                    const codeKey = String(r.code || '').trim().toLowerCase();
+                    const existingId = allowOverwrite && window.bulkExistingCodesMap ? window.bulkExistingCodesMap[codeKey] : null;
+                    const ref = existingId ? db.collection('programs').doc(existingId) : db.collection('programs').doc();
 
-                const vTypeRaw = (r.venuetype || r.venueType || '').trim().toLowerCase();
-                const sStageRaw = (r.substage || r.subStage || '').trim().toLowerCase();
+                    const matchedSet = allLimits.find(l => l.name.toLowerCase() === (r.progset || '').toLowerCase().trim());
 
-                const vTypeData = window.bulkVenuesMapping ? window.bulkVenuesMapping[vTypeRaw] : null;
-                const sStageData = window.bulkSubStagesMapping ? window.bulkSubStagesMapping[vTypeRaw + '_' + sStageRaw] : null;
+                    const gtplName = (r.gradetemplate || r.gradeTemplate || '').trim();
+                    const matchedGrade = window.bulkGradeTemplatesData.find(g => g.name.toLowerCase() === gtplName.toLowerCase());
 
-                batch.set(ref, {
-                    code: (r.code || '').toUpperCase(),
-                    name: r.name,
-                    section: r.section,
-                    type: r.type,
-                    setId: matchedSet ? matchedSet.id : '',
-                    progSet: matchedSet ? matchedSet.name : (r.progset || ''),
+                    const ptplName = (r.positiontemplate || r.positionTemplate || '').trim();
+                    const matchedPos = window.bulkPositionTemplatesData.find(p => p.name.toLowerCase() === ptplName.toLowerCase());
 
-                    enableGrading: !!matchedGrade,
-                    gradeTemplateId: matchedGrade ? matchedGrade.id : '',
-                    gradeTemplate: matchedGrade ? matchedGrade.name : gtplName,
+                    const vTypeRaw = (r.venuetype || r.venueType || '').trim().toLowerCase();
+                    const sStageRaw = (r.substage || r.subStage || '').trim().toLowerCase();
 
-                    enableScoring: !!matchedPos,
-                    positionTemplateId: matchedPos ? matchedPos.id : '',
-                    positionTemplate: matchedPos ? matchedPos.name : ptplName,
+                    const vTypeData = window.bulkVenuesMapping ? window.bulkVenuesMapping[vTypeRaw] : null;
+                    const sStageData = window.bulkSubStagesMapping ? window.bulkSubStagesMapping[vTypeRaw + '_' + sStageRaw] : null;
 
-                    venueTypeId: vTypeData ? vTypeData.id : '',
-                    venueTypeName: vTypeData ? vTypeData.name : '',
-                    subStageId: sStageData ? sStageData.id : '',
-                    subStageName: sStageData ? sStageData.name : '',
+                    batch.set(ref, {
+                        code: (r.code || '').toUpperCase(),
+                        name: r.name,
+                        section: r.section,
+                        type: r.type,
+                        setId: matchedSet ? matchedSet.id : '',
+                        progSet: matchedSet ? matchedSet.name : (r.progset || ''),
 
-                    maxParticipants: parseInt(r.maxparticipants || r.maxParticipants) || 1,
-                    minParticipants: 1,
-                    status: (r.status || 'active').toLowerCase() !== 'inactive',
-                    conceptNote: r.conceptnote || r.conceptNote || '',
-                    timeLimit: r.timelimit || r.timeLimit || '',
-                    skillRequired: r.skillrequired || r.skillRequired || '',
-                    createdAt: ts
-                });
-            });
+                        enableGrading: !!matchedGrade,
+                        gradeTemplateId: matchedGrade ? matchedGrade.id : '',
+                        gradeTemplate: matchedGrade ? matchedGrade.name : gtplName,
 
-            batch.commit()
-                .then(() => {
-                    showToast('<b>✅</b> ' + validRows.length + ' programs imported!');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
-                    bulkProgramRows = [];
-                    renderProgramPreview();
-                })
-                .catch(err => {
-                    showToast('<b>❌</b> ' + err.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
-                });
+                        enableScoring: !!matchedPos,
+                        positionTemplateId: matchedPos ? matchedPos.id : '',
+                        positionTemplate: matchedPos ? matchedPos.name : ptplName,
+
+                        venueTypeId: vTypeData ? vTypeData.id : '',
+                        venueTypeName: vTypeData ? vTypeData.name : '',
+                        subStageId: sStageData ? sStageData.id : '',
+                        subStageName: sStageData ? sStageData.name : '',
+
+                        maxParticipants: parseInt(r.maxparticipants || r.maxParticipants) || 1,
+                        minParticipants: 1,
+                        status: (r.status || 'active').toLowerCase() !== 'inactive',
+                        conceptNote: r.conceptnote || r.conceptNote || '',
+                        timeLimit: r.timelimit || r.timeLimit || '',
+                        skillRequired: r.skillrequired || r.skillRequired || '',
+                        createdAt: ts
+                    }, { merge: true });
+
+                    batchCount++;
+                    importedCount++;
+
+                    if (batchCount === 450) {
+                        await batch.commit();
+                        batch = db.batch();
+                        batchCount = 0;
+                    }
+                }
+
+                if (batchCount > 0) {
+                    await batch.commit();
+                }
+
+                showToast('<b>✅</b> ' + importedCount + ' programs imported successfully!');
+                bulkProgramRows = [];
+                renderProgramPreview();
+            } catch (err) {
+                console.error("Import programs error:", err);
+                showToast('<b>❌</b> ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════

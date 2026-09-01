@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Topic Registration</title>
@@ -8,10 +9,12 @@
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
 </head>
+
 <body>
     <div class="mb-6 shrink-0 pt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 id="tmt-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Topic Registration</h1>
+            <h1 id="tmt-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Topic
+                Registration</h1>
             <p class="text-[13px] text-gray-500 mt-1">Submit topics for programs based on participant/set count.</p>
         </div>
     </div>
@@ -21,7 +24,8 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-6" id="tmt-list">
         <div class="col-span-full py-16 text-center text-[13px] text-gray-400">
-            <div class="w-6 h-6 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-3"></div>
+            <div class="w-6 h-6 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-3">
+            </div>
             Fetching topics...
         </div>
     </div>
@@ -30,7 +34,7 @@
         document.getElementById('tmt-title').innerText = (window.currentTMSection || 'Section') + ' Topic Registration';
         var section = window.currentTMSection;
         var team = localStorage.getItem('managerTeam');
-        
+
         window.tmtProgramsList = [];
         window.tmtRegistrationsList = [];
         window.tmtCandidates = [];
@@ -41,11 +45,11 @@
             if (!config) return false;
             const { start, end } = config;
             if (!start && !end) return false;
-            
+
             const now = new Date();
             const startDate = start ? new Date(start) : null;
             const endDate = end ? new Date(end) : null;
-            
+
             if (startDate && endDate) return now >= startDate && now <= endDate;
             if (startDate && !endDate) return now >= startDate;
             if (!startDate && endDate) return now <= endDate;
@@ -74,28 +78,28 @@
             });
 
             db.collection('candidates').where('team', '==', team).where('section', '==', section).get().then(snap => {
-                window.tmtCandidates = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                window.tmtCandidates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 return db.collection('programs').where('section', '==', section).where('status', '==', true).where('topicRegistration', '==', true).get();
             }).then(snap => {
-                window.tmtProgramsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                
-                if(window.tmtProgUnsub) window.tmtProgUnsub();
+                window.tmtProgramsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                if (window.tmtProgUnsub) window.tmtProgUnsub();
                 window.tmtProgUnsub = db.collection('registrations').where('team', '==', team).where('section', '==', section).onSnapshot(regSnap => {
-                    window.tmtRegistrationsList = regSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                    window.tmtRegistrationsList = regSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                     window.renderTMTopics();
                 });
             });
         }
 
-        window.switchTMTTab = function(progId, slotNum) {
+        window.switchTMTTab = function (progId, slotNum) {
             window.tmtActiveTabs[progId] = slotNum;
-            
+
             // Hide all tab contents for this prog
             document.querySelectorAll(`.tmt-inputs-${progId}`).forEach(el => el.classList.add('hidden'));
             // Show selected
             const target = document.getElementById(`tmt-inputs-${progId}-${slotNum}`);
             if (target) target.classList.remove('hidden');
-            
+
             // Update button styles
             document.querySelectorAll(`.tmt-tab-btn-${progId}`).forEach(btn => {
                 btn.classList.remove('text-brand-blue', 'border-brand-blue');
@@ -108,7 +112,7 @@
             }
         };
 
-        window.renderTMTopics = function() {
+        window.renderTMTopics = function () {
             const bannerContainer = document.getElementById('tmt-status-banner');
             const container = document.getElementById('tmt-list');
 
@@ -120,7 +124,7 @@
 
             if (bannerContainer) {
                 if (isUnlocked) {
-                    const timeRangeStr = (cfg.start && cfg.end) 
+                    const timeRangeStr = (cfg.start && cfg.end)
                         ? `${formatTopicWindowDate(cfg.start)} &ndash; ${formatTopicWindowDate(cfg.end)}`
                         : (cfg.end ? `Closes on ${formatTopicWindowDate(cfg.end)}` : `Opened on ${formatTopicWindowDate(cfg.start)}`);
 
@@ -161,7 +165,7 @@
             container.innerHTML = window.tmtProgramsList.map(prog => {
                 const reg = window.tmtRegistrationsList.find(r => r.programId === prog.id);
                 const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
-                
+
                 let totalSlots = 1;
                 if (isGroup) {
                     totalSlots = parseInt(prog.groupSetsCount) || 1;
@@ -181,21 +185,21 @@
                 if (totalSlots > 1) {
                     tabsHTML = `
                         <div class="flex overflow-x-auto no-scrollbar border-b border-gray-100 mb-4 gap-4 scroll-smooth">
-                            ${Array.from({length: totalSlots}, (_, idx) => {
-                                const slotNum = idx + 1;
-                                const chestNo = regChests[idx] || null;
-                                const cand = chestNo ? window.tmtCandidates.find(can => can.chestNo === chestNo) : null;
-                                
-                                let tabLabel = isGroup ? `Set ${slotNum}` : (chestNo ? `#${chestNo} ${cand ? cand.name.split(' ')[0] : ''}` : `Set ${slotNum}`);
-                                const active = activeSlot === slotNum;
-                                const activeClass = active ? 'text-brand-blue border-brand-blue' : 'text-gray-400 border-transparent';
-                                
-                                return `
+                            ${Array.from({ length: totalSlots }, (_, idx) => {
+                        const slotNum = idx + 1;
+                        const chestNo = regChests[idx] || null;
+                        const cand = chestNo ? window.tmtCandidates.find(can => can.chestNo === chestNo) : null;
+
+                        let tabLabel = isGroup ? `Set ${slotNum}` : (chestNo ? `#${chestNo} ${cand ? cand.name.split(' ')[0] : ''}` : `Set ${slotNum}`);
+                        const active = activeSlot === slotNum;
+                        const activeClass = active ? 'text-brand-blue border-brand-blue' : 'text-gray-400 border-transparent';
+
+                        return `
                                     <button onclick="window.switchTMTTab('${prog.id}', ${slotNum})" id="tmt-tab-btn-${prog.id}-${slotNum}" 
                                         class="tmt-tab-btn-${prog.id} pb-2 text-[10px] font-bold uppercase tracking-wider ${activeClass} border-b-2 transition-all whitespace-nowrap outline-none">
                                         ${tabLabel}
                                     </button>`;
-                            }).join('')}
+                    }).join('')}
                         </div>
                     `;
                 }
@@ -210,7 +214,7 @@
                     const name = topicData.name || (slotNum === 1 && reg ? reg.topicName : '');
                     const author = topicData.author || (slotNum === 1 && reg ? reg.topicAuthor : '');
                     const content = topicData.content || (slotNum === 1 && reg ? reg.topicContent : '');
-                    
+
                     const isHidden = (totalSlots > 1 && activeSlot !== slotNum) ? 'hidden' : '';
 
                     contentsHTML += `
@@ -278,14 +282,14 @@
             `;
         }
 
-        window.saveTMTopic = function(progId) {
+        window.saveTMTopic = function (progId) {
             if (!checkTopicWindowUnlocked(window.tmtConfig)) {
                 return typeof showToast === 'function' && showToast("🔒 Topic Registration is currently closed by the admin.");
             }
 
             const prog = window.tmtProgramsList.find(p => p.id === progId);
             if (!prog) return;
-            
+
             const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
             let totalSlots = 1;
             if (isGroup) {
@@ -350,14 +354,14 @@
             btn.innerHTML = '<div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>'; btn.disabled = true;
 
             if (reg) {
-                db.collection('registrations').doc(reg.id).update(updateData).then(() => { 
-                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!"); 
-                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
-                    btn.disabled = false; 
+                db.collection('registrations').doc(reg.id).update(updateData).then(() => {
+                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!");
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
+                    btn.disabled = false;
                 }).catch(err => {
                     console.error(err);
                     typeof showToast === 'function' && showToast("❌ Error saving topic.");
-                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 });
             } else {
@@ -365,17 +369,18 @@
                 updateData.candidateIds = [];
                 updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 db.collection('registrations').add(updateData).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!"); 
-                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!");
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 }).catch(err => {
                     console.error(err);
                     typeof showToast === 'function' && showToast("❌ Error saving topic.");
-                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details'; 
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 });
             }
         };
     </script>
 </body>
+
 </html>
