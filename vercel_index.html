@@ -128,7 +128,7 @@
       <div class="lg:col-span-5 flex flex-col items-start text-left">
         <!-- SIBAQ Logo -->
         <div class="logo-container cursor-pointer">
-          <img src="asset/sibaq-logo.svg" alt="SIBAQ Logo" class="h-20 w-auto">
+          <img src="asset/logo-logo.png" alt="SIBAQ Logo" class="h-20 w-auto">
         </div>
 
         <!-- Colorful Title Kauthukam -->
@@ -313,7 +313,7 @@
 
       <!-- SIBAQ Logo -->
       <div class="mb-8 shrink-0">
-        <img src="asset/sibaq-logo.svg" alt="SIBAQ Logo" class="h-20 md:h-24 w-auto object-contain">
+        <img src="asset/logo-logo.png" alt="SIBAQ Logo" class="h-20 md:h-24 w-auto object-contain">
       </div>
 
       <!-- Heading -->
@@ -684,11 +684,10 @@
       <div class="flex flex-col max-w-[400px] w-full text-center lg:text-left items-center lg:items-start">
         <div class="mb-6 relative">
           <div class="absolute -inset-4 bg-gray-50/50 rounded-full blur-xl -z-10"></div>
-          <img src="asset/sibaq-logo.svg" alt="SIBAQ Logo" class="h-16 md:h-20 w-auto object-contain relative z-10">
+          <img src="asset/logo-logo.png" alt="SIBAQ Logo" class="h-16 md:h-20 w-auto object-contain relative z-10">
         </div>
-        <p class="font-sans font-light text-[14px] md:text-[15px] text-neutral-500 leading-relaxed mb-8">
-          Darul Huda Islamic University, Hidaya Nagar,<br>Chemmad, Tirurangadi PO, Malappuram Dist.<br>Pin: 676306,
-          Kerala, India
+        <p class="font-sans font-light text-[14px] md:text-[15px] text-neutral-500 leading-relaxed mb-8" data-fest="address">
+          Sheikh Fareed Auliya Da'wa College (SFADC),<br>Odamala, Malappuram Dist.<br>Kerala, India
         </p>
         <div class="flex space-x-3 mb-10">
           <a href="#"
@@ -709,7 +708,7 @@
           </a>
         </div>
         <p class="font-sans text-[13px] text-neutral-400">
-          © All rights reserved | Sibaq Committee <span data-fest="copyright-year">2026</span>
+          © All rights reserved | <span data-fest="name">Festival</span> Committee <span data-fest="copyright-year">2026</span>
         </p>
       </div>
 
@@ -722,7 +721,7 @@
         </div>
         <h3 class="font-sans font-medium text-[22px] md:text-2xl text-neutral-800 mb-3">Never Miss Anything</h3>
         <p class="font-sans font-light text-sm text-neutral-400 mb-8 leading-relaxed px-2">
-          Keep Tracking Sibaq Events and be part of the<br>prestigious Art Fest
+          Keep Tracking <span data-fest="name">Festival</span> Events and be part of the<br>prestigious Art Fest
         </p>
         <div class="flex flex-col space-y-3.5 relative z-10">
           <input type="email" placeholder="Enter your email"
@@ -793,43 +792,7 @@
     </div>
   </div>
 
-  <!-- Interactive Video Overlay Modal -->
-  <div id="video-modal"
-    class="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 md:p-8 opacity-0 pointer-events-none transition-all duration-500">
-    <button id="close-modal"
-      class="absolute top-6 right-6 text-white hover:text-brandRed transition-colors duration-300">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-        class="w-10 h-10">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-      </svg>
-    </button>
-    <div
-      class="w-full max-w-4xl aspect-video bg-neutral-950 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 scale-95 transition-transform duration-500"
-      id="video-container">
-      <!-- Embedded Video Player / Interactive Arts Visualizer -->
-      <div class="w-full h-full flex flex-col items-center justify-center relative text-white bg-black">
-        <canvas id="visualizer-canvas" class="absolute inset-0 w-full h-full z-0 opacity-40"></canvas>
-        <div class="z-10 flex flex-col items-center text-center px-6">
-          <div
-            class="w-16 h-16 rounded-full bg-brandRed/20 border border-brandRed/50 flex items-center justify-center mb-4 animate-bounce">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-              stroke="currentColor" class="w-8 h-8 text-brandRed">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M9 9l10.5-3m0 0L21 9M19.5 6l-10.5 3m0 0L3 9m6 6l10.5-3m-10.5 3L3 15m6-6v6" />
-            </svg>
-          </div>
-          <h3 class="font-sans font-bold text-2xl md:text-3xl mb-2 text-white" data-fest="name-experience">Experience
-            Kauthukam '26</h3>
-          <p class="text-gray-400 text-sm md:text-base max-w-md mb-6">Let the colors of culture, music, and art take
-            over. The grand celebration has officially started!</p>
-          <button id="modal-action-btn"
-            class="bg-brandRed hover:bg-brandRed/90 text-white font-semibold font-sans px-8 py-3 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95">
-            Enter Festival Hall
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Confetti / Celebration Canvas -->
   <canvas id="celebration-canvas" class="fixed inset-0 pointer-events-none z-[80]"></canvas>

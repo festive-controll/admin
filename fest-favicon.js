@@ -127,6 +127,12 @@
             el.textContent = 'Experience ' + name + ' ' + yearShort;
         });
 
+        if (data.address) {
+            document.querySelectorAll('[data-fest="address"]').forEach(el => {
+                el.innerHTML = data.address.replace(/\n/g, '<br>');
+            });
+        }
+
         if (logo512 || logo192 || data.logo) {
             const logoUrl = data.logo || logo512 || logo192;
             document.querySelectorAll('[data-fest="logo"], #nav-badge img').forEach(img => {

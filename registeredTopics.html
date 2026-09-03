@@ -194,24 +194,42 @@
                 }
             }
 
-            Promise.all([
-                db ? db.collection('programs').get() : Promise.resolve({ docs: [] }),
-                db ? db.collection('candidates').get() : Promise.resolve({ docs: [] })
-            ]).then(([pSnap, cSnap]) => {
-                pSnap.docs.forEach(d => { allProgramsMap[d.id] = { id: d.id, ...d.data() }; });
-                cSnap.docs.forEach(d => { allCandidatesMap[d.id] = { id: d.id, ...d.data() }; });
-                listenRegistrations();
-            }).catch(err => {
-                console.error("Error fetching metadata:", err);
-                listenRegistrations();
-            });
-
-            function listenRegistrations() {
+            function initDataListeners() {
                 if (!db) {
                     renderEmptyState("Database connection unavailable");
                     return;
                 }
 
+                // Real-time listener for programs
+                db.collection('programs').onSnapshot(pSnap => {
+                    allProgramsMap = {};
+                    pSnap.docs.forEach(d => {
+                        const pData = { id: d.id, ...d.data() };
+                        allProgramsMap[d.id] = pData;
+                        if (pData.id) allProgramsMap[pData.id] = pData;
+                        if (pData.programId) allProgramsMap[pData.programId] = pData;
+                        if (pData.code) allProgramsMap[pData.code] = pData;
+                    });
+                    renderUI();
+                }, err => {
+                    console.error("Error fetching programs:", err);
+                });
+
+                // Real-time listener for candidates
+                db.collection('candidates').onSnapshot(cSnap => {
+                    allCandidatesMap = {};
+                    cSnap.docs.forEach(d => {
+                        const cData = { id: d.id, ...d.data() };
+                        allCandidatesMap[d.id] = cData;
+                        if (cData.id) allCandidatesMap[cData.id] = cData;
+                        if (cData.chestNo) allCandidatesMap[String(cData.chestNo).trim()] = cData;
+                    });
+                    renderUI();
+                }, err => {
+                    console.error("Error fetching candidates:", err);
+                });
+
+                // Real-time listener for registrations
                 db.collection('registrations').onSnapshot(snap => {
                     allRegistrations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     renderUI();
@@ -220,6 +238,8 @@
                     renderEmptyState("Error loading topic registrations");
                 });
             }
+
+            initDataListeners();
 
             window.filterByStatus = function(status) {
                 currentStatusFilter = status;
@@ -248,7 +268,21 @@
                 let topicItems = [];
 
                 allRegistrations.forEach(r => {
-                    const prog = allProgramsMap[r.programId] || { name: 'Program ID: ' + (r.programId || '---'), code: 'PRG', section: '' };
+                    let prog = allProgramsMap[r.programId] ||
+                               allProgramsMap[r.progId] ||
+                               allProgramsMap[r.program] ||
+                               (r.programName ? { name: r.programName, code: r.programCode || r.code || 'PRG', section: r.section || '' } : null);
+
+                    if (!prog || !prog.name) {
+                        const rawProgId = r.programId || r.progId || '';
+                        const fallbackName = r.programName || r.progName || r.program || (rawProgId ? (rawProgId.length > 15 ? 'Program #' + rawProgId.slice(0, 6) : rawProgId) : 'Untitled Program');
+                        prog = {
+                            name: fallbackName,
+                            code: r.programCode || r.code || (prog && prog.code) || 'PRG',
+                            section: r.section || (prog && prog.section) || ''
+                        };
+                    }
+
                     const teamName = r.team || 'Solo Participant';
                     const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
 
@@ -256,7 +290,11 @@
                         Object.keys(r.topics).forEach(slotKey => {
                             const tData = r.topics[slotKey];
                             if (tData && (tData.name || tData.author || tData.content)) {
-                                const cand = Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(slotKey).trim() && c.team === r.team);
+                                const cand = Object.values(allCandidatesMap).find(c => 
+                                    String(c.chestNo).trim() === String(slotKey).trim() && 
+                                    (!r.team || !c.team || c.team.toLowerCase().trim() === r.team.toLowerCase().trim())
+                                ) || Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(slotKey).trim());
+
                                 let candName = cand ? cand.name : null;
                                 let chestDisplay = cand ? '#' + slotKey : null;
 
@@ -264,7 +302,10 @@
                                     const idx = parseInt(slotKey) - 1;
                                     if (!isNaN(idx) && r.chestNumbers && r.chestNumbers[idx]) {
                                         const chestNo = r.chestNumbers[idx];
-                                        const matchedCand = Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(chestNo).trim() && c.team === r.team);
+                                        const matchedCand = Object.values(allCandidatesMap).find(c => 
+                                            String(c.chestNo).trim() === String(chestNo).trim() && 
+                                            (!r.team || !c.team || c.team.toLowerCase().trim() === r.team.toLowerCase().trim())
+                                        ) || Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(chestNo).trim());
                                         candName = matchedCand ? matchedCand.name : `Participant #${chestNo}`;
                                         chestDisplay = '#' + chestNo;
                                     } else {
@@ -292,7 +333,26 @@
                     } else if (r.topicName || r.topicContent || r.topicAuthor) {
                         // Single root topic or Group program topic
                         const chestDisplay = Array.isArray(r.chestNumbers) && r.chestNumbers.length > 0 ? '#' + r.chestNumbers.join(', #') : (r.chestNo ? '#' + r.chestNo : 'Set 1');
-                        const candidateDisplay = r.candidateName || r.name || (isGroup ? 'Group Entry' : 'Participant');
+                        
+                        let candidateDisplay = r.candidateName || r.name || r.candidate || r.candName;
+                        if (!candidateDisplay && r.chestNo) {
+                            const cand = Object.values(allCandidatesMap).find(c => 
+                                String(c.chestNo).trim() === String(r.chestNo).trim() && 
+                                (!r.team || !c.team || c.team.toLowerCase().trim() === r.team.toLowerCase().trim())
+                            ) || Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(r.chestNo).trim());
+                            if (cand) candidateDisplay = cand.name;
+                        }
+                        if (!candidateDisplay && Array.isArray(r.chestNumbers) && r.chestNumbers.length > 0) {
+                            const names = r.chestNumbers.map(cn => {
+                                const cand = Object.values(allCandidatesMap).find(c => 
+                                    String(c.chestNo).trim() === String(cn).trim() && 
+                                    (!r.team || !c.team || c.team.toLowerCase().trim() === r.team.toLowerCase().trim())
+                                ) || Object.values(allCandidatesMap).find(c => String(c.chestNo).trim() === String(cn).trim());
+                                return cand ? cand.name : null;
+                            }).filter(Boolean);
+                            if (names.length > 0) candidateDisplay = names.join(', ');
+                        }
+                        if (!candidateDisplay) candidateDisplay = isGroup ? 'Group Entry' : 'Participant';
 
                         topicItems.push({
                             regId: r.id,
@@ -432,6 +492,9 @@
                                         <i class="fi fi-rr-refresh"></i>
                                     </button>
                                 ` : ''}
+                                <button onclick="window.deleteTopicFromFirebase('${item.regId}', ${chestArg}, ${isMultiArg}, '${(item.topicName || '').replace(/'/g, "\\'")}')" title="Remove / Delete from Firebase" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm">
+                                    <i class="fi fi-rr-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>`;
@@ -472,6 +535,67 @@
                     console.error("Error updating topic status:", err);
                     showToast("Failed to update status: " + err.message, "error");
                 });
+            };
+
+            window.deleteTopicFromFirebase = function(regId, chestNo, isMultiTopic, topicTitle) {
+                if (!db) return showToast("Database error", "error");
+                
+                const titleStr = topicTitle ? `"${topicTitle}"` : 'this topic';
+                if (!confirm(`Are you sure you want to remove ${titleStr} from Firebase? This action cannot be undone.`)) {
+                    return;
+                }
+
+                const regDoc = allRegistrations.find(r => r.id === regId);
+                const hasCandidates = regDoc && ((regDoc.chestNumbers && regDoc.chestNumbers.length > 0) || (regDoc.candidateIds && regDoc.candidateIds.length > 0));
+
+                if (isMultiTopic && chestNo) {
+                    const remainingTopicsCount = regDoc && regDoc.topics ? Object.keys(regDoc.topics).length : 0;
+                    if (!hasCandidates && remainingTopicsCount <= 1) {
+                        db.collection('registrations').doc(regId).delete().then(() => {
+                            showToast(`Topic removed from Firebase!`, "success");
+                        }).catch(err => {
+                            console.error("Error deleting document:", err);
+                            showToast("Failed to remove: " + err.message, "error");
+                        });
+                        return;
+                    }
+
+                    let updateObj = {};
+                    updateObj[`topics.${chestNo}`] = firebase.firestore.FieldValue.delete();
+                    updateObj.updatedAt = new Date();
+
+                    db.collection('registrations').doc(regId).update(updateObj).then(() => {
+                        showToast(`Topic removed from Firebase!`, "success");
+                    }).catch(err => {
+                        console.error("Error removing topic from Firebase:", err);
+                        showToast("Failed to remove topic: " + err.message, "error");
+                    });
+                } else {
+                    if (!hasCandidates) {
+                        db.collection('registrations').doc(regId).delete().then(() => {
+                            showToast(`Topic removed from Firebase!`, "success");
+                        }).catch(err => {
+                            console.error("Error deleting document:", err);
+                            showToast("Failed to remove: " + err.message, "error");
+                        });
+                        return;
+                    }
+
+                    let updateObj = {
+                        topicName: firebase.firestore.FieldValue.delete(),
+                        topicContent: firebase.firestore.FieldValue.delete(),
+                        topicAuthor: firebase.firestore.FieldValue.delete(),
+                        topicStatus: firebase.firestore.FieldValue.delete(),
+                        updatedAt: new Date()
+                    };
+
+                    db.collection('registrations').doc(regId).update(updateObj).then(() => {
+                        showToast(`Topic removed from Firebase!`, "success");
+                    }).catch(err => {
+                        console.error("Error removing topic from Firebase:", err);
+                        showToast("Failed to remove topic: " + err.message, "error");
+                    });
+                }
             };
 
         })();
