@@ -486,6 +486,17 @@
             }
         };
 
+        function getCandidateTeamName(cand) {
+            if (!cand) return '';
+            const chestNum = parseInt(String(cand.chestNo || '').replace(/\D/g, ''), 10) || 0;
+            if (chestNum > 0 && activeTeamsData && activeTeamsData.length > 0) {
+                const seriesBase = Math.floor(chestNum / 100) * 100;
+                const teamBySeries = activeTeamsData.find(t => parseInt(t.chestNoSeries) === seriesBase);
+                if (teamBySeries && teamBySeries.name) return teamBySeries.name;
+            }
+            return cand.team || '';
+        }
+
         function getTeamColor(teamName) {
             // Use allTeamsColorMap first (covers all teams regardless of isActive)
             if (allTeamsColorMap[teamName]) return allTeamsColorMap[teamName];
@@ -607,7 +618,8 @@
 
             paginatedData.forEach(cand => {
                 const initial = cand.name ? cand.name.charAt(0).toUpperCase() : '?';
-                const teamColorHex = getTeamColor(cand.team);
+                const candTeamName = getCandidateTeamName(cand);
+                const teamColorHex = getTeamColor(candTeamName);
                 const isSelected = selectedIds.has(cand.id);
                 const isCap = cand.isCaptain || (cand.chestNo && cand.team && (() => {
                     const teamObj = activeTeamsData.find(t => t.name === cand.team);
@@ -658,7 +670,7 @@
                     </div>
                     <div class="col-span-3 flex items-center justify-center space-x-2">
                         <span class="w-[7px] h-[7px] rounded-full" style="background-color: ${teamColorHex}"></span>
-                        <span class="text-[13px] text-gray-700 font-medium">${cand.team}</span>
+                        <span class="text-[13px] text-gray-700 font-medium">${candTeamName}</span>
                     </div>
                     <div class="col-span-2 flex items-center justify-center">
                         <span class="px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[11px] font-medium text-gray-600 shadow-sm leading-tight">${cand.section}</span>
@@ -694,7 +706,7 @@
                             </div>
                             <div class="flex items-center space-x-2 mt-3">
                                 <span class="w-[7px] h-[7px] rounded-full" style="background-color: ${teamColorHex}"></span>
-                                <span class="text-[13px] text-gray-600 font-medium">${cand.team}</span>
+                                <span class="text-[13px] text-gray-600 font-medium">${candTeamName}</span>
                             </div>
                         </div>
                     </div>

@@ -720,98 +720,129 @@
         async function syncCaptainsToCandidates(teamName, series, captainName, assistantName, oldTeamName = null) {
             if (typeof db === 'undefined') return;
             const seriesBase = parseInt(series) || 0;
-            const capChest = String(seriesBase + 1);
-            const asstChest = String(seriesBase + 2);
+            const capChest = seriesBase > 0 ? String(seriesBase + 1) : '';
+            const asstChest = seriesBase > 0 ? String(seriesBase + 2) : '';
 
             const timestamp = new Date().toISOString();
 
             try {
-                // Fetch candidates matching current team name or old team name
-                const teamFilter = oldTeamName || teamName;
-                const teamCandsSnap = await db.collection('candidates').where('team', '==', teamFilter).get();
+                const searchTeams = Array.from(new Set([teamName, oldTeamName].filter(Boolean)));
+                const teamCandsSnap = await db.collection('candidates').where('team', 'in', searchTeams).get();
                 let teamCands = teamCandsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // If team name changed, update existing candidates to the new team name
+                // If team name changed, update all candidates of old team to new team name
                 if (oldTeamName && oldTeamName !== teamName) {
                     for (const cand of teamCands) {
-                        await db.collection('candidates').doc(cand.id).update({ team: teamName });
-                        cand.team = teamName;
+                        if (cand.team !== teamName) {
+                            await db.collection('candidates').doc(cand.id).update({ team: teamName });
+                            cand.team = teamName;
+                        }
                     }
                 }
 
                 // 1. Sync Captain
-                if (captainName) {
-                    let capCand = teamCands.find(c => c.isCaptain || c.name === captainName || String(c.chestNo) === capChest);
+                if (captainName && captainName.trim()) {
+                    const trimmedCap = captainName.trim();
+                    let capCand = teamCands.find(c => c.isCaptain || (c.name && c.name.trim().toLowerCase() === trimmedCap.toLowerCase()) || (capChest && String(c.chestNo) === capChest));
                     if (capCand) {
-                        await db.collection('candidates').doc(capCand.id).update({
-                            name: captainName,
-                            chestNo: capChest,
+                        const updatePayload = {
+                            name: trimmedCap,
                             team: teamName,
                             isCaptain: true,
                             isAssistantCaptain: false,
-                            active: true,
-                            isActive: true,
                             updatedAt: timestamp
-                        });
-                    } else {
-                        await db.collection('candidates').add({
-                            name: captainName,
-                            chestNo: capChest,
-                            team: teamName,
-                            active: true,
-                            isActive: true,
-                            isCaptain: true,
-                            isAssistantCaptain: false,
-                            section: "General",
-                            admissionNo: "N/A",
-                            createdAt: timestamp,
-                            updatedAt: timestamp
-                        });
+                        };
+                        if (capChest) updatePayload.chestNo = capChest;
+                        await db.collection('candidates').doc(capCand.id).update(updatePayload);
                     }
                 } else {
-                    const prevCaps = teamCands.filter(c => c.isCaptain || String(c.chestNo) === capChest);
+                    const prevCaps = teamCands.filter(c => c.isCaptain || (capChest && String(c.chestNo) === capChest));
                     for (const c of prevCaps) {
                         await db.collection('candidates').doc(c.id).update({ isCaptain: false, updatedAt: timestamp });
                     }
                 }
 
                 // 2. Sync Assistant Captain
-                if (assistantName) {
-                    let asstCand = teamCands.find(c => (c.isAssistantCaptain || c.name === assistantName || String(c.chestNo) === asstChest) && c.name !== captainName);
+                if (assistantName && assistantName.trim()) {
+                    const trimmedAsst = assistantName.trim();
+                    let asstCand = teamCands.find(c => (c.isAssistantCaptain || (c.name && c.name.trim().toLowerCase() === trimmedAsst.toLowerCase()) || (asstChest && String(c.chestNo) === asstChest)) && (c.name || '').trim().toLowerCase() !== (captainName || '').trim().toLowerCase());
                     if (asstCand) {
-                        await db.collection('candidates').doc(asstCand.id).update({
-                            name: assistantName,
-                            chestNo: asstChest,
+                        const updatePayload = {
+                            name: trimmedAsst,
                             team: teamName,
                             isCaptain: false,
                             isAssistantCaptain: true,
-                            active: true,
-                            isActive: true,
                             updatedAt: timestamp
-                        });
-                    } else {
-                        await db.collection('candidates').add({
-                            name: assistantName,
-                            chestNo: asstChest,
-                            team: teamName,
-                            active: true,
-                            isActive: true,
-                            isCaptain: false,
-                            isAssistantCaptain: true,
-                            section: "General",
-                            admissionNo: "N/A",
-                            createdAt: timestamp,
-                            updatedAt: timestamp
-                        });
+                        };
+                        if (asstChest) updatePayload.chestNo = asstChest;
+                        await db.collection('candidates').doc(asstCand.id).update(updatePayload);
                     }
                 } else {
-                    const prevAssts = teamCands.filter(c => c.isAssistantCaptain || String(c.chestNo) === asstChest);
+                    const prevAssts = teamCands.filter(c => c.isAssistantCaptain || (asstChest && String(c.chestNo) === asstChest));
                     for (const c of prevAssts) {
                         await db.collection('candidates').doc(c.id).update({ isAssistantCaptain: false, updatedAt: timestamp });
                     }
                 }
             } catch (err) {
                 console.error("Error syncing captains to candidates:", err);
+            }
+        }
+
+        async function cleanupAndSyncTeamsAndCandidates() {
+            if (typeof db === 'undefined') return;
+            try {
+                const teamsSnap = await db.collection('teams').get();
+                const teams = teamsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                const candsSnap = await db.collection('candidates').get();
+                const candidates = candsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                const seriesTeamMap = {};
+                teams.forEach(t => {
+                    const s = parseInt(t.chestNoSeries);
+                    if (s > 0 && t.name) {
+                        seriesTeamMap[s] = t.name;
+                    }
+                });
+
+                const batch = db.batch();
+                let batchCount = 0;
+                const duplicatesToDelete = new Set();
+
+                candidates.forEach(c => {
+                    const chestNum = parseInt(String(c.chestNo).replace(/\D/g, ''), 10) || 0;
+                    if (chestNum > 0) {
+                        const seriesBase = Math.floor(chestNum / 100) * 100;
+                        const expectedTeam = seriesTeamMap[seriesBase];
+                        if (expectedTeam && c.team !== expectedTeam) {
+                            batch.update(db.collection('candidates').doc(c.id), { team: expectedTeam });
+                            batchCount++;
+                        }
+                    }
+
+                    if (c.section === "General" && (c.admissionNo === "N/A" || !c.admissionNo)) {
+                        const realCand = candidates.find(other => 
+                            other.id !== c.id && 
+                            other.name.trim().toLowerCase() === c.name.trim().toLowerCase() && 
+                            other.section !== "General"
+                        );
+                        if (realCand) {
+                            duplicatesToDelete.add(c.id);
+                        }
+                    }
+                });
+
+                duplicatesToDelete.forEach(id => {
+                    batch.delete(db.collection('candidates').doc(id));
+                    batchCount++;
+                });
+
+                if (batchCount > 0) {
+                    await batch.commit();
+                    console.log(`Auto-cleaned ${batchCount} candidate team mismatches and duplicates.`);
+                }
+            } catch (err) {
+                console.error("Error in cleanupAndSyncTeamsAndCandidates:", err);
             }
         }
 
@@ -825,8 +856,38 @@
                         await syncCaptainsToCandidates(team.name, team.chestNoSeries, team.captainName, team.assistantCaptainName);
                     }
                 }
+                await cleanupAndSyncTeamsAndCandidates();
             } catch (err) {
                 console.error("Error auto syncing all team captains:", err);
+            }
+        }
+
+        async function renameTeamAcrossAllCollections(oldTeamName, newTeamName) {
+            if (typeof db === 'undefined' || !oldTeamName || !newTeamName || oldTeamName === newTeamName) return;
+            const collectionsToUpdate = ['candidates', 'registrations', 'festUsers', 'programResults', 'auction'];
+            for (const colName of collectionsToUpdate) {
+                try {
+                    const snap = await db.collection(colName).where('team', '==', oldTeamName).get();
+                    if (!snap.empty) {
+                        const BATCH_SIZE = 450;
+                        let batch = db.batch();
+                        let count = 0;
+                        for (const doc of snap.docs) {
+                            batch.update(db.collection(colName).doc(doc.id), { team: newTeamName });
+                            count++;
+                            if (count >= BATCH_SIZE) {
+                                await batch.commit();
+                                batch = db.batch();
+                                count = 0;
+                            }
+                        }
+                        if (count > 0) {
+                            await batch.commit();
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Error updating team name in ${colName}:`, err);
+                }
             }
         }
 
@@ -854,10 +915,13 @@
 
             if (editingTeamId) {
                 if (typeof db !== 'undefined') {
-                    db.collection('teams').doc(editingTeamId).update(payload).then(() => {
+                    db.collection('teams').doc(editingTeamId).update(payload).then(async () => {
+                        if (oldTeamName && oldTeamName !== name) {
+                            await renameTeamAcrossAllCollections(oldTeamName, name);
+                        }
                         syncCaptainsToCandidates(name, series, captain, assistant, oldTeamName).then(() => {
                             window.closeTeamSidebar();
-                            typeof showToast === 'function' && showToast("✅ Team and Captains updated!");
+                            typeof showToast === 'function' && showToast("✅ Team and Candidate details updated!");
                         });
                     }).catch(err => {
                         console.error("Error updating team:", err);
