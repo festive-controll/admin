@@ -164,20 +164,57 @@
 
         // Initialize Firestore Listeners
         function initData() {
-            if (!db) return;
+            function compareProgramCodes(codeARaw, codeBRaw) {
+                const codeA = String(codeARaw || '').trim();
+                const codeB = String(codeBRaw || '').trim();
+                if (!codeA) return 1;
+                if (!codeB) return -1;
 
-            // Fetch Sections
-            db.collection('sections').where('isActive', '==', true).onSnapshot(secSnap => {
-                allSections = secSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderSectionTabs();
-                renderUI();
-            });
+                const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+                const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
 
-            // Fetch Programs
-            db.collection('programs').onSnapshot(progSnap => {
-                allPrograms = progSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderUI();
-            });
+                if (matchA && matchB) {
+                    const prefixA = matchA[1].toUpperCase();
+                    const prefixB = matchB[1].toUpperCase();
+                    const catA = prefixA[0];
+                    const catB = prefixB[0];
+
+                    if (catA !== catB) return catA.localeCompare(catB);
+
+                    const subA = prefixA.slice(1);
+                    const subB = prefixB.slice(1);
+
+                    if (subA !== subB) {
+                        if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
+                        if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
+                        return subA.localeCompare(subB);
+                    }
+
+                    const numA = parseInt(matchA[2], 10);
+                    const numB = parseInt(matchB[2], 10);
+                    if (numA !== numB) return numA - numB;
+
+                    return matchA[3].localeCompare(matchB[3]);
+                }
+
+                return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+            }
+
+            if (typeof db !== 'undefined') {
+                // Fetch Sections
+                db.collection('sections').where('isActive', '==', true).onSnapshot(secSnap => {
+                    allSections = secSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderSectionTabs();
+                    renderUI();
+                });
+
+                // Fetch Programs
+                db.collection('programs').onSnapshot(progSnap => {
+                    allPrograms = progSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    allPrograms.sort((a, b) => compareProgramCodes(a.code, b.code));
+                    renderUI();
+                });
+            }
         }
 
         function renderSectionTabs() {
@@ -335,8 +372,8 @@
             
             Object.keys(sectionsMap).forEach(secName => {
                 const progs = sectionsMap[secName];
-                // Sort programs by Code
-                progs.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+                // Sort programs by Code using compareProgramCodes
+                progs.sort((a, b) => compareProgramCodes(a.code, b.code));
 
                 const secEnabledCount = progs.filter(p => !!p.topicRegistration).length;
 

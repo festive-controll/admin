@@ -70,8 +70,46 @@
             });
         }
 
-        if (typeof db !== 'undefined' && section && team) {
-            // Listen to topic registration time window config
+        function compareProgramCodes(codeARaw, codeBRaw) {
+            const codeA = String(codeARaw || '').trim();
+            const codeB = String(codeBRaw || '').trim();
+            if (!codeA) return 1;
+            if (!codeB) return -1;
+
+            const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+            const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+
+            if (matchA && matchB) {
+                const prefixA = matchA[1].toUpperCase();
+                const prefixB = matchB[1].toUpperCase();
+                const catA = prefixA[0];
+                const catB = prefixB[0];
+
+                if (catA !== catB) return catA.localeCompare(catB);
+
+                const subA = prefixA.slice(1);
+                const subB = prefixB.slice(1);
+
+                if (subA !== subB) {
+                    if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
+                    if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
+                    return subA.localeCompare(subB);
+                }
+
+                const numA = parseInt(matchA[2], 10);
+                const numB = parseInt(matchB[2], 10);
+                if (numA !== numB) return numA - numB;
+
+                return matchA[3].localeCompare(matchB[3]);
+            }
+
+            return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+        }
+
+        window.fetchTMTopicData = function (section) {
+            const team = localStorage.getItem('managerTeam');
+            if (typeof db === 'undefined' || !db || !team || !section) return;
+
             db.collection('config').doc('topicReg').onSnapshot(doc => {
                 window.tmtConfig = doc.exists ? doc.data() : null;
                 if (window.tmtProgramsList && window.tmtProgramsList.length > 0) window.renderTMTopics();
@@ -82,6 +120,7 @@
                 return db.collection('programs').where('section', '==', section).where('status', '==', true).where('topicRegistration', '==', true).get();
             }).then(snap => {
                 window.tmtProgramsList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.tmtProgramsList.sort((a, b) => compareProgramCodes(a.code, b.code));
 
                 if (window.tmtProgUnsub) window.tmtProgUnsub();
                 window.tmtProgUnsub = db.collection('registrations').where('team', '==', team).where('section', '==', section).onSnapshot(regSnap => {

@@ -229,13 +229,44 @@
                         if (secA < secB) return -1;
                         if (secA > secB) return 1;
                         
-                        const codeA = (a.code || '').toLowerCase();
-                        const codeB = (b.code || '').toLowerCase();
-                        if (codeA < codeB) return -1;
-                        if (codeA > codeB) return 1;
-                        
-                        return 0;
+                        return compareProgramCodes(a.code, b.code);
                     });
+                }
+
+                function compareProgramCodes(codeARaw, codeBRaw) {
+                    const codeA = String(codeARaw || '').trim();
+                    const codeB = String(codeBRaw || '').trim();
+                    if (!codeA) return 1;
+                    if (!codeB) return -1;
+
+                    const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+                    const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+
+                    if (matchA && matchB) {
+                        const prefixA = matchA[1].toUpperCase();
+                        const prefixB = matchB[1].toUpperCase();
+                        const catA = prefixA[0];
+                        const catB = prefixB[0];
+
+                        if (catA !== catB) return catA.localeCompare(catB);
+
+                        const subA = prefixA.slice(1);
+                        const subB = prefixB.slice(1);
+
+                        if (subA !== subB) {
+                            if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
+                            if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
+                            return subA.localeCompare(subB);
+                        }
+
+                        const numA = parseInt(matchA[2], 10);
+                        const numB = parseInt(matchB[2], 10);
+                        if (numA !== numB) return numA - numB;
+
+                        return matchA[3].localeCompare(matchB[3]);
+                    }
+
+                    return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
                 }
                 
                 dbRef.collection('programs').onSnapshot(s => { 
