@@ -100,11 +100,13 @@
             </div>
 
             <div class="flex items-center ml-4 gap-2">
-                <button id="btn-export-csv" onclick="window.exportToCSV()" class="hidden items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-white border border-gray-300 rounded-full text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap p-0">
+                <button id="btn-export-csv" onclick="window.exportToCSV()"
+                    class="hidden items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-white border border-gray-300 rounded-full text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap p-0">
                     <i class="fi fi-rr-file-csv text-sm sm:text-[13px]"></i>
                     <span class="hidden sm:block">Export CSV</span>
                 </button>
-                <button id="btn-reassign-chest" onclick="window.reassignChestNumbers()" class="hidden items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-white border border-gray-300 rounded-full text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap p-0">
+                <button id="btn-reassign-chest" onclick="window.reassignChestNumbers()"
+                    class="hidden items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-white border border-gray-300 rounded-full text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap p-0">
                     <i class="fi fi-rr-shuffle text-sm sm:text-[13px]"></i>
                     <span class="hidden sm:block">Reassign Chest Nos</span>
                 </button>
@@ -138,16 +140,20 @@
                 <!-- Search -->
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto mt-3 sm:mt-0">
                     <div class="relative w-full sm:w-auto min-w-[130px]">
-                        <select id="filter-team" onchange="applyCandFilters()" class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                        <select id="filter-team" onchange="applyCandFilters()"
+                            class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
                             <option value="All">All Teams</option>
                         </select>
-                        <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                        <i
+                            class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
                     </div>
                     <div class="relative w-full sm:w-auto min-w-[130px]">
-                        <select id="filter-category" onchange="applyCandFilters()" class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                        <select id="filter-category" onchange="applyCandFilters()"
+                            class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
                             <option value="All">All Categories</option>
                         </select>
-                        <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                        <i
+                            class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
                     </div>
                     <div class="relative w-full sm:w-64">
                         <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
@@ -416,9 +422,9 @@
             // Show admin-only buttons
             setTimeout(() => {
                 const reassignBtn = document.getElementById('btn-reassign-chest');
-                const exportBtn   = document.getElementById('btn-export-csv');
+                const exportBtn = document.getElementById('btn-export-csv');
                 if (reassignBtn) reassignBtn.classList.replace('hidden', 'flex');
-                if (exportBtn)   exportBtn.classList.replace('hidden', 'flex');
+                if (exportBtn) exportBtn.classList.replace('hidden', 'flex');
             }, 0);
         }
 
@@ -530,7 +536,7 @@
             if (filterCategoryVal && filterCategoryVal !== 'All') {
                 filtered = filtered.filter(c => c.section === filterCategoryVal);
             }
-            
+
             if (!candSearchQuery) return filtered;
             return filtered.filter(c => {
                 const nameMatch = c.name && c.name.toLowerCase().includes(candSearchQuery);
@@ -562,7 +568,7 @@
 
             const resCount = document.getElementById('results-count');
             if (resCount) resCount.innerText = `Showing ${totalItems > 0 ? startIndex + 1 : 0} to ${endIndex} of ${totalItems} results`;
-            
+
             const pageInfo = document.getElementById('cand-page-info');
             if (pageInfo) pageInfo.innerText = `Page ${candCurrentPage} of ${totalPages}`;
 
@@ -611,8 +617,8 @@
                     const teamObj = activeTeamsData.find(t => t.name === cand.team);
                     return teamObj && teamObj.chestNoSeries !== undefined && teamObj.chestNoSeries !== null && String(cand.chestNo) === String((parseInt(teamObj.chestNoSeries) || 0) + 2);
                 })());
-                const roleBadge = isCap 
-                    ? `<span class="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase tracking-wider shrink-0">Captain</span>` 
+                const roleBadge = isCap
+                    ? `<span class="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase tracking-wider shrink-0">Captain</span>`
                     : (isAsst ? `<span class="ml-2 px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-[9px] font-bold uppercase tracking-wider shrink-0">Asst Captain</span>` : '');
 
                 // Card & Row styling based on selection
@@ -928,7 +934,7 @@
             }
         }
 
-        window.reassignChestNumbers = async function() {
+        window.reassignChestNumbers = async function () {
             if (!confirm('⚠️ This will REASSIGN chest numbers for ALL candidates based on their team Series:\n\nSeries 100 → 101, 102...\nSeries 200 → 201, 202...\nSeries 300 → 301, 302...\n\nThis action cannot be undone. Continue?')) return;
 
             const btn = document.getElementById('btn-reassign-chest');
@@ -962,14 +968,14 @@
 
                 sortedTeams.forEach(team => {
                     const blockStart = parseInt(team.chestNoSeries) || 0; // e.g. 100, 200, 300
-                    
+
                     // Identify the captain and assistant captain
                     const captainCand = byTeam[team.name].find(c => c.isCaptain || c.name === team.captainName || (c.chestNo && String(c.chestNo) === String(blockStart + 1)));
                     const assistantCand = byTeam[team.name].find(c => c.isAssistantCaptain || c.name === team.assistantCaptainName || (c.chestNo && String(c.chestNo) === String(blockStart + 2)));
-                    
+
                     // Filter them out from other candidates
                     const otherCands = byTeam[team.name].filter(c => c.id !== (captainCand ? captainCand.id : null) && c.id !== (assistantCand ? assistantCand.id : null));
-                    
+
                     // Sort other candidates by current chest number (preserves relative order)
                     otherCands.sort((a, b) => {
                         const nA = parseInt(String(a.chestNo).replace(/\D/g, ''), 10) || 0;
@@ -1010,7 +1016,7 @@
 
                 for (const batch of batches) await batch.commit();
                 typeof showToast === 'function' && showToast(`✅ Reassigned chest numbers for ${opCount} candidates!`);
-            } catch(err) {
+            } catch (err) {
                 console.error('Reassign error:', err);
                 typeof showToast === 'function' && showToast('❌ Error: ' + err.message);
             } finally {
@@ -1019,7 +1025,7 @@
             }
         };
 
-        window.exportToCSV = function() {
+        window.exportToCSV = function () {
             if (candidatesData.length === 0) {
                 typeof showToast === 'function' && showToast("❌ No data to export");
                 return;
@@ -1036,7 +1042,7 @@
                 c.active ? 'Active' : 'Inactive'
             ]);
 
-            let csvContent = "data:text/csv;charset=utf-8," 
+            let csvContent = "data:text/csv;charset=utf-8,"
                 + headers.join(",") + "\n"
                 + rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",")).join("\n");
 
@@ -1047,7 +1053,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             typeof showToast === 'function' && showToast("✅ CSV Exported!");
         };
 
@@ -1073,7 +1079,7 @@
             } else {
                 // Block: chestNoSeries=100 → 100-199, chestNoSeries=200 → 200-299
                 const blockStart = seriesBase + 3;   // Ordinary candidates start at seriesBase + 3
-                const blockEnd   = seriesBase + 98;  // 101+98=199, 201+98=299
+                const blockEnd = seriesBase + 98;  // 101+98=199, 201+98=299
 
                 // Find max chest already used by THIS team within its block
                 let maxInBlock = blockStart - 1;     // Starts at seriesBase + 2 (assistant chestNo)
@@ -1218,15 +1224,15 @@
                 }
             }
 
-            const payload = { 
-                chestNo, 
-                name, 
-                admissionNo: admissionNo || 'N/A', 
-                class: className, 
-                team: team, 
-                section, 
-                active, 
-                imageUrl: selectedImageUrl || '', 
+            const payload = {
+                chestNo,
+                name,
+                admissionNo: admissionNo || 'N/A',
+                class: className,
+                team: team,
+                section,
+                active,
+                imageUrl: selectedImageUrl || '',
                 inAuction: inAuction
             };
             if (status !== 'available') payload.status = status;
@@ -1272,17 +1278,17 @@
             window.candFestDataUnsub = db.collection('config').doc('festData').onSnapshot(doc => {
                 const d = doc.exists ? doc.data() : {};
                 liveDraftEnabled = d.liveDraft === true;
-                
+
                 const teamSelect = document.getElementById('candTeam');
                 if (teamSelect) {
                     teamSelect.disabled = liveDraftEnabled || isTeamManager;
-                    
+
                     let defaultText = liveDraftEnabled ? 'Waiting for Auction...' : 'Select Team';
                     let optionsHTML = `<option value="">${defaultText}</option>`;
                     activeTeamsData.forEach(team => {
                         optionsHTML += `<option value="${team.name}">${team.name}</option>`;
                     });
-                    
+
                     const currentVal = teamSelect.value;
                     teamSelect.innerHTML = optionsHTML;
                     if (currentVal) teamSelect.value = currentVal;
@@ -1303,7 +1309,7 @@
                 // Populate sidebar team dropdown and filter dropdown
                 const teamSelect = document.getElementById('candTeam');
                 const filterTeamSelect = document.getElementById('filter-team');
-                
+
                 if (filterTeamSelect) {
                     const filterCurrent = filterTeamSelect.value;
                     let opts = '<option value="All">All Teams</option>';
@@ -1347,10 +1353,10 @@
                     return o1 - o2;
                 });
                 activeSectionsData = sortedDocs;
-                
+
                 const sectionSelect = document.getElementById('candSection');
                 const filterSectionSelect = document.getElementById('filter-category');
-                
+
                 if (filterSectionSelect) {
                     const filterCurrent = filterSectionSelect.value;
                     let opts = '<option value="All">All Categories</option>';
@@ -1360,7 +1366,7 @@
                     filterSectionSelect.innerHTML = opts;
                     filterSectionSelect.value = filterCurrent;
                 }
-                
+
                 if (sectionSelect) {
                     const currentVal = sectionSelect.value;
                     let optionsHTML = '<option value="" disabled selected>Select Section</option>';

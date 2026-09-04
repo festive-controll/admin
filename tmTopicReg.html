@@ -290,6 +290,9 @@
             const prog = window.tmtProgramsList.find(p => p.id === progId);
             if (!prog) return;
 
+            const team = localStorage.getItem('managerTeam') || '';
+            const section = window.currentTMSection || (prog ? prog.section : '') || '';
+
             const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
             let totalSlots = 1;
             if (isGroup) {
