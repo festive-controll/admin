@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Judgement Sheet</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/cobe" rel="stylesheet">
+
+    <!-- Tailwind & UIcons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    
+    <!-- Toastify & Export Libs -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #eef2f6;
+            font-family: 'Satoshi', 'Inter', sans-serif;
+            color: #253347;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sheet-page {
+            width: 794px;
+            min-height: 1123px;
+            background: #ffffff;
+            border: 1px solid #d9dee4;
+            border-radius: 18px;
+            padding: 24px 28px 18px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .06);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin: 20px auto;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+
+        .font-cobe {
+            font-family: 'Cobe', 'Satoshi', sans-serif;
+        }
+
+        @media print {
+            html, body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            #sheetsContainer {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                display: block !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .sheet-page {
+                margin: 0 auto !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 12mm 14mm 10mm !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                page-break-inside: avoid !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Control Header Navbar (Hidden on Print) -->
+    <header class="no-print sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <button onclick="history.back()" class="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-colors">
+                <i class="fi fi-rr-arrow-left text-sm"></i>
+            </button>
+            <div>
+                <h1 id="topProgTitle" class="text-sm font-bold text-slate-800 m-0 uppercase font-cobe">Official Judgement Sheet</h1>
+                <p id="topProgMeta" class="text-[11px] text-slate-500 font-semibold m-0">Loading program details...</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Judge Selector -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <span class="text-[10px] font-bold text-slate-500 px-2 uppercase font-cobe">Judges:</span>
+                <button onclick="changeJudgeCount(1)" id="jbtn-1" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all bg-white text-blue-700 shadow-sm">1</button>
+                <button onclick="changeJudgeCount(2)" id="jbtn-2" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">2</button>
+                <button onclick="changeJudgeCount(3)" id="jbtn-3" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">3</button>
+                <button onclick="changeJudgeCount(4)" id="jbtn-4" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">4</button>
+            </div>
+
+            <!-- Action Buttons -->
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                <i class="fi fi-rr-print"></i> Print Sheet
+            </button>
+            <button onclick="exportPdf()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                <i class="fi fi-rr-file-pdf"></i> Export PDF
+            </button>
+            <button onclick="exportPng()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all">
+                <i class="fi fi-rr-picture"></i> Save PNG
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Sheet Container -->
+    <main id="sheetsContainer" class="py-6 px-4">
+        <div class="text-center py-20 text-slate-400 font-bold">
+            <i class="fi fi-rr-spinner animate-spin text-3xl block mb-2 text-blue-600"></i>
+            Generating Judgement Sheet...
+        </div>
+    </main>
+
+    <!-- Firebase SDK (Version 8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        (function() {
+            var firebaseConfig = {
+                apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+                authDomain: "festie-s1u2h3.firebaseapp.com",
+                projectId: "festie-s1u2h3",
+                storageBucket: "festie-s1u2h3.firebasestorage.app",
+                messagingSenderId: "794049194885",
+                appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+            };
+
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            window.db = firebase.firestore();
+        })();
+
+        let currentJudgeCount = 1;
+        let activeProg = null;
+        let activeCands = [];
+        let festivalNameStr = 'ANNUAL FESTIVAL';
+        let festivalLogoStr = 'logo-512.svg';
+
+        function showToast(msg, bg = "#10b981") {
+            if (typeof Toastify !== 'undefined') {
+                Toastify({ text: msg, duration: 3000, style: { background: bg } }).showToast();
+            }
+        }
+
+        function changeJudgeCount(count) {
+            currentJudgeCount = count;
+            for(let i=1; i<=4; i++) {
+                const btn = document.getElementById(`jbtn-${i}`);
+                if (btn) {
+                    if (i === count) {
+                        btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg transition-all bg-white text-blue-700 shadow-sm";
+                    } else {
+                        btn.className = "px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+                    }
+                }
+            }
+            renderSheets();
+        }
+
+        async function loadSheetData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let pId = urlParams.get('id') || localStorage.getItem('viewProgramId');
+            if (!pId) {
+                document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">❌ Program ID not specified.</div>`;
+                return;
+            }
+
+            const db = window.db;
+
+            try {
+                // 1. Fetch festData for official name & logo
+                try {
+                    const festDoc = await db.collection('config').doc('festData').get();
+                    if (festDoc.exists) {
+                        const fd = festDoc.data();
+                        if (fd.name) festivalNameStr = fd.name;
+                        if (fd.logo || fd.logo512 || fd.logo192) festivalLogoStr = fd.logo || fd.logo512 || fd.logo192;
+                    }
+                } catch(e){}
+
+                // 2. Fetch website config fallback
+                if (!festivalLogoStr || festivalLogoStr === 'logo-512.svg') {
+                    try {
+                        const webDoc = await db.collection('config').doc('website').get();
+                        if (webDoc.exists && webDoc.data().logo) {
+                            festivalLogoStr = webDoc.data().logo;
+                        }
+                    } catch(e){}
+                }
+
+                // 3. Fetch program details
+                const pDoc = await db.collection('programs').doc(pId).get();
+                if (!pDoc.exists) {
+                    document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">❌ Program document not found.</div>`;
+                    return;
+                }
+                activeProg = { id: pDoc.id, ...pDoc.data() };
+
+                // Resolve venue name from venues collection or schedule properties
+                let resVenue = activeProg.venue || '';
+                if (activeProg.venueId) {
+                    try {
+                        const vDoc = await db.collection('venues').doc(activeProg.venueId).get();
+                        if (vDoc.exists && vDoc.data()) {
+                            const vd = vDoc.data();
+                            resVenue = vd.name || vd.venueName || '';
+                            if (vd.subVenue) resVenue += ` (${vd.subVenue})`;
+                        }
+                    } catch(e){}
+                }
+                if (!resVenue && activeProg.venueType) {
+                    resVenue = activeProg.venueType + (activeProg.subStage ? ` (${activeProg.subStage})` : '');
+                }
+                if (!resVenue) {
+                    resVenue = 'MAIN STAGE';
+                }
+                // Resolve date from schedule time/date or fallback to today
+                let resDate = '';
+                const timeVal = activeProg.time || activeProg.date || activeProg.scheduleDate || activeProg.startTime;
+                if (timeVal) {
+                    try {
+                        const d = new Date(timeVal);
+                        if (!isNaN(d.getTime())) {
+                            resDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                        } else {
+                            resDate = String(timeVal);
+                        }
+                    } catch(e) {
+                        resDate = String(timeVal);
+                    }
+                }
+                if (!resDate) {
+                    resDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                activeProg.resolvedDate = resDate;
+
+                // 4. Fetch candidate registrations
+                const candSnap = await db.collection('candidates').get();
+                const allCands = candSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const regSnap = await db.collection('registrations').where('programId', '==', pId).get();
+                const regs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                let teamGroups = {};
+                regs.forEach(reg => {
+                    const tName = reg.team || (reg.chestNo ? 'Solo Participant' : 'Individual');
+                    if (!teamGroups[tName]) teamGroups[tName] = [];
+                    const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                    
+                    if (chestsList.length > 0) {
+                        chestsList.forEach(chest => {
+                            const cand = allCands.find(c => String(c.chestNo).trim() === String(chest).trim() || String(c.id) === String(chest));
+                            teamGroups[tName].push({
+                                chestNo: chest,
+                                name: cand ? cand.name : (reg.candidateName || reg.name || `Chest #${chest}`),
+                                team: tName
+                            });
+                        });
+                    } else if (reg.candidateName || reg.name) {
+                        teamGroups[tName].push({
+                            chestNo: reg.chestNo || '---',
+                            name: reg.candidateName || reg.name || 'Participant',
+                            team: tName
+                        });
+                    }
+                });
+
+                activeCands = [];
+                for(let t in teamGroups) {
+                    teamGroups[t].forEach(c => activeCands.push(c));
+                }
+
+                activeCands.sort((a, b) => {
+                    const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
+                    const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                    if (numA !== numB) return numA - numB;
+                    return String(a.chestNo || '').localeCompare(String(b.chestNo || ''));
+                });
+
+                if (activeCands.length === 0) {
+                    for(let i=1; i <= (activeProg.maxParticipants || 8); i++) {
+                        activeCands.push({ chestNo: '', name: '', team: '' });
+                    }
+                }
+
+                document.getElementById('topProgTitle').innerText = `${activeProg.name || 'Program'} (${activeProg.code || ''})`;
+                document.getElementById('topProgMeta').innerText = `VENUE: ${activeProg.resolvedVenue} • SECTION: ${activeProg.section || 'BIDAYA'}`;
+
+                renderSheets();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">❌ Error loading judgement sheet data: ${err.message}</div>`;
+            }
+        }
+
+        function renderSheets() {
+            if (!activeProg) return;
+
+            const container = document.getElementById('sheetsContainer');
+            let resultScanUrl = '';
+            if (window.location.protocol.startsWith('http')) {
+                const cleanPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                resultScanUrl = window.location.origin + cleanPath + 'allResult.html?id=' + encodeURIComponent(activeProg.id);
+            } else {
+                resultScanUrl = window.location.href.split('?')[0].replace('judge.html', 'allResult.html') + '?id=' + encodeURIComponent(activeProg.id);
+            }
+
+            const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=2&ecc=M&data=" + encodeURIComponent(resultScanUrl);
+
+            let thHtml = `<tr style="background: #155995; color: #ffffff; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: .4px; font-family: 'Cobe', 'Satoshi', sans-serif;">
+                <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 52px;">CODE</th>
+                <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 72px;">CHEST</th>
+                <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: left;">CANDIDATE / PARTICIPANTS</th>
+                <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: left; width: 112px;">TEAM</th>
+                <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 72px;">GRADE</th>
+                <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 72px;">POINTS</th>
+            </tr>`;
+
+            let tbHtml = '';
+            activeCands.forEach((c, i) => {
+                const rowBg = i % 2 === 1 ? '#fbfcfd' : '#ffffff';
+                tbHtml += `<tr style="background-color: ${rowBg};">
+                    <td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center; font-weight: 700; color: #253347; font-size: 10px;">${String.fromCharCode(65 + i)}</td>
+                    <td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center; font-weight: 700; color: #253347; font-size: 10px;">${c.chestNo || ''}</td>
+                    <td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; font-weight: 800; color: #253347; font-size: 10px; text-transform: uppercase; line-height: 1.3;">${c.name || ''}</td>
+                    <td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; font-weight: 700; font-size: 10px; color: #6d7785; text-transform: uppercase;">${c.team || ''}</td>
+                    <td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center;"></td>
+                    <td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center;"></td>
+                </tr>`;
+            });
+
+            let fullHtml = '';
+            for (let j = 1; j <= currentJudgeCount; j++) {
+                fullHtml += `
+                <div id="pdfSingleSheet_${j}" class="sheet-page">
+                    <div>
+                        <!-- Accent Line -->
+                        <div style="height: 5px; border-radius: 999px; margin-bottom: 16px; background: linear-gradient(90deg, #155995 0%, #7f1d3f 24%, #d8232a 50%, #f05a19 76%, #f7b733 100%);"></div>
+
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                            <div style="display: flex; align-items: center; gap: 14px;">
+                                <div style="width: 44px; height: 44px; border: 1px solid #d4dbe3; border-radius: 10px; display: grid; place-items: center; background: #ffffff; flex-shrink: 0; padding: 4px;">
+                                    <img src="${festivalLogoStr || 'logo-512.svg'}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" crossorigin="anonymous" onerror="this.onerror=null; this.src='logo-512.svg';" />
+                                </div>
+                                <div>
+                                    <h1 style="margin: 0; color: #0f4b80; font-size: 18px; letter-spacing: .2px; font-weight: 800; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase;">
+                                        OFFICIAL JUDGEMENT SHEET
+                                    </h1>
+                                    <p style="margin: 5px 0 0; color: #8a95a4; font-size: 9px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase;">
+                                        VENUE: ${activeProg.resolvedVenue} &nbsp;&bull;&nbsp; FESTIVAL: ${festivalNameStr}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                                <div style="background: #0f4b80; color: #ffffff; border-radius: 8px; padding: 10px 14px; font-size: 10px; font-weight: 800; letter-spacing: .8px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase; white-space: nowrap;">
+                                    JUDGE ${j} OF ${currentJudgeCount}
+                                </div>
+                                <div style="width: 52px; height: 52px; border: 1px solid #b9c0c8; border-radius: 6px; padding: 3px; background: #ffffff; flex-shrink: 0; display: grid; place-items: center;">
+                                    <img src="${qrUrl}" alt="QR" style="width: 100%; height: 100%; display: block; object-fit: contain;" onerror="this.onerror=null; this.src='https://quickchart.io/qr?size=300&text=' + encodeURIComponent('${resultScanUrl}');" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div style="height: 1px; background: #0f4b80; margin: 14px 0 16px;"></div>
+
+                        <!-- Meta Grid -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 2.05fr 1fr; gap: 8px; margin-bottom: 14px;">
+                            <div style="border: 1px solid #d4dbe3; background: #f7f9fc; border-radius: 8px; padding: 10px 10px 9px; min-height: 52px;">
+                                <span style="display: block; color: #0f4b80; font-size: 8px; font-weight: 800; margin-bottom: 5px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase;">DATE</span>
+                                <strong style="font-size: 11px; color: #253347;">${activeProg.resolvedDate}</strong>
+                            </div>
+                            <div style="border: 1px solid #d4dbe3; background: #f7f9fc; border-radius: 8px; padding: 10px 10px 9px; min-height: 52px;">
+                                <span style="display: block; color: #0f4b80; font-size: 8px; font-weight: 800; margin-bottom: 5px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase;">VENUE</span>
+                                <strong style="font-size: 11px; color: #253347; text-transform: uppercase;">${activeProg.resolvedVenue}</strong>
+                            </div>
+                            <div style="border: 1px solid #d4dbe3; background: #f7f9fc; border-radius: 8px; padding: 10px 10px 9px; min-height: 52px;">
+                                <span style="display: block; color: #0f4b80; font-size: 8px; font-weight: 800; margin-bottom: 5px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase;">PROGRAM</span>
+                                <strong style="font-size: 11px; color: #253347; text-transform: uppercase;">${activeProg.name || '---'}</strong>
+                            </div>
+                            <div style="border: 1px solid #d4dbe3; background: #f7f9fc; border-radius: 8px; padding: 10px 10px 9px; min-height: 52px;">
+                                <span style="display: block; color: #0f4b80; font-size: 8px; font-weight: 800; margin-bottom: 5px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase;">CODE &amp; SECTION</span>
+                                <strong style="font-size: 11px; color: #253347; text-transform: uppercase;">${activeProg.code || '---'} &bull; ${activeProg.section || '---'}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Table -->
+                        <div style="border: 1px solid #155995; border-radius: 10px; overflow: hidden; background: #ffffff;">
+                            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                                <thead>${thHtml}</thead>
+                                <tbody>${tbHtml}</tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="margin-top: 24px; padding-top: 14px; border-top: 1px solid #cfd6dd; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div style="font-size: 7px; color: #718096; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;">
+                            OFFICIAL EVALUATION SHEET &nbsp;&bull;&nbsp; JUDGE ${j} OF ${currentJudgeCount}
+                        </div>
+                        <div style="display: flex; align-items: flex-end; gap: 16px;">
+                            <div style="color: #0f4b80; font-size: 9px; font-weight: 800; line-height: 1.35; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase;">
+                                JUDGE ${j}<br />SIGNATURE:
+                            </div>
+                            <div style="width: 155px; border-bottom: 1px solid #56728f; height: 22px;"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            container.innerHTML = fullHtml;
+        }
+
+        async function exportPdf() {
+            showToast("⏳ Generating PDF...", "#f59e0b");
+            try {
+                const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+                if (!jsPDFLib) throw new Error("jsPDF library not loaded");
+
+                const pdf = new jsPDFLib('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                for (let j = 1; j <= currentJudgeCount; j++) {
+                    const sheetNode = document.getElementById(`pdfSingleSheet_${j}`);
+                    let imgData = null;
+
+                    if (typeof domtoimage !== 'undefined' && domtoimage.toPng) {
+                        try {
+                            imgData = await domtoimage.toPng(sheetNode, { bgcolor: '#ffffff', quality: 1, width: 794, height: 1123 });
+                        } catch (e) {
+                            console.warn("domtoimage error page " + j, e);
+                        }
+                    }
+
+                    if (!imgData && typeof html2canvas !== 'undefined') {
+                        const canvas = await html2canvas(sheetNode, { scale: 2, useCORS: true, logging: false });
+                        imgData = canvas.toDataURL('image/png');
+                    }
+
+                    if (imgData) {
+                        if (j > 1) pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    }
+                }
+
+                pdf.save(`Judgesheet_${activeProg?.code || 'PRG'}_${currentJudgeCount}Judges.pdf`);
+                showToast("✅ PDF downloaded successfully!");
+            } catch(e) {
+                console.error(e);
+                showToast("❌ PDF Export failed: " + e.message, "#ef4444");
+            }
+        }
+
+        async function exportPng() {
+            showToast("⏳ Rendering PNG image...", "#f59e0b");
+            try {
+                const firstSheet = document.getElementById(`pdfSingleSheet_1`);
+                let dataUrl = null;
+
+                if (typeof domtoimage !== 'undefined' && domtoimage.toPng) {
+                    dataUrl = await domtoimage.toPng(firstSheet, { bgcolor: '#ffffff', quality: 1 });
+                } else if (typeof html2canvas !== 'undefined') {
+                    const canvas = await html2canvas(firstSheet, { scale: 2, useCORS: true, logging: false });
+                    dataUrl = canvas.toDataURL('image/png');
+                }
+
+                if (dataUrl) {
+                    const a = document.createElement('a');
+                    a.download = `Judgesheet_${activeProg?.code || 'PRG'}.png`;
+                    a.href = dataUrl;
+                    a.click();
+                    showToast("✅ PNG image downloaded!");
+                }
+            } catch(e) {
+                console.error(e);
+                showToast("❌ PNG Export failed: " + e.message, "#ef4444");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSheetData);
+    </script>
+</body>
+</html>
