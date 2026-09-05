@@ -148,6 +148,10 @@
                 <input type="text" id="venueVolunteers" placeholder="e.g. Alice, Bob, Charlie" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all shadow-sm">
                 <p class="text-[11px] text-gray-500 mt-2">Enter multiple volunteers manually, separated by commas.</p>
             </div>
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="venueSendWa" class="w-4 h-4 text-brand-blue border-gray-200 rounded focus:ring-brand-blue cursor-pointer" checked>
+                <label for="venueSendWa" class="text-[13px] font-semibold text-gray-800 cursor-pointer select-none">Send WhatsApp Alerts</label>
+            </div>
         </div>
         <!-- Footer -->
         <div class="p-5 border-t border-gray-100 bg-white flex justify-end gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
@@ -187,7 +191,8 @@
             document.getElementById('venueType').value = 'Stage';
             document.getElementById('venuePlace').value = '';
             document.getElementById('venueVolunteers').value = '';
-            document.getElementById('venueSendWa').checked = true;
+            const sendWaEl = document.getElementById('venueSendWa');
+            if (sendWaEl) sendWaEl.checked = true;
             document.getElementById('venue-sidebar-title').innerText = "Add Venue";
             document.getElementById('btn-save-venue-text').innerText = "Submit";
 
@@ -199,7 +204,7 @@
                     document.getElementById('venueName').value = v.name || '';
                     document.getElementById('venueType').value = v.type || 'Stage';
                     document.getElementById('venuePlace').value = v.place || '';
-                    document.getElementById('venueSendWa').checked = v.sendWaAlerts !== false;
+                    if (sendWaEl) sendWaEl.checked = v.sendWaAlerts !== false;
                     
                     if (Array.isArray(v.volunteers)) {
                         document.getElementById('venueVolunteers').value = v.volunteers.join(', ');
@@ -230,7 +235,8 @@
             const type = document.getElementById('venueType').value;
             const place = document.getElementById('venuePlace').value.trim();
             const volunteersStr = document.getElementById('venueVolunteers').value.trim();
-            const sendWaAlerts = document.getElementById('venueSendWa').checked;
+            const sendWaEl = document.getElementById('venueSendWa');
+            const sendWaAlerts = sendWaEl ? sendWaEl.checked : true;
 
             if(!name || !place) {
                 return typeof showToast === 'function' ? showToast("❌ Name and Place are required") : alert("Required fields missing");

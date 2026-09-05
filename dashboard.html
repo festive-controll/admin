@@ -11,6 +11,15 @@
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
     <meta name="theme-color" content="#134E8E">
+    <script>
+        (function () {
+            const origWarn = console.warn;
+            console.warn = function (...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+                origWarn.apply(console, args);
+            };
+        })();
+    </script>
     <script src="fest-favicon.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel='stylesheet'
@@ -970,7 +979,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
-        const firebaseConfig = {
+        var firebaseConfig = {
             apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
             authDomain: "festie-s1u2h3.firebaseapp.com",
             projectId: "festie-s1u2h3",
@@ -1276,6 +1285,8 @@
                         if (!code || !code.trim()) return;
                         // Skip tailwind config setup block (already set up by dashboard)
                         if (code.includes('tailwind.config =')) return;
+                        // Convert const/let firebaseConfig to var firebaseConfig to avoid redeclaration SyntaxErrors in global scope
+                        code = code.replace(/(?:const|let)\s+firebaseConfig\s*=/g, 'var firebaseConfig =');
                         try {
                             const newScript = document.createElement('script');
                             newScript.appendChild(document.createTextNode(code));
@@ -1434,7 +1445,11 @@
                     scripts.forEach(oldScript => {
                         const newScript = document.createElement('script');
                         Array.from(oldScript.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
-                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        let code = oldScript.innerHTML;
+                        if (code) {
+                            code = code.replace(/(?:const|let)\s+firebaseConfig\s*=/g, 'var firebaseConfig =');
+                        }
+                        newScript.appendChild(document.createTextNode(code));
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
 
@@ -1497,7 +1512,11 @@
                     scripts.forEach(oldScript => {
                         const newScript = document.createElement('script');
                         Array.from(oldScript.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
-                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        let code = oldScript.innerHTML;
+                        if (code) {
+                            code = code.replace(/(?:const|let)\s+firebaseConfig\s*=/g, 'var firebaseConfig =');
+                        }
+                        newScript.appendChild(document.createTextNode(code));
                         oldScript.parentNode.replaceChild(newScript, oldScript);
                     });
 

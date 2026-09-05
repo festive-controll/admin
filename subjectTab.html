@@ -324,7 +324,7 @@
                 var db = window.db || (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
 
                 if (!db && typeof firebase !== 'undefined') {
-                    const firebaseConfig = {
+                    var firebaseConfig = {
                         authDomain: "festie-s1u2h3.firebaseapp.com",
                         projectId: "festie-s1u2h3",
                         storageBucket: "festie-s1u2h3.firebasestorage.app",
