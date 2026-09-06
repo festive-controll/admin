@@ -452,6 +452,13 @@
 
                 updateData();
                 window.switchViewMode('table');
+
+                // Auto-open target program when URL contains ?id=... (e.g. from QR scan)
+                const urlParams = new URLSearchParams(window.location.search);
+                const scannedId = urlParams.get('id');
+                if (scannedId) {
+                    window.viewProgramDetails(scannedId);
+                }
             })();
     </script>
 </body>
