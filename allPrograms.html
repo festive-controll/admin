@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,11 @@
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script>
         tailwind.config = {
@@ -34,27 +38,60 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
-        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Dropdown animation */
-        .dropdown-enter { animation: drop-in 0.15s ease-out forwards; transform-origin: top right; }
-        @keyframes drop-in {
-            0% { opacity: 0; transform: scale(0.95) translateY(-5px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        
+
+        i[class^="fi-"] {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .font-mono-custom {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Dropdown animation */
+        .dropdown-enter {
+            animation: drop-in 0.15s ease-out forwards;
+            transform-origin: top right;
+        }
+
+        @keyframes drop-in {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(-5px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
         /* Accordion transition */
-        .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
+        .accordion-content {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+        }
     </style>
 </head>
+
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
 
     <div class="max-w-full w-full mx-auto relative">
-        
+
         <!-- ========================================== -->
         <!-- LIST VIEW (Main Display)                   -->
         <!-- ========================================== -->
@@ -63,10 +100,12 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h1 class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Programs</h1>
-                    <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage festival programs and settings</p>
+                    <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage festival programs and
+                        settings</p>
                 </div>
                 <div class="flex items-center ml-4">
-                    <button onclick="openFormView()" class="flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-[#FFB33F] border border-transparent rounded-full text-[13px] font-bold text-[#111827] hover:bg-opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap p-0">
+                    <button onclick="openFormView()"
+                        class="flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:py-2.5 bg-[#FFB33F] border border-transparent rounded-full text-[13px] font-bold text-[#111827] hover:bg-opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap p-0">
                         <i class="fi fi-rr-add text-sm sm:text-[13px]"></i>
                         <span class="hidden sm:block">Create Program</span>
                     </button>
@@ -74,31 +113,41 @@
             </div>
 
             <!-- Main Card Area -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
+            <div
+                class="bg-white rounded-xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
                 <!-- Toolbar -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 gap-4 sm:gap-0">
-                    <div class="flex space-x-2 items-center w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0 px-1">
-                        <button id="btn-table" onclick="switchProgView('table')" class="bg-white shadow-sm text-[#111827] text-[13px] font-semibold py-1.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all duration-200 whitespace-nowrap">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 gap-4 sm:gap-0">
+                    <div
+                        class="flex space-x-2 items-center w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0 px-1">
+                        <button id="btn-table" onclick="switchProgView('table')"
+                            class="bg-white shadow-sm text-[#111827] text-[13px] font-semibold py-1.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all duration-200 whitespace-nowrap">
                             <i class="fi fi-rr-table-list text-xs shrink-0"></i> Table
                         </button>
-                        <button id="btn-cards" onclick="switchProgView('cards')" class="text-gray-500 hover:text-gray-800 bg-transparent text-[13px] font-medium py-1.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all duration-200 whitespace-nowrap">
+                        <button id="btn-cards" onclick="switchProgView('cards')"
+                            class="text-gray-500 hover:text-gray-800 bg-transparent text-[13px] font-medium py-1.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all duration-200 whitespace-nowrap">
                             <i class="fi fi-rr-grid text-xs shrink-0"></i> Cards
                         </button>
                     </div>
                     <!-- Search and Filter -->
                     <div class="flex items-center gap-3 w-full sm:w-auto mt-3 sm:mt-0">
                         <div class="relative w-full sm:w-auto min-w-[140px]">
-                            <select id="filter-section" onchange="applyProgFilters()" class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                            <select id="filter-section" onchange="applyProgFilters()"
+                                class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
                                 <option value="All">All Categories</option>
                             </select>
-                            <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                            <i
+                                class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
                         </div>
                         <div class="relative w-full sm:w-64">
-                            <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                            <input type="text" id="search-programs" oninput="applyProgFilters()" placeholder="Search programs..." 
+                            <i
+                                class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input type="text" id="search-programs" oninput="applyProgFilters()"
+                                placeholder="Search programs..."
                                 class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] transition-all">
                         </div>
-                        <button onclick="downloadProgCSV()" class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
+                        <button onclick="downloadProgCSV()"
+                            class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
                             <i class="fi fi-rr-file-export text-xs"></i>
                             <span class="hidden md:inline">Export</span>
                         </button>
@@ -106,18 +155,23 @@
                 </div>
 
                 <!-- Bulk Header -->
-                <div id="bulk-header" class="hidden flex items-center justify-between py-2.5 px-6 border-b border-gray-100 bg-blue-50/50">
+                <div id="bulk-header"
+                    class="hidden flex items-center justify-between py-2.5 px-6 border-b border-gray-100 bg-blue-50/50">
                     <div class="flex items-center space-x-4">
-                        <div onclick="toggleProgSelectAll(event)" class="w-5 h-5 rounded-full flex items-center justify-center bg-[#FFC107] cursor-pointer shadow-sm hover:scale-105 transition-transform">
+                        <div onclick="toggleProgSelectAll(event)"
+                            class="w-5 h-5 rounded-full flex items-center justify-center bg-[#FFC107] cursor-pointer shadow-sm hover:scale-105 transition-transform">
                             <i class="fi fi-rr-check text-[10px] text-white"></i>
                         </div>
-                        <span class="text-[13px] font-semibold text-gray-800"><span id="selected-count-text">1</span> selected</span>
+                        <span class="text-[13px] font-semibold text-gray-800"><span id="selected-count-text">1</span>
+                            selected</span>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <button onclick="downloadProgCSV(true)" class="flex items-center justify-center gap-2 px-4 py-1.5 bg-brand-blue border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-opacity-90 shadow-sm transition-colors">
+                        <button onclick="downloadProgCSV(true)"
+                            class="flex items-center justify-center gap-2 px-4 py-1.5 bg-brand-blue border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-opacity-90 shadow-sm transition-colors">
                             <i class="fi fi-rr-file-export text-sm"></i> Export Selected
                         </button>
-                        <button onclick="deleteSelectedProgs()" class="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#DC2626] border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-red-700 shadow-sm transition-colors">
+                        <button onclick="deleteSelectedProgs()"
+                            class="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#DC2626] border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-red-700 shadow-sm transition-colors">
                             <i class="fi fi-rr-trash text-sm"></i> Delete Selected
                         </button>
                     </div>
@@ -127,9 +181,12 @@
                 <div id="view-table" class="block">
                     <div class="overflow-x-auto w-full">
                         <div id="prog-table-container" class="min-w-[800px]">
-                            <div id="standard-header" class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA]">
+                            <div id="standard-header"
+                                class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA]">
                                 <div class="col-span-1 flex items-center">
-                                    <div onclick="toggleProgSelectAll(event)" class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors" id="master-checkbox"></div>
+                                    <div onclick="toggleProgSelectAll(event)"
+                                        class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors"
+                                        id="master-checkbox"></div>
                                 </div>
                                 <div class="col-span-2 text-[13px] font-medium text-gray-700">Code</div>
                                 <div class="col-span-3 text-[13px] font-medium text-gray-700">Program</div>
@@ -145,31 +202,39 @@
 
                 <!-- CARDS VIEW -->
                 <div id="view-cards" class="hidden p-6 bg-gray-50/50">
-                    <div id="prog-cards-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+                    <div id="prog-cards-list"
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
                 </div>
 
                 <!-- Footer / Pagination -->
-                <div class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                     <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                         <span id="results-count">Showing results</span>
                         <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
                         <div class="relative ml-2 sm:ml-0">
-                            <select id="prog-per-page" onchange="changeProgPerPage(this.value)" class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
+                            <select id="prog-per-page" onchange="changeProgPerPage(this.value)"
+                                class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                                 <option value="250">250</option>
                                 <option value="500">500</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                                 <i class="fi fi-rr-angle-small-down text-[10px]"></i>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-3 sm:space-x-4">
-                        <button id="prog-prev-page" onclick="changeProgPage(-1)" class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i class="fi fi-rr-angle-small-left text-xs"></i></button>
+                        <button id="prog-prev-page" onclick="changeProgPage(-1)"
+                            class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i
+                                class="fi fi-rr-angle-small-left text-xs"></i></button>
                         <span id="prog-page-info" class="text-gray-600 text-[12px] sm:text-[13px]">Page 1 of 1</span>
-                        <button id="prog-next-page" onclick="changeProgPage(1)" class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i class="fi fi-rr-angle-small-right text-xs"></i></button>
+                        <button id="prog-next-page" onclick="changeProgPage(1)"
+                            class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"><i
+                                class="fi fi-rr-angle-small-right text-xs"></i></button>
                     </div>
                 </div>
             </div>
@@ -180,101 +245,127 @@
         <!-- ========================================== -->
         <div id="form-view" class="hidden animate-in fade-in duration-300 pb-10 max-w-4xl mx-auto">
             <div class="flex items-center gap-4 mb-6">
-                <button onclick="closeFormView()" class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">
+                <button onclick="closeFormView()"
+                    class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">
                     <i class="fi fi-rr-arrow-left"></i>
                 </button>
                 <div>
-                    <h1 id="form-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Create Program</h1>
-                    <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5">Configure all program rules and settings</p>
+                    <h1 id="form-title" class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Create
+                        Program</h1>
+                    <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5">Configure all program rules and settings
+                    </p>
                 </div>
             </div>
 
             <div class="space-y-4">
-                
+
                 <!-- Accordion 1: Basic Details -->
                 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <button onclick="toggleAccordion('acc-basic', 'icon-basic')" class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
+                    <button onclick="toggleAccordion('acc-basic', 'icon-basic')"
+                        class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center"><i class="fi fi-rr-info"></i></div>
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center">
+                                <i class="fi fi-rr-info"></i></div>
                             <h3 class="text-[15px] font-bold text-gray-800">Basic Details</h3>
                         </div>
-                        <i id="icon-basic" class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300 rotate-180"></i>
+                        <i id="icon-basic"
+                            class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300 rotate-180"></i>
                     </button>
                     <div id="acc-basic" class="p-6 border-t border-gray-100 bg-gray-50/30">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Code *</label>
-                                <input type="text" id="progCode" placeholder="e.g. PRG-01" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all font-mono-custom uppercase">
+                                <input type="text" id="progCode" placeholder="e.g. PRG-01"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all font-mono-custom uppercase">
                             </div>
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Name *</label>
-                                <input type="text" id="progName" placeholder="e.g. Solo Dance" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
+                                <input type="text" id="progName" placeholder="e.g. Solo Dance"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Section *</label>
                                 <div class="relative">
-                                    <select id="progSection" onchange="handleSectionChange('progSection', 'progType')" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                    <select id="progSection" onchange="handleSectionChange('progSection', 'progType')"
+                                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
                                         <option value="" disabled selected>Select Section</option>
                                     </select>
-                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i
+                                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Type *</label>
                                 <div class="relative">
-                                    <select id="progType" onchange="toggleGroupFields()" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                    <select id="progType" onchange="toggleGroupFields()"
+                                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
                                         <option value="Individual">Individual</option>
                                         <option value="Group">Group</option>
                                         <option value="General">General</option>
                                     </select>
-                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i
+                                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
                             </div>
                             <div id="groupSetsContainer" class="hidden">
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Count of Sets</label>
-                                <input type="number" id="progGroupSets" placeholder="e.g. 2" min="1" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
+                                <input type="number" id="progGroupSets" placeholder="e.g. 2" min="1"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                             <div id="groupParticipantsContainer" class="hidden">
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Participants per Set</label>
-                                <input type="number" id="progGroupParticipants" placeholder="e.g. 10" min="1" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Participants per
+                                    Set</label>
+                                <input type="number" id="progGroupParticipants" placeholder="e.g. 10" min="1"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                             <div id="progSetContainer">
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Set Limit</label>
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Program Set
+                                    Limit</label>
                                 <div class="relative">
-                                    <select id="progSet" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                    <select id="progSet"
+                                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
                                         <option value="">No Limit Set</option>
                                         <!-- Fetched dynamically -->
                                     </select>
-                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i
+                                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Venue Type</label>
                                 <div class="relative">
-                                    <select id="progVenueType" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer" onchange="updateSubStageDropdown(this.value)">
+                                    <select id="progVenueType"
+                                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer"
+                                        onchange="updateSubStageDropdown(this.value)">
                                         <option value="" disabled selected>Select Venue Type</option>
                                     </select>
-                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i
+                                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Sub Stage</label>
                                 <div class="relative">
-                                    <select id="progSubStage" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer" disabled>
+                                    <select id="progSubStage"
+                                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer"
+                                        disabled>
                                         <option value="" disabled selected>Select Sub Stage</option>
                                     </select>
-                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i
+                                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Status</label>
                                 <div class="relative w-full md:w-1/2">
-                                    <select id="progStatus" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
+                                    <select id="progStatus"
+                                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] appearance-none cursor-pointer">
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
                                     </select>
-                                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                    <i
+                                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                                 </div>
                             </div>
                         </div>
@@ -282,29 +373,42 @@
                 </div>
 
                 <!-- Accordion 2: Participation Limits -->
-                <div id="accordion-participation-limits" class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <button onclick="toggleAccordion('acc-limits', 'icon-limits')" class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
+                <div id="accordion-participation-limits"
+                    class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    <button onclick="toggleAccordion('acc-limits', 'icon-limits')"
+                        class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-orange-50 text-brand-orange flex items-center justify-center"><i class="fi fi-rr-users"></i></div>
+                            <div
+                                class="w-8 h-8 rounded-lg bg-orange-50 text-brand-orange flex items-center justify-center">
+                                <i class="fi fi-rr-users"></i></div>
                             <h3 class="text-[15px] font-bold text-gray-800">Participation Limits</h3>
                         </div>
-                        <i id="icon-limits" class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
+                        <i id="icon-limits"
+                            class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
                     </button>
                     <div id="acc-limits" class="hidden p-6 border-t border-gray-100 bg-gray-50/30">
                         <div class="grid grid-cols-1 gap-6">
-                            <div id="unlimitedCheckboxContainer" class="hidden flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                            <div id="unlimitedCheckboxContainer"
+                                class="hidden flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                 <div>
                                     <h4 class="text-[14px] font-semibold text-gray-800">Unlimited Participants</h4>
-                                    <p class="text-[12px] text-gray-500 mt-0.5">Enable unlimited participant registrations for this program (no fixed participant entry columns in Team Manager).</p>
+                                    <p class="text-[12px] text-gray-500 mt-0.5">Enable unlimited participant
+                                        registrations for this program (no fixed participant entry columns in Team
+                                        Manager).</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="progUnlimited" class="sr-only peer" onchange="toggleUnlimitedMaxInput()">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue"></div>
+                                    <input type="checkbox" id="progUnlimited" class="sr-only peer"
+                                        onchange="toggleUnlimitedMaxInput()">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue">
+                                    </div>
                                 </label>
                             </div>
                             <div id="maxParticipantsContainer">
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5" id="progMaxLabel">Maximum Participants</label>
-                                <input type="number" id="progMax" value="1" min="1" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5"
+                                    id="progMaxLabel">Maximum Participants</label>
+                                <input type="number" id="progMax" value="1" min="1"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                         </div>
                     </div>
@@ -314,22 +418,29 @@
 
                 <!-- Accordion 3: Registration Settings -->
                 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <button onclick="toggleAccordion('acc-reg', 'icon-reg')" class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
+                    <button onclick="toggleAccordion('acc-reg', 'icon-reg')"
+                        class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"><i class="fi fi-rr-document-signed"></i></div>
+                            <div
+                                class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                <i class="fi fi-rr-document-signed"></i></div>
                             <h3 class="text-[15px] font-bold text-gray-800">Registration Settings</h3>
                         </div>
-                        <i id="icon-reg" class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
+                        <i id="icon-reg"
+                            class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
                     </button>
                     <div id="acc-reg" class="hidden p-6 border-t border-gray-100 bg-gray-50/30">
                         <div class="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
                             <div>
                                 <h4 class="text-[14px] font-semibold text-gray-800">Topic Registration</h4>
-                                <p class="text-[12px] text-gray-500 mt-0.5">Require participants to provide a topic/subject name during registration.</p>
+                                <p class="text-[12px] text-gray-500 mt-0.5">Require participants to provide a
+                                    topic/subject name during registration.</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="progTopicReg" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue"></div>
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue">
+                                </div>
                             </label>
                         </div>
                     </div>
@@ -337,29 +448,40 @@
 
                 <!-- Accordion 4: Scoring & Templates -->
                 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <button onclick="toggleAccordion('acc-score', 'icon-score')" class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
+                    <button onclick="toggleAccordion('acc-score', 'icon-score')"
+                        class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><i class="fi fi-rr-trophy"></i></div>
+                            <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
+                                <i class="fi fi-rr-trophy"></i></div>
                             <h3 class="text-[15px] font-bold text-gray-800">Scoring & Templates</h3>
                         </div>
-                        <i id="icon-score" class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
+                        <i id="icon-score"
+                            class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
                     </button>
                     <div id="acc-score" class="hidden p-6 border-t border-gray-100 bg-gray-50/30 space-y-6">
-                        
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                            <div
+                                class="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                 <div class="font-semibold text-[14px] text-gray-800">Enable Grading</div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="progGrading" class="sr-only peer" onchange="toggleTemplateState('progGrading', 'progGradeTemplate', 'icon-grade-template')">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue"></div>
+                                    <input type="checkbox" id="progGrading" class="sr-only peer"
+                                        onchange="toggleTemplateState('progGrading', 'progGradeTemplate', 'icon-grade-template')">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue">
+                                    </div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                            <div
+                                class="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                 <div class="font-semibold text-[14px] text-gray-800">Enable Scoring</div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="progScoring" class="sr-only peer" onchange="toggleTemplateState('progScoring', 'progScoreTemplate', 'icon-score-template')">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue"></div>
+                                    <input type="checkbox" id="progScoring" class="sr-only peer"
+                                        onchange="toggleTemplateState('progScoring', 'progScoreTemplate', 'icon-score-template')">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-blue">
+                                    </div>
                                 </label>
                             </div>
                         </div>
@@ -368,20 +490,25 @@
                             <div id="grade-container">
                                 <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Grade Template</label>
                                 <div class="relative w-full">
-                                    <select id="progGradeTemplate" disabled class="w-full px-4 py-2.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-lg text-[13px] focus:outline-none transition-all appearance-none cursor-not-allowed">
+                                    <select id="progGradeTemplate" disabled
+                                        class="w-full px-4 py-2.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-lg text-[13px] focus:outline-none transition-all appearance-none cursor-not-allowed">
                                         <option value="">Loading templates...</option>
                                     </select>
-                                    <i id="icon-grade-template" class="fi fi-rr-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors"></i>
+                                    <i id="icon-grade-template"
+                                        class="fi fi-rr-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors"></i>
                                 </div>
                             </div>
 
                             <div id="score-container">
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Pattern Template</label>
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Pattern
+                                    Template</label>
                                 <div class="relative w-full">
-                                    <select id="progScoreTemplate" disabled class="w-full px-4 py-2.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-lg text-[13px] focus:outline-none transition-all appearance-none cursor-not-allowed">
+                                    <select id="progScoreTemplate" disabled
+                                        class="w-full px-4 py-2.5 bg-gray-100 text-gray-500 border border-gray-200 rounded-lg text-[13px] focus:outline-none transition-all appearance-none cursor-not-allowed">
                                         <option value="">Loading templates...</option>
                                     </select>
-                                    <i id="icon-score-template" class="fi fi-rr-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors"></i>
+                                    <i id="icon-score-template"
+                                        class="fi fi-rr-lock absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors"></i>
                                 </div>
                             </div>
                         </div>
@@ -391,34 +518,49 @@
 
                 <!-- Accordion 5: Concept & Skills -->
                 <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <button onclick="toggleAccordion('acc-concept', 'icon-concept')" class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
+                    <button onclick="toggleAccordion('acc-concept', 'icon-concept')"
+                        class="w-full flex justify-between items-center p-5 bg-white hover:bg-gray-50 transition-colors focus:outline-none">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fi fi-rr-document"></i></div>
+                            <div
+                                class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                <i class="fi fi-rr-document"></i></div>
                             <h3 class="text-[15px] font-bold text-gray-800">Concept & Skills</h3>
                         </div>
-                        <i id="icon-concept" class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
+                        <i id="icon-concept"
+                            class="fi fi-rr-angle-small-down text-gray-400 transition-transform duration-300"></i>
                     </button>
                     <div id="acc-concept" class="hidden p-6 border-t border-gray-100 bg-gray-50/30 space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Participant Time Limit</label>
-                                <input type="text" id="progTimeLimit" placeholder="e.g. 5 minutes each" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Participant Time
+                                    Limit</label>
+                                <input type="text" id="progTimeLimit" placeholder="e.g. 5 minutes each"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                             <div>
-                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Skill Evaluated</label>
-                                <input type="text" id="progSkill" placeholder="e.g. Typing, Speed, Public Speaking" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
+                                <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Skill
+                                    Evaluated</label>
+                                <input type="text" id="progSkill" placeholder="e.g. Typing, Speed, Public Speaking"
+                                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all">
                             </div>
                         </div>
                         <div>
                             <label class="block text-[13px] font-medium text-gray-800 mb-1.5">Concept Note</label>
-                            <textarea id="progConceptNote" placeholder="Write the concept note or program details here..." rows="4" class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all resize-y"></textarea>
+                            <textarea id="progConceptNote"
+                                placeholder="Write the concept note or program details here..." rows="4"
+                                class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all resize-y"></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-200">
-                    <button onclick="closeFormView()" class="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-[14px] font-bold hover:bg-gray-50 transition-all shadow-sm"><i class="fi fi-rr-cross text-sm"></i> Cancel</button>
-                    <button onclick="saveProgram()" id="btn-save-program" class="flex items-center justify-center gap-2 px-8 py-2.5 bg-brand-blue text-white rounded-lg text-[14px] font-bold hover:bg-opacity-90 transition-all shadow-md"><i class="fi fi-rr-disk text-sm"></i> <span id="btn-save-program-text">Create Program</span></button>
+                    <button onclick="closeFormView()"
+                        class="flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-[14px] font-bold hover:bg-gray-50 transition-all shadow-sm"><i
+                            class="fi fi-rr-cross text-sm"></i> Cancel</button>
+                    <button onclick="saveProgram()" id="btn-save-program"
+                        class="flex items-center justify-center gap-2 px-8 py-2.5 bg-brand-blue text-white rounded-lg text-[14px] font-bold hover:bg-opacity-90 transition-all shadow-md"><i
+                            class="fi fi-rr-disk text-sm"></i> <span id="btn-save-program-text">Create
+                            Program</span></button>
                 </div>
 
             </div>
@@ -426,71 +568,92 @@
     </div>
 
     <!-- Quick Edit Sidebar -->
-    <div id="edit-sidebar-overlay" class="hidden fixed inset-0 bg-gray-900/40 z-[110] transition-opacity backdrop-blur-sm" onclick="closeEditSidebar()"></div>
-    <div id="edit-sidebar" class="fixed top-0 right-0 h-full w-[400px] max-w-full bg-white shadow-2xl z-[120] transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div id="edit-sidebar-overlay"
+        class="hidden fixed inset-0 bg-gray-900/40 z-[110] transition-opacity backdrop-blur-sm"
+        onclick="closeEditSidebar()"></div>
+    <div id="edit-sidebar"
+        class="fixed top-0 right-0 h-full w-[400px] max-w-full bg-white shadow-2xl z-[120] transform translate-x-full transition-transform duration-300 flex flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
             <div>
                 <h2 class="text-lg font-bold text-gray-900">Quick Edit</h2>
                 <p class="text-[13px] text-gray-500 mt-1">Update basic program details</p>
             </div>
-            <button onclick="closeEditSidebar()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
+            <button onclick="closeEditSidebar()"
+                class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
                 <i class="fi fi-rr-cross text-sm"></i>
             </button>
         </div>
         <!-- Body -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
             <div>
-                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Program Code <span class="text-red-500">*</span></label>
-                <input type="text" id="quickProgCode" placeholder="e.g. PRG-01" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-mono-custom uppercase transition-all shadow-sm">
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Program Code <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="quickProgCode" placeholder="e.g. PRG-01"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue font-mono-custom uppercase transition-all shadow-sm">
             </div>
             <div>
-                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Program Name <span class="text-red-500">*</span></label>
-                <input type="text" id="quickProgName" placeholder="e.g. Solo Dance" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all shadow-sm">
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Program Name <span
+                        class="text-red-500">*</span></label>
+                <input type="text" id="quickProgName" placeholder="e.g. Solo Dance"
+                    class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all shadow-sm">
             </div>
             <div>
-                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Section <span class="text-red-500">*</span></label>
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Section <span
+                        class="text-red-500">*</span></label>
                 <div class="relative">
-                    <select id="quickProgSection" onchange="handleSectionChange('quickProgSection', 'quickProgType')" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue appearance-none cursor-pointer transition-all shadow-sm">
+                    <select id="quickProgSection" onchange="handleSectionChange('quickProgSection', 'quickProgType')"
+                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue appearance-none cursor-pointer transition-all shadow-sm">
                         <option value="" disabled selected>Select Section</option>
                     </select>
-                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    <i
+                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                 </div>
             </div>
             <div>
-                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Program Type <span class="text-red-500">*</span></label>
+                <label class="block text-[13px] font-semibold text-gray-800 mb-2">Program Type <span
+                        class="text-red-500">*</span></label>
                 <div class="relative">
-                    <select id="quickProgType" class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue appearance-none cursor-pointer transition-all shadow-sm">
+                    <select id="quickProgType"
+                        class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue appearance-none cursor-pointer transition-all shadow-sm">
                         <option value="Individual">Individual</option>
                         <option value="Group">Group</option>
                         <option value="General">General</option>
                     </select>
-                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    <i
+                        class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                 </div>
             </div>
         </div>
         <!-- Footer -->
         <div class="p-5 border-t border-gray-100 bg-white flex justify-end gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-            <button onclick="closeEditSidebar()" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-[13px] font-semibold hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
-            <button onclick="saveQuickEdit()" class="px-6 py-2.5 bg-brand-blue text-white rounded-lg text-[13px] font-semibold hover:bg-opacity-90 transition-all shadow-md flex items-center gap-2">
+            <button onclick="closeEditSidebar()"
+                class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-[13px] font-semibold hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
+            <button onclick="saveQuickEdit()"
+                class="px-6 py-2.5 bg-brand-blue text-white rounded-lg text-[13px] font-semibold hover:bg-opacity-90 transition-all shadow-md flex items-center gap-2">
                 <i class="fi fi-rr-disk text-xs"></i> Update
             </button>
         </div>
     </div>
 
     <!-- Global Action Menu -->
-    <div id="global-action-menu" class="hidden fixed w-36 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] py-1 overflow-hidden dropdown-enter">
-        <button id="btn-view" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+    <div id="global-action-menu"
+        class="hidden fixed w-36 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] py-1 overflow-hidden dropdown-enter">
+        <button id="btn-view"
+            class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
             <i class="fi fi-rr-eye text-[15px] mr-2.5 text-gray-500"></i> View
         </button>
-        <button id="btn-edit" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+        <button id="btn-edit"
+            class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
             <i class="fi fi-rr-edit text-[15px] mr-2.5 text-gray-500"></i> Edit
         </button>
-        <button id="btn-add-result" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+        <button id="btn-add-result"
+            class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
             <i class="fi fi-rr-add text-[15px] mr-2.5 text-green-500"></i> Add Result
         </button>
         <div class="border-t border-gray-100 my-0.5"></div>
-        <button id="btn-delete" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center transition-colors">
+        <button id="btn-delete"
+            class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center transition-colors">
             <i class="fi fi-rr-trash text-[15px] mr-2.5 text-red-500"></i> Delete
         </button>
     </div>
@@ -506,23 +669,23 @@
         var quickEditingProgId = null;
         var progCurrentPage = 1;
         var progItemsPerPage = 25;
-        
+
         let sectionOrderMap = {};
 
         function downloadProgCSV(onlySelected = false) {
             let data = programsData;
-            if(onlySelected) {
+            if (onlySelected) {
                 data = programsData.filter(p => selectedProgIds.has(p.id));
-            } else if(progSearchQuery) {
+            } else if (progSearchQuery) {
                 // Export currently filtered search results
-                data = programsData.filter(p => 
+                data = programsData.filter(p =>
                     (p.name && p.name.toLowerCase().includes(progSearchQuery)) ||
                     (p.code && p.code.toLowerCase().includes(progSearchQuery)) ||
                     (p.section && p.section.toLowerCase().includes(progSearchQuery))
                 );
             }
 
-            if(data.length === 0) return typeof showToast === 'function' && showToast("❌ No programs to export");
+            if (data.length === 0) return typeof showToast === 'function' && showToast("❌ No programs to export");
 
             const headers = ["ID", "Code", "Name", "Section", "Type", "Status", "Max Participants", "Topic Reg", "Grading", "Scoring", "Time Limit", "Skill Required", "Concept Note"];
             const rows = data.map(p => [
@@ -541,7 +704,7 @@
                 p.conceptNote || ''
             ]);
 
-            let csvContent = "data:text/csv;charset=utf-8," 
+            let csvContent = "data:text/csv;charset=utf-8,"
                 + headers.join(",") + "\n"
                 + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
 
@@ -552,12 +715,12 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             typeof showToast === 'function' && showToast("✅ CSV Downloaded!");
         }
 
         // Section fetching for dropdown
-        if(typeof db !== 'undefined') {
+        if (typeof db !== 'undefined') {
             db.collection('sections').where('isActive', '==', true).onSnapshot(snap => {
                 let sortedDocs = snap.docs.map(doc => doc.data());
                 sortedDocs.sort((a, b) => {
@@ -565,42 +728,42 @@
                     let o2 = typeof b.order === 'number' ? b.order : 999;
                     return o1 - o2;
                 });
-                
+
                 const secSelect = document.getElementById('progSection');
                 const quickSecSelect = document.getElementById('quickProgSection');
                 const filterSecSelect = document.getElementById('filter-section');
-                
-                if(secSelect) {
+
+                if (secSelect) {
                     const current = secSelect.getAttribute('data-pending-val') || secSelect.value;
                     let opts = '<option value="" disabled selected>Select Section</option>';
                     sortedDocs.forEach(data => { opts += `<option value="${data.name}">${data.name}</option>`; });
-                    secSelect.innerHTML = opts; 
-                    if(current) { secSelect.value = current; secSelect.removeAttribute('data-pending-val'); }
+                    secSelect.innerHTML = opts;
+                    if (current) { secSelect.value = current; secSelect.removeAttribute('data-pending-val'); }
                 }
-                if(quickSecSelect) {
+                if (quickSecSelect) {
                     const quickCurrent = quickSecSelect.getAttribute('data-pending-val') || quickSecSelect.value;
                     let opts = '<option value="" disabled selected>Select Section</option>';
                     sortedDocs.forEach(data => { opts += `<option value="${data.name}">${data.name}</option>`; });
-                    quickSecSelect.innerHTML = opts; 
-                    if(quickCurrent) { quickSecSelect.value = quickCurrent; quickSecSelect.removeAttribute('data-pending-val'); }
+                    quickSecSelect.innerHTML = opts;
+                    if (quickCurrent) { quickSecSelect.value = quickCurrent; quickSecSelect.removeAttribute('data-pending-val'); }
                 }
-                if(filterSecSelect) {
+                if (filterSecSelect) {
                     const filterCurrent = filterSecSelect.value;
                     let opts = '<option value="All">All Categories</option>';
                     sortedDocs.forEach(data => { opts += `<option value="${data.name}">${data.name}</option>`; });
                     filterSecSelect.innerHTML = opts;
                     filterSecSelect.value = filterCurrent;
                 }
-                
+
                 // Build section order map
                 sectionOrderMap = {};
                 snap.forEach(doc => {
                     sectionOrderMap[doc.data().name.toLowerCase()] = typeof doc.data().order === 'number' ? doc.data().order : 999;
                 });
-                
+
                 // Re-render UI if programs are already loaded to apply new sort
                 if (programsData.length > 0) {
-                    programsData.sort((a,b) => {
+                    programsData.sort((a, b) => {
                         const secA = (a.section || '').toLowerCase();
                         const secB = (b.section || '').toLowerCase();
                         const orderA = sectionOrderMap[secA] !== undefined ? sectionOrderMap[secA] : 999;
@@ -608,125 +771,125 @@
                         if (orderA !== orderB) return orderA - orderB;
                         if (secA < secB) return -1;
                         if (secA > secB) return 1;
-                        
+
                         const codeA = (a.code || '').toLowerCase();
                         const codeB = (b.code || '').toLowerCase();
                         if (codeA < codeB) return -1;
                         if (codeA > codeB) return 1;
-                        
+
                         return 0;
                     });
                     renderProgsUI();
                 }
             });
-            
+
             db.collection('programSets').onSnapshot(snap => {
                 const el = document.getElementById('progSet');
-                if(el) {
+                if (el) {
                     const cur = el.getAttribute('data-pending-val') || el.value;
                     let html = '<option value="">No Limit Set</option>';
-                    snap.forEach(d => { 
-                        html += `<option value="${d.id}">${d.data().name}</option>`; 
+                    snap.forEach(d => {
+                        html += `<option value="${d.id}">${d.data().name}</option>`;
                     });
                     el.innerHTML = html;
-                    if(cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
+                    if (cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
                 }
             });
-            
+
             db.collection('gradeTemplates').onSnapshot(snap => {
                 const el = document.getElementById('progGradeTemplate');
-                if(el) {
+                if (el) {
                     const cur = el.getAttribute('data-pending-val') || el.value;
                     let html = '<option value="" disabled selected>Select Grade Template</option>';
                     snap.forEach(d => { html += `<option value="${d.id}">${d.data().name}</option>`; });
                     el.innerHTML = html;
-                    if(cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
+                    if (cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
                 }
             });
 
             db.collection('positionTemplates').onSnapshot(snap => {
                 const el = document.getElementById('progScoreTemplate');
-                if(el) {
+                if (el) {
                     const cur = el.getAttribute('data-pending-val') || el.value;
                     let html = '<option value="" disabled selected>Select Pattern Template</option>';
                     snap.forEach(d => { html += `<option value="${d.id}">${d.data().name}</option>`; });
                     el.innerHTML = html;
-                    if(cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
+                    if (cur) { el.value = cur; el.removeAttribute('data-pending-val'); }
                 }
             });
 
             db.collection('venueTypes').onSnapshot(snap => {
                 window.dynamicVenueTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 const el = document.getElementById('progVenueType');
-                if(el) {
+                if (el) {
                     const cur = el.getAttribute('data-pending-val') || el.value;
                     let html = '<option value="" disabled selected>Select Venue Type</option>';
                     window.dynamicVenueTypes.forEach(v => {
                         html += `<option value="${v.id}">${v.name}</option>`;
                     });
                     el.innerHTML = html;
-                    if(cur) { 
-                        el.value = cur; 
-                        el.removeAttribute('data-pending-val'); 
+                    if (cur) {
+                        el.value = cur;
+                        el.removeAttribute('data-pending-val');
                         updateSubStageDropdown(cur, document.getElementById('progSubStage')?.getAttribute('data-pending-val'));
                     }
                 }
             });
-            
-        function compareProgramCodes(codeARaw, codeBRaw) {
-            const codeA = String(codeARaw || '').trim();
-            const codeB = String(codeBRaw || '').trim();
-            if (!codeA) return 1;
-            if (!codeB) return -1;
 
-            const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
-            const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+            function compareProgramCodes(codeARaw, codeBRaw) {
+                const codeA = String(codeARaw || '').trim();
+                const codeB = String(codeBRaw || '').trim();
+                if (!codeA) return 1;
+                if (!codeB) return -1;
 
-            if (matchA && matchB) {
-                const prefixA = matchA[1].toUpperCase();
-                const prefixB = matchB[1].toUpperCase();
-                const catA = prefixA[0];
-                const catB = prefixB[0];
+                const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+                const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
 
-                if (catA !== catB) return catA.localeCompare(catB);
+                if (matchA && matchB) {
+                    const prefixA = matchA[1].toUpperCase();
+                    const prefixB = matchB[1].toUpperCase();
+                    const catA = prefixA[0];
+                    const catB = prefixB[0];
 
-                const subA = prefixA.slice(1);
-                const subB = prefixB.slice(1);
+                    if (catA !== catB) return catA.localeCompare(catB);
 
-                if (subA !== subB) {
-                    if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
-                    if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
-                    return subA.localeCompare(subB);
+                    const subA = prefixA.slice(1);
+                    const subB = prefixB.slice(1);
+
+                    if (subA !== subB) {
+                        if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
+                        if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
+                        return subA.localeCompare(subB);
+                    }
+
+                    const numA = parseInt(matchA[2], 10);
+                    const numB = parseInt(matchB[2], 10);
+                    if (numA !== numB) return numA - numB;
+
+                    return matchA[3].localeCompare(matchB[3]);
                 }
 
-                const numA = parseInt(matchA[2], 10);
-                const numB = parseInt(matchB[2], 10);
-                if (numA !== numB) return numA - numB;
-
-                return matchA[3].localeCompare(matchB[3]);
+                return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
             }
 
-            return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
-        }
+            window.progUnsub = db.collection('programs').onSnapshot(snap => {
+                programsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                programsData.sort((a, b) => {
+                    const secA = (a.section || '').toLowerCase();
+                    const secB = (b.section || '').toLowerCase();
+                    const orderA = sectionOrderMap[secA] !== undefined ? sectionOrderMap[secA] : 999;
+                    const orderB = sectionOrderMap[secB] !== undefined ? sectionOrderMap[secB] : 999;
+                    if (orderA !== orderB) return orderA - orderB;
+                    if (secA < secB) return -1;
+                    if (secA > secB) return 1;
 
-        window.progUnsub = db.collection('programs').onSnapshot(snap => {
-            programsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            programsData.sort((a,b) => {
-                const secA = (a.section || '').toLowerCase();
-                const secB = (b.section || '').toLowerCase();
-                const orderA = sectionOrderMap[secA] !== undefined ? sectionOrderMap[secA] : 999;
-                const orderB = sectionOrderMap[secB] !== undefined ? sectionOrderMap[secB] : 999;
-                if (orderA !== orderB) return orderA - orderB;
-                if (secA < secB) return -1;
-                if (secA > secB) return 1;
-                
-                return compareProgramCodes(a.code, b.code);
+                    return compareProgramCodes(a.code, b.code);
+                });
+                renderProgsUI();
             });
-            renderProgsUI();
-        });
         }
 
-        window.updateSubStageDropdown = function(venueTypeId, pendingVal = null) {
+        window.updateSubStageDropdown = function (venueTypeId, pendingVal = null) {
             const el = document.getElementById('progSubStage');
             if (!el) return;
             if (!venueTypeId) {
@@ -736,14 +899,14 @@
             }
             el.disabled = false;
             el.innerHTML = '<option value="" disabled selected>Loading...</option>';
-            
+
             db.collection('venueTypes').doc(venueTypeId).collection('subStages').get().then(snap => {
                 let html = '<option value="" disabled selected>Select Sub Stage</option>';
                 snap.forEach(d => {
                     html += `<option value="${d.id}">${d.data().name}</option>`;
                 });
                 el.innerHTML = html;
-                if(pendingVal) { el.value = pendingVal; }
+                if (pendingVal) { el.value = pendingVal; }
                 el.removeAttribute('data-pending-val');
             }).catch(err => {
                 console.error("Error fetching sub stages:", err);
@@ -770,32 +933,32 @@
             const participationLimitsAccordion = document.getElementById('accordion-participation-limits');
             const unlimContainer = document.getElementById('unlimitedCheckboxContainer');
             const participantsLabel = document.querySelector('#groupParticipantsContainer label');
-            
+
             if (progType === 'Group') {
-                if(setsContainer) setsContainer.classList.remove('hidden');
-                if(participantsContainer) {
+                if (setsContainer) setsContainer.classList.remove('hidden');
+                if (participantsContainer) {
                     participantsContainer.classList.remove('hidden');
-                    if(participantsLabel) participantsLabel.innerText = 'Participants per Set';
+                    if (participantsLabel) participantsLabel.innerText = 'Participants per Set';
                 }
-                if(progSetContainer) progSetContainer.classList.add('hidden');
-                if(participationLimitsAccordion) participationLimitsAccordion.classList.add('hidden');
+                if (progSetContainer) progSetContainer.classList.add('hidden');
+                if (participationLimitsAccordion) participationLimitsAccordion.classList.add('hidden');
             } else if (progType === 'General') {
-                if(setsContainer) setsContainer.classList.add('hidden');
-                if(participantsContainer) participantsContainer.classList.add('hidden');
-                if(progSetContainer) progSetContainer.classList.add('hidden');
-                if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
-                if(unlimContainer) unlimContainer.classList.remove('hidden');
+                if (setsContainer) setsContainer.classList.add('hidden');
+                if (participantsContainer) participantsContainer.classList.add('hidden');
+                if (progSetContainer) progSetContainer.classList.add('hidden');
+                if (participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                if (unlimContainer) unlimContainer.classList.remove('hidden');
             } else {
-                if(setsContainer) setsContainer.classList.add('hidden');
-                if(participantsContainer) participantsContainer.classList.add('hidden');
-                if(progSetContainer) progSetContainer.classList.remove('hidden');
-                if(participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
-                if(unlimContainer) {
-                    if(isKulliya) unlimContainer.classList.remove('hidden');
+                if (setsContainer) setsContainer.classList.add('hidden');
+                if (participantsContainer) participantsContainer.classList.add('hidden');
+                if (progSetContainer) progSetContainer.classList.remove('hidden');
+                if (participationLimitsAccordion) participationLimitsAccordion.classList.remove('hidden');
+                if (unlimContainer) {
+                    if (isKulliya) unlimContainer.classList.remove('hidden');
                     else unlimContainer.classList.add('hidden');
                 }
-                if(document.getElementById('progGroupSets')) document.getElementById('progGroupSets').value = '';
-                if(document.getElementById('progGroupParticipants')) document.getElementById('progGroupParticipants').value = '';
+                if (document.getElementById('progGroupSets')) document.getElementById('progGroupSets').value = '';
+                if (document.getElementById('progGroupParticipants')) document.getElementById('progGroupParticipants').value = '';
             }
         }
 
@@ -855,13 +1018,13 @@
         function openFormView(id = null) {
             document.getElementById('main-list-view').classList.add('hidden');
             document.getElementById('form-view').classList.remove('hidden');
-            window.scrollTo(0,0);
+            window.scrollTo(0, 0);
 
             editingProgId = id;
             if (!id) {
                 document.getElementById('form-title').innerText = "Create Program";
                 document.getElementById('btn-save-program-text').innerText = "Create Program";
-                
+
                 // Reset
                 ['progCode', 'progName', 'progSection', 'progTimeLimit', 'progSkill', 'progConceptNote', 'progVenueType', 'progSubStage'].forEach(x => {
                     const el = document.getElementById(x);
@@ -896,14 +1059,14 @@
                 document.getElementById('form-title').innerText = "Edit Program";
                 document.getElementById('btn-save-program-text').innerText = "Update Program";
                 const p = programsData.find(x => x.id === id);
-                if(p) {
+                if (p) {
                     document.getElementById('progCode').value = p.code || '';
                     document.getElementById('progName').value = p.name || '';
-                    
+
                     const pSec = document.getElementById('progSection');
                     pSec.value = p.section || '';
                     if (!pSec.value && p.section) pSec.setAttribute('data-pending-val', p.section);
-                    
+
                     document.getElementById('progType').value = p.type || 'Individual';
                     toggleGroupFields();
                     handleSectionChange('progSection', 'progType');
@@ -912,12 +1075,12 @@
                         document.getElementById('progGroupParticipants').value = p.groupParticipantsPerSet || '';
                     }
                     document.getElementById('progStatus').value = p.status !== false ? 'active' : 'inactive';
-                    
+
                     const pSet = document.getElementById('progSet');
                     const currentSet = p.setId || '';
                     pSet.value = currentSet;
                     if (!pSet.value && currentSet) pSet.setAttribute('data-pending-val', currentSet);
-                    
+
                     const isUnlim = !!p.isUnlimited || p.maxParticipants === 'unlimited';
                     const unlimCheck = document.getElementById('progUnlimited');
                     if (unlimCheck) unlimCheck.checked = isUnlim;
@@ -928,15 +1091,15 @@
 
                     document.getElementById('progTopicReg').checked = !!p.topicRegistration;
                     document.getElementById('progGrading').checked = !!p.enableGrading;
-                    if(p.enableGrading) {
+                    if (p.enableGrading) {
                         const gt = document.getElementById('progGradeTemplate');
                         const val = p.gradeTemplateId || p.gradeTemplate || '';
                         gt.value = val;
                         if (!gt.value && val) gt.setAttribute('data-pending-val', val);
                     }
-                    
+
                     document.getElementById('progScoring').checked = !!p.enableScoring;
-                    if(p.enableScoring) {
+                    if (p.enableScoring) {
                         const st = document.getElementById('progScoreTemplate');
                         const val = p.positionTemplateId || p.positionTemplate || '';
                         st.value = val;
@@ -951,7 +1114,7 @@
                         const vId = p.venueTypeId || '';
                         vt.value = vId;
                         if (!vt.value && vId) vt.setAttribute('data-pending-val', vId);
-                        
+
                         const st = document.getElementById('progSubStage');
                         if (st) {
                             const sId = p.subStageId || '';
@@ -975,8 +1138,8 @@
             const code = document.getElementById('progCode').value.trim().toUpperCase();
             const name = document.getElementById('progName').value.trim();
             const section = document.getElementById('progSection').value;
-            
-            if(!code || !name || !section) {
+
+            if (!code || !name || !section) {
                 return typeof showToast === 'function' ? showToast("❌ Fill basic details (Code, Name, Section)") : alert("Required fields missing");
             }
 
@@ -986,7 +1149,7 @@
 
             const vTypeId = document.getElementById('progVenueType') ? document.getElementById('progVenueType').value : '';
             const vTypeName = (vTypeId && typeof db !== 'undefined') ? (document.querySelector('#progVenueType option:checked')?.text || '') : '';
-            
+
             const sStageId = document.getElementById('progSubStage') ? document.getElementById('progSubStage').value : '';
             const sStageName = (sStageId && typeof db !== 'undefined') ? (document.querySelector('#progSubStage option:checked')?.text || '') : '';
 
@@ -1018,7 +1181,7 @@
                 updatedAt: new Date()
             };
 
-            if(editingProgId) {
+            if (editingProgId) {
                 db.collection('programs').doc(editingProgId).update(payload).then(() => {
                     typeof showToast === 'function' && showToast("✅ Program updated!");
                     closeFormView();
@@ -1036,7 +1199,7 @@
         function openEditSidebar(id) {
             quickEditingProgId = id;
             const p = programsData.find(x => x.id === id);
-            if(p) {
+            if (p) {
                 document.getElementById('quickProgCode').value = p.code || '';
                 document.getElementById('quickProgName').value = p.name || '';
                 const qSec = document.getElementById('quickProgSection');
@@ -1060,18 +1223,18 @@
         }
 
         function saveQuickEdit() {
-            if(!quickEditingProgId) return;
+            if (!quickEditingProgId) return;
             const code = document.getElementById('quickProgCode').value.trim().toUpperCase();
             const name = document.getElementById('quickProgName').value.trim();
             const section = document.getElementById('quickProgSection').value;
             const type = document.getElementById('quickProgType').value;
-            
-            if(!code || !name || !section) {
+
+            if (!code || !name || !section) {
                 return typeof showToast === 'function' ? showToast("❌ Code, Name and Section are required") : alert("Required fields missing");
             }
-            
+
             const payload = { code, name, section, type, updatedAt: new Date() };
-            
+
             db.collection('programs').doc(quickEditingProgId).update(payload).then(() => {
                 typeof showToast === 'function' && showToast("✅ Quick Edit saved!");
                 closeEditSidebar();
@@ -1100,16 +1263,16 @@
         function renderProgsUI() {
             const tableList = document.getElementById('prog-table-list');
             const cardsList = document.getElementById('prog-cards-list');
-            
+
             let filtered = programsData;
-            
+
             const categoryFilter = document.getElementById('filter-section') ? document.getElementById('filter-section').value : 'All';
-            if(categoryFilter !== 'All') {
+            if (categoryFilter !== 'All') {
                 filtered = filtered.filter(p => p.section === categoryFilter);
             }
-            
-            if(progSearchQuery) {
-                filtered = filtered.filter(p => 
+
+            if (progSearchQuery) {
+                filtered = filtered.filter(p =>
                     (p.name && p.name.toLowerCase().includes(progSearchQuery)) ||
                     (p.code && p.code.toLowerCase().includes(progSearchQuery)) ||
                     (p.section && p.section.toLowerCase().includes(progSearchQuery))
@@ -1131,7 +1294,7 @@
 
             const stdHeader = document.getElementById('standard-header');
             const blkHeader = document.getElementById('bulk-header');
-            if(selectedProgIds.size > 0) {
+            if (selectedProgIds.size > 0) {
                 stdHeader.classList.add('hidden');
                 blkHeader.classList.remove('hidden');
                 document.getElementById('selected-count-text').innerText = selectedProgIds.size;
@@ -1154,7 +1317,7 @@
                 const cardBorder = isSel ? 'border-2 border-[#FFC107]' : 'border border-gray-200';
                 const statHTML = (p.status !== false) ? `<span class="px-2.5 py-1 bg-[#FFB33F] text-[#111827] rounded-full text-[10px] font-bold shadow-sm">ACTIVE</span>` : `<span class="px-2.5 py-1 bg-red-50 text-red-500 rounded-full text-[10px] font-bold">INACTIVE</span>`;
                 const initial = p.name ? p.name.charAt(0).toUpperCase() : 'P';
-                
+
                 tableHTML += `
                 <div class="grid grid-cols-12 gap-4 items-center py-2.5 px-6 border-b border-gray-100 ${bg} transition-colors group">
                     <div class="col-span-1">${isSel ? getProgChecked(p.id) : getProgUnchecked(p.id)}</div>
@@ -1196,26 +1359,26 @@
             progCurrentPage += dir;
             renderProgsUI();
         }
-        
+
         function changeProgPerPage(val) {
             progItemsPerPage = parseInt(val);
             progCurrentPage = 1;
             renderProgsUI();
         }
-        
+
         function toggleProgSelect(id, e) {
             e.stopPropagation();
-            if(selectedProgIds.has(id)) selectedProgIds.delete(id); else selectedProgIds.add(id);
+            if (selectedProgIds.has(id)) selectedProgIds.delete(id); else selectedProgIds.add(id);
             renderProgsUI();
         }
         function toggleProgSelectAll(e) {
-            if(e) e.stopPropagation();
-            if(selectedProgIds.size > 0) selectedProgIds.clear();
+            if (e) e.stopPropagation();
+            if (selectedProgIds.size > 0) selectedProgIds.clear();
             else programsData.forEach(p => selectedProgIds.add(p.id));
             renderProgsUI();
         }
         function deleteSelectedProgs() {
-            if(confirm(`Delete ${selectedProgIds.size} programs?`)) {
+            if (confirm(`Delete ${selectedProgIds.size} programs?`)) {
                 const batch = db.batch();
                 selectedProgIds.forEach(id => batch.delete(db.collection('programs').doc(id)));
                 batch.commit().then(() => {
@@ -1241,26 +1404,26 @@
             window.activeProgId = id;
             if (activeProgDropdownId === id) { window.progCloseMenu(); return; }
             activeProgDropdownId = id;
-            
+
             const btn = event.currentTarget;
             const rect = btn.getBoundingClientRect();
             const menu = document.getElementById('global-action-menu');
             menu.classList.remove('hidden');
-            
+
             let topPos = rect.bottom + 4;
             if (topPos + menu.offsetHeight > window.innerHeight) topPos = rect.top - menu.offsetHeight - 4;
             menu.style.top = topPos + 'px';
             menu.style.left = (rect.right - 144) + 'px';
-            
+
             let actionBtn;
-            if (actionBtn = document.getElementById('btn-view')) actionBtn.onclick = (e) => { 
-                window.progCloseMenu(); 
+            if (actionBtn = document.getElementById('btn-view')) actionBtn.onclick = (e) => {
+                window.progCloseMenu();
                 const prog = programsData.find(p => p.id === id);
-                viewProgram(id, prog ? prog.name : 'Program'); 
+                viewProgram(id, prog ? prog.name : 'Program');
             };
             if (actionBtn = document.getElementById('btn-edit')) actionBtn.onclick = (e) => { window.progCloseMenu(); openEditSidebar(id); };
-            if (actionBtn = document.getElementById('btn-add-reg')) actionBtn.onclick = (e) => { 
-                window.progCloseMenu(); 
+            if (actionBtn = document.getElementById('btn-add-reg')) actionBtn.onclick = (e) => {
+                window.progCloseMenu();
                 localStorage.setItem('viewProgramId', id);
                 const prog = programsData.find(p => p.id === id);
                 if (prog) localStorage.setItem('viewProgramName', prog.name);
@@ -1271,17 +1434,17 @@
                 }
             };
             if (actionBtn = document.getElementById('btn-add-result')) actionBtn.onclick = (e) => { window.progCloseMenu(); typeof showToast === 'function' && showToast("Navigating to Add Result..."); };
-            if (actionBtn = document.getElementById('btn-delete')) actionBtn.onclick = (e) => { 
-                window.progCloseMenu(); 
-                if(confirm("Delete this program?")) db.collection('programs').doc(id).delete().then(() => typeof showToast === 'function' && showToast("✅ Deleted")); 
+            if (actionBtn = document.getElementById('btn-delete')) actionBtn.onclick = (e) => {
+                window.progCloseMenu();
+                if (confirm("Delete this program?")) db.collection('programs').doc(id).delete().then(() => typeof showToast === 'function' && showToast("✅ Deleted"));
             };
         }
-        
-        if(window.progCloseMenu) {
+
+        if (window.progCloseMenu) {
             document.removeEventListener('click', window.progCloseMenu);
             window.removeEventListener('scroll', window.progCloseMenu, true);
         }
-        window.progCloseMenu = function(e) {
+        window.progCloseMenu = function (e) {
             const menu = document.getElementById('global-action-menu');
             if (e && e.type === 'click' && menu && menu.contains(e.target)) return;
             activeProgDropdownId = null;
@@ -1295,13 +1458,14 @@
             const isTable = v === 'table';
             document.getElementById('view-table').classList.toggle('hidden', !isTable);
             document.getElementById('view-cards').classList.toggle('hidden', isTable);
-            
+
             const activeClassList = "bg-white shadow-sm text-[#111827] text-[13px] font-semibold py-1.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all duration-200 whitespace-nowrap";
             const inactiveClassList = "text-gray-500 hover:text-gray-800 bg-transparent text-[13px] font-medium py-1.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all duration-200 whitespace-nowrap";
-            
+
             document.getElementById('btn-table').className = isTable ? activeClassList : inactiveClassList;
             document.getElementById('btn-cards').className = isTable ? inactiveClassList : activeClassList;
         }
     </script>
 </body>
+
 </html>

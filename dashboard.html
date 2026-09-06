@@ -992,6 +992,28 @@
         db.settings({ experimentalForceLongPolling: true, merge: true });
         window.db = db;
 
+        // Global Firestore Listener Tracker to prevent memory leaks & lagging when changing tabs
+        window._moduleUnsubscribers = window._moduleUnsubscribers || [];
+        (function patchFirestoreOnSnapshot() {
+            if (window._firestorePatched) return;
+            window._firestorePatched = true;
+            const wrapOnSnapshot = (proto) => {
+                if (!proto || !proto.onSnapshot) return;
+                const orig = proto.onSnapshot;
+                proto.onSnapshot = function (...args) {
+                    const unsub = orig.apply(this, args);
+                    if (window._moduleUnsubscribers && typeof unsub === 'function') {
+                        window._moduleUnsubscribers.push(unsub);
+                    }
+                    return unsub;
+                };
+            };
+            if (window.firebase && firebase.firestore) {
+                if (firebase.firestore.Query) wrapOnSnapshot(firebase.firestore.Query.prototype);
+                if (firebase.firestore.DocumentReference) wrapOnSnapshot(firebase.firestore.DocumentReference.prototype);
+            }
+        })();
+
         // ── Auth Guard & Session Watcher ──────────────────────────────
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
@@ -1458,9 +1480,9 @@
                     document.getElementById('breadcrumb-middle')?.classList.add('hidden');
                     document.getElementById('breadcrumb-separator-2')?.classList.add('hidden');
                     const currentCrumb = document.getElementById('breadcrumb-current');
-                    if (currentCrumb) { 
-                        currentCrumb.classList.remove('hidden'); 
-                        currentCrumb.innerText = (window.currentTMSection ? window.currentTMSection + ' ' : '') + 'Programs'; 
+                    if (currentCrumb) {
+                        currentCrumb.classList.remove('hidden');
+                        currentCrumb.innerText = (window.currentTMSection ? window.currentTMSection + ' ' : '') + 'Programs';
                     }
 
                     loader.classList.add('hidden');

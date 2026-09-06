@@ -1017,6 +1017,16 @@
                 const candidatesMap = {};
                 candSnap.forEach(d => candidatesMap[d.id] = Object.assign({id: d.id}, d.data()));
 
+                const subSnap = await db.collection('substitutions').where('programId', '==', programId).get();
+                const subsMap = {};
+                subSnap.forEach(d => {
+                    const s = d.data();
+                    if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
+                    if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
+                    if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
+                    if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                });
+
                 const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
 
                 let gOpts = '<option value="">None</option>';
@@ -1085,8 +1095,33 @@
                         const reg = doc.data();
                         const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
                         chestsList.forEach(chest => {
-                            const candObj = Object.values(candidatesMap).find(c => String(c.chestNo) === String(chest));
-                            if (candObj) candsToEval.push(candObj);
+                            const candObj = Object.values(candidatesMap).find(c => String(c.chestNo).trim() === String(chest).trim() || String(c.id) === String(chest));
+                            let cId = candObj ? candObj.id : chest;
+                            let cChest = chest;
+                            let cName = candObj ? candObj.name : (reg.candidateName || reg.name || `Chest #${chest}`);
+                            let cTeam = candObj ? candObj.team : (reg.team || '');
+                            let origSortChest = chest;
+
+                            const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                            if (sub) {
+                                if (sub.origChestNo) origSortChest = sub.origChestNo;
+                                if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
+                                    const sCand = Object.values(candidatesMap).find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
+                                    cChest = sub.subChestNo || cChest;
+                                    cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
+                                    cId = sub.subCandidateId || cId;
+                                } else if (sub.type === 'cancel') {
+                                    cName = cName + ' (CANCELLED)';
+                                }
+                            }
+
+                            candsToEval.push({
+                                id: cId,
+                                chestNo: cChest,
+                                origChestNo: origSortChest,
+                                name: cName,
+                                team: cTeam
+                            });
                         });
                     });
 
@@ -1119,10 +1154,10 @@
 
                     if (candOrder === 'chest-desc') {
                         candsToEval.sort((a, b) => {
-                            const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
-                            const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                            const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
+                            const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                             if (numA !== numB) return numB - numA;
-                            return String(b.chestNo || '').localeCompare(String(a.chestNo || ''));
+                            return String(b.origChestNo || b.chestNo || '').localeCompare(String(a.origChestNo || a.chestNo || ''));
                         });
                     } else if (candOrder === 'auto-mixed') {
                         let mixedCands = [];
@@ -1132,10 +1167,10 @@
                         teamNames.forEach(t => {
                             if (teamGroups[t].length > maxDepth) maxDepth = teamGroups[t].length;
                             teamGroups[t].sort((a, b) => {
-                                const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
-                                const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                                const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
+                                const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                                 if (numA !== numB) return numA - numB;
-                                return String(a.chestNo || '').localeCompare(String(b.chestNo || ''));
+                                return String(a.origChestNo || a.chestNo || '').localeCompare(String(b.origChestNo || b.chestNo || ''));
                             });
                         });
 
@@ -1160,10 +1195,10 @@
                     } else {
                         // chest-asc
                         candsToEval.sort((a, b) => {
-                            const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
-                            const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                            const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
+                            const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                             if (numA !== numB) return numA - numB;
-                            return String(a.chestNo || '').localeCompare(String(a.chestNo || ''));
+                            return String(a.origChestNo || a.chestNo || '').localeCompare(String(a.origChestNo || a.chestNo || ''));
                         });
                     }
 

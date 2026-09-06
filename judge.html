@@ -266,12 +266,22 @@
                 }
                 activeProg.resolvedDate = resDate;
 
-                // 4. Fetch candidate registrations
+                // 4. Fetch candidate registrations & substitutions
                 const candSnap = await db.collection('candidates').get();
                 const allCands = candSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
                 const regSnap = await db.collection('registrations').where('programId', '==', pId).get();
                 const regs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const subSnap = await db.collection('substitutions').where('programId', '==', pId).get();
+                const subsMap = {};
+                subSnap.forEach(doc => {
+                    const s = doc.data();
+                    if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
+                    if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
+                    if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
+                    if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                });
 
                 let teamGroups = {};
                 regs.forEach(reg => {
@@ -282,16 +292,51 @@
                     if (chestsList.length > 0) {
                         chestsList.forEach(chest => {
                             const cand = allCands.find(c => String(c.chestNo).trim() === String(chest).trim() || String(c.id) === String(chest));
+                            let cId = cand ? cand.id : chest;
+                            let cChest = chest;
+                            let cName = cand ? cand.name : (reg.candidateName || reg.name || `Chest #${chest}`);
+                            let origSortChest = chest;
+
+                            const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                            if (sub) {
+                                if (sub.origChestNo) origSortChest = sub.origChestNo;
+                                if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
+                                    const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
+                                    cChest = sub.subChestNo || cChest;
+                                    cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
+                                } else if (sub.type === 'cancel') {
+                                    cName = cName + ' (CANCELLED)';
+                                }
+                            }
+
                             teamGroups[tName].push({
-                                chestNo: chest,
-                                name: cand ? cand.name : (reg.candidateName || reg.name || `Chest #${chest}`),
+                                chestNo: cChest,
+                                origChestNo: origSortChest,
+                                name: cName,
                                 team: tName
                             });
                         });
                     } else if (reg.candidateName || reg.name) {
+                        let cChest = reg.chestNo || '---';
+                        let cName = reg.candidateName || reg.name || 'Participant';
+                        let cId = reg.candidateId || '';
+                        let origSortChest = cChest;
+
+                        const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                        if (sub) {
+                            if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
+                                const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
+                                cChest = sub.subChestNo || cChest;
+                                cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
+                            } else if (sub.type === 'cancel') {
+                                cName = cName + ' (CANCELLED)';
+                            }
+                        }
+
                         teamGroups[tName].push({
-                            chestNo: reg.chestNo || '---',
-                            name: reg.candidateName || reg.name || 'Participant',
+                            chestNo: cChest,
+                            origChestNo: origSortChest,
+                            name: cName,
                             team: tName
                         });
                     }
@@ -308,10 +353,10 @@
 
                 if (candOrder === 'chest-desc') {
                     activeCands.sort((a, b) => {
-                        const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
-                        const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                        const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
+                        const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                         if (numA !== numB) return numB - numA;
-                        return String(b.chestNo || '').localeCompare(String(a.chestNo || ''));
+                        return String(b.origChestNo || b.chestNo || '').localeCompare(String(a.origChestNo || a.chestNo || ''));
                     });
                 } else if (candOrder === 'auto-mixed') {
                     if (isGroup) {
@@ -328,7 +373,7 @@
                             return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
                         };
 
-                        activeCands.sort((a, b) => String(a.chestNo || '').localeCompare(String(b.chestNo || '')));
+                        activeCands.sort((a, b) => String(a.origChestNo || a.chestNo || '').localeCompare(String(b.origChestNo || b.chestNo || '')));
                         for (let i = activeCands.length - 1; i > 0; i--) {
                             const j = Math.floor(seededRand() * (i + 1));
                             [activeCands[i], activeCands[j]] = [activeCands[j], activeCands[i]];
@@ -341,10 +386,10 @@
                         teamNames.forEach(t => {
                             if (teamGroups[t].length > maxDepth) maxDepth = teamGroups[t].length;
                             teamGroups[t].sort((a, b) => {
-                                const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
-                                const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                                const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
+                                const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                                 if (numA !== numB) return numA - numB;
-                                return String(a.chestNo || '').localeCompare(String(b.chestNo || ''));
+                                return String(a.origChestNo || a.chestNo || '').localeCompare(String(b.origChestNo || b.chestNo || ''));
                             });
                         });
 
