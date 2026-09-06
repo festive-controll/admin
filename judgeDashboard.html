@@ -552,6 +552,8 @@
             }
         }
 
+        let resultsUnsub = null;
+
         async function fetchAssignedPrograms() {
             if (!judgeId) return;
             db.collection('programs').onSnapshot(async snap => {
@@ -578,9 +580,34 @@
                 
                 assignedPrograms = assigned;
                 
-                renderProgramsTable();
-                renderTopicCards();
-                updateStats();
+                if (!resultsUnsub) {
+                    resultsUnsub = db.collection('programResults').onSnapshot(resSnap => {
+                        const evaluatedProgramIds = new Set();
+                        resSnap.docs.forEach(d => {
+                            const data = d.data();
+                            if (data.programId && (data.gradeLabel || data.positionLabel || data.totalPoints > 0)) {
+                                evaluatedProgramIds.add(data.programId);
+                            }
+                        });
+                        
+                        assignedPrograms.forEach(p => {
+                            p.evaluated = evaluatedProgramIds.has(p.id);
+                        });
+
+                        renderProgramsTable();
+                        renderTopicCards();
+                        updateStats();
+                    }, err => {
+                        console.warn("programResults error:", err);
+                        renderProgramsTable();
+                        renderTopicCards();
+                        updateStats();
+                    });
+                } else {
+                    renderProgramsTable();
+                    renderTopicCards();
+                    updateStats();
+                }
             });
         }
 
@@ -1068,17 +1095,91 @@
                         return;
                     }
 
-                    candsToEval.forEach(cand => {
+                    // Helper to generate Code Letter (A, B, C, D... AA, AB...)
+                    function getCodeLetter(idx) {
+                        let letter = '';
+                        let num = idx;
+                        while (num >= 0) {
+                            letter = String.fromCharCode((num % 26) + 65) + letter;
+                            num = Math.floor(num / 26) - 1;
+                        }
+                        return letter;
+                    }
+
+                    // Determine candidate ordering setup (matches Judgement Sheet setup)
+                    const candOrder = prog.candOrder || localStorage.getItem('jsmCandOrder_' + programId) || localStorage.getItem('jsmCandOrder') || 'auto-mixed';
+
+                    // Group by team for team interleaving in auto-mixed mode
+                    const teamGroups = {};
+                    candsToEval.forEach(c => {
+                        const tName = c.team || 'Solo Participant';
+                        if (!teamGroups[tName]) teamGroups[tName] = [];
+                        teamGroups[tName].push(c);
+                    });
+
+                    if (candOrder === 'chest-desc') {
+                        candsToEval.sort((a, b) => {
+                            const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
+                            const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                            if (numA !== numB) return numB - numA;
+                            return String(b.chestNo || '').localeCompare(String(a.chestNo || ''));
+                        });
+                    } else if (candOrder === 'auto-mixed') {
+                        let mixedCands = [];
+                        let maxDepth = 0;
+                        const teamNames = Object.keys(teamGroups).sort((a, b) => a.localeCompare(b));
+                        
+                        teamNames.forEach(t => {
+                            if (teamGroups[t].length > maxDepth) maxDepth = teamGroups[t].length;
+                            teamGroups[t].sort((a, b) => {
+                                const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
+                                const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                                if (numA !== numB) return numA - numB;
+                                return String(a.chestNo || '').localeCompare(String(b.chestNo || ''));
+                            });
+                        });
+
+                        for (let i = 0; i < maxDepth; i++) {
+                            teamNames.forEach(t => {
+                                if (teamGroups[t][i]) mixedCands.push(teamGroups[t][i]);
+                            });
+                        }
+
+                        if (programId && mixedCands.length > 0) {
+                            let hash = 0;
+                            for (let i = 0; i < programId.length; i++) {
+                                hash = (Math.imul(31, hash) + programId.charCodeAt(i)) | 0;
+                            }
+                            const offset = Math.abs(hash) % mixedCands.length;
+                            if (offset > 0) {
+                                mixedCands = mixedCands.slice(offset).concat(mixedCands.slice(0, offset));
+                            }
+                        }
+
+                        candsToEval = mixedCands;
+                    } else {
+                        // chest-asc
+                        candsToEval.sort((a, b) => {
+                            const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
+                            const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                            if (numA !== numB) return numA - numB;
+                            return String(a.chestNo || '').localeCompare(String(a.chestNo || ''));
+                        });
+                    }
+
+                    candsToEval.forEach((cand, i) => {
                         const existing = existingResults.find(r => r.candidateId === cand.id);
+                        const codeLtr = getCodeLetter(i);
                         
                         html += `
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-brand-blue/30 transition-colors mb-4 cand-eval-card" data-candid="${cand.id}" data-chest="${cand.chestNo}" data-name="${cand.name}" data-team="${cand.team || ''}">
                             <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center font-black shrink-0">${cand.name.charAt(0).toUpperCase()}</div>
+                                    <div class="w-10 h-10 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center font-black shrink-0" title="Code ${codeLtr}">${codeLtr}</div>
                                     <div>
                                         <h4 class="text-sm font-bold text-gray-900">${cand.name}</h4>
                                         <div class="flex items-center gap-2 mt-1">
+                                            <span class="bg-blue-100 px-2 py-0.5 rounded text-[10px] font-extrabold text-brand-blue uppercase tracking-widest">CODE ${codeLtr}</span>
                                             <span class="bg-gray-100 px-2 py-0.5 rounded text-[10px] font-bold text-gray-600 uppercase tracking-widest">#${cand.chestNo}</span>
                                             <span class="text-[11px] font-medium text-gray-500 uppercase tracking-widest">${cand.team || 'Solo'}</span>
                                         </div>
@@ -1158,6 +1259,8 @@
                 
                 const batch = db.batch();
 
+                let hasAnySavedResult = false;
+
                 if (isGroup) {
                     const cards = document.querySelectorAll('.group-eval-card');
                     cards.forEach(card => {
@@ -1175,6 +1278,7 @@
                         if(!gLbl && !pLbl) {
                             batch.delete(docRef);
                         } else {
+                            hasAnySavedResult = true;
                             batch.set(docRef, {
                                 programId: evalProgramId,
                                 isGroupResult: true,
@@ -1211,6 +1315,7 @@
                         if(!gLbl && !pLbl) {
                             batch.delete(docRef);
                         } else {
+                            hasAnySavedResult = true;
                             batch.set(docRef, {
                                 programId: evalProgramId,
                                 isGroupResult: false,
@@ -1231,7 +1336,7 @@
                 }
 
                 batch.update(db.collection('programs').doc(evalProgramId), {
-                    evaluated: true,
+                    evaluated: hasAnySavedResult,
                     resultsUpdatedAt: new Date(),
                     evaluatedByJudge: judgeId
                 });

@@ -1134,8 +1134,8 @@
                                                 <img src="logo-512.svg" alt="Logo" class="max-w-full max-h-full object-contain block" id="jsb-preview-logo" onerror="this.onerror=null; this.src='logo-192.svg';" />
                                             </div>
                                             <div>
-                                                <h1 class="m-0 text-[#0f4b80] text-base font-extrabold tracking-wide uppercase font-['Cobe','Satoshi',sans-serif]">OFFICIAL JUDGEMENT SHEET</h1>
-                                                <p class="m-0 text-[#8a95a4] text-[9px] font-bold tracking-wider uppercase mt-1">VENUE: MAIN AUDITORIUM &bull; FESTIVAL: ANNUAL FESTIVAL</p>
+                                                <h1 class="m-0 text-[#0f4b80] text-[15px] font-extrabold tracking-wide uppercase font-['Cobe','Satoshi',sans-serif] whitespace-nowrap leading-tight">OFFICIAL JUDGEMENT SHEET</h1>
+                                                <p class="m-0 text-[#8a95a4] text-[9px] font-bold tracking-wider uppercase mt-1 leading-snug">VENUE: MAIN AUDITORIUM &bull; FESTIVAL: ANNUAL FESTIVAL</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-3 shrink-0">
@@ -5210,12 +5210,22 @@
             thHtml += '</tr>';
             if (document.getElementById('jsb-preview-thead')) document.getElementById('jsb-preview-thead').innerHTML = thHtml;
 
+            function getCodeLetter(idx) {
+                let letter = '';
+                let num = idx;
+                while (num >= 0) {
+                    letter = String.fromCharCode((num % 26) + 65) + letter;
+                    num = Math.floor(num / 26) - 1;
+                }
+                return letter;
+            }
+
             // Re-render dummy rows based on active columns
             let tbody = '';
             for (let i = 1; i <= 3; i++) {
                 const bg = i % 2 === 0 ? 'bg-[#fbfcfd]' : 'bg-white';
                 tbody += `<tr class="${bg} h-9">`;
-                if (document.getElementById('jsb-c-code')?.checked) tbody += `<td class="p-2 border-r border-b border-[#dde3ea] text-center font-bold text-[#253347] text-[10px]">${String.fromCharCode(64 + i)}</td>`;
+                if (document.getElementById('jsb-c-code')?.checked) tbody += `<td class="p-2 border-r border-b border-[#dde3ea] text-center font-bold text-[#253347] text-[10px]">${getCodeLetter(i - 1)}</td>`;
                 if (document.getElementById('jsb-c-chest')?.checked) tbody += `<td class="p-2 border-r border-b border-[#dde3ea] text-center font-bold text-[#253347] text-[10px]">30${5 + i}</td>`;
                 if (document.getElementById('jsb-c-cand')?.checked) tbody += `<td class="p-2 border-r border-b border-[#dde3ea] font-extrabold text-[#253347] text-[10px] uppercase">${i === 1 ? 'HAMDAN MOHAMMED K' : i === 2 ? 'MUHAMMED HASIL CP' : 'CANDIDATE NAME'}</td>`;
                 if (document.getElementById('jsb-c-team')?.checked) tbody += `<td class="p-2 border-r border-b border-[#dde3ea] font-bold text-[10px] uppercase text-[#6d7785]">ALPHA</td>`;
