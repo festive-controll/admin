@@ -453,18 +453,10 @@
             </p>
 
             <!-- Instruction Box -->
-            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 text-left mb-6 space-y-2.5">
-                <div class="flex items-start gap-3">
-                    <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">1</div>
-                    <p class="text-xs text-slate-300">Open <span class="font-semibold text-white">Inner Dashboard</span> on your mobile phone.</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">2</div>
-                    <p class="text-xs text-slate-300">Go to <span class="font-semibold text-blue-400">Bulk Entry</span> &rarr; <span class="font-semibold text-blue-400">Verify</span>.</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">3</div>
-                    <p class="text-xs text-slate-300">Enter your passcode & verify with fingerprint.</p>
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 text-center mb-6">
+                <div class="flex items-center justify-center gap-2 text-cyan-300 font-semibold text-xs">
+                    <i class="fi fi-rr-mobile text-sm"></i>
+                    <span>Open the verification portal on your authorized mobile smartphone.</span>
                 </div>
             </div>
 
@@ -1013,6 +1005,38 @@
         let _ownerAuthUnsub = null;
         let _ownerAuthSessionId = null;
 
+        function getClientDeviceInfo() {
+            const ua = navigator.userAgent;
+            let type = 'Desktop Device';
+            let os = 'Unknown OS';
+            let browser = 'Web Browser';
+
+            if (/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) {
+                type = /iPad|Tablet/i.test(ua) ? 'Tablet Device' : 'Mobile Device';
+            }
+            if (/Windows/i.test(ua)) os = 'Windows PC';
+            else if (/Macintosh|Mac OS/i.test(ua)) os = 'macOS';
+            else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS Device';
+            else if (/Android/i.test(ua)) os = 'Android';
+            else if (/Linux/i.test(ua)) os = 'Linux';
+
+            if (/Edg/i.test(ua)) browser = 'Microsoft Edge';
+            else if (/Chrome/i.test(ua)) browser = 'Google Chrome';
+            else if (/Firefox/i.test(ua)) browser = 'Mozilla Firefox';
+            else if (/Safari/i.test(ua)) browser = 'Apple Safari';
+            else if (/Opera|OPR/i.test(ua)) browser = 'Opera';
+
+            const screenRes = (window.screen && window.screen.width) ? `${window.screen.width}x${window.screen.height}` : 'Active Display';
+
+            return {
+                type: type,
+                os: os,
+                browser: browser,
+                ip: 'Client (' + os + ')',
+                location: screenRes
+            };
+        }
+
         function showWaitingForBiometrics(username, ownerName) {
             const overlay = document.getElementById('owner-waiting-biometrics-overlay');
             if (!overlay) return;
@@ -1038,14 +1062,17 @@
             _ownerAuthSessionId = sessionId;
 
             const now = Date.now();
+            const clientDev = getClientDeviceInfo();
             const sessionPayload = {
                 sessionId: sessionId,
                 status: 'waiting_biometrics',
                 requestTimeMs: now,
+                requestTimeStr: new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                 username: username || 'admin',
                 ownerName: ownerName || 'Owner',
                 verified: false,
-                active: true
+                active: true,
+                device: clientDev
             };
 
             // Write pending verification session to Firestore
@@ -1059,10 +1086,32 @@
                 _ownerAuthUnsub = null;
             }
 
-            // Real-time listener for biometric verification approval
+            // Real-time listener for biometric verification approval or rejection
             _ownerAuthUnsub = firebase.firestore().collection('admin').doc('ownerAuthSession').onSnapshot(snap => {
                 if (!snap.exists) return;
                 const data = snap.data();
+
+                // Check if the request was rejected by the authorized device
+                if (data && data.status === 'rejected') {
+                    if (laser) laser.style.display = 'none';
+                    if (icon) icon.className = 'fi fi-rr-cross-circle text-5xl text-red-400 animate-pulse';
+                    if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-red-950/80 border-2 border-red-500 shadow-lg shadow-red-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
+                    if (title) title.innerText = 'Access Rejected';
+                    if (desc) desc.innerText = 'The owner login request was denied by the verification device.';
+                    if (statusText) statusText.innerHTML = '<span class="text-red-400 font-bold">🚫 Authorization Rejected</span>';
+
+                    if (_ownerAuthUnsub) {
+                        _ownerAuthUnsub();
+                        _ownerAuthUnsub = null;
+                    }
+
+                    showToast('<b>🚫 Access Denied</b> Login request was rejected.');
+                    setTimeout(() => {
+                        const ov = document.getElementById('owner-waiting-biometrics-overlay');
+                        if (ov) ov.classList.add('hidden');
+                    }, 2500);
+                    return;
+                }
 
                 // Check if this session or current active request has been verified
                 if (data && (data.status === 'verified' || data.verified === true)) {
