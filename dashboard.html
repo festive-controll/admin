@@ -1162,7 +1162,7 @@
                     db.collection('admin').doc('ownerAuthSession').onSnapshot(snap => {
                         if (snap.exists) {
                             const d = snap.data();
-                            if (d && d.status === 'cancelled') {
+                            if (d && (d.status === 'cancelled' || d.status === 'rejected' || d.status === 'blocked')) {
                                 localStorage.removeItem('ownerVerified');
                                 showDashboardOwnerLock();
                             }

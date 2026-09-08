@@ -418,56 +418,74 @@
     <!-- WAITING FOR BIOMETRICS OVERLAY SCREEN          -->
     <!-- Displayed when Owner signs in, waiting mobile   -->
     <!-- ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- WAITING FOR BIOMETRICS OVERLAY SCREEN          -->
+    <!-- Displayed when Owner signs in, waiting mobile   -->
+    <!-- ══════════════════════════════════════════════ -->
     <div id="owner-waiting-biometrics-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-7 sm:p-9 max-w-md w-full shadow-2xl text-center relative overflow-hidden text-white animate-in">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden text-white animate-in">
             <!-- Background glow -->
             <div class="absolute -top-16 -left-16 w-44 h-44 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
             <!-- Header Badge -->
-            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-6">
-                <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-                <span>Security Protocol Active</span>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-400 text-xs font-semibold mb-5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                <span>Mobile Biometric Security Gate</span>
             </div>
 
             <!-- Fingerprint Scanning Animation Area -->
-            <div class="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+            <div class="relative w-28 h-28 mx-auto mb-4 flex items-center justify-center">
                 <!-- Outer Pulse Rings -->
                 <div class="absolute inset-0 rounded-full border border-blue-500/30 animate-biometric-wave-1"></div>
                 <div class="absolute inset-0 rounded-full border border-cyan-400/20 animate-biometric-wave-2"></div>
                 <div class="absolute inset-0 rounded-full border border-indigo-500/20 animate-biometric-wave-3"></div>
 
-                <!-- Center Biometric Pad (Tap 3 times on mobile for quick passcode 340) -->
-                <div id="waiting-bio-pad" onclick="handleFingerprintTripleTap()" class="relative z-10 w-24 h-24 rounded-2xl bg-slate-800/90 border border-blue-500/40 shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden transition-all duration-300 cursor-pointer select-none active:scale-95">
-                    <i id="waiting-bio-icon" class="fi fi-rr-fingerprint text-5xl text-cyan-400"></i>
+                <!-- Center Biometric Pad (Visual Scanning Indicator) -->
+                <div id="waiting-bio-pad" class="relative z-10 w-20 h-20 rounded-2xl bg-slate-800/90 border border-cyan-500/40 shadow-lg shadow-cyan-500/20 flex items-center justify-center overflow-hidden transition-all duration-300 select-none">
+                    <i id="waiting-bio-icon" class="fi fi-rr-fingerprint text-4xl text-cyan-400"></i>
                     <!-- Animated Laser Scan Bar -->
                     <div id="waiting-bio-laser" class="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_#22d3ee] animate-laser-sweep"></div>
                 </div>
             </div>
 
-            <h2 id="waiting-bio-title" class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
+            <h2 id="waiting-bio-title" class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-1.5">
                 Waiting for Biometrics
             </h2>
-            <p id="waiting-bio-desc" class="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-6">
-                Owner access requires biometric verification. Please approve from your authorized mobile device.
+            <p id="waiting-bio-desc" class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto mb-4">
+                Owner access requires biometric verification. Approve from your authorized mobile device.
             </p>
 
-            <!-- Instruction Box -->
-            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 text-center mb-6">
-                <div class="flex items-center justify-center gap-2 text-cyan-300 font-semibold text-xs">
-                    <i class="fi fi-rr-mobile text-sm"></i>
-                    <span>Open the verification portal on your authorized mobile smartphone.</span>
+            <!-- QR Code & Mobile Link Instruction Card -->
+            <div id="waiting-bio-qr-container" class="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 mb-4 text-center">
+                <p class="text-[11px] font-semibold text-slate-300 mb-2 flex items-center justify-center gap-1.5">
+                    <i class="fi fi-rr-qr-scan text-cyan-400"></i> Scan with your phone camera:
+                </p>
+                <div class="flex items-center justify-center gap-3">
+                    <div class="bg-white p-1.5 rounded-xl shadow-md shrink-0">
+                        <img id="waiting-bio-qr-img" src="" alt="Mobile Verify QR" class="w-20 h-20 object-contain rounded-lg">
+                    </div>
+                    <div class="text-left flex-1 min-w-0">
+                        <p class="text-[11px] text-slate-300 font-semibold mb-1">Open on Mobile</p>
+                        <p class="text-[10px] text-slate-400 leading-tight mb-2">Scan QR or open verification portal on your phone.</p>
+                        <button type="button" onclick="copyVerificationPortalUrl()" id="btn-waiting-copy-url"
+                            class="px-2.5 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold transition-all flex items-center gap-1">
+                            <i class="fi fi-rr-copy text-xs"></i>
+                            <span id="btn-waiting-copy-text">Copy Link</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Live Status & Cancel -->
-            <div class="flex flex-col gap-3">
+            <!-- Live Status & Actions -->
+            <div class="space-y-3">
                 <div class="flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span id="waiting-bio-status-text">Listening for mobile approval in real-time...</span>
+                    <span id="waiting-bio-status-text">Listening for phone approval in real-time...</span>
                 </div>
 
-                <button type="button" onclick="cancelWaitingForBiometrics()" class="mt-2 w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-all">
+                <button type="button" onclick="cancelWaitingForBiometrics()"
+                    class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-all">
                     Cancel Sign In
                 </button>
             </div>
@@ -1037,6 +1055,35 @@
             };
         }
 
+        function getVerificationPortalUrl() {
+            let base = window.location.href.split('?')[0].split('#')[0];
+            if (base.endsWith('index.html')) {
+                base = base.substring(0, base.lastIndexOf('index.html'));
+            }
+            if (!base.endsWith('/')) {
+                base += '/';
+            }
+            return base + 'verify/index.html';
+        }
+
+        function copyVerificationPortalUrl() {
+            const url = getVerificationPortalUrl();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const txt = document.getElementById('btn-waiting-copy-text');
+                    if (txt) txt.innerText = 'Copied!';
+                    showToast('<b>📋 Link Copied!</b> Open on your mobile device.');
+                    setTimeout(() => {
+                        if (txt) txt.innerText = 'Copy Link';
+                    }, 2500);
+                }).catch(() => {
+                    showToast('Verify URL: ' + url);
+                });
+            } else {
+                showToast('Verify URL: ' + url);
+            }
+        }
+
         function showWaitingForBiometrics(username, ownerName) {
             const overlay = document.getElementById('owner-waiting-biometrics-overlay');
             if (!overlay) return;
@@ -1048,13 +1095,20 @@
             const title = document.getElementById('waiting-bio-title');
             const desc = document.getElementById('waiting-bio-desc');
             const statusText = document.getElementById('waiting-bio-status-text');
+            const qrImg = document.getElementById('waiting-bio-qr-img');
 
-            if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-slate-800/90 border border-blue-500/40 shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden transition-all duration-300';
-            if (icon) icon.className = 'fi fi-rr-fingerprint text-5xl text-cyan-400';
+            if (pad) pad.className = 'relative z-10 w-20 h-20 rounded-2xl bg-slate-800/90 border border-cyan-500/40 shadow-lg shadow-cyan-500/20 flex items-center justify-center overflow-hidden transition-all duration-300';
+            if (icon) icon.className = 'fi fi-rr-fingerprint text-4xl text-cyan-400';
             if (laser) { laser.style.display = 'block'; laser.className = 'absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_#22d3ee] animate-laser-sweep'; }
             if (title) title.innerText = 'Waiting for Biometrics';
-            if (desc) desc.innerText = 'Owner access requires biometric verification. Please approve from your authorized mobile device.';
-            if (statusText) statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> <span>Listening for mobile approval in real-time...</span>';
+            if (desc) desc.innerText = 'Owner access requires biometric verification. Approve from your authorized mobile device.';
+            if (statusText) statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> <span>Listening for phone approval in real-time...</span>';
+
+            // Generate QR Code for Phone Scan
+            const verifyPortalUrl = getVerificationPortalUrl();
+            if (qrImg) {
+                qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(verifyPortalUrl);
+            }
 
             overlay.classList.remove('hidden');
 
@@ -1092,24 +1146,32 @@
                 const data = snap.data();
 
                 // Check if the request was rejected by the authorized device
-                if (data && data.status === 'rejected') {
+                if (data && (data.status === 'rejected' || data.status === 'blocked')) {
                     if (laser) laser.style.display = 'none';
-                    if (icon) icon.className = 'fi fi-rr-cross-circle text-5xl text-red-400 animate-pulse';
-                    if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-red-950/80 border-2 border-red-500 shadow-lg shadow-red-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
-                    if (title) title.innerText = 'Access Rejected';
-                    if (desc) desc.innerText = 'The owner login request was denied by the verification device.';
-                    if (statusText) statusText.innerHTML = '<span class="text-red-400 font-bold">🚫 Authorization Rejected</span>';
+                    if (icon) icon.className = 'fi fi-rr-cross-circle text-4xl text-red-400 animate-pulse';
+                    if (pad) pad.className = 'relative z-10 w-20 h-20 rounded-2xl bg-red-950/80 border-2 border-red-500 shadow-lg shadow-red-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
+                    if (title) title.innerText = 'Access Rejected / Blocked';
+                    if (desc) desc.innerText = 'The owner login request was denied by the mobile verification device.';
+                    if (statusText) statusText.innerHTML = '<span class="text-red-400 font-bold">🚫 Authorization Blocked</span>';
 
                     if (_ownerAuthUnsub) {
                         _ownerAuthUnsub();
                         _ownerAuthUnsub = null;
                     }
 
-                    showToast('<b>🚫 Access Denied</b> Login request was rejected.');
+                    showToast('<b>🚫 Access Denied</b> Login request was rejected on mobile.');
                     setTimeout(() => {
                         const ov = document.getElementById('owner-waiting-biometrics-overlay');
                         if (ov) ov.classList.add('hidden');
-                    }, 2500);
+                        
+                        const passInput = document.getElementById('password');
+                        if (passInput) {
+                            passInput.value = '';
+                            passInput.focus();
+                            passInput.classList.add('animate-shake');
+                            setTimeout(() => passInput.classList.remove('animate-shake'), 500);
+                        }
+                    }, 2200);
                     return;
                 }
 
@@ -1118,11 +1180,11 @@
                     const verTime = data.verifiedAtMs || now;
                     if (Date.now() - verTime < 300000) {
                         // Success! Update UI
-                        if (icon) icon.className = 'fi fi-rr-shield-check text-5xl text-emerald-400 animate-bounce';
-                        if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
+                        if (icon) icon.className = 'fi fi-rr-shield-check text-4xl text-emerald-400 animate-bounce';
+                        if (pad) pad.className = 'relative z-10 w-20 h-20 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
                         if (laser) laser.style.display = 'none';
                         if (title) title.innerText = 'Biometrics Verified!';
-                        if (desc) desc.innerText = 'Identity confirmed successfully. Unlocking Owner Dashboard...';
+                        if (desc) desc.innerText = 'Identity confirmed from mobile. Unlocking Owner Dashboard...';
                         if (statusText) statusText.innerHTML = '<span class="text-emerald-400 font-bold">✅ Verification Successful! Access Granted.</span>';
 
                         if (_ownerAuthUnsub) {
@@ -1137,6 +1199,7 @@
                         localStorage.setItem('userManagement', 'true');
                         localStorage.setItem('resultManagement', 'true');
                         localStorage.setItem('semiOwner', 'true');
+                        localStorage.setItem('innerDashboard', 'true');
                         localStorage.setItem('festUserName', ownerName || 'Owner');
                         localStorage.setItem('festUserId', 'owner');
 
@@ -1144,7 +1207,7 @@
 
                         setTimeout(() => {
                             window.location.href = 'dashboard.html';
-                        }, 1200);
+                        }, 1000);
                     }
                 }
             }, err => {
