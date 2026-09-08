@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -97,10 +97,10 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        function showToast(msg, isError=false) {
+        function showToast(msg, isError=false, duration=3000) {
             Toastify({
-                text: msg, duration: 3000, gravity: "top", position: "center",
-                style: { background: isError ? "#fff0f0" : "#fff", color: isError ? "#d32f2f" : "#333", border: isError ? "1px solid #ffcdd2" : "1px solid #eaeaea", borderRadius: "10px", padding: "12px 24px", fontSize: "14px", display: "flex", alignItems: "center" },
+                text: msg, duration: duration, gravity: "top", position: "center",
+                style: { background: isError ? "#fff0f0" : "#fff", color: isError ? "#d32f2f" : "#333", border: isError ? "1px solid #ffcdd2" : "1px solid #eaeaea", borderRadius: "12px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)", padding: "12px 24px", fontSize: "14px", display: "block", textAlign: "center", lineHeight: "1.5", maxWidth: "90vw" },
             }).showToast();
         }
 

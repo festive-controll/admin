@@ -281,6 +281,7 @@
                                 <button type="button" id="vt-btn-reset-dev" onclick="resetCurrentTeamDevices()" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 hover:underline">Reset</button>
                             </div>
                         </div>
+                        <div id="vt-detail-devlist" class="space-y-1.5 pt-1"></div>
                         <!-- Divider -->
                         <div class="h-px bg-gray-100"></div>
                         <div class="flex justify-between items-center text-sm">
@@ -393,6 +394,36 @@
                         const regDevs = Array.isArray(t.registeredDevices) ? t.registeredDevices : [];
                         safeText('vt-detail-devlimit', `${devLimit} Device${devLimit > 1 ? 's' : ''}`);
                         safeText('vt-detail-devactive', `${regDevs.length} / ${devLimit} Active`);
+
+                        const devListEl = document.getElementById('vt-detail-devlist');
+                        if (devListEl) {
+                            if (regDevs.length === 0) {
+                                devListEl.innerHTML = '';
+                            } else {
+                                devListEl.innerHTML = regDevs.map((d, i) => {
+                                    const isObj = typeof d === 'object' && d !== null;
+                                    const devName = !isObj ? d.substring(0, 10) + '...' : `${d.deviceType || 'Device'} (${d.os || 'OS'}, ${d.browser || 'Browser'})`;
+                                    const ip = isObj && d.ip ? d.ip : 'Unknown IP';
+                                    const location = isObj && (d.location || d.city) ? (d.location || d.city) : 'Location unavailable';
+                                    const timeStr = (isObj && d.lastLogin) ? new Date(d.lastLogin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                                    return `
+                                    <div class="p-2 bg-gray-50 rounded-xl border border-gray-100 space-y-1 text-xs">
+                                        <div class="flex items-center justify-between font-bold text-gray-700 text-[11px]">
+                                            <span class="truncate max-w-[170px]" title="${isObj ? d.deviceId : d}">#${i + 1}: ${devName}</span>
+                                            <span class="text-[10px] text-gray-400 font-normal shrink-0">${timeStr}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 flex-wrap text-[10px]">
+                                            <span class="inline-flex items-center gap-1 font-mono text-sky-700 bg-white px-1.5 py-0.5 rounded border border-sky-100" title="IP Address">
+                                                <i class="fi fi-rr-globe text-[9px]"></i> ${ip}
+                                            </span>
+                                            <span class="inline-flex items-center gap-1 text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-100" title="Location">
+                                                <i class="fi fi-rr-marker text-[9px]"></i> ${location}
+                                            </span>
+                                        </div>
+                                    </div>`;
+                                }).join('');
+                            }
+                        }
 
                         window.resetCurrentTeamDevices = function() {
                             if (confirm(`Reset registered devices for "${teamName}"?`)) {

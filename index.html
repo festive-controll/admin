@@ -48,6 +48,34 @@
 
     <!-- Custom Animated Checkbox CSS -->
     <style>
+        /* Custom Centered Modern Toast Notification */
+        .toastify.custom-toast {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.08) !important;
+            border-radius: 14px !important;
+            border: 1px solid #e5e7eb !important;
+            padding: 14px 22px !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 13.5px !important;
+            line-height: 1.5 !important;
+            max-width: 440px !important;
+            width: fit-content !important;
+            width: -moz-fit-content !important;
+            text-align: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            top: 24px !important;
+            margin: 0 !important;
+            z-index: 999999 !important;
+        }
+
         .check {
             cursor: pointer;
             position: relative;
@@ -355,11 +383,104 @@
         }
         .security-btn:hover { opacity: .9; transform: translateY(-1px); }
         .security-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Biometric Waiting Screen Animations */
+        @keyframes biometric-wave {
+            0% { transform: scale(0.85); opacity: 0.8; }
+            50% { transform: scale(1.18); opacity: 0.2; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+        @keyframes laser-sweep {
+            0% { top: 10%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 88%; opacity: 0; }
+        }
+        .animate-biometric-wave-1 {
+            animation: biometric-wave 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+        .animate-biometric-wave-2 {
+            animation: biometric-wave 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 0.8s;
+        }
+        .animate-biometric-wave-3 {
+            animation: biometric-wave 2.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite 1.6s;
+        }
+        .animate-laser-sweep {
+            animation: laser-sweep 2s ease-in-out infinite alternate;
+        }
     </style>
 <script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 sm:p-8 font-sans">
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- WAITING FOR BIOMETRICS OVERLAY SCREEN          -->
+    <!-- Displayed when Owner signs in, waiting mobile   -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div id="owner-waiting-biometrics-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-7 sm:p-9 max-w-md w-full shadow-2xl text-center relative overflow-hidden text-white animate-in">
+            <!-- Background glow -->
+            <div class="absolute -top-16 -left-16 w-44 h-44 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Header Badge -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-6">
+                <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                <span>Security Protocol Active</span>
+            </div>
+
+            <!-- Fingerprint Scanning Animation Area -->
+            <div class="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                <!-- Outer Pulse Rings -->
+                <div class="absolute inset-0 rounded-full border border-blue-500/30 animate-biometric-wave-1"></div>
+                <div class="absolute inset-0 rounded-full border border-cyan-400/20 animate-biometric-wave-2"></div>
+                <div class="absolute inset-0 rounded-full border border-indigo-500/20 animate-biometric-wave-3"></div>
+
+                <!-- Center Biometric Pad -->
+                <div id="waiting-bio-pad" class="relative z-10 w-24 h-24 rounded-2xl bg-slate-800/90 border border-blue-500/40 shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden transition-all duration-300">
+                    <i id="waiting-bio-icon" class="fi fi-rr-fingerprint text-5xl text-cyan-400"></i>
+                    <!-- Animated Laser Scan Bar -->
+                    <div id="waiting-bio-laser" class="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_#22d3ee] animate-laser-sweep"></div>
+                </div>
+            </div>
+
+            <h2 id="waiting-bio-title" class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
+                Waiting for Biometrics
+            </h2>
+            <p id="waiting-bio-desc" class="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-6">
+                Owner access requires biometric verification. Please approve from your authorized mobile device.
+            </p>
+
+            <!-- Instruction Box -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 text-left mb-6 space-y-2.5">
+                <div class="flex items-start gap-3">
+                    <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">1</div>
+                    <p class="text-xs text-slate-300">Open <span class="font-semibold text-white">Inner Dashboard</span> on your mobile phone.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">2</div>
+                    <p class="text-xs text-slate-300">Go to <span class="font-semibold text-blue-400">Bulk Entry</span> &rarr; <span class="font-semibold text-blue-400">Verify</span>.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">3</div>
+                    <p class="text-xs text-slate-300">Enter your passcode & verify with fingerprint.</p>
+                </div>
+            </div>
+
+            <!-- Live Status & Cancel -->
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="waiting-bio-status-text">Listening for mobile approval in real-time...</span>
+                </div>
+
+                <button type="button" onclick="cancelWaitingForBiometrics()" class="mt-2 w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-all">
+                    Cancel Sign In
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <!-- SYSTEM OFFLINE / MAINTENANCE SCREEN             -->
@@ -569,6 +690,13 @@
                 window.location.href = 'mediaDashboard.html';
             } else if (role === 'Judge' || role === 'judge') {
                 window.location.href = 'judgeDashboard.html';
+            } else if (role === 'owner') {
+                if (localStorage.getItem('ownerVerified') === 'true') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('ownerVerified');
+                }
             } else {
                 window.location.href = 'dashboard.html';
             }
@@ -770,28 +898,128 @@
         });
 
         // React-hot-toast style toast using Toastify
-        function showToast(message) {
+        function showToast(message, duration = 3000) {
             Toastify({
                 text: message,
-                duration: 2000,
+                duration: duration,
                 gravity: "top",
                 position: "center",
-                style: {
-                    background: "#ffffff",
-                    color: "#333",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                    borderRadius: "8px",
-                    border: "1px solid #eaeaea",
-                    padding: "12px 24px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    fontFamily: "'Inter', sans-serif"
-                },
+                className: "custom-toast",
                 escapeMarkup: false
             }).showToast();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // OWNER LOGIN BIOMETRIC PROTECTION & REAL-TIME SYNC
+        // ══════════════════════════════════════════════════════════════
+        let _ownerAuthUnsub = null;
+        let _ownerAuthSessionId = null;
+
+        function showWaitingForBiometrics(username, ownerName) {
+            const overlay = document.getElementById('owner-waiting-biometrics-overlay');
+            if (!overlay) return;
+
+            // Reset UI state
+            const pad = document.getElementById('waiting-bio-pad');
+            const icon = document.getElementById('waiting-bio-icon');
+            const laser = document.getElementById('waiting-bio-laser');
+            const title = document.getElementById('waiting-bio-title');
+            const desc = document.getElementById('waiting-bio-desc');
+            const statusText = document.getElementById('waiting-bio-status-text');
+
+            if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-slate-800/90 border border-blue-500/40 shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden transition-all duration-300';
+            if (icon) icon.className = 'fi fi-rr-fingerprint text-5xl text-cyan-400';
+            if (laser) { laser.style.display = 'block'; laser.className = 'absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_12px_#22d3ee] animate-laser-sweep'; }
+            if (title) title.innerText = 'Waiting for Biometrics';
+            if (desc) desc.innerText = 'Owner access requires biometric verification. Please approve from your authorized mobile device.';
+            if (statusText) statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> <span>Listening for mobile approval in real-time...</span>';
+
+            overlay.classList.remove('hidden');
+
+            const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+            _ownerAuthSessionId = sessionId;
+
+            const now = Date.now();
+            const sessionPayload = {
+                sessionId: sessionId,
+                status: 'waiting_biometrics',
+                requestTimeMs: now,
+                username: username || 'admin',
+                ownerName: ownerName || 'Owner',
+                verified: false,
+                active: true
+            };
+
+            // Write pending verification session to Firestore
+            firebase.firestore().collection('admin').doc('ownerAuthSession').set(sessionPayload, { merge: true }).catch(err => {
+                console.warn("Could not publish ownerAuthSession to Firestore:", err);
+            });
+
+            // Clean up old listener
+            if (_ownerAuthUnsub) {
+                _ownerAuthUnsub();
+                _ownerAuthUnsub = null;
+            }
+
+            // Real-time listener for biometric verification approval
+            _ownerAuthUnsub = firebase.firestore().collection('admin').doc('ownerAuthSession').onSnapshot(snap => {
+                if (!snap.exists) return;
+                const data = snap.data();
+
+                // Check if this session or current active request has been verified
+                if (data && (data.status === 'verified' || data.verified === true)) {
+                    const verTime = data.verifiedAtMs || now;
+                    if (Date.now() - verTime < 300000) {
+                        // Success! Update UI
+                        if (icon) icon.className = 'fi fi-rr-shield-check text-5xl text-emerald-400 animate-bounce';
+                        if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
+                        if (laser) laser.style.display = 'none';
+                        if (title) title.innerText = 'Biometrics Verified!';
+                        if (desc) desc.innerText = 'Identity confirmed successfully. Unlocking Owner Dashboard...';
+                        if (statusText) statusText.innerHTML = '<span class="text-emerald-400 font-bold">✅ Verification Successful! Access Granted.</span>';
+
+                        if (_ownerAuthUnsub) {
+                            _ownerAuthUnsub();
+                            _ownerAuthUnsub = null;
+                        }
+
+                        // Mark session in localStorage
+                        localStorage.setItem('isLoggedIn', 'true');
+                        localStorage.setItem('userRole', 'owner');
+                        localStorage.setItem('ownerVerified', 'true');
+                        localStorage.setItem('userManagement', 'true');
+                        localStorage.setItem('resultManagement', 'true');
+                        localStorage.setItem('semiOwner', 'true');
+                        localStorage.setItem('festUserName', ownerName || 'Owner');
+                        localStorage.setItem('festUserId', 'owner');
+
+                        showToast('<b>✅</b> Owner Biometric Verified! Welcome.');
+
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 1200);
+                    }
+                }
+            }, err => {
+                console.warn("Error listening to ownerAuthSession:", err);
+            });
+        }
+
+        function cancelWaitingForBiometrics() {
+            if (_ownerAuthUnsub) {
+                _ownerAuthUnsub();
+                _ownerAuthUnsub = null;
+            }
+            firebase.firestore().collection('admin').doc('ownerAuthSession').set({
+                status: 'cancelled',
+                verified: false,
+                active: false,
+                cancelledAtMs: Date.now()
+            }, { merge: true }).catch(() => {});
+
+            const overlay = document.getElementById('owner-waiting-biometrics-overlay');
+            if (overlay) overlay.classList.add('hidden');
+            showToast('<b>ℹ️</b> Biometric verification cancelled.');
         }
 
         const loginBtn = document.querySelector('#loginForm button[type="submit"]');
@@ -849,22 +1077,15 @@
                 }
 
                 if ((user === validUser && pass === validPass) || (user === 'admin' && pass === '81119')) {
-                    // Owner login — always allowed
+                    // Owner login credentials valid — do not immediately grant dashboard access
                     if (!doc.exists) {
                         dbRef.set({ username: 'admin', password: '81119', name: 'Kauthukam' }).catch(() => { });
                         firebase.firestore().collection('config').doc('festData').set({ name: 'Kauthukam', isActive: true }).catch(() => { });
                     }
-                    showToast('<b>✅</b> Successfully logged in!');
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userRole', 'owner');
-                    localStorage.setItem('userManagement', 'true');
-                    localStorage.setItem('resultManagement', 'true');
-                    localStorage.setItem('semiOwner', 'true');
                     const ownerName = doc.exists ? (doc.data().name || doc.data().username) : 'Suhail';
-                    localStorage.setItem('festUserName', ownerName);
-                    localStorage.setItem('festUserId', 'owner');
+                    resetBtn();
                     handleRememberMe(user);
-                    window.location.href = 'dashboard.html';
+                    showWaitingForBiometrics(user, ownerName);
                     return;
                 }
 
@@ -906,6 +1127,34 @@
                                 const devOS = typeof window.detectOS === 'function' ? window.detectOS() : 'Unknown';
                                 const devBrowser = typeof window.detectBrowser === 'function' ? window.detectBrowser() : 'Browser';
                                 return { devType, devOS, devBrowser };
+                            };
+
+                            const getClientGeoAndIp = async () => {
+                                if (typeof window.getDeviceGeoInfo === 'function') {
+                                    try {
+                                        return await window.getDeviceGeoInfo();
+                                    } catch(e) {}
+                                }
+                                try {
+                                    const controller = new AbortController();
+                                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                                    const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+                                    clearTimeout(timeoutId);
+                                    if (res.ok) {
+                                        const data = await res.json();
+                                        if (data && data.success !== false) {
+                                            const parts = [data.city, data.region, data.country].filter(Boolean);
+                                            return {
+                                                ip: data.ip || 'Unknown IP',
+                                                city: data.city || '',
+                                                region: data.region || '',
+                                                country: data.country || '',
+                                                location: parts.join(', ') || 'Unknown Location'
+                                            };
+                                        }
+                                    }
+                                } catch(e) {}
+                                return { ip: 'Unknown IP', location: 'Unknown Location', city: '', region: '', country: '' };
                             };
 
                             const completeFestUserLogin = () => {
@@ -974,17 +1223,24 @@
 
                                         const curDeviceId = getClientDeviceId();
                                         const { devType, devOS, devBrowser } = getClientDeviceInfo();
+                                        const geoInfo = await getClientGeoAndIp();
 
                                         const existingIdx = combinedRegistered.findIndex(d => (typeof d === 'string' ? d === curDeviceId : d.deviceId === curDeviceId));
 
                                         if (existingIdx !== -1) {
                                             // Already authorized device -> update timestamp & allow login
+                                            const oldDev = typeof combinedRegistered[existingIdx] === 'object' ? combinedRegistered[existingIdx] : {};
                                             const updatedDeviceObj = {
                                                 deviceId: curDeviceId,
                                                 deviceType: devType,
                                                 os: devOS,
                                                 browser: devBrowser,
-                                                registeredAt: (typeof combinedRegistered[existingIdx] === 'object' && combinedRegistered[existingIdx].registeredAt) ? combinedRegistered[existingIdx].registeredAt : new Date().toISOString(),
+                                                ip: geoInfo.ip && geoInfo.ip !== 'Unknown IP' ? geoInfo.ip : (oldDev.ip || 'Unknown IP'),
+                                                location: geoInfo.location && geoInfo.location !== 'Unknown Location' ? geoInfo.location : (oldDev.location || 'Unknown Location'),
+                                                city: geoInfo.city || oldDev.city || '',
+                                                region: geoInfo.region || oldDev.region || '',
+                                                country: geoInfo.country || oldDev.country || '',
+                                                registeredAt: oldDev.registeredAt || new Date().toISOString(),
                                                 lastLogin: new Date().toISOString()
                                             };
                                             combinedRegistered[existingIdx] = updatedDeviceObj;
@@ -1008,7 +1264,15 @@
                                                     setTimeout(() => pwdInput.classList.remove('border-red-500', 'animate-shake'), 2000);
                                                 }
                                                 const displayName = teamData.name || teamName || festUser.name || 'Your Team';
-                                                showToast(`<b>🚫 Already a Device Setted!</b><br>Team "<b>${displayName}</b>" is already logged in on another device.<br>Only <b>1 device</b> is allowed. You cannot log in from this device unless the other device logs out or Admin resets devices.`);
+                                                showToast(`
+                                                    <div style="font-weight: 700; color: #dc2626; font-size: 14.5px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                                        <span>🚫</span> Device Limit Reached
+                                                    </div>
+                                                    <div style="font-size: 13px; color: #4b5563; line-height: 1.5; max-width: 360px;">
+                                                        Team "<b>${displayName}</b>" is already logged in on another device.<br>
+                                                        Only <b>1 device</b> is allowed. Please log out from the other device or ask Admin to reset registered devices.
+                                                    </div>
+                                                `, 5000);
                                                 return;
                                             }
 
@@ -1018,6 +1282,11 @@
                                                 deviceType: devType,
                                                 os: devOS,
                                                 browser: devBrowser,
+                                                ip: geoInfo.ip || 'Unknown IP',
+                                                location: geoInfo.location || 'Unknown Location',
+                                                city: geoInfo.city || '',
+                                                region: geoInfo.region || '',
+                                                country: geoInfo.country || '',
                                                 registeredAt: new Date().toISOString(),
                                                 lastLogin: new Date().toISOString()
                                             };
@@ -1035,7 +1304,14 @@
                                     } catch (err) {
                                         console.warn("Device check error:", err);
                                         resetBtn();
-                                        showToast('<b>⚠️ Connection Error</b><br>Could not verify team device registration. Please check your connection and try again.');
+                                        showToast(`
+                                            <div style="font-weight: 700; color: #d97706; font-size: 14.5px; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                                <span>⚠️</span> Connection Error
+                                            </div>
+                                            <div style="font-size: 13px; color: #4b5563; line-height: 1.5; max-width: 360px;">
+                                                Could not verify team device registration. Please check your connection and try again.
+                                            </div>
+                                        `, 4000);
                                     }
                                 })();
                             } else {

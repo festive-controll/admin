@@ -83,11 +83,32 @@
             border-radius: 4px;
         }
 
-        i[class^="fi-"] {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
+        /* Custom Centered Modern Toast Notification */
+        .toastify.custom-toast {
+            background: #ffffff !important;
+            color: #1f2937 !important;
+            box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15), 0 10px 15px -5px rgba(0, 0, 0, 0.08) !important;
+            border-radius: 14px !important;
+            border: 1px solid #e5e7eb !important;
+            padding: 14px 22px !important;
+            font-family: 'Inter', sans-serif !important;
+            font-size: 13.5px !important;
+            line-height: 1.5 !important;
+            max-width: 440px !important;
+            width: fit-content !important;
+            width: -moz-fit-content !important;
+            text-align: center !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+            top: 24px !important;
+            margin: 0 !important;
+            z-index: 999999 !important;
         }
 
         .animate-in {
@@ -1130,6 +1151,115 @@
 
         const currId = localStorage.getItem('festUserId');
         const currRole = localStorage.getItem('userRole');
+
+        // ── Owner Biometric Protection Guard ──
+        if (currRole === 'owner') {
+            if (localStorage.getItem('ownerVerified') !== 'true') {
+                showDashboardOwnerLock();
+            } else {
+                // Monitor for revocation or session change
+                if (typeof db !== 'undefined') {
+                    db.collection('admin').doc('ownerAuthSession').onSnapshot(snap => {
+                        if (snap.exists) {
+                            const d = snap.data();
+                            if (d && d.status === 'cancelled') {
+                                localStorage.removeItem('ownerVerified');
+                                showDashboardOwnerLock();
+                            }
+                        }
+                    }, err => console.warn("Owner session sync:", err));
+                }
+            }
+        }
+
+        function showDashboardOwnerLock() {
+            if (document.getElementById('owner-dashboard-lock-overlay')) return;
+            const overlay = document.createElement('div');
+            overlay.id = 'owner-dashboard-lock-overlay';
+            overlay.className = 'fixed inset-0 z-[999999] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4';
+            overlay.innerHTML = `
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-7 sm:p-9 max-w-md w-full shadow-2xl text-center relative overflow-hidden text-white animate-in">
+                    <div class="absolute -top-16 -left-16 w-44 h-44 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-16 -right-16 w-44 h-44 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-6">
+                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                        <span>Owner Dashboard Locked</span>
+                    </div>
+
+                    <div class="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+                        <div id="dash-lock-pad" class="relative z-10 w-24 h-24 rounded-2xl bg-slate-800/90 border border-blue-500/40 shadow-lg shadow-blue-500/20 flex items-center justify-center overflow-hidden transition-all duration-300">
+                            <i id="dash-lock-icon" class="fi fi-rr-fingerprint text-5xl text-cyan-400 animate-pulse"></i>
+                        </div>
+                    </div>
+
+                    <h2 id="dash-lock-title" class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
+                        Waiting for Biometrics
+                    </h2>
+                    <p id="dash-lock-desc" class="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-6">
+                        Owner Dashboard is protected. Please verify via <span class="text-white font-semibold">Bulk Entry &rarr; Verify</span> in the mobile Inner Dashboard.
+                    </p>
+
+                    <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 text-left mb-6 space-y-2.5">
+                        <div class="flex items-start gap-3">
+                            <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">1</div>
+                            <p class="text-xs text-slate-300">Open <span class="font-semibold text-white">Inner Dashboard</span> on your mobile device.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">2</div>
+                            <p class="text-xs text-slate-300">Open <span class="font-semibold text-blue-400">Bulk Entry &rarr; Verify</span>.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-[11px] font-bold text-blue-400 shrink-0 mt-0.5">3</div>
+                            <p class="text-xs text-slate-300">Enter passcode & authenticate with fingerprint.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-center gap-2 text-xs font-medium text-slate-400">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span id="dash-lock-status">Awaiting mobile biometric verification...</span>
+                        </div>
+                        <button type="button" onclick="logoutUser()" class="mt-2 w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold transition-all">
+                            Exit / Return to Sign In
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Listen in real-time
+            if (typeof db !== 'undefined') {
+                const unsub = db.collection('admin').doc('ownerAuthSession').onSnapshot(snap => {
+                    if (!snap.exists) return;
+                    const d = snap.data();
+                    if (d && (d.status === 'verified' || d.verified === true)) {
+                        const now = Date.now();
+                        const verTime = d.verifiedAtMs || now;
+                        if (now - verTime < 300000) {
+                            localStorage.setItem('ownerVerified', 'true');
+                            const icon = document.getElementById('dash-lock-icon');
+                            const pad = document.getElementById('dash-lock-pad');
+                            const title = document.getElementById('dash-lock-title');
+                            const desc = document.getElementById('dash-lock-desc');
+                            const status = document.getElementById('dash-lock-status');
+                            if (icon) icon.className = 'fi fi-rr-shield-check text-5xl text-emerald-400 animate-bounce';
+                            if (pad) pad.className = 'relative z-10 w-24 h-24 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
+                            if (title) title.innerText = 'Biometric Verified!';
+                            if (desc) desc.innerText = 'Owner Dashboard unlocked. Welcome back!';
+                            if (status) status.innerHTML = '<span class="text-emerald-400 font-bold">Access Granted</span>';
+
+                            setTimeout(() => {
+                                unsub();
+                                overlay.remove();
+                                if (typeof showToast === 'function') showToast('<b>✅</b> Owner Dashboard Unlocked!');
+                            }, 1000);
+                        }
+                    }
+                }, err => console.warn("Dashboard owner lock sync:", err));
+            }
+        }
+
         if (currId && currRole !== 'owner') {
             db.collection('festUsers').doc(currId).onSnapshot(doc => {
                 if (doc.exists) {
@@ -1164,10 +1294,10 @@
                             
                             // 1. Watch user's own festUser doc for device authorization
                             const userRegisteredDevs = Array.isArray(d.registeredDevices) ? d.registeredDevices : [];
-                            if (curDeviceId && userRegisteredDevs.length > 0) {
+                            if (curDeviceId) {
                                 const isUserDevAuth = userRegisteredDevs.some(dev => (typeof dev === 'string' ? dev === curDeviceId : dev.deviceId === curDeviceId));
                                 if (!isUserDevAuth) {
-                                    alert(`⚠️ Device Session Expired: This account was logged in from another device or reset by Admin.`);
+                                    alert(`⚠️ Device Session Expired: Active devices were reset by Admin or this account logged in on another device.`);
                                     logoutUser();
                                     return;
                                 }
@@ -1180,15 +1310,59 @@
                                     if (!teamSnap.empty) {
                                         const teamDoc = teamSnap.docs[0].data() || {};
                                         const registeredDevs = Array.isArray(teamDoc.registeredDevices) ? teamDoc.registeredDevices : [];
-                                        if (curDeviceId && registeredDevs.length > 0) {
+                                        if (curDeviceId) {
                                             const isRegistered = registeredDevs.some(dev => (typeof dev === 'string' ? dev === curDeviceId : dev.deviceId === curDeviceId));
                                             if (!isRegistered) {
-                                                alert(`⚠️ Device Session Expired: Another device logged in for team "${newTeam}" or active devices were reset.`);
+                                                alert(`⚠️ Device Session Expired: Active devices for team "${newTeam}" were reset by Admin.`);
                                                 logoutUser();
                                             }
                                         }
                                     }
                                 }, err => console.warn("Team device sync:", err));
+
+                                // Enrich registered device with IP and Location in background
+                                if (curDeviceId && !window._festGeoSynced) {
+                                    window._festGeoSynced = true;
+                                    (async () => {
+                                        try {
+                                            const getGeo = (typeof window.getDeviceGeoInfo === 'function') ? window.getDeviceGeoInfo : null;
+                                            if (!getGeo) return;
+                                            const geo = await getGeo();
+                                            if (geo && geo.ip && geo.ip !== 'Unknown IP') {
+                                                const tSnap = await db.collection('teams').where('name', '==', newTeam).limit(1).get().catch(() => null);
+                                                if (tSnap && !tSnap.empty) {
+                                                    const tDoc = tSnap.docs[0];
+                                                    const tDevs = Array.isArray(tDoc.data().registeredDevices) ? [...tDoc.data().registeredDevices] : [];
+                                                    let changed = false;
+                                                    const updated = tDevs.map(dev => {
+                                                        if ((typeof dev === 'string' && dev === curDeviceId) || (dev && dev.deviceId === curDeviceId)) {
+                                                            if (typeof dev === 'string' || !dev.ip || dev.ip === 'Unknown IP') {
+                                                                changed = true;
+                                                                return {
+                                                                    ...(typeof dev === 'object' ? dev : {}),
+                                                                    deviceId: curDeviceId,
+                                                                    deviceType: (typeof dev === 'object' && dev.deviceType) || (typeof window.detectDeviceType === 'function' ? window.detectDeviceType() : 'Desktop'),
+                                                                    os: (typeof dev === 'object' && dev.os) || (typeof window.detectOS === 'function' ? window.detectOS() : 'Unknown'),
+                                                                    browser: (typeof dev === 'object' && dev.browser) || (typeof window.detectBrowser === 'function' ? window.detectBrowser() : 'Browser'),
+                                                                    ip: geo.ip,
+                                                                    location: geo.location,
+                                                                    city: geo.city || '',
+                                                                    region: geo.region || '',
+                                                                    country: geo.country || '',
+                                                                    lastLogin: (typeof dev === 'object' && dev.lastLogin) || new Date().toISOString()
+                                                                };
+                                                            }
+                                                        }
+                                                        return dev;
+                                                    });
+                                                    if (changed) {
+                                                        await tDoc.ref.update({ registeredDevices: updated }).catch(() => {});
+                                                    }
+                                                }
+                                            }
+                                        } catch(err) {}
+                                    })();
+                                }
                             }
                         }
                     }
@@ -1348,10 +1522,13 @@
             }
         }
 
-        function showToast(msg) {
+        function showToast(msg, duration = 2500) {
             Toastify({
-                text: `<b>${msg.includes('âœ…') ? '' : 'ðŸ””'}</b> ${msg}`, duration: 2500, gravity: "top", position: "center",
-                style: { background: "#fff", color: "#333", boxShadow: "0 10px 40px -10px rgba(0,0,0,0.1)", borderRadius: "1.5rem", border: "1px solid #eaeaea", padding: "16px 32px", fontSize: "13px", fontWeight: "600", fontFamily: "'Inter', sans-serif" },
+                text: `<b>${msg.includes('✅') || msg.includes('❌') || msg.includes('⚠️') || msg.includes('🚫') || msg.includes('🔒') ? '' : '🔔'}</b> ${msg}`,
+                duration: duration,
+                gravity: "top",
+                position: "center",
+                className: "custom-toast",
                 escapeMarkup: false
             }).showToast();
         }

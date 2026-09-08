@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -688,10 +688,10 @@
             });
         }
 
-        function showToast(msg) {
+        function showToast(msg, duration = 3000) {
             Toastify({
-                text: msg, duration: 3000, gravity: "top", position: "center",
-                style: { background: "#fff", color: "#333", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", borderRadius: "12px", border: "1px solid #eee", padding: "12px 24px", fontSize: "14px", fontFamily: "'Inter',sans-serif", display: "flex", gap: "8px", alignItems: "center" },
+                text: msg, duration: duration, gravity: "top", position: "center",
+                style: { background: "#fff", color: "#333", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)", borderRadius: "12px", border: "1px solid #eee", padding: "12px 24px", fontSize: "14px", fontFamily: "'Inter',sans-serif", display: "block", textAlign: "center", lineHeight: "1.5", maxWidth: "90vw" },
                 escapeMarkup: false
             }).showToast();
         }

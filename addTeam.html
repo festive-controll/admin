@@ -734,11 +734,25 @@
                 listEl.innerHTML = '<div class="italic text-gray-400 py-1">No devices currently registered.</div>';
             } else {
                 listEl.innerHTML = list.map((d, i) => {
-                    const devName = typeof d === 'string' ? d.substring(0, 12) + '...' : `${d.deviceType || 'Device'} (${d.os || 'OS'}, ${d.browser || 'Browser'})`;
-                    const timeStr = (typeof d === 'object' && d.lastLogin) ? new Date(d.lastLogin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-                    return `<div class="flex items-center justify-between py-0.5 border-b border-gray-100 last:border-0">
-                        <span class="truncate max-w-[220px]" title="${typeof d === 'object' ? d.deviceId : d}">#${i + 1}: ${devName}</span>
-                        <span class="text-[10px] text-gray-400 shrink-0">${timeStr}</span>
+                    const isObj = typeof d === 'object' && d !== null;
+                    const devName = !isObj ? d.substring(0, 12) + '...' : `${d.deviceType || 'Device'} (${d.os || 'OS'}, ${d.browser || 'Browser'})`;
+                    const timeStr = (isObj && d.lastLogin) ? new Date(d.lastLogin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    const ip = isObj && d.ip ? d.ip : 'Unknown IP';
+                    const location = isObj && (d.location || d.city) ? (d.location || d.city) : 'Location unavailable';
+
+                    return `<div class="p-2 bg-white rounded-xl border border-gray-200 space-y-1 shadow-2xs">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-gray-700">
+                            <span class="truncate max-w-[200px]" title="${isObj ? d.deviceId : d}">#${i + 1}: ${devName}</span>
+                            <span class="text-[10px] text-gray-400 font-normal shrink-0">${timeStr}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap text-[10px]">
+                            <span class="inline-flex items-center gap-1 font-mono text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100" title="IP Address">
+                                <i class="fi fi-rr-globe text-[9px]"></i> ${ip}
+                            </span>
+                            <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100" title="Location">
+                                <i class="fi fi-rr-marker text-[9px]"></i> ${location}
+                            </span>
+                        </div>
                     </div>`;
                 }).join('');
             }
@@ -749,9 +763,12 @@
             if (!editingTeamId) return;
             const team = teamsData.find(t => t.id === editingTeamId);
             const teamName = team ? team.name : 'this team';
-            if (confirm(`Reset registered devices for "${teamName}"?`)) {
+            if (confirm(`Reset registered devices for "${teamName}"?\n\nThis will immediately log out active devices for this team.`)) {
                 if (typeof db !== 'undefined') {
                     db.collection('teams').doc(editingTeamId).update({ registeredDevices: [] }).then(() => {
+                        db.collection('festUsers').where('team', '==', teamName).get().then(uSnap => {
+                            uSnap.forEach(uDoc => uDoc.ref.update({ registeredDevices: [], activeDeviceId: '' }).catch(() => {}));
+                        }).catch(() => {});
                         renderSidebarRegisteredDevices([]);
                         typeof showToast === 'function' && showToast(`✅ Registered devices reset for ${teamName}!`);
                     }).catch(err => {

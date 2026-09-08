@@ -82,17 +82,104 @@ function detectBrowser() {
     return "Other";
 }
 
-// 4. Heartbeat logic
-function sendHeartbeat() {
+// 4. Geolocation & IP Detection
+let _geoInfoCache = null;
+
+async function getDeviceGeoInfo() {
+    if (_geoInfoCache && _geoInfoCache.ip && _geoInfoCache.ip !== 'Unknown IP') {
+        return _geoInfoCache;
+    }
+    
+    try {
+        const stored = sessionStorage.getItem('fest_device_geo');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed.ip && parsed.ip !== 'Unknown IP') {
+                _geoInfoCache = parsed;
+                return parsed;
+            }
+        }
+    } catch(e) {}
+
+    // Fetch from ipwho.is (fast, HTTPS, CORS enabled)
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.success !== false) {
+                const parts = [data.city, data.region, data.country].filter(Boolean);
+                const info = {
+                    ip: data.ip || 'Unknown IP',
+                    city: data.city || '',
+                    region: data.region || '',
+                    country: data.country || '',
+                    location: parts.join(', ') || 'Unknown Location',
+                    isp: data.connection?.isp || data.isp || ''
+                };
+                _geoInfoCache = info;
+                try { sessionStorage.setItem('fest_device_geo', JSON.stringify(info)); } catch(e) {}
+                return info;
+            }
+        }
+    } catch (e) {}
+
+    // Fallback: ipapi.co
+    try {
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
+        const res2 = await fetch('https://ipapi.co/json/', { signal: controller2.signal });
+        clearTimeout(timeoutId2);
+        if (res2.ok) {
+            const data2 = await res2.json();
+            if (data2 && data2.ip) {
+                const parts = [data2.city, data2.region, data2.country_name].filter(Boolean);
+                const info = {
+                    ip: data2.ip || 'Unknown IP',
+                    city: data2.city || '',
+                    region: data2.region || '',
+                    country: data2.country_name || '',
+                    location: parts.join(', ') || 'Unknown Location',
+                    isp: data2.org || ''
+                };
+                _geoInfoCache = info;
+                try { sessionStorage.setItem('fest_device_geo', JSON.stringify(info)); } catch(e) {}
+                return info;
+            }
+        }
+    } catch (e) {}
+
+    const fallback = {
+        ip: 'Unknown IP',
+        city: '',
+        region: '',
+        country: '',
+        location: 'Unknown Location',
+        isp: ''
+    };
+    _geoInfoCache = fallback;
+    return fallback;
+}
+
+// 5. Heartbeat logic
+async function sendHeartbeat() {
     const db = firebase.firestore();
     const deviceId = getDeviceId();
     const docRef = db.collection('connectedDevices').doc(deviceId);
+    const geo = await getDeviceGeoInfo();
     
     const updateData = {
         deviceId: deviceId,
         deviceType: detectDeviceType(),
         os: detectOS(),
         browser: detectBrowser(),
+        ip: geo.ip || 'Unknown IP',
+        location: geo.location || 'Unknown Location',
+        city: geo.city || '',
+        region: geo.region || '',
+        country: geo.country || '',
         currentPage: window.location.pathname,
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -141,6 +228,7 @@ window.getDeviceId = getDeviceId;
 window.detectDeviceType = detectDeviceType;
 window.detectOS = detectOS;
 window.detectBrowser = detectBrowser;
+window.getDeviceGeoInfo = getDeviceGeoInfo;
 window.sendHeartbeat = sendHeartbeat;
 
 if (document.readyState === 'loading') {
