@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -35,6 +35,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
 
@@ -130,11 +131,11 @@
                     <div class="space-y-4">
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500">Team</span>
-                            <span class="font-medium text-gray-900" id="vc-det-team">—</span>
+                            <span class="font-medium text-gray-900" id="vc-det-team">â€”</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500">Section</span>
-                            <span class="font-medium text-gray-900" id="vc-det-sec">—</span>
+                            <span class="font-medium text-gray-900" id="vc-det-sec">â€”</span>
                         </div>
                         
                         <!-- Divider -->
@@ -142,11 +143,11 @@
                         
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500">Chest Number</span>
-                            <span class="font-medium text-gray-900 font-mono-custom" id="vc-det-chest">—</span>
+                            <span class="font-medium text-gray-900 font-mono-custom" id="vc-det-chest">â€”</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500">Admission Number</span>
-                            <span class="font-medium text-gray-900 font-mono-custom" id="vc-det-adm">—</span>
+                            <span class="font-medium text-gray-900 font-mono-custom" id="vc-det-adm">â€”</span>
                         </div>
                     </div>
                 </div>
@@ -278,8 +279,8 @@
                             document.getElementById('vc-det-adm').innerText = c.admissionNo || '--';
                         }
                         
-                        document.getElementById('vc-det-team').innerText = c.team || '—';
-                        document.getElementById('vc-det-sec').innerText = c.section || '—';
+                        document.getElementById('vc-det-team').innerText = c.team || 'â€”';
+                        document.getElementById('vc-det-sec').innerText = c.section || 'â€”';
                         
                         const avatarEl = document.getElementById('vc-avatar');
                         const candInitial = (c.name || candNameStr).charAt(0).toUpperCase();

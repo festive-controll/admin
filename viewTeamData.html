@@ -95,6 +95,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg text-brand-textDark antialiased min-h-screen p-4 sm:p-6 lg:p-8">
@@ -249,11 +250,11 @@
                     <div class="p-6 space-y-4">
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">Team Captain</span>
-                            <span id="vt-detail-captain" class="font-bold text-gray-900">—</span>
+                            <span id="vt-detail-captain" class="font-bold text-gray-900">â€”</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">Assistant Captain</span>
-                            <span id="vt-detail-assistant" class="font-bold text-gray-900">—</span>
+                            <span id="vt-detail-assistant" class="font-bold text-gray-900">â€”</span>
                         </div>
                         <div class="h-px bg-gray-100"></div>
                         <div class="flex justify-between items-center text-sm">
@@ -268,6 +269,17 @@
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">Display Order</span>
                             <span id="vt-detail-order" class="font-bold text-gray-900">—</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500 font-medium">Device Limit</span>
+                            <span id="vt-detail-devlimit" class="font-bold text-gray-900">1 Device</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500 font-medium">Connected Devices</span>
+                            <div class="flex items-center gap-2">
+                                <span id="vt-detail-devactive" class="font-bold text-gray-900 text-xs">0 Active</span>
+                                <button type="button" id="vt-btn-reset-dev" onclick="resetCurrentTeamDevices()" class="text-[11px] font-bold text-amber-600 hover:text-amber-700 hover:underline">Reset</button>
+                            </div>
                         </div>
                         <!-- Divider -->
                         <div class="h-px bg-gray-100"></div>
@@ -376,6 +388,26 @@
                         if (colorBoxEl) colorBoxEl.style.backgroundColor = t.color || '#134E8E';
                         safeText('vt-detail-color-text', t.color || '—');
                         safeText('vt-detail-order', t.displayOrder || '—');
+                        
+                        const devLimit = parseInt(t.deviceLimit, 10) > 0 ? parseInt(t.deviceLimit, 10) : 1;
+                        const regDevs = Array.isArray(t.registeredDevices) ? t.registeredDevices : [];
+                        safeText('vt-detail-devlimit', `${devLimit} Device${devLimit > 1 ? 's' : ''}`);
+                        safeText('vt-detail-devactive', `${regDevs.length} / ${devLimit} Active`);
+
+                        window.resetCurrentTeamDevices = function() {
+                            if (confirm(`Reset registered devices for "${teamName}"?`)) {
+                                db.collection('teams').doc(teamId).update({ registeredDevices: [] }).then(() => {
+                                    db.collection('festUsers').where('team', '==', teamName).get().then(uSnap => {
+                                        uSnap.forEach(uDoc => uDoc.ref.update({ registeredDevices: [], activeDeviceId: '' }).catch(() => {}));
+                                    }).catch(() => {});
+                                    alert(`✅ Registered devices reset for ${teamName}!`);
+                                }).catch(err => {
+                                    console.error(err);
+                                    alert("❌ Error resetting devices!");
+                                });
+                            }
+                        };
+
                         safeText('vt-detail-created', t.createdAt ? (t.createdAt.seconds ? new Date(t.createdAt.seconds * 1000).toLocaleDateString() : new Date(t.createdAt).toLocaleDateString()) : '—');
                         safeText('vt-detail-updated', t.updatedAt ? (t.updatedAt.seconds ? new Date(t.updatedAt.seconds * 1000).toLocaleDateString() : new Date(t.updatedAt).toLocaleDateString()) : '—');
 
@@ -529,7 +561,7 @@
                                 <span class="text-[13.5px] font-bold text-gray-900 group-hover:text-brand-blue transition-colors flex items-center">${c.name}${roleBadge}</span>
                             </div>
                             <div class="col-span-2 text-center">
-                                <span class="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-600 rounded-md text-[10px] font-bold uppercase tracking-wider">${c.section || '—'}</span>
+                                <span class="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-600 rounded-md text-[10px] font-bold uppercase tracking-wider">${c.section || 'â€”'}</span>
                             </div>
                             <div class="col-span-2 text-center font-bold text-sm text-gray-900">
                                 ${pts} <span class="text-[10px] text-gray-400 tracking-tighter">PTS</span>

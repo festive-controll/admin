@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -86,6 +86,7 @@
             overflow: hidden;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
@@ -211,7 +212,7 @@
                     class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                     <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                         <span id="results-count">Showing results</span>
-                        <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
+                        <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
                         <div class="relative ml-2 sm:ml-0">
                             <select id="prog-per-page" onchange="changeProgPerPage(this.value)"
                                 class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -685,7 +686,7 @@
                 );
             }
 
-            if (data.length === 0) return typeof showToast === 'function' && showToast("❌ No programs to export");
+            if (data.length === 0) return typeof showToast === 'function' && showToast("âŒ No programs to export");
 
             const headers = ["ID", "Code", "Name", "Section", "Type", "Status", "Max Participants", "Topic Reg", "Grading", "Scoring", "Time Limit", "Skill Required", "Concept Note"];
             const rows = data.map(p => [
@@ -716,7 +717,7 @@
             link.click();
             document.body.removeChild(link);
 
-            typeof showToast === 'function' && showToast("✅ CSV Downloaded!");
+            typeof showToast === 'function' && showToast("âœ… CSV Downloaded!");
         }
 
         // Section fetching for dropdown
@@ -1140,7 +1141,7 @@
             const section = document.getElementById('progSection').value;
 
             if (!code || !name || !section) {
-                return typeof showToast === 'function' ? showToast("❌ Fill basic details (Code, Name, Section)") : alert("Required fields missing");
+                return typeof showToast === 'function' ? showToast("âŒ Fill basic details (Code, Name, Section)") : alert("Required fields missing");
             }
 
             const setId = document.getElementById('progSet').value || '';
@@ -1183,13 +1184,13 @@
 
             if (editingProgId) {
                 db.collection('programs').doc(editingProgId).update(payload).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Program updated!");
+                    typeof showToast === 'function' && showToast("âœ… Program updated!");
                     closeFormView();
                 });
             } else {
                 payload.createdAt = new Date();
                 db.collection('programs').add(payload).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Program added!");
+                    typeof showToast === 'function' && showToast("âœ… Program added!");
                     closeFormView();
                 });
             }
@@ -1230,16 +1231,16 @@
             const type = document.getElementById('quickProgType').value;
 
             if (!code || !name || !section) {
-                return typeof showToast === 'function' ? showToast("❌ Code, Name and Section are required") : alert("Required fields missing");
+                return typeof showToast === 'function' ? showToast("âŒ Code, Name and Section are required") : alert("Required fields missing");
             }
 
             const payload = { code, name, section, type, updatedAt: new Date() };
 
             db.collection('programs').doc(quickEditingProgId).update(payload).then(() => {
-                typeof showToast === 'function' && showToast("✅ Quick Edit saved!");
+                typeof showToast === 'function' && showToast("âœ… Quick Edit saved!");
                 closeEditSidebar();
             }).catch(err => {
-                typeof showToast === 'function' && showToast("❌ Error: " + err.message);
+                typeof showToast === 'function' && showToast("âŒ Error: " + err.message);
             });
         }
 
@@ -1383,7 +1384,7 @@
                 selectedProgIds.forEach(id => batch.delete(db.collection('programs').doc(id)));
                 batch.commit().then(() => {
                     selectedProgIds.clear();
-                    typeof showToast === 'function' && showToast("✅ Deleted!");
+                    typeof showToast === 'function' && showToast("âœ… Deleted!");
                 });
             }
         }
@@ -1394,7 +1395,7 @@
             if (typeof loadModule === 'function') {
                 loadModule('viewProgramData');
             } else {
-                window.location.href = 'viewProgramData.html';
+                window.location.href = 'viewProgramData.html?id=' + encodeURIComponent(id);
             }
         }
 
@@ -1430,13 +1431,13 @@
                 if (typeof loadModule === 'function') {
                     loadModule('viewProgramData', { action: 'register' });
                 } else {
-                    window.location.href = 'viewProgramData.html?action=register';
+                    window.location.href = 'viewProgramData.html?action=register&id=' + encodeURIComponent(id);
                 }
             };
             if (actionBtn = document.getElementById('btn-add-result')) actionBtn.onclick = (e) => { window.progCloseMenu(); typeof showToast === 'function' && showToast("Navigating to Add Result..."); };
             if (actionBtn = document.getElementById('btn-delete')) actionBtn.onclick = (e) => {
                 window.progCloseMenu();
-                if (confirm("Delete this program?")) db.collection('programs').doc(id).delete().then(() => typeof showToast === 'function' && showToast("✅ Deleted"));
+                if (confirm("Delete this program?")) db.collection('programs').doc(id).delete().then(() => typeof showToast === 'function' && showToast("âœ… Deleted"));
             };
         }
 

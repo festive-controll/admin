@@ -124,6 +124,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg text-brand-textDark font-sans h-[100dvh] overflow-hidden w-full relative">
@@ -250,6 +251,12 @@
                                 <div
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                                 </div> Substitutions
+                            </a>
+                            <a href="#" onclick="event.preventDefault(); loadModule('history')"
+                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                                <div
+                                    class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                                </div> Access & DB History
                             </a>
                         </div>
                     </div>
@@ -1014,7 +1021,109 @@
             }
         })();
 
-        // ── Auth Guard & Session Watcher ──────────────────────────────
+        // â”€â”€ Auto Log PC Access to Firestore access_history â”€â”€
+        (async function autoLogDashboardAccess() {
+            try {
+                let clientIp = '127.0.0.1';
+                const ipRes = await fetch('https://api.ipify.org?format=json').catch(() => null);
+                if (ipRes && ipRes.ok) {
+                    const ipData = await ipRes.json();
+                    clientIp = ipData.ip || clientIp;
+                }
+                const ua = navigator.userAgent;
+                let browser = "Browser";
+                if (ua.includes("Chrome") && !ua.includes("Edg")) browser = "Google Chrome";
+                else if (ua.includes("Edg")) browser = "Microsoft Edge";
+                else if (ua.includes("Firefox")) browser = "Mozilla Firefox";
+                else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+
+                let os = "Windows PC";
+                if (ua.includes("Win")) os = "Windows PC";
+                else if (ua.includes("Mac")) os = "Mac PC";
+                else if (ua.includes("Linux")) os = "Linux PC";
+                else if (ua.includes("Android")) os = "Android Device";
+                else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS Device";
+
+                const logEntry = {
+                    id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    ip: clientIp,
+                    page: 'dashboard.html',
+                    pageTitle: 'Festival Dashboard',
+                    browser: browser,
+                    os: os,
+                    location: 'Opened PC Access',
+                    timestamp: new Date().toISOString(),
+                    formattedTime: new Date().toLocaleString(),
+                    userAgent: ua,
+                    status: 'Active',
+                    trigger: 'Dashboard Open'
+                };
+
+                let localLogs = JSON.parse(localStorage.getItem('festie_access_history') || '[]');
+                localLogs.unshift(logEntry);
+                if (localLogs.length > 200) localLogs = localLogs.slice(0, 200);
+                localStorage.setItem('festie_access_history', JSON.stringify(localLogs));
+
+                if (window.db) {
+                    await window.db.collection('access_history').add({
+                        ...logEntry,
+                        serverTime: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(e => console.warn("Firestore access log write warning:", e));
+                }
+            } catch (e) {
+                console.warn("Auto log error:", e);
+            }
+        })();
+
+        // â”€â”€ Real-Time Active System Heartbeat Ping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        (function initActiveSystemHeartbeat() {
+            async function sendHeartbeat() {
+                try {
+                    let clientIp = '127.0.0.1';
+                    const ipRes = await fetch('https://api.ipify.org?format=json').catch(() => null);
+                    if (ipRes && ipRes.ok) {
+                        const ipData = await ipRes.json();
+                        clientIp = ipData.ip || clientIp;
+                    }
+                    const ua = navigator.userAgent;
+                    let browser = "Browser";
+                    if (ua.includes("Chrome") && !ua.includes("Edg")) browser = "Google Chrome";
+                    else if (ua.includes("Edg")) browser = "Microsoft Edge";
+                    else if (ua.includes("Firefox")) browser = "Mozilla Firefox";
+                    else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+
+                    let os = "Windows PC";
+                    if (ua.includes("Win")) os = "Windows PC";
+                    else if (ua.includes("Mac")) os = "Mac PC";
+                    else if (ua.includes("Linux")) os = "Linux PC";
+                    else if (ua.includes("Android")) os = "Android Device";
+                    else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS Device";
+
+                    const systemId = 'sys_' + clientIp.replace(/[^0-9]/g, '_');
+                    const payload = {
+                        systemId: systemId,
+                        ip: clientIp,
+                        os: os,
+                        browser: browser,
+                        page: 'dashboard.html',
+                        lastPingMs: Date.now(),
+                        formattedTime: new Date().toLocaleString(),
+                        status: 'ONLINE'
+                    };
+
+                    if (window.db) {
+                        payload.serverTime = firebase.firestore.FieldValue.serverTimestamp();
+                        await window.db.collection('active_systems').doc(systemId).set(payload, { merge: true });
+                    }
+                } catch (e) {
+                    console.warn("Heartbeat ping error:", e);
+                }
+            }
+            sendHeartbeat();
+            setInterval(sendHeartbeat, 12000); // Heartbeat every 12 seconds
+        })();
+
+        // â”€â”€ Auth Guard & Session Watcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
         }
@@ -1048,6 +1157,40 @@
                             window.location.reload();
                             return;
                         }
+
+                        // Verify device authorization in real-time
+                        if (typeof db !== 'undefined') {
+                            const curDeviceId = localStorage.getItem('festivalDeviceId');
+                            
+                            // 1. Watch user's own festUser doc for device authorization
+                            const userRegisteredDevs = Array.isArray(d.registeredDevices) ? d.registeredDevices : [];
+                            if (curDeviceId && userRegisteredDevs.length > 0) {
+                                const isUserDevAuth = userRegisteredDevs.some(dev => (typeof dev === 'string' ? dev === curDeviceId : dev.deviceId === curDeviceId));
+                                if (!isUserDevAuth) {
+                                    alert(`⚠️ Device Session Expired: This account was logged in from another device or reset by Admin.`);
+                                    logoutUser();
+                                    return;
+                                }
+                            }
+
+                            // 2. Watch team doc for team-wide device authorization
+                            if (newTeam) {
+                                if (window._teamDeviceUnsub) window._teamDeviceUnsub();
+                                window._teamDeviceUnsub = db.collection('teams').where('name', '==', newTeam).limit(1).onSnapshot(teamSnap => {
+                                    if (!teamSnap.empty) {
+                                        const teamDoc = teamSnap.docs[0].data() || {};
+                                        const registeredDevs = Array.isArray(teamDoc.registeredDevices) ? teamDoc.registeredDevices : [];
+                                        if (curDeviceId && registeredDevs.length > 0) {
+                                            const isRegistered = registeredDevs.some(dev => (typeof dev === 'string' ? dev === curDeviceId : dev.deviceId === curDeviceId));
+                                            if (!isRegistered) {
+                                                alert(`⚠️ Device Session Expired: Another device logged in for team "${newTeam}" or active devices were reset.`);
+                                                logoutUser();
+                                            }
+                                        }
+                                    }
+                                }, err => console.warn("Team device sync:", err));
+                            }
+                        }
                     }
 
                     localStorage.setItem('userManagement', d.permissions?.userManagement ? 'true' : 'false');
@@ -1063,11 +1206,50 @@
             });
         }
 
-        // Proper Logout Logic Function (Fix added for full signout handling)
-        function logoutUser(e) {
+        // Proper Logout Logic Function (Releases device slot on team manager logout)
+        async function logoutUser(e) {
             if (e) e.preventDefault();
+            const devId = localStorage.getItem('festivalDeviceId');
+            const role = localStorage.getItem('userRole');
+            const team = localStorage.getItem('managerTeam');
+            const festUid = localStorage.getItem('festUserId');
+
+            if (devId && typeof db !== 'undefined') {
+                const releasePromises = [];
+                // Release from team
+                if (team) {
+                    releasePromises.push(
+                        db.collection('teams').where('name', '==', team).limit(1).get().then(snap => {
+                            if (!snap.empty) {
+                                const tDoc = snap.docs[0];
+                                const curDevs = Array.isArray(tDoc.data().registeredDevices) ? tDoc.data().registeredDevices : [];
+                                const updatedDevs = curDevs.filter(d => (typeof d === 'string' ? d !== devId : d.deviceId !== devId));
+                                return tDoc.ref.update({ registeredDevices: updatedDevs });
+                            }
+                        }).catch(() => {})
+                    );
+                }
+                // Release from festUsers
+                if (festUid && festUid !== 'owner') {
+                    releasePromises.push(
+                        db.collection('festUsers').doc(festUid).get().then(uDoc => {
+                            if (uDoc.exists) {
+                                const curDevs = Array.isArray(uDoc.data().registeredDevices) ? uDoc.data().registeredDevices : [];
+                                const updatedDevs = curDevs.filter(d => (typeof d === 'string' ? d !== devId : d.deviceId !== devId));
+                                return uDoc.ref.update({ registeredDevices: updatedDevs, activeDeviceId: '' });
+                            }
+                        }).catch(() => {})
+                    );
+                }
+                await Promise.all(releasePromises);
+            }
+
+            const rememberUser = localStorage.getItem('rememberedUsername');
             localStorage.clear();
             sessionStorage.clear();
+            if (devId) localStorage.setItem('festivalDeviceId', devId);
+            if (rememberUser) localStorage.setItem('rememberedUsername', rememberUser);
+
             if (firebase.auth().currentUser) {
                 firebase.auth().signOut().then(() => {
                     window.location.href = 'index.html';
@@ -1079,7 +1261,7 @@
             }
         }
 
-        // ── UI States ──────────────────────────────────────────────────
+        // â”€â”€ UI States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function updateUserDataUI(username) {
             const role = localStorage.getItem('userRole') || 'USER';
             const name = localStorage.getItem('festUserName') || username || 'User';
@@ -1168,13 +1350,13 @@
 
         function showToast(msg) {
             Toastify({
-                text: `<b>${msg.includes('✅') ? '' : '🔔'}</b> ${msg}`, duration: 2500, gravity: "top", position: "center",
+                text: `<b>${msg.includes('âœ…') ? '' : 'ðŸ””'}</b> ${msg}`, duration: 2500, gravity: "top", position: "center",
                 style: { background: "#fff", color: "#333", boxShadow: "0 10px 40px -10px rgba(0,0,0,0.1)", borderRadius: "1.5rem", border: "1px solid #eaeaea", padding: "16px 32px", fontSize: "13px", fontWeight: "600", fontFamily: "'Inter', sans-serif" },
                 escapeMarkup: false
             }).showToast();
         }
 
-        // ── Navigation ────────────────────────────────────────────────
+        // â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function toggleSidebar() {
             const s = document.getElementById('sidebar');
             const o = document.getElementById('sidebarOverlay');
@@ -1183,7 +1365,7 @@
         }
 
         function toggleTMTopicMenu(id) {
-            if (!window.topicRegUnlocked) { return showToast("<b>🔒</b> Topic Registration is currently closed by the admin."); }
+            if (!window.topicRegUnlocked) { return showToast("<b>ðŸ”’</b> Topic Registration is currently closed by the admin."); }
             toggleSubmenu(id);
         }
 
@@ -1227,11 +1409,11 @@
 
         }
 
-        // ── Module System ──────────────────────────────────────────────
+        // â”€â”€ Module System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function loadModule(moduleName) {
             const isWebBlocked = localStorage.getItem('blockAccess') === 'true';
             if (moduleName === 'website' && isWebBlocked) {
-                showToast("<b>🔒</b> You do not have permission to access the Website Editor.");
+                showToast("<b>ðŸ”’</b> You do not have permission to access the Website Editor.");
                 return;
             }
 
@@ -1307,8 +1489,8 @@
                         if (!code || !code.trim()) return;
                         // Skip tailwind config setup block (already set up by dashboard)
                         if (code.includes('tailwind.config =')) return;
-                        // Convert const/let firebaseConfig to var firebaseConfig to avoid redeclaration SyntaxErrors in global scope
-                        code = code.replace(/(?:const|let)\s+firebaseConfig\s*=/g, 'var firebaseConfig =');
+                        // Convert const/let to var to avoid redeclaration SyntaxErrors when switching modules/programs
+                        code = code.replace(/(^|[\n;{])\s*(const|let)\s+/g, '$1var ');
                         try {
                             const newScript = document.createElement('script');
                             newScript.appendChild(document.createTextNode(code));
@@ -1345,6 +1527,7 @@
                         'teamToppers': 'Team Toppers',
                         'candidateToppers': 'Candidate Toppers',
                         'website': 'Website Settings',
+                        'history': 'Access & DB History',
                         'viewCandidateData': 'Candidate Profile',
                         'viewTeamData': 'Team Overview',
                         'viewSectionData': 'Section Overview',
@@ -1401,7 +1584,7 @@
                 });
         }
 
-        // ── TM Dedicated Table Loading ─────────────────────────────────
+        // â”€â”€ TM Dedicated Table Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function loadTMSection(sectionName) {
             // Close sidebar on mobile after selection
             const sidebar = document.getElementById('sidebar');
@@ -1469,7 +1652,7 @@
                         Array.from(oldScript.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
                         let code = oldScript.innerHTML;
                         if (code) {
-                            code = code.replace(/(?:const|let)\s+firebaseConfig\s*=/g, 'var firebaseConfig =');
+                            code = code.replace(/(^|[\n;{])\s*(const|let)\s+/g, '$1var ');
                         }
                         newScript.appendChild(document.createTextNode(code));
                         oldScript.parentNode.replaceChild(newScript, oldScript);
@@ -1536,7 +1719,7 @@
                         Array.from(oldScript.attributes).forEach(a => newScript.setAttribute(a.name, a.value));
                         let code = oldScript.innerHTML;
                         if (code) {
-                            code = code.replace(/(?:const|let)\s+firebaseConfig\s*=/g, 'var firebaseConfig =');
+                            code = code.replace(/(^|[\n;{])\s*(const|let)\s+/g, '$1var ');
                         }
                         newScript.appendChild(document.createTextNode(code));
                         oldScript.parentNode.replaceChild(newScript, oldScript);
@@ -1569,7 +1752,7 @@
             document.getElementById('breadcrumb-current')?.classList.add('hidden');
         }
 
-        // ── Real-time Listeners ────────────────────────────────────────
+        // â”€â”€ Real-time Listeners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let statsUnsub = [];
         function setupDashboardStats() {
             statsUnsub.forEach(u => u());
@@ -1646,7 +1829,7 @@
             });
         }
 
-        // ── Sidebars RESTORED ──────────────────────────────────────────
+        // â”€â”€ Sidebars RESTORED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function openManageAccount(e) { e?.preventDefault(); toggleDropdown(); document.getElementById('rightSidebarOverlay').classList.remove('hidden'); document.getElementById('manageAccountSidebar').classList.remove('translate-x-full'); populateManageFields(); }
         function closeManageAccount() { document.getElementById('manageAccountSidebar').classList.add('translate-x-full'); document.getElementById('rightSidebarOverlay').classList.add('hidden'); }
 
@@ -1790,7 +1973,7 @@
             if (el) el.type = el.type === 'password' ? 'text' : 'password';
         }
 
-        // ── Results OTP Flow ──────────────────────────────────────────
+        // â”€â”€ Results OTP Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function requestAccessModal() { document.getElementById('otpModal').classList.remove('hidden'); }
         function verifyOTP() {
             const val = document.getElementById('otp-input').value;
@@ -1806,7 +1989,7 @@
             });
         }
 
-        // ── Notifications ──────────────────────────────────────────────
+        // â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let activeAlerts = [];
 
         function listenForAlerts() {
@@ -1891,7 +2074,7 @@
             document.getElementById('alertDetailModal').classList.add('hidden');
         }
 
-        // ── Init ──────────────────────────────────────────────────────
+        // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         document.addEventListener('DOMContentLoaded', () => {
             const username = localStorage.getItem('festUserName') || 'User';
             updateUserDataUI(username);
@@ -1977,7 +2160,7 @@
                         const style = document.createElement('style');
                         style.id = 'admin-offline-style';
                         style.innerHTML = `
-                            @import url('https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap');
+                            /* Cobe font family */
                             @keyframes error-slide-up { from{opacity:0;transform:translateY(24px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
                             @keyframes error-float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
                             @keyframes bg-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -1995,7 +2178,7 @@
                                 animation: error-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
                                 position: relative;
                                 z-index: 10;
-                                font-family: 'Clash Grotesk', sans-serif;
+                                font-family: 'Cobe', sans-serif;
                                 display: flex;
                                 flex-direction: column;
                                 align-items: center;

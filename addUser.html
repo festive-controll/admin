@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users Management — Festival Dashboard</title>
+    <title>Users Management â€” Festival Dashboard</title>
     <!-- Favicon / PWA Setup -->
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
@@ -77,6 +77,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans text-brand-textDark antialiased min-h-screen">
@@ -153,7 +154,7 @@
                 class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                 <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                     <span id="pagination-label">Showing 0 results</span>
-                    <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
+                    <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
                     <div class="relative ml-2 sm:ml-0">
                         <select id="user-per-page" onchange="changeUserPerPage(this.value)"
                             class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -259,7 +260,7 @@
                 <div class="relative">
                     <select id="ar-role"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
-                        <option value="" disabled selected>Select a role…</option>
+                        <option value="" disabled selected>Select a roleâ€¦</option>
                         <option value="Admin">Admin</option>
                         <option value="Team Manager">Team Manager</option>
                         <option value="Media">Media</option>
@@ -279,7 +280,7 @@
                 <div class="relative">
                     <select id="ar-team"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
-                        <option value="" disabled selected>Select a team…</option>
+                        <option value="" disabled selected>Select a teamâ€¦</option>
                     </select>
                     <i
                         class="fi fi-rr-angle-small-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
@@ -373,7 +374,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
-        // ── Firebase Init ──────────────────────────────────────────────
+        // â”€â”€ Firebase Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const firebaseConfig = {
             apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
             authDomain: "festie-s1u2h3.firebaseapp.com",
@@ -386,7 +387,7 @@
         var db = firebase.firestore();
         window.db = db;
 
-        // ── Toast System ───────────────────────────────────────────────
+        // â”€â”€ Toast System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function showToast(msg) {
             Toastify({
                 text: msg, duration: 3000, gravity: "top", position: "center",
@@ -395,7 +396,7 @@
             }).showToast();
         }
 
-        // ── Helper functions ───────────────────────────────────────────
+        // â”€â”€ Helper functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function relativeTime(ts) {
             if (!ts || !ts.toMillis) return 'just now';
             const diff = Math.floor((Date.now() - ts.toMillis()) / 1000);
@@ -421,7 +422,7 @@
 
         // Action menu logic centralized below
 
-        // ── Render Templates ───────────────────────────────────────────
+        // â”€â”€ Render Templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function renderTableRow(user) {
             const isOwner = user.id === 'owner';
             const isActive = user.isActive !== false;
@@ -433,8 +434,8 @@
                             ${initial(user.name || user.username)}
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[13.5px] font-bold text-gray-900 leading-none">${user.name || user.username || '—'}</span>
-                            <span class="text-[12px] text-gray-400 mt-1">${user.email || user.username || '—'}</span>
+                            <span class="text-[13.5px] font-bold text-gray-900 leading-none">${user.name || user.username || 'â€”'}</span>
+                            <span class="text-[12px] text-gray-400 mt-1">${user.email || user.username || 'â€”'}</span>
                         </div>
             </div>
             <div class="col-span-3 flex flex-col gap-1.5 items-start">
@@ -480,10 +481,10 @@
                     
                     <div class="flex flex-col overflow-hidden w-full">
                         <h4 class="text-[15px] font-bold text-gray-900 leading-tight truncate w-full flex items-center gap-1">
-                            ${user.name || user.username || '—'}
+                            ${user.name || user.username || 'â€”'}
                             ${!isActive ? '<div class="w-2 h-2 rounded-full bg-red-500 ml-1" title="Inactive"></div>' : ''}
                         </h4>
-                        <p class="text-[12px] text-gray-500 truncate w-full mt-0.5">${user.email || user.username || '—'}</p>
+                        <p class="text-[12px] text-gray-500 truncate w-full mt-0.5">${user.email || user.username || 'â€”'}</p>
                     </div>
                 </div>
 
@@ -497,7 +498,7 @@
             </div>`;
         }
 
-        // ── Action Menu Logic ──────────────────────────────────────────
+        // â”€â”€ Action Menu Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let activeDropdownId = null;
         function openActionMenu(userId, event) {
             event.stopPropagation();
@@ -550,7 +551,7 @@
         document.addEventListener('click', closeAllDropdowns);
         window.addEventListener('scroll', closeAllDropdowns, true);
 
-        // ── Real-time Listeners & State ────────────────────────────────
+        // â”€â”€ Real-time Listeners & State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let ownerUser = null;
         let festUsersList = [];
         let allUsers = [];
@@ -573,7 +574,7 @@
         db.collection('teams').where('isActive', '==', true).onSnapshot(snap => {
             const select = document.getElementById('ar-team');
             const currentVal = select ? select.value : '';
-            let optionsHTML = '<option value="" disabled selected>Select a team…</option>';
+            let optionsHTML = '<option value="" disabled selected>Select a teamâ€¦</option>';
             snap.forEach(doc => {
                 const team = doc.data();
                 optionsHTML += `<option value="${team.name}">${team.name}</option>`;
@@ -584,7 +585,7 @@
             }
         });
 
-        // ── Missing Logic: Implementing Search functionality ───────────
+        // â”€â”€ Missing Logic: Implementing Search functionality â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function applyFilters() {
             searchQuery = document.getElementById('search-users').value.toLowerCase().trim();
             userCurrentPage = 1;
@@ -676,7 +677,7 @@
             renderCombine();
         });
 
-        // ── View Toggle ────────────────────────────────────────────────
+        // â”€â”€ View Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function switchView(mode) {
             const isTable = mode === 'table';
             document.getElementById('view-table').style.display = isTable ? 'block' : 'none';
@@ -689,7 +690,7 @@
             document.getElementById('btn-cards').className = isTable ? inactiveClassList : activeClassList;
         }
 
-        // ── Add / Edit Role Sidebar ────────────────────────────────────
+        // â”€â”€ Add / Edit Role Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let currentEditId = null;
 
         function openAssignRole(userId = null) {
@@ -838,7 +839,7 @@
             const saveBtn = document.getElementById('btn-save-role');
             const origHTML = saveBtn.innerHTML;
             saveBtn.disabled = true;
-            saveBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…';
+            saveBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦';
 
             const payload = { name, username, password, role };
             if (role === 'Team Manager') {
@@ -861,11 +862,11 @@
                 closeAssignRole();
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = origHTML;
-                showToast(`<b>✅</b> User successfully ${currentEditId ? 'updated' : 'added'}!`);
+                showToast(`<b>âœ…</b> User successfully ${currentEditId ? 'updated' : 'added'}!`);
             }).catch(err => {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = origHTML;
-                showToast('<b>❌</b> Error: ' + err.message);
+                showToast('<b>âŒ</b> Error: ' + err.message);
             });
         }
 
@@ -876,7 +877,7 @@
             setTimeout(() => el.classList.remove('border-red-400', 'ring-2', 'ring-red-200'), 1800);
         }
 
-        // ── Permissions Sidebar ────────────────────────────────────────
+        // â”€â”€ Permissions Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let currentPermUserId = null;
 
         function openPermissions(userId) {
@@ -907,7 +908,7 @@
             const btn = document.getElementById('btn-save-perms');
             const origHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…';
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦';
 
             const permissions = {
                 userManagement: document.getElementById('perm-user-mgmt').checked,
@@ -920,30 +921,30 @@
                     closePermissions();
                     btn.disabled = false;
                     btn.innerHTML = origHTML;
-                    showToast('<b>✅</b> Permissions updated successfully!');
+                    showToast('<b>âœ…</b> Permissions updated successfully!');
                 }).catch(err => {
-                    showToast('<b>❌</b> Error: ' + err.message);
+                    showToast('<b>âŒ</b> Error: ' + err.message);
                     btn.disabled = false;
                     btn.innerHTML = origHTML;
                 });
         }
 
-        // ── Missing Logic: Toggle User Active/Inactive ─────────────────
+        // â”€â”€ Missing Logic: Toggle User Active/Inactive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function toggleUserStatus(userId, currentStatus) {
             const newStatus = !currentStatus;
             db.collection('festUsers').doc(userId).update({ isActive: newStatus })
                 .then(() => {
-                    showToast(`<b>✅</b> User account ${newStatus ? 'activated' : 'deactivated'}!`);
+                    showToast(`<b>âœ…</b> User account ${newStatus ? 'activated' : 'deactivated'}!`);
                 })
-                .catch(err => showToast('<b>❌</b> Error updating status: ' + err.message));
+                .catch(err => showToast('<b>âŒ</b> Error updating status: ' + err.message));
         }
 
-        // ── Delete User ────────────────────────────────────────────────
+        // â”€â”€ Delete User â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function deleteUser(userId) {
             if (confirm("Are you sure you want to completely remove this user? This action cannot be undone.")) {
                 db.collection('festUsers').doc(userId).delete()
-                    .then(() => showToast('<b>🗑️</b> User deleted successfully!'))
-                    .catch(err => showToast("<b>❌</b> Error deleting user: " + err.message));
+                    .then(() => showToast('<b>ðŸ—‘ï¸</b> User deleted successfully!'))
+                    .catch(err => showToast("<b>âŒ</b> Error deleting user: " + err.message));
             }
         }
 

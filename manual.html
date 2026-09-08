@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Monitor | Admin Festive</title>
+    
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Flaticon Uicons -->
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { background-color: #f9fafb; color: #111827; }
+        .card { background: white; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .live-dot {
+            width: 8px; height: 8px; background-color: #22c55e; border-radius: 50%;
+            display: inline-block; animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .skeleton { background: #e2e8f0; animation: pulse-skel 1.5s infinite; border-radius: 4px; }
+        @keyframes pulse-skel {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .filter-btn { padding: 4px 12px; border-radius: 4px; border: 1px solid #e5e7eb; background: white; color: #4b5563; font-size: 0.875rem; cursor: pointer; transition: 0.2s; }
+        .filter-btn.active { background: #1f2937; color: white; border-color: #1f2937; }
+        .filter-btn:hover:not(.active) { background: #f3f4f6; }
+        .table-th { padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: #6b7280; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
+        .table-td { padding: 12px; font-size: 0.875rem; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
+        .table-row:hover { background-color: #f9fafb; }
+        .status-badge { padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+        .status-online { background: #dcfce7; color: #166534; }
+        .status-offline { background: #f3f4f6; color: #4b5563; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .status-online .status-dot { background-color: #22c55e; }
+        .status-offline .status-dot { background-color: #9ca3af; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Auth check script -->
+    <script>
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const userRole = localStorage.getItem('userRole');
+        if (isLoggedIn !== 'true' || (userRole !== 'owner' && userRole !== 'admin')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-gray-100 rounded-lg"><i class="fi fi-rr-computer"></i></div>
+                <div>
+                    <h1 class="text-lg font-semibold leading-none">Device Monitor</h1>
+                    <p class="text-xs text-gray-500 mt-1">Live connections to Admin Festive</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-sm font-medium text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                <span class="live-dot"></span> LIVE
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="card p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase">Total Devices</p>
+                <p class="text-2xl font-semibold mt-1" id="stat-total">-</p>
+            </div>
+            <div class="card p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase">Online Now</p>
+                <p class="text-2xl font-semibold mt-1 text-green-600" id="stat-online">-</p>
+            </div>
+            <div class="card p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase">Mobile</p>
+                <p class="text-2xl font-semibold mt-1" id="stat-mobile">-</p>
+            </div>
+            <div class="card p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase">Tablet</p>
+                <p class="text-2xl font-semibold mt-1" id="stat-tablet">-</p>
+            </div>
+            <div class="card p-4">
+                <p class="text-xs text-gray-500 font-semibold uppercase">Desktop</p>
+                <p class="text-2xl font-semibold mt-1" id="stat-desktop">-</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex flex-col md:flex-row gap-4 justify-between mb-4">
+            <div class="flex flex-wrap gap-2" id="filter-container">
+                <button class="filter-btn active" data-filter="All">All <span id="count-all" class="ml-1 text-gray-400">0</span></button>
+                <button class="filter-btn" data-filter="Online">Online <span id="count-online" class="ml-1 text-gray-400">0</span></button>
+                <button class="filter-btn" data-filter="Offline">Offline <span id="count-offline" class="ml-1 text-gray-400">0</span></button>
+                <button class="filter-btn" data-filter="Mobile">Mobile <span id="count-mobile" class="ml-1 text-gray-400">0</span></button>
+                <button class="filter-btn" data-filter="Tablet">Tablet <span id="count-tablet" class="ml-1 text-gray-400">0</span></button>
+                <button class="filter-btn" data-filter="Desktop">Desktop <span id="count-desktop" class="ml-1 text-gray-400">0</span></button>
+            </div>
+            
+            <div class="flex gap-2 w-full md:w-auto">
+                <div class="relative w-full md:w-64">
+                    <i class="fi fi-rr-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="search-input" placeholder="Search devices..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-gray-500">
+                </div>
+                <select id="sort-select" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-gray-500 bg-white cursor-pointer">
+                    <option value="recent">Most recently active</option>
+                    <option value="first">First connected</option>
+                    <option value="type">Device type</option>
+                    <option value="os">OS</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="hidden mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm"></div>
+
+        <!-- Table/Cards -->
+        <div class="card overflow-hidden">
+            <div id="loading-state" class="p-6 space-y-4">
+                <div class="h-4 skeleton w-full"></div>
+                <div class="h-4 skeleton w-3/4"></div>
+                <div class="h-4 skeleton w-5/6"></div>
+            </div>
+            
+            <div id="empty-state" class="hidden p-12 text-center text-gray-500">
+                <i class="fi fi-rr-devices text-4xl mb-3 text-gray-300"></i>
+                <p>No devices recorded yet.</p>
+                <p class="text-sm">Devices will appear here when the website is opened.</p>
+            </div>
+
+            <div class="overflow-x-auto hidden" id="table-container">
+                <table class="w-full w-min-max">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="table-th">Device</th>
+                            <th class="table-th">OS</th>
+                            <th class="table-th">Browser</th>
+                            <th class="table-th">Current Page</th>
+                            <th class="table-th">Status</th>
+                            <th class="table-th">Last Active</th>
+                            <th class="table-th">First Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-list">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards Container (hidden on md+ screens) -->
+            <div id="cards-container" class="md:hidden hidden divide-y divide-gray-100">
+                <!-- Cards rendered via JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Overlay -->
+    <div id="device-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="text-base font-semibold text-gray-900">Device Details</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fi fi-rr-cross"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase">Device Name</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="text" id="modal-name" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-md border border-gray-300 text-sm focus:outline-none focus:border-gray-500">
+                        <button onclick="renameDevice()" class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-gray-700 text-sm hover:bg-gray-100">
+                            Save
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Status</label>
+                        <div id="modal-status" class="mt-1"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Device ID</label>
+                        <div class="mt-1 text-sm font-mono text-gray-900 flex items-center gap-2">
+                            <span id="modal-id-trunc" title=""></span>
+                            <button onclick="copyDeviceId()" class="text-gray-400 hover:text-gray-600" title="Copy"><i class="fi fi-rr-copy"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Type</label>
+                        <div id="modal-type" class="mt-1 text-sm text-gray-900"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Operating System</label>
+                        <div id="modal-os" class="mt-1 text-sm text-gray-900"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Browser</label>
+                        <div id="modal-browser" class="mt-1 text-sm text-gray-900"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Current Page</label>
+                        <div id="modal-page" class="mt-1 text-sm text-gray-900 break-all"></div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 uppercase">First Connected</label>
+                        <div id="modal-first" class="mt-1 text-sm text-gray-900"></div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Last Active</label>
+                        <div id="modal-last" class="mt-1 text-sm text-gray-900"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="removeDevice()" class="text-red-600 text-sm font-medium hover:text-red-800 transition-colors">
+                    Remove Device
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec",
+            measurementId: "G-P2TS8F6LLJ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // State
+        let devices = [];
+        let currentFilter = 'All';
+        let searchQuery = '';
+        let sortOption = 'recent';
+        let selectedDevice = null;
+        let isMobile = window.innerWidth < 768;
+
+        window.addEventListener('resize', () => {
+            const nowMobile = window.innerWidth < 768;
+            if(nowMobile !== isMobile) {
+                isMobile = nowMobile;
+                renderUI();
+            }
+        });
+
+        // Date Formatters
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return "Just now";
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes} min ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} hr ago`;
+            if (hours < 48) return "Yesterday";
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatExactDate(date) {
+            if(!date) return "N/A";
+            return date.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        function getStatus(lastSeen) {
+            if (!lastSeen) return false;
+            const diff = Date.now() - lastSeen.toMillis();
+            return diff <= 60000; // 60 seconds
+        }
+
+        function getDeviceIcon(type) {
+            if (type === 'Mobile') return '<i class="fi fi-rr-smartphone"></i>';
+            if (type === 'Tablet') return '<i class="fi fi-rr-tablet"></i>';
+            return '<i class="fi fi-rr-computer"></i>';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-state');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+        }
+
+        // Fetch Data
+        db.collection('connectedDevices').onSnapshot((snapshot) => {
+            document.getElementById('loading-state').classList.add('hidden');
+            
+            devices = snapshot.docs.map(doc => {
+                const data = doc.data();
+                const lastSeen = data.lastSeen;
+                const firstSeen = data.firstSeen;
+                return {
+                    id: doc.id,
+                    ...data,
+                    isOnline: getStatus(lastSeen),
+                    lastSeenDate: lastSeen ? lastSeen.toDate() : new Date(0),
+                    firstSeenDate: firstSeen ? firstSeen.toDate() : new Date(0)
+                };
+            });
+            updateStats();
+            renderUI();
+        }, (error) => {
+            console.error("Firebase Error: ", error);
+            document.getElementById('loading-state').classList.add('hidden');
+            showError("Error loading data: " + error.message);
+        });
+
+        // Periodic UI update for relative times and online status
+        setInterval(() => {
+            devices.forEach(d => {
+                d.isOnline = getStatus(d.lastSeen);
+            });
+            updateStats();
+            renderUI();
+        }, 15000);
+
+        function updateStats() {
+            const stats = { all: 0, online: 0, offline: 0, mobile: 0, tablet: 0, desktop: 0 };
+            
+            devices.forEach(d => {
+                stats.all++;
+                if (d.isOnline) stats.online++; else stats.offline++;
+                if (d.deviceType === 'Mobile') stats.mobile++;
+                else if (d.deviceType === 'Tablet') stats.tablet++;
+                else stats.desktop++;
+            });
+
+            document.getElementById('stat-total').innerText = stats.all;
+            document.getElementById('stat-online').innerText = stats.online;
+            document.getElementById('stat-mobile').innerText = stats.mobile;
+            document.getElementById('stat-tablet').innerText = stats.tablet;
+            document.getElementById('stat-desktop').innerText = stats.desktop;
+
+            document.getElementById('count-all').innerText = stats.all;
+            document.getElementById('count-online').innerText = stats.online;
+            document.getElementById('count-offline').innerText = stats.offline;
+            document.getElementById('count-mobile').innerText = stats.mobile;
+            document.getElementById('count-tablet').innerText = stats.tablet;
+            document.getElementById('count-desktop').innerText = stats.desktop;
+        }
+
+        // Filter & Sort & Search Logic
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                currentFilter = e.currentTarget.getAttribute('data-filter');
+                renderUI();
+            });
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderUI();
+        });
+
+        document.getElementById('sort-select').addEventListener('change', (e) => {
+            sortOption = e.target.value;
+            renderUI();
+        });
+
+        function getFilteredAndSortedDevices() {
+            let res = devices;
+
+            // Filter
+            if (currentFilter === 'Online') res = res.filter(d => d.isOnline);
+            else if (currentFilter === 'Offline') res = res.filter(d => !d.isOnline);
+            else if (currentFilter === 'Mobile') res = res.filter(d => d.deviceType === 'Mobile');
+            else if (currentFilter === 'Tablet') res = res.filter(d => d.deviceType === 'Tablet');
+            else if (currentFilter === 'Desktop') res = res.filter(d => d.deviceType === 'Desktop');
+
+            // Search
+            if (searchQuery) {
+                res = res.filter(d => {
+                    const name = (d.deviceName || `${d.os} ${d.deviceType}`).toLowerCase();
+                    return name.includes(searchQuery) ||
+                           (d.id && d.id.toLowerCase().includes(searchQuery)) ||
+                           (d.deviceType && d.deviceType.toLowerCase().includes(searchQuery)) ||
+                           (d.os && d.os.toLowerCase().includes(searchQuery)) ||
+                           (d.browser && d.browser.toLowerCase().includes(searchQuery)) ||
+                           (d.currentPage && d.currentPage.toLowerCase().includes(searchQuery));
+                });
+            }
+
+            // Sort
+            res.sort((a, b) => {
+                // Online always first unless sort is overridden heavily (we keep online first as default)
+                if (sortOption === 'recent') {
+                    if (a.isOnline && !b.isOnline) return -1;
+                    if (!a.isOnline && b.isOnline) return 1;
+                    return b.lastSeenDate - a.lastSeenDate;
+                }
+                if (sortOption === 'first') return b.firstSeenDate - a.firstSeenDate;
+                if (sortOption === 'type') return (a.deviceType || '').localeCompare(b.deviceType || '');
+                if (sortOption === 'os') return (a.os || '').localeCompare(b.os || '');
+                return 0;
+            });
+
+            return res;
+        }
+
+        function getStatusHTML(isOnline) {
+            if(isOnline) return `<span class="status-badge status-online"><span class="status-dot"></span> Online</span>`;
+            return `<span class="status-badge status-offline"><span class="status-dot"></span> Offline</span>`;
+        }
+
+        function renderUI() {
+            const list = getFilteredAndSortedDevices();
+            
+            const tableCont = document.getElementById('table-container');
+            const cardsCont = document.getElementById('cards-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (devices.length === 0) {
+                emptyState.classList.remove('hidden');
+                tableCont.classList.add('hidden');
+                cardsCont.classList.add('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+                if(isMobile) {
+                    tableCont.classList.add('hidden');
+                    cardsCont.classList.remove('hidden');
+                } else {
+                    tableCont.classList.remove('hidden');
+                    cardsCont.classList.add('hidden');
+                }
+            }
+
+            if (isMobile) {
+                cardsCont.innerHTML = list.map(d => {
+                    const defaultName = `${d.os || 'Unknown'} ${d.deviceType || 'Device'}`;
+                    return `
+                    <div class="p-4 bg-white hover:bg-gray-50 cursor-pointer" onclick="openModal('${d.id}')">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2 font-medium text-gray-900">
+                                <span class="text-gray-400">${getDeviceIcon(d.deviceType)}</span>
+                                ${d.deviceName || defaultName}
+                            </div>
+                            ${getStatusHTML(d.isOnline)}
+                        </div>
+                        <div class="text-sm text-gray-500 mb-1 flex items-center gap-2">
+                            <span>${d.browser || 'Unknown'}</span> &bull; <span>${d.currentPage || '/'}</span>
+                        </div>
+                        <div class="text-xs text-gray-400 flex justify-between">
+                            <span>Active: ${timeAgo(d.lastSeenDate)}</span>
+                            <span>Seen: ${d.firstSeenDate.toLocaleDateString()}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                const tbody = document.getElementById('device-list');
+                tbody.innerHTML = list.map(d => {
+                    const defaultName = `${d.os || 'Unknown'} ${d.deviceType || 'Device'}`;
+                    return `
+                    <tr class="table-row" onclick="openModal('${d.id}')">
+                        <td class="table-td font-medium text-gray-900">
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-400">${getDeviceIcon(d.deviceType)}</span>
+                                ${d.deviceName || defaultName}
+                            </div>
+                        </td>
+                        <td class="table-td text-gray-600">${d.os || '-'}</td>
+                        <td class="table-td text-gray-600">${d.browser || '-'}</td>
+                        <td class="table-td text-gray-500 max-w-xs truncate">${d.currentPage || '/'}</td>
+                        <td class="table-td">${getStatusHTML(d.isOnline)}</td>
+                        <td class="table-td text-gray-500">${timeAgo(d.lastSeenDate)}</td>
+                        <td class="table-td text-gray-500">${d.firstSeenDate.toLocaleDateString()}</td>
+                    </tr>`;
+                }).join('');
+            }
+        }
+
+        // Modal functions
+        function openModal(id) {
+            selectedDevice = devices.find(d => d.id === id);
+            if (!selectedDevice) return;
+            
+            document.getElementById('modal-name').value = selectedDevice.deviceName || '';
+            document.getElementById('modal-name').placeholder = `${selectedDevice.os || 'Unknown'} ${selectedDevice.deviceType || 'Device'}`;
+            document.getElementById('modal-status').innerHTML = getStatusHTML(selectedDevice.isOnline);
+            document.getElementById('modal-id-trunc').innerText = selectedDevice.id.substring(0, 12) + '...';
+            document.getElementById('modal-id-trunc').title = selectedDevice.id;
+            document.getElementById('modal-type').innerText = selectedDevice.deviceType || '-';
+            document.getElementById('modal-os').innerText = selectedDevice.os || '-';
+            document.getElementById('modal-browser').innerText = selectedDevice.browser || '-';
+            document.getElementById('modal-page').innerText = selectedDevice.currentPage || '-';
+            document.getElementById('modal-first').innerText = formatExactDate(selectedDevice.firstSeenDate);
+            document.getElementById('modal-last').innerText = formatExactDate(selectedDevice.lastSeenDate);
+            
+            document.getElementById('device-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('device-modal').classList.add('hidden');
+            selectedDevice = null;
+        }
+
+        function renameDevice() {
+            if (!selectedDevice) return;
+            const newName = document.getElementById('modal-name').value.trim();
+            db.collection('connectedDevices').doc(selectedDevice.id).update({
+                deviceName: newName
+            }).then(() => {
+                // UI updates via snapshot
+            }).catch(e => alert("Error renaming: " + e.message));
+        }
+
+        function removeDevice() {
+            if (!selectedDevice) return;
+            if(confirm("Are you sure you want to remove this device record? If the device is still active, it may reappear.")) {
+                db.collection('connectedDevices').doc(selectedDevice.id).delete()
+                .then(() => {
+                    closeModal();
+                })
+                .catch(e => alert("Error removing: " + e.message));
+            }
+        }
+
+        function copyDeviceId() {
+            if (!selectedDevice) return;
+            navigator.clipboard.writeText(selectedDevice.id).then(() => {
+                alert("Device ID copied!");
+            });
+        }
+    </script>
+</body>
+</html>

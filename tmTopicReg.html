@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,6 +8,7 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body>
@@ -323,7 +324,7 @@
 
         window.saveTMTopic = function (progId) {
             if (!checkTopicWindowUnlocked(window.tmtConfig)) {
-                return typeof showToast === 'function' && showToast("🔒 Topic Registration is currently closed by the admin.");
+                return typeof showToast === 'function' && showToast("ðŸ”’ Topic Registration is currently closed by the admin.");
             }
 
             const prog = window.tmtProgramsList.find(p => p.id === progId);
@@ -375,7 +376,7 @@
             }
 
             if (!hasAtLeastOne) {
-                return typeof showToast === 'function' && showToast("❌ Topic Name cannot be empty.");
+                return typeof showToast === 'function' && showToast("âŒ Topic Name cannot be empty.");
             }
 
             let updateData = {
@@ -397,12 +398,12 @@
 
             if (reg) {
                 db.collection('registrations').doc(reg.id).update(updateData).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!");
+                    typeof showToast === 'function' && showToast("âœ… Topic Details Saved Successfully!");
                     btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 }).catch(err => {
                     console.error(err);
-                    typeof showToast === 'function' && showToast("❌ Error saving topic.");
+                    typeof showToast === 'function' && showToast("âŒ Error saving topic.");
                     btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 });
@@ -411,12 +412,12 @@
                 updateData.candidateIds = [];
                 updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 db.collection('registrations').add(updateData).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!");
+                    typeof showToast === 'function' && showToast("âœ… Topic Details Saved Successfully!");
                     btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 }).catch(err => {
                     console.error(err);
-                    typeof showToast === 'function' && showToast("❌ Error saving topic.");
+                    typeof showToast === 'function' && showToast("âŒ Error saving topic.");
                     btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 });

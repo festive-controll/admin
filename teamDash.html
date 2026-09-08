@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,6 +7,7 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body>
     <div class="mb-6 shrink-0 pt-2">
@@ -112,7 +113,7 @@
                         <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[13px] shadow-sm border shrink-0 uppercase" style="background-color: ${tColor}15; color: ${tColor}; border-color: ${tColor}30;">
                             ${(c.name || '?').charAt(0)}
                         </div>
-                        <span onclick="window.openTMRegisteredProgramsModal('${c.id}')" class="text-[13.5px] font-medium text-gray-900 hover:text-brand-blue hover:underline cursor-pointer transition-colors">${c.name || '—'}</span>
+                        <span onclick="window.openTMRegisteredProgramsModal('${c.id}')" class="text-[13.5px] font-medium text-gray-900 hover:text-brand-blue hover:underline cursor-pointer transition-colors">${c.name || 'â€”'}</span>
                     </div>
                     <div class="col-span-2"><span class="text-[13px] font-medium text-gray-700">${c.chestNo || 'N/A'}</span></div>
                     <div class="col-span-2"><span class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-md text-[11px] font-medium border border-gray-200">${c.class || 'N/A'}</span></div>
@@ -148,7 +149,7 @@
                                 </div>
                                 <div>
                                     <h3 class="text-[16px] font-bold text-gray-900 leading-tight" id="tm-modal-cand-name">Candidate Name</h3>
-                                    <p class="text-[12px] text-gray-500 mt-0.5" id="tm-modal-cand-sub">Team • Section • Class</p>
+                                    <p class="text-[12px] text-gray-500 mt-0.5" id="tm-modal-cand-sub">Team â€¢ Section â€¢ Class</p>
                                 </div>
                             </div>
                             <button onclick="window.closeTMRegisteredProgramsModal()" class="w-9 h-9 rounded-full bg-white border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-all shadow-sm">
@@ -184,7 +185,7 @@
 
             if (chestBadge) chestBadge.innerText = cand.chestNo ? '#' + cand.chestNo : '#--';
             if (nameEl) nameEl.innerText = cand.name || 'Candidate';
-            if (subEl) subEl.innerText = `${cand.team || 'Team'} • ${cand.section || 'Section'} ${cand.class ? '• Class ' + cand.class : ''}`;
+            if (subEl) subEl.innerText = `${cand.team || 'Team'} â€¢ ${cand.section || 'Section'} ${cand.class ? 'â€¢ Class ' + cand.class : ''}`;
 
             if (bodyEl) {
                 bodyEl.innerHTML = `
@@ -312,7 +313,7 @@
                                                 <h4 class="text-[14px] font-bold text-gray-900 group-hover:text-brand-blue transition-colors leading-tight">${p.name}</h4>
                                                 <div class="flex items-center gap-2 mt-1">
                                                     <span class="text-[11px] text-gray-500 font-medium">${p.section}</span>
-                                                    <span class="text-gray-300">•</span>
+                                                    <span class="text-gray-300">â€¢</span>
                                                     <span class="text-[10px] text-gray-600 font-bold bg-white border border-gray-200 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.type}</span>
                                                 </div>
                                             </div>

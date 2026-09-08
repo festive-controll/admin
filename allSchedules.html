@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -62,6 +62,7 @@
             background: #cbd5e1;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
 
@@ -242,12 +243,12 @@
         async function exportSchedulesWithJudgesToExcel() {
             if (!programsData || programsData.length === 0) {
                 typeof Toastify === 'function' ? Toastify({
-                    text: "⚠️ No programs data loaded to export",
+                    text: "âš ï¸ No programs data loaded to export",
                     duration: 3000,
                     gravity: "bottom",
                     position: "right",
                     style: { background: "#F59E0B" }
-                }).showToast() : alert("⚠️ No programs data loaded to export");
+                }).showToast() : alert("âš ï¸ No programs data loaded to export");
                 return;
             }
 
@@ -262,12 +263,12 @@
 
             if (programsWithJudges.length === 0) {
                 typeof Toastify === 'function' ? Toastify({
-                    text: "⚠️ No programs with assigned judges found!",
+                    text: "âš ï¸ No programs with assigned judges found!",
                     duration: 3000,
                     gravity: "bottom",
                     position: "right",
                     style: { background: "#F59E0B" }
-                }).showToast() : alert("⚠️ No programs with assigned judges found!");
+                }).showToast() : alert("âš ï¸ No programs with assigned judges found!");
                 return;
             }
 
@@ -354,7 +355,7 @@
                 XLSX.writeFile(workbook, fileName);
 
                 typeof Toastify === 'function' && Toastify({
-                    text: `✅ Exported ${programsWithJudges.length} program(s) with assigned judges to Excel!`,
+                    text: `âœ… Exported ${programsWithJudges.length} program(s) with assigned judges to Excel!`,
                     duration: 3000,
                     gravity: "bottom",
                     position: "right",
@@ -363,7 +364,7 @@
             } else {
                 exportRowsToCSV(excelRows, fileName);
                 typeof Toastify === 'function' && Toastify({
-                    text: `✅ Exported ${programsWithJudges.length} program(s) as CSV (Excel compatible)!`,
+                    text: `âœ… Exported ${programsWithJudges.length} program(s) as CSV (Excel compatible)!`,
                     duration: 3000,
                     gravity: "bottom",
                     position: "right",
@@ -469,13 +470,13 @@
                         const vObj = venuesData.find(v => v.id === p.venueId);
                         if (vObj) {
                             if (vObj.sendWaAlerts === false) {
-                                console.log(`🚫 WhatsApp alert skipped for ${p.code}: Venue '${vObj.name}' has WhatsApp alerts unticked.`);
+                                console.log(`ðŸš« WhatsApp alert skipped for ${p.code}: Venue '${vObj.name}' has WhatsApp alerts unticked.`);
                                 return;
                             }
                             if (typeof venueTypesData !== 'undefined' && Array.isArray(venueTypesData)) {
                                 const vtObj = venueTypesData.find(vt => vt.name === vObj.type || vt.id === vObj.typeId);
                                 if (vtObj && vtObj.sendWaAlerts === false) {
-                                    console.log(`🚫 WhatsApp alert skipped for ${p.code}: Venue Type '${vtObj.name}' has WhatsApp alerts unticked.`);
+                                    console.log(`ðŸš« WhatsApp alert skipped for ${p.code}: Venue Type '${vtObj.name}' has WhatsApp alerts unticked.`);
                                     return;
                                 }
                             }
@@ -493,7 +494,7 @@
             });
 
             if (toAlertIds.length > 0) {
-                console.log(`⏰ Consolidated 5-minute alert triggered for ${toAlertIds.length} program(s)...`);
+                console.log(`â° Consolidated 5-minute alert triggered for ${toAlertIds.length} program(s)...`);
                 schedulesWaSendBatch(toAlertIds);
             }
         }
@@ -522,17 +523,17 @@
                     const totalSecs = Math.floor(diffMs / 1000);
                     const m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
                     const s = String(totalSecs % 60).padStart(2, '0');
-                    timerEl.innerHTML = `<span class="inline-flex items-center gap-1 text-[11px] font-bold font-mono-custom text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md animate-pulse">⏳ Only ${m}:${s} remaining!</span>`;
+                    timerEl.innerHTML = `<span class="inline-flex items-center gap-1 text-[11px] font-bold font-mono-custom text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md animate-pulse">â³ Only ${m}:${s} remaining!</span>`;
                 } else if (diffMs > 5 * 60 * 1000) {
                     // > 5 minutes remaining
                     const totalMins = Math.floor(diffMs / 60000);
                     const hrs = Math.floor(totalMins / 60);
                     const mins = totalMins % 60;
                     const text = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
-                    timerEl.innerHTML = `<span class="text-[10.5px] font-medium font-mono-custom text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">⏳ Starts in ${text}</span>`;
+                    timerEl.innerHTML = `<span class="text-[10.5px] font-medium font-mono-custom text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">â³ Starts in ${text}</span>`;
                 } else if (diffMs <= 0 && diffMs >= -30 * 60 * 1000) {
                     // Already started (00:00)
-                    timerEl.innerHTML = `<span class="text-[10.5px] font-bold font-mono-custom text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">🏁 Started (00:00)</span>`;
+                    timerEl.innerHTML = `<span class="text-[10.5px] font-bold font-mono-custom text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">ðŸ Started (00:00)</span>`;
                 } else {
                     timerEl.innerHTML = '';
                 }
@@ -603,7 +604,7 @@
                 
             } catch(e) {
                 console.error(e);
-                typeof showToast === 'function' ? showToast("❌ Save failed: " + e.message) : alert("❌ Save failed");
+                typeof showToast === 'function' ? showToast("âŒ Save failed: " + e.message) : alert("âŒ Save failed");
             }
         }
 
@@ -656,7 +657,7 @@
                             const opChestNos = opRegs.map(r => r.chestNo).filter(x => x);
                             const common = myChestNos.filter(c => opChestNos.includes(c));
                             if(common.length > 0) {
-                                warnings.push(`⚠️ Conflict: Chest ${common[0]} in ${op.code}`);
+                                warnings.push(`âš ï¸ Conflict: Chest ${common[0]} in ${op.code}`);
                                 break;
                             }
                         }
@@ -859,7 +860,7 @@
                 if (p.venueId) {
                     const vObj = venuesData.find(v => v.id === p.venueId);
                     if (vObj && vObj.sendWaAlerts === false) {
-                        console.log(`🚫 WhatsApp alert skipped for program ${p.code}: Venue '${vObj.name}' has WhatsApp alerts unticked.`);
+                        console.log(`ðŸš« WhatsApp alert skipped for program ${p.code}: Venue '${vObj.name}' has WhatsApp alerts unticked.`);
                         return;
                     }
                 }
@@ -891,7 +892,7 @@
 
             if (missingNumbers.length > 0) {
                 typeof Toastify === 'function' && Toastify({
-                    text: `⚠️ Cannot send alert: Judge(s) [${missingNumbers.join(', ')}] have no WhatsApp number saved!`,
+                    text: `âš ï¸ Cannot send alert: Judge(s) [${missingNumbers.join(', ')}] have no WhatsApp number saved!`,
                     duration: 5000, gravity: 'bottom', position: 'right',
                     style: { background: '#F59E0B', borderRadius: '8px', fontSize: '12px' }
                 }).showToast();
@@ -903,7 +904,7 @@
             for (const jId in judgeMap) {
                 const { judge, cleanNumber, progs } = judgeMap[jId];
 
-                let msg = `🚨 *${festName} Judge Schedule Alert* 🚨\n\nHello 👋 ${judge.name},\n\nYou have *${progs.length} assigned program(s)* starting soon:\n\n`;
+                let msg = `ðŸš¨ *${festName} Judge Schedule Alert* ðŸš¨\n\nHello ðŸ‘‹ ${judge.name},\n\nYou have *${progs.length} assigned program(s)* starting soon:\n\n`;
 
                 progs.forEach((prog, index) => {
                     const venueObj = venuesData.find(v => v.id === prog.venueId);
@@ -913,7 +914,7 @@
                     }
                     const concept = prog.conceptNote ? prog.conceptNote : "None provided";
 
-                    let timeText = "⏳ Only 05:00 remaining!";
+                    let timeText = "â³ Only 05:00 remaining!";
                     if (prog.time) {
                         const diffMs = new Date(prog.time) - new Date();
                         if (diffMs > 0) {
@@ -922,23 +923,23 @@
                             if (diffMins < 5) {
                                 const m = String(Math.floor(totalSecs / 60)).padStart(2, '0');
                                 const s = String(totalSecs % 60).padStart(2, '0');
-                                timeText = `⏳ Only ${m}:${s} remaining!`;
+                                timeText = `â³ Only ${m}:${s} remaining!`;
                             } else if (diffMins < 60) {
-                                timeText = `⏳ Starts in ${diffMins} minute(s)!`;
+                                timeText = `â³ Starts in ${diffMins} minute(s)!`;
                             } else {
                                 const hours = Math.floor(diffMins / 60);
                                 const mins = diffMins % 60;
-                                timeText = `⏳ Starts in ${hours} hour(s) and ${mins} minute(s)!`;
+                                timeText = `â³ Starts in ${hours} hour(s) and ${mins} minute(s)!`;
                             }
                         } else {
-                            timeText = `⏳ Program time has already started! (00:00)`;
+                            timeText = `â³ Program time has already started! (00:00)`;
                         }
                     }
 
-                    msg += `${index + 1}️⃣ *${prog.name}* (Code: ${prog.code || 'N/A'})\n📍 *Venue:* ${venueName}\n📝 *Concept:* ${concept}\n${timeText}\n\n`;
+                    msg += `${index + 1}ï¸âƒ£ *${prog.name}* (Code: ${prog.code || 'N/A'})\nðŸ“ *Venue:* ${venueName}\nðŸ“ *Concept:* ${concept}\n${timeText}\n\n`;
                 });
 
-                msg += `🚨 Please report to your venue(s) immediately. Thank you! 🙏`;
+                msg += `ðŸš¨ Please report to your venue(s) immediately. Thank you! ðŸ™`;
 
                 try {
                     const res = await fetch(`${serverUrl}/send`, {
@@ -949,12 +950,12 @@
                     const data = await res.json();
 
                     if (data.success) {
-                        console.log(`✓ Consolidated message sent to ${judge.name} (${progs.length} program(s))`);
+                        console.log(`âœ“ Consolidated message sent to ${judge.name} (${progs.length} program(s))`);
                         progs.forEach(p => successfullyAlertedProgIds.add(p.id));
                     } else {
-                        console.error(`✗ Failed for ${judge.name}: ${data.error}`);
+                        console.error(`âœ— Failed for ${judge.name}: ${data.error}`);
                         typeof Toastify === 'function' && Toastify({
-                            text: `❌ WhatsApp error for ${judge.name}: ${data.error}`,
+                            text: `âŒ WhatsApp error for ${judge.name}: ${data.error}`,
                             duration: 5000, gravity: 'bottom', position: 'right',
                             style: { background: '#EF4444', borderRadius: '8px', fontSize: '12px' }
                         }).showToast();
@@ -978,7 +979,7 @@
                     await batch.commit();
 
                     typeof Toastify === 'function' && Toastify({
-                        text: `✅ Consolidated WhatsApp alert sent to judge(s)!`,
+                        text: `âœ… Consolidated WhatsApp alert sent to judge(s)!`,
                         duration: 3000, gravity: 'bottom', position: 'right',
                         style: { background: '#25D366', borderRadius: '8px', fontSize: '13px' }
                     }).showToast();
@@ -995,3 +996,4 @@
     </script>
 </body>
 </html>
+

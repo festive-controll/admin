@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -43,6 +43,7 @@
 
         .dragover { border-color: #FFCC4D !important; background-color: #FFFAED !important; }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8 relative">
 
@@ -514,7 +515,7 @@
                     }
                 }
 
-                if (typeof showToast === 'function') showToast("✅ All files uploaded successfully!");
+                if (typeof showToast === 'function') showToast("âœ… All files uploaded successfully!");
                 
                 setTimeout(() => {
                     closeUploadView();
@@ -638,7 +639,7 @@
                         <div class="flex-1 overflow-hidden pr-2">
                             <h3 class="text-[14px] font-semibold text-gray-900 truncate mb-1" title="${d.name}">${d.name}</h3>
                             <div class="flex items-center gap-2 text-[12px] text-gray-500">
-                                <span>${sizeStr}</span> • <span>${dateStr}</span>
+                                <span>${sizeStr}</span> â€¢ <span>${dateStr}</span>
                             </div>
                         </div>
                         <button onclick="openFileMenu('${d.id}', event)" class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-400"><i class="fi fi-rr-menu-dots-vertical text-[12px]"></i></button>
@@ -682,7 +683,7 @@
                 if(confirm("Are you sure you want to delete this file?")) {
                     if (window.db) {
                         window.db.collection('contentFiles').doc(id).delete().then(() => {
-                            if (typeof showToast === 'function') showToast("✅ File deleted");
+                            if (typeof showToast === 'function') showToast("âœ… File deleted");
                         });
                     } else {
                         filesData = filesData.filter(f => f.id !== id);

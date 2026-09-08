@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Registration — Festival Management</title>
+    <title>Team Registration â€” Festival Management</title>
     <!-- Favicon / PWA Setup -->
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
@@ -44,6 +44,7 @@
         body { font-family: 'Inter', sans-serif; }
         i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen text-brand-textDark antialiased flex flex-col justify-between p-4 sm:p-6 md:p-10">
 
@@ -237,7 +238,7 @@
             if (customWrapper.classList.contains('hidden')) {
                 customWrapper.classList.remove('hidden');
                 selectWrapper.classList.add('hidden');
-                toggleBtn.textContent = '← Select List';
+                toggleBtn.textContent = 'â† Select List';
             } else {
                 customWrapper.classList.add('hidden');
                 selectWrapper.classList.remove('hidden');
@@ -293,10 +294,10 @@
             const password = document.getElementById('regPassword').value;
             const phone = document.getElementById('regPhone').value.trim();
 
-            if (!teamName) return showToast('❌ Please select or enter a Team', true);
-            if (!username) return showToast('❌ Username is required', true);
-            if (!password) return showToast('❌ Password is required', true);
-            if (!phone) return showToast('❌ WhatsApp Number is required', true);
+            if (!teamName) return showToast('âŒ Please select or enter a Team', true);
+            if (!username) return showToast('âŒ Username is required', true);
+            if (!password) return showToast('âŒ Password is required', true);
+            if (!phone) return showToast('âŒ WhatsApp Number is required', true);
 
             const btn = document.getElementById('btn-submit-reg');
             btn.disabled = true;
@@ -308,7 +309,7 @@
                 if (!existingSnap.empty) {
                     btn.disabled = false;
                     btn.innerHTML = 'Submit Registration';
-                    return showToast('❌ Username already taken', true);
+                    return showToast('âŒ Username already taken', true);
                 }
 
                 // Check if Team has already registered an account
@@ -321,7 +322,7 @@
                 if (isAlreadyReg) {
                     btn.disabled = false;
                     btn.innerHTML = 'Submit Registration';
-                    return showToast(`❌ "${teamName}" has already registered an account!`, true);
+                    return showToast(`âŒ "${teamName}" has already registered an account!`, true);
                 }
 
                 const payload = {
@@ -343,12 +344,12 @@
                 document.getElementById('card-register').classList.add('hidden');
                 document.getElementById('card-success').classList.remove('hidden');
 
-                showToast('✅ Registration submitted! Pending admin approval.');
+                showToast('âœ… Registration submitted! Pending admin approval.');
             } catch (err) {
                 console.error("Error:", err);
                 btn.disabled = false;
                 btn.innerHTML = 'Submit Registration';
-                showToast('❌ Error: ' + err.message, true);
+                showToast('âŒ Error: ' + err.message, true);
             }
         }
 
@@ -371,3 +372,4 @@
     </script>
 </body>
 </html>
+

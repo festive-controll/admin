@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judge Dashboard — Festival</title>
+    <title>Judge Dashboard â€” Festival</title>
     <script src="fest-favicon.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel='stylesheet'
@@ -89,6 +89,7 @@
             animation: scanningLaser 2s infinite linear;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg text-gray-900 font-sans h-[100dvh] overflow-hidden">
@@ -709,7 +710,7 @@
             const topicDetails = textarea.value.trim();
 
             if (!topicDetails) {
-                showToast("⚠️ Topic details cannot be empty.");
+                showToast("âš ï¸ Topic details cannot be empty.");
                 textarea.focus();
                 return;
             }
@@ -724,7 +725,7 @@
                     updatedByJudge: judgeId,
                     topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showToast("✅ Topic saved successfully!");
+                showToast("âœ… Topic saved successfully!");
                 btn.innerHTML = '<i class="fi fi-rr-check text-green-300"></i> Saved';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
@@ -732,7 +733,7 @@
                 }, 2000);
             } catch (err) {
                 console.error("Error saving topic:", err);
-                showToast("❌ Failed to save topic.");
+                showToast("âŒ Failed to save topic.");
             }
         }
 
@@ -758,7 +759,7 @@
             const newPassword = document.getElementById('cred-password').value.trim();
 
             if (!newUsername || !newPassword) {
-                showToast("⚠️ Username and password cannot be empty.");
+                showToast("âš ï¸ Username and password cannot be empty.");
                 return;
             }
 
@@ -773,7 +774,7 @@
                 const taken = snap.docs.some(doc => doc.id !== judgeId);
                 
                 if (taken) {
-                    showToast("❌ Username is already taken.");
+                    showToast("âŒ Username is already taken.");
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     return;
@@ -784,11 +785,11 @@
                     pass: newPassword
                 });
 
-                showToast("✅ Credentials updated successfully!");
+                showToast("âœ… Credentials updated successfully!");
                 closeCredentialsModal();
             } catch (err) {
                 console.error("Error updating credentials:", err);
-                showToast("❌ Failed to update credentials.");
+                showToast("âŒ Failed to update credentials.");
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
@@ -845,12 +846,12 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 document.getElementById('groupRegModal').classList.add('hidden');
-                showToast("✅ Registration submitted. Waiting for Admin approval.");
+                showToast("âœ… Registration submitted. Waiting for Admin approval.");
                 // Now open the modal in locked state
                 await actuallyOpenEvaluateModal(scanTargetProgramId, 'pending');
             } catch (err) {
                 console.error("Error registering:", err);
-                showToast("❌ Failed to register.");
+                showToast("âŒ Failed to register.");
             } finally {
                 btn.innerHTML = 'Register';
                 btn.disabled = false;
@@ -905,10 +906,10 @@
                                 stopScanner();
                                 processGroupProgramEvaluation(prog.id);
                             } else {
-                                showToast("⚠️ Scanned program is not a group judgement program.");
+                                showToast("âš ï¸ Scanned program is not a group judgement program.");
                             }
                         } else {
-                            showToast("⚠️ QR code does not match any assigned program.");
+                            showToast("âš ï¸ QR code does not match any assigned program.");
                         }
                     },
                     (errorMessage) => {
@@ -917,7 +918,7 @@
                 );
             } catch (err) {
                 console.error("Camera error:", err);
-                showToast("❌ Unable to access camera.");
+                showToast("âŒ Unable to access camera.");
                 stopScanner();
             }
         }
@@ -961,7 +962,7 @@
                 }
             } catch (err) {
                 console.error("Error checking registration:", err);
-                showToast("❌ Failed to verify registration status.");
+                showToast("âŒ Failed to verify registration status.");
             }
         }
 
@@ -1070,21 +1071,33 @@
                                     <div>
                                         <h4 class="text-sm font-bold text-gray-900">${teamName}</h4>
                                         <p class="text-[11px] font-medium text-gray-500 uppercase tracking-widest mt-1">Group Performance</p>
+                                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 flex flex-col justify-between gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-extrabold text-gray-600 uppercase tracking-widest mb-1.5">Position Mark</label>
+                                        <input type="number" min="0" max="100" step="0.1" oninput="autoCalculateResults()"
+                                            class="eval-pos-marks-input w-full h-10 px-3 bg-white border-2 border-slate-300 rounded-lg text-sm font-black text-gray-900 text-center outline-none focus:border-brand-blue transition-all"
+                                            placeholder="Enter Mark (e.g. 10)">
+                                    </div>
+                                    <div>
+                                        <span class="eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
+                                            ðŸ† Position: None
+                                        </span>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Grade</label>
-                                    <select class="eval-g-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
-                                        ${gOpts}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Position</label>
-                                    <select class="eval-p-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
-                                        ${pOpts}
-                                    </select>
+
+                                <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 flex flex-col justify-between gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-extrabold text-gray-600 uppercase tracking-widest mb-1.5">Grade Mark</label>
+                                        <input type="number" min="0" max="100" step="0.1" oninput="autoCalculateResults()"
+                                            class="eval-grade-marks-input w-full h-10 px-3 bg-white border-2 border-slate-300 rounded-lg text-sm font-black text-gray-900 text-center outline-none focus:border-brand-blue transition-all"
+                                            placeholder="Enter Mark (e.g. 8.5)">
+                                    </div>
+                                    <div>
+                                        <span class="eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
+                                            ðŸŽ–ï¸ Grade: None
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>`;
@@ -1221,18 +1234,33 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Grade</label>
-                                    <select class="eval-g-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
-                                        ${gOpts}
-                                    </select>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 flex flex-col justify-between gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-extrabold text-gray-600 uppercase tracking-widest mb-1.5">Position Mark</label>
+                                        <input type="number" min="0" max="100" step="0.1" oninput="autoCalculateResults()"
+                                            class="eval-pos-marks-input w-full h-10 px-3 bg-white border-2 border-slate-300 rounded-lg text-sm font-black text-gray-900 text-center outline-none focus:border-brand-blue transition-all"
+                                            placeholder="Enter Mark (e.g. 10)">
+                                    </div>
+                                    <div>
+                                        <span class="eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
+                                            ðŸ† Position: None
+                                        </span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Position</label>
-                                    <select class="eval-p-sel w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
-                                        ${pOpts}
-                                    </select>
+
+                                <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 flex flex-col justify-between gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-extrabold text-gray-600 uppercase tracking-widest mb-1.5">Grade Mark</label>
+                                        <input type="number" min="0" max="100" step="0.1" oninput="autoCalculateResults()"
+                                            class="eval-grade-marks-input w-full h-10 px-3 bg-white border-2 border-slate-300 rounded-lg text-sm font-black text-gray-900 text-center outline-none focus:border-brand-blue transition-all"
+                                            placeholder="Enter Mark (e.g. 8.5)">
+                                    </div>
+                                    <div>
+                                        <span class="eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
+                                            ðŸŽ–ï¸ Grade: None
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>`;
@@ -1246,8 +1274,8 @@
                     cards.forEach(card => {
                         const teamName = card.getAttribute('data-team');
                         const candId = card.getAttribute('data-candid');
-                        const gSel = card.querySelector('.eval-g-sel');
-                        const pSel = card.querySelector('.eval-p-sel');
+                        const posInput = card.querySelector('.eval-pos-marks-input');
+                        const gradeInput = card.querySelector('.eval-grade-marks-input');
                         
                         let ex = null;
                         if (isGroup) {
@@ -1257,23 +1285,153 @@
                         }
 
                         if (ex) {
-                            for(let opt of gSel.options) if (opt.text === ex.gradeLabel) opt.selected = true;
-                            for(let opt of pSel.options) if (opt.text === ex.positionLabel) opt.selected = true;
+                            if (posInput) posInput.value = ex.posMarks !== undefined ? ex.posMarks : (ex.marks !== undefined ? ex.marks : '');
+                            if (gradeInput) gradeInput.value = ex.gradeMarks !== undefined ? ex.gradeMarks : (ex.marks !== undefined ? ex.marks : '');
                         }
 
                         if (groupStatus === 'pending') {
-                            gSel.disabled = true;
-                            pSel.disabled = true;
-                            gSel.classList.add('bg-gray-100', 'cursor-not-allowed');
-                            pSel.classList.add('bg-gray-100', 'cursor-not-allowed');
+                            if (posInput) { posInput.disabled = true; posInput.classList.add('bg-gray-100', 'cursor-not-allowed'); }
+                            if (gradeInput) { gradeInput.disabled = true; gradeInput.classList.add('bg-gray-100', 'cursor-not-allowed'); }
                         }
                     });
+
+                    autoCalculateResults();
                 }, 100);
 
             } catch (err) {
                 console.error("Evaluation loading error:", err);
                 listEl.innerHTML = '<div class="py-20 text-center"><i class="fi fi-rr-triangle-warning text-4xl text-red-300"></i><p class="mt-4 text-sm font-bold text-red-500">Failed to load data.</p></div>';
             }
+        }
+
+        function autoCalculateResults() {
+            if (!evalProgramId) return;
+            const prog = assignedPrograms.find(p => p.id === evalProgramId);
+            if (!prog) return;
+
+            const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+            const cards = isGroup ? document.querySelectorAll('.group-eval-card') : document.querySelectorAll('.cand-eval-card');
+
+            const cardData = [];
+            cards.forEach(card => {
+                const posInput = card.querySelector('.eval-pos-marks-input');
+                const gradeInput = card.querySelector('.eval-grade-marks-input');
+                
+                const posRaw = posInput ? posInput.value.trim() : '';
+                const gradeRaw = gradeInput ? gradeInput.value.trim() : '';
+                
+                const posMarks = posRaw !== '' ? parseFloat(posRaw) : null;
+                const gradeMarks = gradeRaw !== '' ? parseFloat(gradeRaw) : null;
+                
+                cardData.push({ card, posMarks, gradeMarks });
+            });
+
+            // 1. Position ranking
+            const validPosCards = cardData.filter(d => d.posMarks !== null && !isNaN(d.posMarks) && d.posMarks >= 0);
+            validPosCards.sort((a, b) => b.posMarks - a.posMarks);
+
+            const posTemplate = (prog.positionTemplateId && posTemplates[prog.positionTemplateId]) ? posTemplates[prog.positionTemplateId] : null;
+            const posValues = posTemplate ? (posTemplate.values || posTemplate.positions || []) : [
+                { label: '1st', points: 5 },
+                { label: '2nd', points: 3 },
+                { label: '3rd', points: 1 }
+            ];
+
+            let currentRank = 0;
+            validPosCards.forEach((item, index) => {
+                if (index > 0 && item.posMarks < validPosCards[index - 1].posMarks) {
+                    currentRank = index;
+                }
+                item.rankIndex = currentRank;
+            });
+
+            // 2. Grade Templates setup
+            const gradeTemplate = (prog.gradeTemplateId && gradeTemplates[prog.gradeTemplateId]) ? gradeTemplates[prog.gradeTemplateId] : null;
+            const gradeValues = gradeTemplate ? (gradeTemplate.values || gradeTemplate.grades || []) : [
+                { percentage: '80% - 100%', label: 'A', points: 5 },
+                { percentage: '60% - 79%', label: 'B', points: 3 },
+                { percentage: '40% - 59%', label: 'C', points: 1 }
+            ];
+
+            // 3. Process each card
+            cardData.forEach(item => {
+                const { card, posMarks, gradeMarks } = item;
+                const posBadge = card.querySelector('.eval-pos-badge');
+                const gradeBadge = card.querySelector('.eval-grade-badge');
+
+                // Process Position
+                let pLbl = '', pPts = 0;
+                if (posMarks !== null && !isNaN(posMarks)) {
+                    const rankIdx = item.rankIndex;
+                    let pObj = (rankIdx !== undefined && rankIdx < posValues.length) ? posValues[rankIdx] : null;
+                    pLbl = pObj ? (pObj.label || pObj.position || pObj.name) : '';
+                    pPts = pObj ? Number(pObj.points || pObj.value || 0) : 0;
+
+                    if (posBadge) {
+                        posBadge.innerHTML = pLbl ? `ðŸ† Position: <b>${pLbl}</b> (${pPts} pts)` : 'ðŸ† Position: None';
+                        posBadge.className = pLbl ? 'eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-amber-50 text-amber-800 font-extrabold text-xs border border-amber-200 flex items-center justify-center gap-1 shadow-sm' : 'eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
+                    }
+                } else {
+                    if (posBadge) {
+                        posBadge.innerHTML = 'ðŸ† Position: None';
+                        posBadge.className = 'eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
+                    }
+                }
+
+                // Process Grade
+                let gLbl = '', gPts = 0;
+                if (gradeMarks !== null && !isNaN(gradeMarks)) {
+                    let pct = gradeMarks;
+                    if (gradeMarks <= 10) {
+                        pct = (gradeMarks / 10) * 100;
+                    }
+
+                    let gObj = null;
+                    for (let g of gradeValues) {
+                        const percStr = (g.percentage || g.range || '').trim();
+                        if (percStr) {
+                            const nums = percStr.match(/\d+(\.\d+)?/g);
+                            if (nums && nums.length >= 2) {
+                                const min = parseFloat(nums[0]);
+                                const max = parseFloat(nums[1]);
+                                if (pct >= min && pct <= max) { gObj = g; break; }
+                            } else if (nums && nums.length === 1) {
+                                const min = parseFloat(nums[0]);
+                                if (pct >= min) { gObj = g; break; }
+                            }
+                        }
+                    }
+
+                    if (!gObj && gradeValues.length > 0) {
+                        if (pct >= 80) gObj = gradeValues[0];
+                        else if (pct >= 60 && gradeValues.length > 1) gObj = gradeValues[1];
+                        else if (pct >= 40 && gradeValues.length > 2) gObj = gradeValues[2];
+                        else gObj = gradeValues[gradeValues.length - 1];
+                    }
+
+                    gLbl = gObj ? (gObj.label || gObj.grade || gObj.name) : '';
+                    gPts = gObj ? Number(gObj.points || gObj.value || 0) : 0;
+
+                    if (gradeBadge) {
+                        gradeBadge.innerHTML = gLbl ? `ðŸŽ–ï¸ Grade: <b>${gLbl}</b> (${gPts} pts)` : 'ðŸŽ–ï¸ Grade: None';
+                        gradeBadge.className = gLbl ? 'eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-blue-50 text-brand-blue font-extrabold text-xs border border-blue-200 flex items-center justify-center gap-1 shadow-sm' : 'eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
+                    }
+                } else {
+                    if (gradeBadge) {
+                        gradeBadge.innerHTML = 'ðŸŽ–ï¸ Grade: None';
+                        gradeBadge.className = 'eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
+                    }
+                }
+
+                const totalPts = gPts + pPts;
+                card.setAttribute('data-g-lbl', gLbl);
+                card.setAttribute('data-g-pts', gPts);
+                card.setAttribute('data-p-lbl', pLbl);
+                card.setAttribute('data-p-pts', pPts);
+                card.setAttribute('data-total-pts', totalPts);
+                card.setAttribute('data-pos-marks', posMarks !== null ? posMarks : '');
+                card.setAttribute('data-grade-marks', gradeMarks !== null ? gradeMarks : '');
+            });
         }
 
         function closeEvaluateModal() {
@@ -1293,24 +1451,28 @@
                 const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
                 
                 const batch = db.batch();
-
                 let hasAnySavedResult = false;
 
                 if (isGroup) {
                     const cards = document.querySelectorAll('.group-eval-card');
                     cards.forEach(card => {
                         const teamName = card.getAttribute('data-team');
-                        const gSel = card.querySelector('.eval-g-sel');
-                        const pSel = card.querySelector('.eval-p-sel');
-                        
-                        let gPts = 0, pPts = 0, gLbl = '', pLbl = '';
-                        if(gSel.value) { const parts = gSel.value.split('|'); gPts = parseInt(parts[0])||0; gLbl = parts[1]||''; }
-                        if(pSel.value) { const parts = pSel.value.split('|'); pPts = parseInt(parts[0])||0; pLbl = parts[1]||''; }
+                        const posMarksVal = card.getAttribute('data-pos-marks');
+                        const gradeMarksVal = card.getAttribute('data-grade-marks');
+
+                        const gLbl = card.getAttribute('data-g-lbl') || '';
+                        const gPts = parseInt(card.getAttribute('data-g-pts')) || 0;
+                        const pLbl = card.getAttribute('data-p-lbl') || '';
+                        const pPts = parseInt(card.getAttribute('data-p-pts')) || 0;
+                        const totalPts = parseInt(card.getAttribute('data-total-pts')) || (gPts + pPts);
+
+                        const posMarks = posMarksVal !== null && posMarksVal !== '' ? parseFloat(posMarksVal) : null;
+                        const gradeMarks = gradeMarksVal !== null && gradeMarksVal !== '' ? parseFloat(gradeMarksVal) : null;
 
                         const docId = `${evalProgramId}_group_${teamName.replace(/\s/g,'_')}`;
                         const docRef = db.collection('programResults').doc(docId);
 
-                        if(!gLbl && !pLbl) {
+                        if (posMarks === null && gradeMarks === null && !gLbl && !pLbl) {
                             batch.delete(docRef);
                         } else {
                             hasAnySavedResult = true;
@@ -1319,11 +1481,13 @@
                                 isGroupResult: true,
                                 team: teamName,
                                 name: teamName,
+                                posMarks: posMarks,
+                                gradeMarks: gradeMarks,
                                 gradeLabel: gLbl,
                                 gradePoints: gPts,
                                 positionLabel: pLbl,
                                 positionPoints: pPts,
-                                totalPoints: (gPts + pPts),
+                                totalPoints: totalPts,
                                 updatedAt: new Date(),
                                 evaluatedBy: judgeId
                             }, {merge: true});
@@ -1337,17 +1501,22 @@
                         const name = card.getAttribute('data-name');
                         const team = card.getAttribute('data-team');
                         
-                        const gSel = card.querySelector('.eval-g-sel');
-                        const pSel = card.querySelector('.eval-p-sel');
-                        
-                        let gPts = 0, pPts = 0, gLbl = '', pLbl = '';
-                        if(gSel.value) { const parts = gSel.value.split('|'); gPts = parseInt(parts[0])||0; gLbl = parts[1]||''; }
-                        if(pSel.value) { const parts = pSel.value.split('|'); pPts = parseInt(parts[0])||0; pLbl = parts[1]||''; }
+                        const posMarksVal = card.getAttribute('data-pos-marks');
+                        const gradeMarksVal = card.getAttribute('data-grade-marks');
+
+                        const gLbl = card.getAttribute('data-g-lbl') || '';
+                        const gPts = parseInt(card.getAttribute('data-g-pts')) || 0;
+                        const pLbl = card.getAttribute('data-p-lbl') || '';
+                        const pPts = parseInt(card.getAttribute('data-p-pts')) || 0;
+                        const totalPts = parseInt(card.getAttribute('data-total-pts')) || (gPts + pPts);
+
+                        const posMarks = posMarksVal !== null && posMarksVal !== '' ? parseFloat(posMarksVal) : null;
+                        const gradeMarks = gradeMarksVal !== null && gradeMarksVal !== '' ? parseFloat(gradeMarksVal) : null;
 
                         const docId = `${evalProgramId}_${cId}`;
                         const docRef = db.collection('programResults').doc(docId);
 
-                        if(!gLbl && !pLbl) {
+                        if (posMarks === null && gradeMarks === null && !gLbl && !pLbl) {
                             batch.delete(docRef);
                         } else {
                             hasAnySavedResult = true;
@@ -1358,11 +1527,13 @@
                                 chestNo: chestNo,
                                 name: name,
                                 team: team,
+                                posMarks: posMarks,
+                                gradeMarks: gradeMarks,
                                 gradeLabel: gLbl,
                                 gradePoints: gPts,
                                 positionLabel: pLbl,
                                 positionPoints: pPts,
-                                totalPoints: (gPts + pPts),
+                                totalPoints: totalPts,
                                 updatedAt: new Date(),
                                 evaluatedBy: judgeId
                             }, {merge: true});
@@ -1377,11 +1548,11 @@
                 });
 
                 await batch.commit();
-                showToast("✅ Results saved successfully!");
+                showToast("âœ… Results saved successfully!");
                 closeEvaluateModal();
             } catch (err) {
                 console.error("Save error:", err);
-                showToast("❌ Failed to save results.");
+                showToast("âŒ Failed to save results.");
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -1391,3 +1562,4 @@
 </body>
 
 </html>
+

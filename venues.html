@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -44,6 +44,7 @@
             100% { opacity: 1; transform: scale(1) translateY(0); }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
 
@@ -229,7 +230,7 @@
         }
 
         async function saveVenue() {
-            if(!db) return typeof showToast === 'function' ? showToast("❌ Database connection error (db is null)") : alert("❌ Database connection error");
+            if(!db) return typeof showToast === 'function' ? showToast("âŒ Database connection error (db is null)") : alert("âŒ Database connection error");
             
             const name = document.getElementById('venueName').value.trim();
             const type = document.getElementById('venueType').value;
@@ -239,7 +240,7 @@
             const sendWaAlerts = sendWaEl ? sendWaEl.checked : true;
 
             if(!name || !place) {
-                return typeof showToast === 'function' ? showToast("❌ Name and Place are required") : alert("Required fields missing");
+                return typeof showToast === 'function' ? showToast("âŒ Name and Place are required") : alert("Required fields missing");
             }
 
             const volunteersArray = volunteersStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
@@ -262,15 +263,15 @@
             try {
                 if(editingVenueId) {
                     await db.collection('venues').doc(editingVenueId).update(payload);
-                    typeof showToast === 'function' && showToast("✅ Venue updated!");
+                    typeof showToast === 'function' && showToast("âœ… Venue updated!");
                 } else {
                     payload.createdAt = new Date();
                     await db.collection('venues').add(payload);
-                    typeof showToast === 'function' && showToast("✅ Venue added!");
+                    typeof showToast === 'function' && showToast("âœ… Venue added!");
                 }
                 closeVenueSidebar();
             } catch(err) {
-                typeof showToast === 'function' ? showToast("❌ Error: " + err.message) : alert("❌ Error: " + err.message);
+                typeof showToast === 'function' ? showToast("âŒ Error: " + err.message) : alert("âŒ Error: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fi fi-rr-disk text-xs"></i> <span id="btn-save-venue-text">${originalText}</span>`;
@@ -389,7 +390,7 @@
                 try {
                     await db.collection('venues').doc(id).delete();
                     selectedVenueIds.delete(id);
-                    typeof showToast === 'function' && showToast("✅ Venue deleted");
+                    typeof showToast === 'function' && showToast("âœ… Venue deleted");
                 } catch(e) {
                     console.error(e);
                 }
@@ -408,7 +409,7 @@
                     });
                     await batch.commit();
                     selectedVenueIds.clear();
-                    typeof showToast === 'function' && showToast("✅ Selected venues deleted");
+                    typeof showToast === 'function' && showToast("âœ… Selected venues deleted");
                 } catch(e) {
                     console.error(e);
                 }
@@ -417,3 +418,4 @@
     </script>
 </body>
 </html>
+

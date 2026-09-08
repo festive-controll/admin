@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Analytics — Festival Dashboard</title>
+    <title>Team Analytics â€” Festival Dashboard</title>
     <link rel="icon" href="favicon.ico" sizes="any">
 
     <!-- Firebase SDKs (Required if running standalone) -->
@@ -58,6 +58,7 @@
             line-height: 1;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg text-brand-textDark font-sans h-[100dvh] overflow-y-auto w-full relative">
 
@@ -200,7 +201,7 @@
 
     <script>
     (function() {
-        // ── Firestore Initialization ───────────────────────────
+        // â”€â”€ Firestore Initialization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var db;
         if (window.db) {
             db = window.db;
@@ -219,7 +220,7 @@
             console.error("Firebase is not initialized.");
         }
 
-        // ── Global State Variables ─────────────────────────────
+        // â”€â”€ Global State Variables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var _data = { teams: [], candidates: [], results: [], sections: [], programs: [], negativeMarks: [] };
         var _dataLoaded = { teams: false, candidates: false, results: false, sections: false, programs: false, negativeMarks: false };
         var _activeReady = false;
@@ -230,7 +231,7 @@
 
         var fallbackColors = ['#134E8E', '#FFB33F', '#C00707', '#FF4400', '#10B981', '#8B5CF6', '#EC4899'];
 
-        // ── Realtime Listeners ─────────────────────────────────
+        // â”€â”€ Realtime Listeners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function startRealtimeSync() {
             if (!db) return;
 
@@ -309,7 +310,7 @@
             }
         }
 
-        // ── Actions ────────────────────────────────────────────
+        // â”€â”€ Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function applyFilters(silent) {
             document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('initial-empty-state').classList.add('hidden');
@@ -322,7 +323,7 @@
             updateRankings();
             
             if (!silent && typeof Toastify !== 'undefined') {
-                Toastify({ text: "✅ Analytics Refreshed", duration: 2500, gravity: "top", position: "center",
+                Toastify({ text: "âœ… Analytics Refreshed", duration: 2500, gravity: "top", position: "center",
                     style: { background: "#fff", color: "#333", boxShadow: "0 4px 15px -3px rgba(0,0,0,0.1)", borderRadius: "10px", border: "1px solid #eaeaea", padding: "12px 24px", fontSize: "14px", fontWeight: "600" } }).showToast();
             }
         }
@@ -423,7 +424,7 @@
                 .slice(0, limit);
         }
 
-        // ── Renderer ───────────────────────────────────────────
+        // â”€â”€ Renderer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function renderTeamList(containerId, teams) {
             var container = document.getElementById(containerId);
             if (!container) return;
@@ -483,14 +484,14 @@
             container.innerHTML = html;
         }
 
-        // ── Export CSV ─────────────────────────────────────────
+        // â”€â”€ Export CSV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function exportData(type) {
             var dataToExport = type === 'overall' ? _currentOverallData : _currentSectionData;
             var secName = _currentSection ? _currentSection.replace(/\s+/g, '_') : 'Section';
             var fileName = type === 'overall' ? 'Overall_Analytics.csv' : `${secName}_Analytics.csv`;
 
             if (dataToExport.length === 0) {
-                return Toastify({ text: "❌ Export failed: No data available", duration: 3000, gravity: "top", position: "center",
+                return Toastify({ text: "âŒ Export failed: No data available", duration: 3000, gravity: "top", position: "center",
                     style: { background: "#fff", color: "#ef4444", border: "1px solid #fee2e2", borderRadius: "10px", fontSize: "14px" } }).showToast();
             }
 
@@ -507,17 +508,17 @@
             link.click();
             document.body.removeChild(link);
 
-            Toastify({ text: "✅ CSV Export Complete", duration: 2500, gravity: "top", position: "center",
+            Toastify({ text: "âœ… CSV Export Complete", duration: 2500, gravity: "top", position: "center",
                 style: { background: "#fff", color: "#333", border: "1px solid #eaeaea", borderRadius: "10px", fontSize: "14px", fontWeight: "600" } }).showToast();
         }
 
-        // ── Global Exports ─────────────────────────────────────
+        // â”€â”€ Global Exports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         window.applyFilters = applyFilters;
         window.exportData = exportData;
         window.updateRankings = updateRankings;
         window.handleSectionChange = handleSectionChange;
 
-        // ── Init ───────────────────────────────────────────────
+        // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         startRealtimeSync();
     })();
     </script>

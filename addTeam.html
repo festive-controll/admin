@@ -84,6 +84,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
@@ -180,10 +181,11 @@
                                 class="w-5 h-5 rounded-full border-2 border-gray-200 hover:border-[#FFC107] cursor-pointer transition-colors"
                                 id="master-checkbox"></div>
                         </div>
-                        <div class="col-span-4 text-[13px] font-medium text-gray-700">Team</div>
+                        <div class="col-span-3 text-[13px] font-medium text-gray-700">Team</div>
                         <div class="col-span-2 text-[13px] font-medium text-gray-700">Color</div>
                         <div class="col-span-2 text-[13px] font-medium text-gray-700 text-center">Series</div>
-                        <div class="col-span-2 text-[13px] font-medium text-gray-700 text-center">Status</div>
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700 text-center">Device Limit</div>
+                        <div class="col-span-1 text-[13px] font-medium text-gray-700 text-center">Status</div>
                         <div class="col-span-1 text-[13px] font-medium text-gray-700 text-right">Actions</div>
                     </div>
 
@@ -203,7 +205,7 @@
                 class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                 <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                     <span id="results-count">Showing results</span>
-                    <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
+                    <span class="text-gray-300 text-[10px] hidden sm:inline">•</span>
                     <div class="relative ml-2 sm:ml-0">
                         <select id="team-per-page" onchange="changeTeamPerPage(this.value)"
                             class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -235,7 +237,7 @@
 
     <!-- Global Action Menu -->
     <div id="global-action-menu"
-        class="hidden fixed w-36 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] py-1 overflow-hidden dropdown-enter">
+        class="hidden fixed w-44 bg-white border border-gray-200 rounded-lg shadow-xl z-[100] py-1 overflow-hidden dropdown-enter">
         <button id="btn-view"
             class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
             <i class="fi fi-rr-eye text-[15px] mr-2.5 text-gray-500"></i> View
@@ -243,6 +245,10 @@
         <button id="btn-edit"
             class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
             <i class="fi fi-rr-edit text-[15px] mr-2.5 text-gray-500"></i> Edit
+        </button>
+        <button id="btn-reset-dev"
+            class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-amber-600 hover:bg-amber-50 flex items-center transition-colors">
+            <i class="fi fi-rr-refresh text-[14px] mr-2.5 text-amber-500"></i> Reset Devices
         </button>
         <div class="border-t border-gray-100 my-0.5"></div>
         <button id="btn-delete"
@@ -307,6 +313,34 @@
                         value="#FF0000" oninput="window.syncColorFromText(this.value)">
                 </div>
             </div>
+
+            <!-- Device Limit Config -->
+            <div>
+                <label class="block text-[13px] font-medium text-gray-800 mb-1.5 flex items-center justify-between">
+                    <span>Device Limit (Simultaneous Logins)</span>
+                    <span class="text-[11px] text-gray-400 font-normal">Default: 1</span>
+                </label>
+                <input type="number" id="teamDeviceLimit" min="1" max="20" value="1"
+                    class="w-full px-4 py-2 bg-white border border-gray-300 rounded-full text-[13px] focus:outline-none focus:ring-1 focus:ring-[#FFB33F] focus:border-[#FFB33F] transition-all"
+                    placeholder="1">
+                <p class="text-[11px] text-gray-400 mt-1 pl-2">Maximum number of devices this team can enter from simultaneously.</p>
+            </div>
+
+            <!-- Registered Devices info in Edit Mode -->
+            <div id="teamActiveDevicesCard" class="hidden p-3.5 bg-gray-50 border border-gray-200 rounded-2xl space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[12px] font-bold text-gray-700 flex items-center gap-1.5">
+                        <i class="fi fi-rr-computer text-brand-blue"></i>
+                        Registered Devices (<span id="teamRegDevCount">0</span>)
+                    </span>
+                    <button type="button" onclick="window.resetCurrentEditingTeamDevices()"
+                        class="text-[11px] font-bold text-amber-600 hover:text-amber-700 hover:underline flex items-center gap-1">
+                        <i class="fi fi-rr-refresh text-[10px]"></i> Reset
+                    </button>
+                </div>
+                <div id="teamRegisteredDevicesList" class="text-[11px] text-gray-500 space-y-1 max-h-32 overflow-y-auto"></div>
+            </div>
+
             <div class="flex items-center mt-2">
                 <label class="relative inline-flex items-center cursor-pointer group">
                     <input type="checkbox" id="teamActive" class="sr-only peer" checked>
@@ -470,11 +504,15 @@
                 const rowBg = isSelected ? 'bg-blue-50/20' : 'bg-white hover:bg-gray-50';
 
                 const activeHtml = d.isActive ? `<span class="bg-[#FFB33F] text-[#111827] text-[11px] font-medium px-2.5 py-1 rounded-full inline-flex shadow-sm">Active</span>` : `<span class="bg-red-50 text-red-600 text-[11px] font-medium px-2.5 py-1 rounded-full inline-flex shadow-sm">Inactive</span>`;
+                const devLimit = parseInt(d.deviceLimit, 10) > 0 ? parseInt(d.deviceLimit, 10) : 1;
+                const regDevs = Array.isArray(d.registeredDevices) ? d.registeredDevices : [];
+                const devCount = regDevs.length;
+                const devBadgeClass = devCount >= devLimit ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-brand-blue border-blue-100';
 
                 tableHTML += `
                 <div class="grid grid-cols-12 gap-4 items-center py-2.5 px-6 border-b border-gray-100 ${rowBg} transition-colors group cursor-pointer" onclick="viewTeam('${d.id}', event)">
                     <div class="col-span-1">${isSelected ? getCheckedIcon(d.id) : getUncheckedIcon(d.id)}</div>
-                    <div class="col-span-4 flex items-center space-x-3.5">
+                    <div class="col-span-3 flex items-center space-x-3.5">
                         <i class="fi fi-rr-graphic-style text-[18px]" style="color: ${d.color};"></i>
                         <div class="flex flex-col">
                             <span class="text-[14px] font-medium text-gray-900 leading-snug">${d.name}</span>
@@ -491,7 +529,12 @@
                         <span class="text-[12.5px] text-[#6B7280] font-mono-custom tracking-tight uppercase">${d.color}</span>
                     </div>
                     <div class="col-span-2 text-[13px] font-medium text-gray-600 font-mono-custom text-center">${d.chestNoSeries || 'Auto'}</div>
-                    <div class="col-span-2 flex justify-center">${activeHtml}</div>
+                    <div class="col-span-2 flex justify-center">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${devBadgeClass}">
+                            <i class="fi fi-rr-computer text-[10px]"></i> ${devCount} / ${devLimit} Active
+                        </span>
+                    </div>
+                    <div class="col-span-1 flex justify-center">${activeHtml}</div>
                     <div class="col-span-1 flex justify-end">${getActionMenu(d.id)}</div>
                 </div>`;
 
@@ -507,7 +550,11 @@
                                 <span class="w-[7px] h-[7px] rounded-full" style="background-color: ${d.color}"></span>
                                 <span class="text-[12px] text-[#6B7280] font-mono-custom tracking-tight uppercase">${d.color}</span>
                             </div>
-                            <div class="text-[12px] text-gray-500 mt-2 font-mono-custom">Series: ${d.chestNoSeries || 'Auto'}</div>
+                            <div class="text-[12px] text-gray-500 mt-1.5 font-mono-custom">Series: ${d.chestNoSeries || 'Auto'}</div>
+                            <div class="text-[11px] text-gray-600 mt-1 flex items-center gap-1 font-medium">
+                                <i class="fi fi-rr-computer text-[10px] text-gray-400"></i>
+                                <span>Devices: <b class="${devCount >= devLimit ? 'text-amber-600' : 'text-brand-blue'}">${devCount} / ${devLimit}</b></span>
+                            </div>
                             ${d.captainName || d.assistantCaptainName ? `
                             <div class="text-[11px] text-gray-400 mt-2 space-y-0.5">
                                 ${d.captainName ? `<div>C: ${d.captainName} (#${(parseInt(d.chestNoSeries) || 0) + 1})</div>` : ''}
@@ -579,6 +626,32 @@
             }
         };
 
+        window.resetSingleTeamDevices = function (id, event) {
+            if (event) event.stopPropagation();
+            const team = teamsData.find(t => t.id === id);
+            const teamName = team ? team.name : 'this team';
+            if (confirm(`Reset registered devices for "${teamName}"?\n\nThis will clear registered logins and allow the team manager to log in from a new device.`)) {
+                if (typeof db !== 'undefined') {
+                    db.collection('teams').doc(id).update({ registeredDevices: [] }).then(() => {
+                        db.collection('festUsers').where('team', '==', teamName).get().then(uSnap => {
+                            uSnap.forEach(uDoc => uDoc.ref.update({ registeredDevices: [], activeDeviceId: '' }).catch(() => {}));
+                        }).catch(() => {});
+                        typeof showToast === 'function' && showToast(`✅ Registered devices reset for ${teamName}!`);
+                        if (editingTeamId === id) {
+                            renderSidebarRegisteredDevices([]);
+                        }
+                    }).catch(err => {
+                        console.error(err);
+                        typeof showToast === 'function' && showToast("❌ Error resetting devices!");
+                    });
+                } else {
+                    if (team) team.registeredDevices = [];
+                    renderTeamsUI();
+                    typeof showToast === 'function' && showToast(`✅ Registered devices reset for ${teamName}!`);
+                }
+            }
+        };
+
         window.openActionMenu = function (id, event) {
             event.stopPropagation();
             if (activeTeamDropdownId === id) {
@@ -600,10 +673,14 @@
             }
 
             menu.style.top = topPos + 'px';
-            menu.style.left = (rect.right - 144) + 'px';
+            menu.style.left = (rect.right - 176) + 'px';
 
             document.getElementById('btn-view').onclick = (e) => { window.teamCloseDropdowns(); viewTeam(id, e); };
             document.getElementById('btn-edit').onclick = (e) => { window.teamCloseDropdowns(); editTeam(id, e); };
+            const btnReset = document.getElementById('btn-reset-dev');
+            if (btnReset) {
+                btnReset.onclick = (e) => { window.teamCloseDropdowns(); window.resetSingleTeamDevices(id, e); };
+            }
             document.getElementById('btn-delete').onclick = (e) => { window.teamCloseDropdowns(); deleteSingleTeam(id, e); };
         };
 
@@ -645,6 +722,50 @@
             }
         };
 
+        function renderSidebarRegisteredDevices(devs) {
+            const card = document.getElementById('teamActiveDevicesCard');
+            const countEl = document.getElementById('teamRegDevCount');
+            const listEl = document.getElementById('teamRegisteredDevicesList');
+            if (!card || !countEl || !listEl) return;
+
+            const list = Array.isArray(devs) ? devs : [];
+            countEl.innerText = list.length;
+            if (list.length === 0) {
+                listEl.innerHTML = '<div class="italic text-gray-400 py-1">No devices currently registered.</div>';
+            } else {
+                listEl.innerHTML = list.map((d, i) => {
+                    const devName = typeof d === 'string' ? d.substring(0, 12) + '...' : `${d.deviceType || 'Device'} (${d.os || 'OS'}, ${d.browser || 'Browser'})`;
+                    const timeStr = (typeof d === 'object' && d.lastLogin) ? new Date(d.lastLogin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    return `<div class="flex items-center justify-between py-0.5 border-b border-gray-100 last:border-0">
+                        <span class="truncate max-w-[220px]" title="${typeof d === 'object' ? d.deviceId : d}">#${i + 1}: ${devName}</span>
+                        <span class="text-[10px] text-gray-400 shrink-0">${timeStr}</span>
+                    </div>`;
+                }).join('');
+            }
+            card.classList.remove('hidden');
+        }
+
+        window.resetCurrentEditingTeamDevices = function() {
+            if (!editingTeamId) return;
+            const team = teamsData.find(t => t.id === editingTeamId);
+            const teamName = team ? team.name : 'this team';
+            if (confirm(`Reset registered devices for "${teamName}"?`)) {
+                if (typeof db !== 'undefined') {
+                    db.collection('teams').doc(editingTeamId).update({ registeredDevices: [] }).then(() => {
+                        renderSidebarRegisteredDevices([]);
+                        typeof showToast === 'function' && showToast(`✅ Registered devices reset for ${teamName}!`);
+                    }).catch(err => {
+                        console.error(err);
+                        typeof showToast === 'function' && showToast("❌ Error resetting devices!");
+                    });
+                } else {
+                    if (team) team.registeredDevices = [];
+                    renderSidebarRegisteredDevices([]);
+                    renderTeamsUI();
+                }
+            }
+        };
+
         window.openTeamSidebar = function () {
             editingTeamId = null;
             editingOldTeamName = null;
@@ -657,6 +778,9 @@
             window.updateCaptainSeriesHint();
             document.getElementById('teamColorPicker').value = '#FF0000';
             document.getElementById('teamColorText').value = '#FF0000';
+            document.getElementById('teamDeviceLimit').value = '1';
+            const devCard = document.getElementById('teamActiveDevicesCard');
+            if (devCard) devCard.classList.add('hidden');
             document.getElementById('teamActive').checked = true;
             document.getElementById('teamOverlay').classList.remove('hidden');
             document.getElementById('teamSidebar').classList.remove('translate-x-full');
@@ -707,6 +831,8 @@
             const safeCol = window.normalizeHexColor(team.color);
             document.getElementById('teamColorPicker').value = safeCol;
             document.getElementById('teamColorText').value = team.color || safeCol;
+            document.getElementById('teamDeviceLimit').value = parseInt(team.deviceLimit, 10) > 0 ? parseInt(team.deviceLimit, 10) : 1;
+            renderSidebarRegisteredDevices(team.registeredDevices || []);
             document.getElementById('teamActive').checked = team.isActive;
             document.getElementById('teamOverlay').classList.remove('hidden');
             document.getElementById('teamSidebar').classList.remove('translate-x-full');
@@ -899,6 +1025,7 @@
             const series = parseInt(document.getElementById('teamSeries').value) || 0;
             const captain = document.getElementById('teamCaptain').value.trim();
             const assistant = document.getElementById('teamAssistant').value.trim();
+            const deviceLimit = parseInt(document.getElementById('teamDeviceLimit').value, 10) > 0 ? parseInt(document.getElementById('teamDeviceLimit').value, 10) : 1;
             if (!name) return typeof showToast === 'function' ? showToast("❌ Team Name is required!") : alert("Name required");
 
             const oldTeamName = editingTeamId ? editingOldTeamName : null;
@@ -910,6 +1037,7 @@
                 chestNoSeries: series,
                 captainName: captain,
                 assistantCaptainName: assistant,
+                deviceLimit: deviceLimit,
                 updatedAt: new Date()
             };
 
@@ -921,7 +1049,7 @@
                         }
                         syncCaptainsToCandidates(name, series, captain, assistant, oldTeamName).then(() => {
                             window.closeTeamSidebar();
-                            typeof showToast === 'function' && showToast("✅ Team and Candidate details updated!");
+                            typeof showToast === 'function' && showToast("✅ Team details updated!");
                         });
                     }).catch(err => {
                         console.error("Error updating team:", err);
@@ -934,12 +1062,13 @@
                     renderTeamsUI();
                 }
             } else {
+                payload.registeredDevices = [];
                 if (typeof db !== 'undefined') {
                     payload.createdAt = new Date();
                     db.collection('teams').add(payload).then(() => {
                         syncCaptainsToCandidates(name, series, captain, assistant, null).then(() => {
                             window.closeTeamSidebar();
-                            typeof showToast === 'function' && showToast("✅ Team and Captains added!");
+                            typeof showToast === 'function' && showToast("✅ Team added successfully!");
                         });
                     }).catch(err => {
                         console.error("Error adding team:", err);
@@ -956,8 +1085,8 @@
         function copyTeamShareableLink() {
             const url = new URL('teamRegister.html', window.location.href).href;
             navigator.clipboard.writeText(url).then(() => {
-                if (typeof showToast === 'function') showToast("✅ Shareable team registration link copied!");
-                else alert("✅ Shareable link copied: " + url);
+                if (typeof showToast === 'function') showToast("âœ… Shareable team registration link copied!");
+                else alert("âœ… Shareable link copied: " + url);
             }).catch(err => {
                 console.error("Could not copy text: ", err);
             });

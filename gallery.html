@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -41,6 +41,7 @@
         .drawer-open { transform: translateX(0); }
         .drawer-closed { transform: translateX(100%); }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8 relative overflow-x-hidden">
 
@@ -125,7 +126,7 @@
                 <div class="flex justify-between items-center py-4 px-6 border-t border-gray-100 bg-white mt-auto">
                     <div class="text-[13px] text-gray-600 flex items-center gap-2">
                         <span id="showing-text">Showing 0 to 0 of 0 results</span>
-                        <span class="text-gray-300">•</span>
+                        <span class="text-gray-300">â€¢</span>
                         <select class="bg-gray-50 border border-gray-200 rounded px-2 py-1 text-[13px] focus:outline-none cursor-pointer">
                             <option>12</option><option>24</option><option>48</option>
                         </select>
@@ -486,7 +487,7 @@
                     albumsData = albumsData.filter(a => !selectedAlbums.includes(a.id));
                 }
                 
-                if(typeof showToast === 'function') showToast(`✅ ${selectedAlbums.length} Album(s) deleted successfully`);
+                if(typeof showToast === 'function') showToast(`âœ… ${selectedAlbums.length} Album(s) deleted successfully`);
                 selectedAlbums = [];
                 renderAlbums();
             } catch(e) {
@@ -530,7 +531,7 @@
                         albumsData = albumsData.filter(a => a.id !== id);
                         renderAlbums();
                     }
-                    if (typeof showToast === 'function') showToast("✅ Album deleted");
+                    if (typeof showToast === 'function') showToast("âœ… Album deleted");
                 }
                 window.albumCloseDropdowns();
             };
@@ -602,7 +603,7 @@
             const desc = document.getElementById('album-desc').value.trim();
             const isPublic = document.getElementById('album-public').checked;
             
-            if(!name) { typeof showToast === 'function' ? showToast("❌ Album Name is required.") : alert("Album Name is required."); return; }
+            if(!name) { typeof showToast === 'function' ? showToast("âŒ Album Name is required.") : alert("Album Name is required."); return; }
 
             const docData = {
                 name: name, description: desc, isPublic: isPublic,
@@ -618,12 +619,12 @@
                         if (idx > -1) albumsData[idx] = { ...albumsData[idx], ...docData };
                         renderAlbums();
                     }
-                    if (typeof showToast === 'function') showToast("✅ Album updated successfully!");
+                    if (typeof showToast === 'function') showToast("âœ… Album updated successfully!");
                 } else {
                     docData.createdAt = (typeof firebase !== 'undefined') ? firebase.firestore.FieldValue.serverTimestamp() : new Date();
                     if (window.db) { await window.db.collection('galleryAlbums').add(docData); } 
                     else { albumsData.unshift({ id: Date.now().toString(), ...docData, createdAt: { toDate: () => new Date() } }); renderAlbums(); }
-                    if (typeof showToast === 'function') showToast("✅ Album created successfully!");
+                    if (typeof showToast === 'function') showToast("âœ… Album created successfully!");
                 }
                 closeCreateDrawer();
             } catch (error) {

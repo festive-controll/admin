@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subject Tab — Judge Saved Topics</title>
+    <title>Subject Tab â€” Judge Saved Topics</title>
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
@@ -94,6 +94,7 @@
             animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-[#f8f9fc] min-h-screen text-gray-800 p-4 sm:p-6 lg:p-8">
@@ -551,7 +552,7 @@
                         <td class="py-4 px-5 align-top">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider inline-block mb-1">${p.code || 'PRG'}</span>
                             <div class="font-bold text-gray-900 text-[14px] leading-tight">${p.name || 'Unnamed Program'}</div>
-                            <div class="text-[11px] text-gray-400 font-medium mt-0.5">${p.section || 'General'} ${p.category ? '• ' + p.category : ''}</div>
+                            <div class="text-[11px] text-gray-400 font-medium mt-0.5">${p.section || 'General'} ${p.category ? 'â€¢ ' + p.category : ''}</div>
                         </td>
                         <td class="py-4 px-5 align-top">
                             ${judgesHtml}
@@ -608,7 +609,7 @@
                     const prog = allPrograms.find(p => p.id === progId);
                     if (prog && prog.topic) {
                         navigator.clipboard.writeText(prog.topic).then(() => {
-                            showToast("✅ Topic copied to clipboard!");
+                            showToast("âœ… Topic copied to clipboard!");
                         }).catch(() => {
                             showToast("Topic: " + prog.topic);
                         });
@@ -621,7 +622,7 @@
 
                     activeEditProgId = progId;
                     document.getElementById('modalProgTitle').innerText = prog.name || 'Edit Saved Topic';
-                    document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} • ${prog.section || 'General'}`;
+                    document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} â€¢ ${prog.section || 'General'}`;
                     document.getElementById('modalTopicInput').value = prog.topic || '';
 
                     const overlay = document.getElementById('editTopicModalOverlay');
@@ -654,12 +655,12 @@
                         updatedByJudge: 'Admin',
                         topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }).then(() => {
-                        showToast(isClear ? "Topic cleared successfully!" : "✅ Topic updated successfully!");
+                        showToast(isClear ? "Topic cleared successfully!" : "âœ… Topic updated successfully!");
                         closeEditModal();
                         if (btn) btn.disabled = false;
                     }).catch(err => {
                         console.error("Error updating topic:", err);
-                        showToast("❌ Error updating topic: " + err.message, "error");
+                        showToast("âŒ Error updating topic: " + err.message, "error");
                         if (btn) btn.disabled = false;
                     });
                 };
@@ -718,7 +719,7 @@
 
                 window.exportSubjectTopicsToExcel = async function () {
                     if (!allPrograms || allPrograms.length === 0) {
-                        showToast("⚠️ No program topics available to export", "warning");
+                        showToast("âš ï¸ No program topics available to export", "warning");
                         return;
                     }
 
@@ -761,7 +762,7 @@
                     }
 
                     if (nonStageList.length === 0) {
-                        showToast("⚠️ No matching topics found for export", "warning");
+                        showToast("âš ï¸ No matching topics found for export", "warning");
                         return;
                     }
 
@@ -825,17 +826,17 @@
                         const workbook = XLSX.utils.book_new();
                         XLSX.utils.book_append_sheet(workbook, worksheet, "Non-Stage Saved Topics");
                         XLSX.writeFile(workbook, fileName);
-                        showToast("✅ Non-Stage Judge Saved Topics exported to Excel!");
+                        showToast("âœ… Non-Stage Judge Saved Topics exported to Excel!");
                     } else {
                         exportRowsToCSV(excelRows, fileName);
-                        showToast("✅ Exported as CSV (Excel compatible)!");
+                        showToast("âœ… Exported as CSV (Excel compatible)!");
                     }
                 };
 
                 // Passcode & 5-minute Auto-Lock Logic
                 (function initSubjectPasscode() {
                     const LOCK_DURATION = 5 * 60 * 1000; // 5 minutes (300,000 ms)
-                    const REQUIRED_PASSCODE = "340";
+                    const REQUIRED_PASSCODE = "48902";
                     let lockTimerInterval = null;
 
                     function isUnlocked() {
@@ -887,11 +888,11 @@
                             hideLockScreen();
                             startAutoLockTimer();
                             if (typeof showToast === 'function') {
-                                showToast("🔓 Access Granted! Unlocked for 5 minutes.");
+                                showToast("ðŸ”“ Access Granted! Unlocked for 5 minutes.");
                             }
                         } else {
                             if (errorMsg) {
-                                errorMsg.innerText = "❌ Incorrect passcode! Please try again.";
+                                errorMsg.innerText = "âŒ Incorrect passcode! Please try again.";
                                 errorMsg.classList.remove('hidden');
                             }
                             if (input) {
@@ -908,7 +909,7 @@
                         if (lockTimerInterval) clearInterval(lockTimerInterval);
                         showLockScreen();
                         if (typeof showToast === 'function') {
-                            showToast("🔒 Subject Tab locked manually.");
+                            showToast("ðŸ”’ Subject Tab locked manually.");
                         }
                     };
 
@@ -936,7 +937,7 @@
                                 clearInterval(lockTimerInterval);
                                 showLockScreen();
                                 if (typeof showToast === 'function') {
-                                    showToast("🔒 Session expired. Subject Tab re-locked.");
+                                    showToast("ðŸ”’ Session expired. Subject Tab re-locked.");
                                 }
                             } else {
                                 updateUnlockTimerBadge();

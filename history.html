@@ -1,0 +1,1161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Access History & Database Diagnostics</title>
+
+    <!-- Tailwind CSS & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+
+    <!-- Firebase SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#134E8E',
+                            dark: '#0F172A',
+                            accent: '#3B82F6',
+                            emerald: '#10B981',
+                            amber: '#F59E0B',
+                            rose: '#EF4444'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        @keyframes pulse-slow {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+<script type="module" src="/device-tracker.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-12">
+
+    <!-- Top Header / Banner -->
+    <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white shadow-xl border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-600/30 border border-blue-400/30 flex items-center justify-center text-blue-400 shadow-inner">
+                        <i class="fi fi-rr-time-past text-2xl"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl font-black tracking-tight text-white">System Access History & DB Diagnostics</h1>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow"></span>
+                                Live Sync
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span>Real-time web traffic, visitor IP tracking, and Firebase Firestore health telemetry.</span>
+                            <a href="https://admin-festive.vercel.app/" target="_blank" class="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 underline font-mono text-[11px]">
+                                <i class="fi fi-rr-link text-[10px]"></i> admin-festive.vercel.app
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="logCurrentVisit(true)" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2">
+                        <i class="fi fi-rr-plus-circle"></i> Log Visit Now
+                    </button>
+                    <button onclick="runDbSpeedTest()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fi fi-rr-dashboard"></i> DB Speed Test
+                    </button>
+                    <button onclick="exportHistoryCSV()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 text-xs font-bold rounded-xl transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fi fi-rr-file-spreadsheets"></i> Export CSV
+                    </button>
+                    <button onclick="refreshAllData()" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl transition-all active:scale-95" title="Refresh Data">
+                        <i class="fi fi-rr-refresh text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        <!-- Stat Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Visits -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Visits Logged</span>
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <i class="fi fi-rr-eye text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="statTotalVisits" class="text-3xl font-black text-slate-900">0</span>
+                    <span class="text-xs font-medium text-emerald-600 flex items-center gap-0.5">
+                        <i class="fi fi-rr-arrow-up-right"></i> Active
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Recorded website page opens</p>
+            </div>
+
+            <!-- Unique IP & Active Systems Count -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Opened PCs / Systems</span>
+                    <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                        <i class="fi fi-rr-computer text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="statUniqueIPs" class="text-3xl font-black text-slate-900">0</span>
+                    <span id="statActiveSystemsCount" class="text-xs font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-slow"></span>
+                        Live Online
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Distinct client devices & active systems</p>
+            </div>
+
+            <!-- Database Telemetry -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Database Status</span>
+                    <div id="statDbStatusBadge" class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <i class="fi fi-rr-database text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span id="statDbStatusText" class="text-2xl font-black text-emerald-600">Online</span>
+                    <span id="statDbLatency" class="text-xs font-mono font-bold text-slate-500">-- ms</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-1" id="statDbSubtext">Firestore SDK connected & synced</p>
+            </div>
+
+            <!-- Current Client IP -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all border-l-4 border-l-blue-600">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Your Current IP</span>
+                    <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <i class="fi fi-rr-marker text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="statCurrentIP" class="text-lg font-mono font-bold text-slate-900 truncate">Detecting...</div>
+                    <div id="statCurrentLocation" class="text-xs text-slate-500 font-medium truncate mt-0.5">Fetching location info...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Detector Banner Card -->
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                <!-- Col 1: Visitor IP & Geo -->
+                <div class="space-y-2 border-b md:border-b-0 md:border-r border-slate-700/60 pb-4 md:pb-0 md:pr-6">
+                    <div class="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-wider">
+                        <i class="fi fi-rr-globe"></i> Active Client Inspector
+                    </div>
+                    <div>
+                        <span class="text-2xl font-mono font-black text-white" id="myIpAddress">---.---.---.---</span>
+                        <div class="text-xs text-slate-300 font-medium mt-1 flex items-center gap-2" id="myGeoDetails">
+                            <span><i class="fi fi-rr-map-marker text-amber-400"></i> Locating ISP & Country...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Col 2: System / Browser Info -->
+                <div class="space-y-2 border-b md:border-b-0 md:border-r border-slate-700/60 pb-4 md:pb-0 md:pr-6">
+                    <div class="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                        <i class="fi fi-rr-computer"></i> Device & Environment
+                    </div>
+                    <div class="space-y-1 text-xs text-slate-300 font-mono">
+                        <p><span class="text-slate-400">Browser:</span> <span id="myBrowserName" class="text-white font-bold">---</span></p>
+                        <p><span class="text-slate-400">OS Platform:</span> <span id="myOSName" class="text-white font-bold">---</span></p>
+                        <p><span class="text-slate-400">Screen Res:</span> <span id="myScreenRes" class="text-white font-bold">---</span></p>
+                    </div>
+                </div>
+
+                <!-- Col 3: Database Engine Stats -->
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2 text-purple-400 text-xs font-bold uppercase tracking-wider">
+                        <i class="fi fi-rr-server"></i> Firestore Database Collections
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-slate-800/80 rounded-xl p-2 border border-slate-700/60">
+                            <span class="text-slate-400 block text-[10px]">Candidates:</span>
+                            <span id="cntCandidates" class="font-bold text-white text-sm">--</span>
+                        </div>
+                        <div class="bg-slate-800/80 rounded-xl p-2 border border-slate-700/60">
+                            <span class="text-slate-400 block text-[10px]">Programs:</span>
+                            <span id="cntPrograms" class="font-bold text-white text-sm">--</span>
+                        </div>
+                        <div class="bg-slate-800/80 rounded-xl p-2 border border-slate-700/60">
+                            <span class="text-slate-400 block text-[10px]">Teams:</span>
+                            <span id="cntTeams" class="font-bold text-white text-sm">--</span>
+                        </div>
+                        <div class="bg-slate-800/80 rounded-xl p-2 border border-slate-700/60">
+                            <span class="text-slate-400 block text-[10px]">Access Logs:</span>
+                            <span id="cntAccessLogs" class="font-bold text-emerald-400 text-sm">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Navigation Tabs -->
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-3">
+            <div class="flex items-center gap-2 bg-slate-200/70 p-1 rounded-2xl">
+                <button onclick="switchTab('history')" id="tabBtnHistory" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm">
+                    <i class="fi fi-rr-list text-xs mr-1.5"></i> Access History Logs
+                </button>
+                <button onclick="switchTab('pcs')" id="tabBtnPcs" class="px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                    <i class="fi fi-rr-computer text-xs mr-1.5"></i> Opened PCs & Devices
+                </button>
+                <button onclick="switchTab('db')" id="tabBtnDb" class="px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                    <i class="fi fi-rr-database text-xs mr-1.5"></i> DB Health Diagnostics
+                </button>
+                <button onclick="switchTab('client')" id="tabBtnClient" class="px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+                    <i class="fi fi-rr-info text-xs mr-1.5"></i> IP & Session Inspector
+                </button>
+            </div>
+
+            <!-- Controls (Search & Auto-refresh) -->
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <i class="fi fi-rr-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="filterHistoryLogs()" placeholder="Search IP, page, browser..." class="pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none w-56 shadow-sm">
+                </div>
+                <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                    <span>Auto-refresh:</span>
+                    <select id="autoRefreshSelect" onchange="setupAutoRefresh()" class="bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs font-semibold outline-none cursor-pointer">
+                        <option value="0">Off</option>
+                        <option value="5">Every 5s</option>
+                        <option value="15" selected>Every 15s</option>
+                        <option value="30">Every 30s</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 1: Access History Logs Table -->
+        <section id="viewTabHistory" class="space-y-4">
+            <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Website Access & Session Log History</h2>
+                        <p class="text-xs text-slate-500">Live feed of page loads, visitor IP addresses, timestamps, and user sessions.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="clearHistoryLogs()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition-all border border-rose-200 active:scale-95 flex items-center gap-1.5">
+                            <i class="fi fi-rr-trash text-xs"></i> Clear Local Logs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                <th class="py-3.5 px-6">Timestamp & Date</th>
+                                <th class="py-3.5 px-6">Client IP Address</th>
+                                <th class="py-3.5 px-6">Page / Module Opened</th>
+                                <th class="py-3.5 px-6">Device & Browser</th>
+                                <th class="py-3.5 px-6">Network / Status</th>
+                                <th class="py-3.5 px-6 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-slate-100 text-xs">
+                            <tr>
+                                <td colspan="6" class="py-12 text-center text-slate-400">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-2"></div>
+                                    <p class="font-medium">Loading website access history...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer / Item Count -->
+                <div class="px-6 py-3 bg-slate-50/50 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
+                    <span id="historyLogCountInfo">Showing 0 log entries</span>
+                    <span class="text-[11px] text-slate-400">Data synchronized with Firestore & LocalStorage</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Opened PCs & Devices Registry -->
+        <section id="viewTabPcs" class="space-y-4 hidden">
+            <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Opened PCs & Connected Devices Registry</h2>
+                        <p class="text-xs text-slate-500">Distinct PCs, laptops, and mobile devices that opened https://admin-festive.vercel.app/.</p>
+                    </div>
+                    <span id="pcsCountBadge" class="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl border border-blue-200">
+                        0 Unique PCs
+                    </span>
+                </div>
+
+                <div class="p-6">
+                    <div id="pcsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="col-span-full py-8 text-center text-slate-400">
+                            <i class="fi fi-rr-computer text-2xl mb-1 block text-slate-300"></i>
+                            Loading registered PCs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: DB Health Diagnostics -->
+        <section id="viewTabDb" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Connection & Latency Diagnostics Card -->
+                <div class="glass-card rounded-3xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Firestore Connection Test</h3>
+                            <p class="text-xs text-slate-500">Run manual read/write latency benchmarking on Firebase Firestore.</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                            <i class="fi fi-rr-bolt"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-900 rounded-2xl text-white font-mono text-xs space-y-2">
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">Database Target:</span>
+                            <span class="text-blue-400 font-bold">festie-s1u2h3.firebaseapp.com</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">Write Benchmark Latency:</span>
+                            <span id="testWriteLatency" class="text-emerald-400 font-bold">Not tested</span>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-800 pb-2">
+                            <span class="text-slate-400">Read Benchmark Latency:</span>
+                            <span id="testReadLatency" class="text-emerald-400 font-bold">Not tested</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Long Polling Fallback:</span>
+                            <span class="text-amber-400 font-bold">Enabled</span>
+                        </div>
+                    </div>
+
+                    <button onclick="runDbSpeedTest()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-xs flex items-center justify-center gap-2">
+                        <i class="fi fi-rr-play-alt"></i> Execute Speed & Connectivity Test
+                    </button>
+                </div>
+
+                <!-- Database Collections Overview Card -->
+                <div class="glass-card rounded-3xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Database Collections Registry</h3>
+                            <p class="text-xs text-slate-500">Live document counts from active Firestore collections.</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                            <i class="fi fi-rr-folder-tree"></i>
+                        </div>
+                    </div>
+
+                    <div id="collectionsList" class="space-y-2 text-xs">
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fi fi-rr-user text-blue-600"></i>
+                                <span class="font-bold text-slate-700">candidates</span>
+                            </div>
+                            <span id="collCandidatesCount" class="px-2.5 py-1 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-800">Checking...</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fi fi-rr-document text-purple-600"></i>
+                                <span class="font-bold text-slate-700">programs</span>
+                            </div>
+                            <span id="collProgramsCount" class="px-2.5 py-1 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-800">Checking...</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fi fi-rr-users-alt text-amber-600"></i>
+                                <span class="font-bold text-slate-700">teams</span>
+                            </div>
+                            <span id="collTeamsCount" class="px-2.5 py-1 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-800">Checking...</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fi fi-rr-time-fast text-emerald-600"></i>
+                                <span class="font-bold text-slate-700">access_history</span>
+                            </div>
+                            <span id="collAccessCount" class="px-2.5 py-1 bg-white border border-slate-200 rounded-xl font-mono font-bold text-emerald-600">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: IP & Session Inspector -->
+        <section id="viewTabClient" class="space-y-6 hidden">
+            <div class="glass-card rounded-3xl p-6 shadow-sm space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Current Client IP & Network Inspection</h3>
+                        <p class="text-xs text-slate-500">Detailed headers, user agent parsing, and network telemetry for your current device session.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-xl border border-blue-200">
+                        Active Connection
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                    <!-- Network & IP Details -->
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3">
+                        <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[11px] text-blue-600 flex items-center gap-2">
+                            <i class="fi fi-rr-network"></i> Network & IP Address Details
+                        </h4>
+                        <div class="space-y-2 font-mono">
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">Public IP Address:</span>
+                                <span id="inspIp" class="font-bold text-slate-900">Detecting...</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">Target Vercel Host:</span>
+                                <a href="https://admin-festive.vercel.app/" target="_blank" class="font-bold text-blue-600 hover:underline">admin-festive.vercel.app</a>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">Internet Service Provider (ISP):</span>
+                                <span id="inspIsp" class="font-bold text-slate-900">Detecting...</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">City / Region:</span>
+                                <span id="inspCity" class="font-bold text-slate-900">Detecting...</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-slate-500">Country Code / Name:</span>
+                                <span id="inspCountry" class="font-bold text-slate-900">Detecting...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Browser & Hardware -->
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3">
+                        <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[11px] text-purple-600 flex items-center gap-2">
+                            <i class="fi fi-rr-mobile-button"></i> Hardware & Browser Environment
+                        </h4>
+                        <div class="space-y-2 font-mono">
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">User Agent:</span>
+                                <span id="inspUserAgent" class="font-bold text-slate-800 truncate max-w-[200px]" title="">---</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">Language:</span>
+                                <span id="inspLang" class="font-bold text-slate-900">---</span>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-slate-200">
+                                <span class="text-slate-500">Color Depth / Screen:</span>
+                                <span id="inspScreen" class="font-bold text-slate-900">---</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-slate-500">Cookies Enabled:</span>
+                                <span id="inspCookies" class="font-bold text-emerald-600">---</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Core Application Logic Script -->
+    <script>
+        // ------------------------------------------------------------------------
+        // 1. Firebase Initialization & Configuration Setup
+        // ------------------------------------------------------------------------
+        var firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+        };
+
+        let db = null;
+        try {
+            if (window.parent && window.parent.db) {
+                db = window.parent.db;
+            } else if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                db.settings({ experimentalForceLongPolling: true, merge: true });
+            }
+        } catch (err) {
+            console.warn("Firebase fallback initialization warning:", err);
+        }
+
+        // Global State Variables
+        let currentClientIp = "127.0.0.1";
+        let currentGeoData = null;
+        let allHistoryLogs = [];
+        let autoRefreshTimer = null;
+
+        // Toast Helper
+        function showToast(msg, type = "info") {
+            if (typeof Toastify === 'function') {
+                const bg = type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#134E8E';
+                Toastify({
+                    text: msg,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: { background: bg, borderRadius: "12px", fontSize: "13px", fontWeight: "600" }
+                }).showToast();
+            } else {
+                console.log(`[${type.toUpperCase()}] ${msg}`);
+            }
+        }
+
+        // ------------------------------------------------------------------------
+        // 2. Client IP & Browser Environment Detection
+        // ------------------------------------------------------------------------
+        async function fetchClientIPAndGeo() {
+            try {
+                // Try ipify for clean IP
+                const ipRes = await fetch('https://api.ipify.org?format=json').catch(() => null);
+                if (ipRes && ipRes.ok) {
+                    const ipData = await ipRes.json();
+                    currentClientIp = ipData.ip || currentClientIp;
+                }
+
+                // Try ipapi or ipinfo for ISP/Location metadata
+                const geoRes = await fetch(`https://ipapi.co/${currentClientIp}/json/`).catch(() => null);
+                if (geoRes && geoRes.ok) {
+                    currentGeoData = await geoRes.json();
+                }
+            } catch (e) {
+                console.warn("Could not fetch external IP metadata:", e);
+            }
+
+            // Update UI elements with IP
+            document.getElementById('statCurrentIP').innerText = currentClientIp;
+            document.getElementById('myIpAddress').innerText = currentClientIp;
+            document.getElementById('inspIp').innerText = currentClientIp;
+
+            if (currentGeoData && !currentGeoData.error) {
+                const locStr = `${currentGeoData.city || ''}, ${currentGeoData.region || ''}, ${currentGeoData.country_name || ''}`;
+                const ispStr = currentGeoData.org || currentGeoData.asn || 'Local Network';
+
+                document.getElementById('statCurrentLocation').innerText = `${locStr} (${ispStr})`;
+                document.getElementById('myGeoDetails').innerHTML = `<i class="fi fi-rr-map-marker text-amber-400"></i> ${locStr} &bull; ${ispStr}`;
+                document.getElementById('inspIsp').innerText = ispStr;
+                document.getElementById('inspCity').innerText = `${currentGeoData.city || 'N/A'}, ${currentGeoData.region || 'N/A'}`;
+                document.getElementById('inspCountry').innerText = `${currentGeoData.country_code || ''} ${currentGeoData.country_name || 'N/A'}`;
+            } else {
+                document.getElementById('statCurrentLocation').innerText = "Local/Private Network Access";
+                document.getElementById('myGeoDetails').innerHTML = `<i class="fi fi-rr-globe text-blue-400"></i> Direct Client Access`;
+                document.getElementById('inspIsp').innerText = "Local Network Provider";
+                document.getElementById('inspCity').innerText = "Unknown / Local";
+                document.getElementById('inspCountry').innerText = "Local Environment";
+            }
+
+            // Parse User Agent
+            const ua = navigator.userAgent;
+            let browser = "Unknown Browser";
+            if (ua.includes("Chrome") && !ua.includes("Edg")) browser = "Google Chrome";
+            else if (ua.includes("Edg")) browser = "Microsoft Edge";
+            else if (ua.includes("Firefox")) browser = "Mozilla Firefox";
+            else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Apple Safari";
+
+            let os = "Desktop OS";
+            if (ua.includes("Win")) os = "Windows";
+            else if (ua.includes("Mac")) os = "macOS";
+            else if (ua.includes("Linux")) os = "Linux";
+            else if (ua.includes("Android")) os = "Android";
+            else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+
+            document.getElementById('myBrowserName').innerText = browser;
+            document.getElementById('myOSName').innerText = os;
+            document.getElementById('myScreenRes').innerText = `${window.screen.width}x${window.screen.height}`;
+
+            document.getElementById('inspUserAgent').innerText = ua;
+            document.getElementById('inspUserAgent').title = ua;
+            document.getElementById('inspLang').innerText = navigator.language || 'en-US';
+            document.getElementById('inspScreen').innerText = `${window.screen.width}x${window.screen.height} (${window.screen.colorDepth}-bit)`;
+            document.getElementById('inspCookies').innerText = navigator.cookieEnabled ? "Enabled" : "Disabled";
+
+            return { ip: currentClientIp, browser, os, location: document.getElementById('statCurrentLocation').innerText };
+        }
+
+        // ------------------------------------------------------------------------
+        // 3. Log Page Visit (Firestore + LocalStorage)
+        // ------------------------------------------------------------------------
+        async function logCurrentVisit(manualTrigger = false) {
+            const clientDetails = await fetchClientIPAndGeo();
+            const logEntry = {
+                id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                ip: clientDetails.ip || currentClientIp,
+                page: window.location.pathname.split('/').pop() || 'history.html',
+                pageTitle: document.title || 'Access History',
+                browser: clientDetails.browser,
+                os: clientDetails.os,
+                location: clientDetails.location,
+                timestamp: new Date().toISOString(),
+                formattedTime: new Date().toLocaleString(),
+                userAgent: navigator.userAgent,
+                status: 'Active',
+                trigger: manualTrigger ? 'User Manual' : 'Page Load'
+            };
+
+            // Save to LocalStorage
+            try {
+                let localLogs = JSON.parse(localStorage.getItem('festie_access_history') || '[]');
+                localLogs.unshift(logEntry);
+                if (localLogs.length > 200) localLogs = localLogs.slice(0, 200); // cap to 200
+                localStorage.setItem('festie_access_history', JSON.stringify(localLogs));
+            } catch (e) {
+                console.warn("LocalStorage save error:", e);
+            }
+
+            // Save to Firestore if available
+            if (db) {
+                try {
+                    await db.collection('access_history').add({
+                        ...logEntry,
+                        serverTime: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (e) {
+                    console.warn("Firestore access_history log save failed:", e);
+                }
+            }
+
+            if (manualTrigger) {
+                showToast("âœ… Current visit & IP logged successfully!", "success");
+                refreshAllData();
+            }
+        }
+
+        // ------------------------------------------------------------------------
+        // 4. Fetch & Render History Logs
+        // ------------------------------------------------------------------------
+        async function loadHistoryLogs() {
+            let combinedLogs = [];
+
+            // 1. Fetch Local Storage Logs
+            try {
+                const localLogs = JSON.parse(localStorage.getItem('festie_access_history') || '[]');
+                combinedLogs = [...localLogs];
+            } catch (e) {
+                console.warn("Error reading local logs:", e);
+            }
+
+            // 2. Fetch Firestore Logs
+            if (db) {
+                try {
+                    const snap = await db.collection('access_history').orderBy('serverTime', 'desc').limit(100).get();
+                    const fsLogs = snap.docs.map(doc => {
+                        const d = doc.data();
+                        return {
+                            id: doc.id,
+                            ip: d.ip || 'Unknown',
+                            page: d.page || 'Website',
+                            browser: d.browser || 'Browser',
+                            os: d.os || 'OS',
+                            location: d.location || '',
+                            timestamp: d.timestamp || (d.serverTime ? new Date(d.serverTime.toDate()).toISOString() : new Date().toISOString()),
+                            formattedTime: d.formattedTime || (d.serverTime ? new Date(d.serverTime.toDate()).toLocaleString() : new Date().toLocaleString()),
+                            status: d.status || 'Active'
+                        };
+                    });
+
+                    // Merge & deduplicate by timestamp/ip
+                    const existingIds = new Set(combinedLogs.map(l => l.id));
+                    fsLogs.forEach(l => {
+                        if (!existingIds.has(l.id)) {
+                            combinedLogs.push(l);
+                        }
+                    });
+                } catch (e) {
+                    console.warn("Firestore fetch access_history warning:", e);
+                }
+            }
+
+            // Sort by timestamp desc
+            combinedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            allHistoryLogs = combinedLogs;
+
+            renderHistoryTable(allHistoryLogs);
+            renderOpenedPcs(allHistoryLogs);
+            updateStatsCounters(allHistoryLogs);
+        }
+
+        function renderHistoryTable(logs) {
+            const tbody = document.getElementById('historyTableBody');
+            const countInfo = document.getElementById('historyLogCountInfo');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">
+                            <i class="fi fi-rr-info text-2xl mb-1 block text-slate-300"></i>
+                            No access history logs recorded yet. Click "Log Visit Now" above to add an entry.
+                        </td>
+                    </tr>
+                `;
+                countInfo.innerText = "Showing 0 log entries";
+                return;
+            }
+
+            countInfo.innerText = `Showing ${logs.length} logged website access entries`;
+
+            tbody.innerHTML = logs.map(item => {
+                const dateObj = new Date(item.timestamp);
+                const timeAgoStr = getTimeAgo(dateObj);
+                const isCurrent = item.ip === currentClientIp;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors ${isCurrent ? 'bg-blue-50/30' : ''}">
+                        <td class="py-3 px-6 whitespace-nowrap">
+                            <div class="font-semibold text-slate-900">${item.formattedTime || dateObj.toLocaleString()}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">${timeAgoStr}</div>
+                        </td>
+                        <td class="py-3 px-6 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold ${isCurrent ? 'text-blue-700' : 'text-slate-800'}">${item.ip || '127.0.0.1'}</span>
+                                ${isCurrent ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-100 text-blue-700">YOU</span>' : ''}
+                            </div>
+                            <div class="text-[10px] text-slate-400 max-w-xs truncate">${item.location || 'Network Client'}</div>
+                        </td>
+                        <td class="py-3 px-6 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/60">
+                                <i class="fi fi-rr-file text-[10px] text-blue-500"></i>
+                                ${item.page || 'index.html'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 whitespace-nowrap">
+                            <div class="font-medium text-slate-800">${item.browser || 'Web Browser'}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">${item.os || 'OS'}</div>
+                        </td>
+                        <td class="py-3 px-6 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                ${item.status || 'Active'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-6 whitespace-nowrap text-right">
+                            <button onclick="copyToClipboard('${item.ip}')" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Copy IP">
+                                <i class="fi fi-rr-copy text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterHistoryLogs() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderHistoryTable(allHistoryLogs);
+                return;
+            }
+
+            const filtered = allHistoryLogs.filter(l =>
+                (l.ip && l.ip.toLowerCase().includes(query)) ||
+                (l.page && l.page.toLowerCase().includes(query)) ||
+                (l.browser && l.browser.toLowerCase().includes(query)) ||
+                (l.os && l.os.toLowerCase().includes(query)) ||
+                (l.location && l.location.toLowerCase().includes(query))
+            );
+
+            renderHistoryTable(filtered);
+        }
+
+        function updateStatsCounters(logs) {
+            document.getElementById('statTotalVisits').innerText = logs.length;
+
+            const uniqueIPs = new Set(logs.map(l => l.ip)).size;
+            document.getElementById('statUniqueIPs').innerText = uniqueIPs;
+        }
+
+        function clearHistoryLogs() {
+            if (confirm("Are you sure you want to clear local access history logs?")) {
+                localStorage.removeItem('festie_access_history');
+                showToast("Cleared local access history logs", "info");
+                loadHistoryLogs();
+            }
+        }
+
+        function exportHistoryCSV() {
+            if (!allHistoryLogs || allHistoryLogs.length === 0) {
+                showToast("No history logs available to export", "error");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,ID,Timestamp,IP Address,Page,Browser,OS,Location,Status\n";
+            allHistoryLogs.forEach(l => {
+                const row = [
+                    `"${l.id || ''}"`,
+                    `"${l.formattedTime || l.timestamp || ''}"`,
+                    `"${l.ip || ''}"`,
+                    `"${l.page || ''}"`,
+                    `"${l.browser || ''}"`,
+                    `"${l.os || ''}"`,
+                    `"${(l.location || '').replace(/"/g, '""')}"`,
+                    `"${l.status || 'Active'}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `website_access_history_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("ðŸ“¥ Exported Access History CSV!", "success");
+        }
+
+        // ------------------------------------------------------------------------
+        // 5. Database Diagnostics & Telemetry
+        // ------------------------------------------------------------------------
+        async function fetchCollectionCounts() {
+            if (!db) {
+                document.getElementById('statDbStatusText').innerText = "Offline/Mock";
+                document.getElementById('statDbStatusText').className = "text-2xl font-black text-amber-500";
+                return;
+            }
+
+            const collections = ['candidates', 'programs', 'teams', 'access_history'];
+            for (const colName of collections) {
+                try {
+                    const snap = await db.collection(colName).get();
+                    const count = snap.size;
+
+                    if (colName === 'candidates') {
+                        document.getElementById('cntCandidates').innerText = count;
+                        document.getElementById('collCandidatesCount').innerText = `${count} docs`;
+                    } else if (colName === 'programs') {
+                        document.getElementById('cntPrograms').innerText = count;
+                        document.getElementById('collProgramsCount').innerText = `${count} docs`;
+                    } else if (colName === 'teams') {
+                        document.getElementById('cntTeams').innerText = count;
+                        document.getElementById('collTeamsCount').innerText = `${count} docs`;
+                    } else if (colName === 'access_history') {
+                        document.getElementById('cntAccessLogs').innerText = count;
+                        document.getElementById('collAccessCount').innerText = `${count} docs`;
+                    }
+                } catch (e) {
+                    console.warn(`Error counting collection ${colName}:`, e);
+                }
+            }
+        }
+
+        async function runDbSpeedTest() {
+            if (!db) {
+                showToast("Database not initialized", "error");
+                return;
+            }
+
+            document.getElementById('testWriteLatency').innerText = "Testing Write...";
+            document.getElementById('testReadLatency').innerText = "Testing Read...";
+            showToast("âš¡ Running Firestore database latency benchmark...", "info");
+
+            const startTime = performance.now();
+            const testDocRef = db.collection('system_diagnostics').doc('speed_test');
+
+            try {
+                // Measure Write Speed
+                const writeStart = performance.now();
+                await testDocRef.set({
+                    lastTested: firebase.firestore.FieldValue.serverTimestamp(),
+                    clientIp: currentClientIp,
+                    userAgent: navigator.userAgent
+                });
+                const writeLatency = Math.round(performance.now() - writeStart);
+                document.getElementById('testWriteLatency').innerText = `${writeLatency} ms`;
+
+                // Measure Read Speed
+                const readStart = performance.now();
+                const snap = await testDocRef.get();
+                const readLatency = Math.round(performance.now() - readStart);
+                document.getElementById('testReadLatency').innerText = `${readLatency} ms`;
+
+                const totalLatency = Math.round(performance.now() - startTime);
+                document.getElementById('statDbLatency').innerText = `${totalLatency} ms RTT`;
+                document.getElementById('statDbStatusText').innerText = "Healthy (Online)";
+                document.getElementById('statDbStatusText').className = "text-2xl font-black text-emerald-600";
+
+                showToast(`âœ… Database Speed Test Complete! Read: ${readLatency}ms | Write: ${writeLatency}ms`, "success");
+            } catch (err) {
+                console.error("DB Speed Test Failed:", err);
+                document.getElementById('testWriteLatency').innerText = "Failed";
+                document.getElementById('testReadLatency').innerText = "Failed";
+                document.getElementById('statDbStatusText').innerText = "Restricted";
+                document.getElementById('statDbStatusText').className = "text-2xl font-black text-rose-500";
+                showToast("âŒ Database Speed Test encounter permission restriction", "error");
+            }
+        }
+
+        // ------------------------------------------------------------------------
+        // 6. UI Helpers & Utility Functions
+        // ------------------------------------------------------------------------
+        function renderOpenedPcs(logs) {
+            const grid = document.getElementById('pcsGrid');
+            const badge = document.getElementById('pcsCountBadge');
+            if (!logs || logs.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-8 text-center text-slate-400">
+                        <i class="fi fi-rr-computer text-2xl mb-1 block text-slate-300"></i>
+                        No registered PCs found yet. Click "Log Visit Now" above to register an entry.
+                    </div>
+                `;
+                if (badge) badge.innerText = "0 Unique PCs";
+                return;
+            }
+
+            // Group by IP
+            const pcMap = {};
+            logs.forEach(log => {
+                const ipKey = log.ip || '127.0.0.1';
+                if (!pcMap[ipKey]) {
+                    pcMap[ipKey] = {
+                        ip: ipKey,
+                        os: log.os || 'Windows PC',
+                        browser: log.browser || 'Browser',
+                        location: log.location || 'Local Network',
+                        firstSeen: log.timestamp,
+                        lastSeen: log.timestamp,
+                        count: 1
+                    };
+                } else {
+                    pcMap[ipKey].count++;
+                    if (new Date(log.timestamp) > new Date(pcMap[ipKey].lastSeen)) {
+                        pcMap[ipKey].lastSeen = log.timestamp;
+                    }
+                    if (new Date(log.timestamp) < new Date(pcMap[ipKey].firstSeen)) {
+                        pcMap[ipKey].firstSeen = log.timestamp;
+                    }
+                }
+            });
+
+            const pcsList = Object.values(pcMap);
+            if (badge) badge.innerText = `${pcsList.length} Unique PC${pcsList.length > 1 ? 's' : ''}`;
+
+            grid.innerHTML = pcsList.map(pc => {
+                const isCurrent = pc.ip === currentClientIp;
+                const activeInfo = window._activeSystemsMap ? window._activeSystemsMap[pc.ip] : null;
+                const isOnline = activeInfo ? activeInfo.isOnline : (Date.now() - new Date(pc.lastSeen).getTime() < 60000);
+                const lastSeenAgo = getTimeAgo(new Date(pc.lastSeen));
+
+                return `
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-3 ${isCurrent ? 'ring-2 ring-blue-500/40 bg-blue-50/20' : ''}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-slate-100 text-blue-600 flex items-center justify-center font-bold relative">
+                                    <i class="fi fi-rr-computer text-lg"></i>
+                                    ${isOnline ? '<span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></span>' : ''}
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                        ${pc.os}
+                                        ${isCurrent ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-blue-100 text-blue-700">THIS PC</span>' : ''}
+                                    </h4>
+                                    <p class="text-[11px] font-mono text-slate-500">${pc.ip}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-xl text-xs font-black ${isOnline ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-600'}">
+                                ${isOnline ? 'ðŸŸ¢ ONLINE' : pc.count + ' Sessions'}
+                            </span>
+                        </div>
+                        <div class="text-xs space-y-1.5 pt-3 border-t border-slate-100 text-slate-600 font-mono">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Browser:</span>
+                                <span class="font-semibold text-slate-800">${pc.browser}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Location:</span>
+                                <span class="font-semibold text-slate-800 truncate max-w-[150px]">${pc.location || 'Active Network'}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Status / Activity:</span>
+                                <span class="font-bold ${isOnline ? 'text-emerald-600' : 'text-slate-500'}">${isOnline ? 'Active Now' : lastSeenAgo}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tabName) {
+            document.getElementById('viewTabHistory').classList.add('hidden');
+            const pcsTab = document.getElementById('viewTabPcs');
+            if (pcsTab) pcsTab.classList.add('hidden');
+            document.getElementById('viewTabDb').classList.add('hidden');
+            document.getElementById('viewTabClient').classList.add('hidden');
+
+            document.getElementById('tabBtnHistory').className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+            const pcsBtn = document.getElementById('tabBtnPcs');
+            if (pcsBtn) pcsBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+            document.getElementById('tabBtnDb').className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+            document.getElementById('tabBtnClient').className = "px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900";
+
+            if (tabName === 'history') {
+                document.getElementById('viewTabHistory').classList.remove('hidden');
+                document.getElementById('tabBtnHistory').className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm";
+            } else if (tabName === 'pcs') {
+                if (pcsTab) pcsTab.classList.remove('hidden');
+                if (pcsBtn) pcsBtn.className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm";
+            } else if (tabName === 'db') {
+                document.getElementById('viewTabDb').classList.remove('hidden');
+                document.getElementById('tabBtnDb').className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm";
+            } else if (tabName === 'client') {
+                document.getElementById('viewTabClient').classList.remove('hidden');
+                document.getElementById('tabBtnClient').className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-900 shadow-sm";
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 5) return "Just now";
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Copied ${text} to clipboard!`, "success");
+            }).catch(() => {
+                showToast(`IP: ${text}`);
+            });
+        }
+
+        function setupAutoRefresh() {
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            const val = parseInt(document.getElementById('autoRefreshSelect').value, 10);
+            if (val > 0) {
+                autoRefreshTimer = setInterval(() => {
+                    loadHistoryLogs();
+                    fetchCollectionCounts();
+                }, val * 1000);
+            }
+        }
+
+        function listenToActiveSystems() {
+            if (!db) return;
+            db.collection('active_systems').onSnapshot(snap => {
+                const now = Date.now();
+                let onlineCount = 0;
+                const activeMap = {};
+
+                snap.docs.forEach(doc => {
+                    const data = doc.data();
+                    const pingMs = data.lastPingMs || (data.serverTime ? data.serverTime.toMillis() : 0);
+                    const isOnline = (now - pingMs) < 45000;
+                    if (isOnline) onlineCount++;
+                    activeMap[data.ip] = {
+                        isOnline: isOnline,
+                        lastPingMs: pingMs,
+                        page: data.page || 'dashboard.html',
+                        os: data.os || 'Windows PC',
+                        browser: data.browser || 'Browser'
+                    };
+                });
+
+                window._activeSystemsMap = activeMap;
+                const statElem = document.getElementById('statActiveSystemsCount');
+                if (statElem) {
+                    statElem.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-slow"></span> ${onlineCount} Online`;
+                }
+                const pcsBadge = document.getElementById('pcsCountBadge');
+                if (pcsBadge) {
+                    pcsBadge.innerText = `${onlineCount} Currently Online System${onlineCount !== 1 ? 's' : ''}`;
+                }
+
+                if (allHistoryLogs && allHistoryLogs.length > 0) {
+                    renderOpenedPcs(allHistoryLogs);
+                }
+            }, err => console.warn("Active systems listener warning:", err));
+        }
+
+        function refreshAllData() {
+            fetchClientIPAndGeo();
+            loadHistoryLogs();
+            fetchCollectionCounts();
+        }
+
+        // Initialize Page
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchClientIPAndGeo();
+            await logCurrentVisit(false);
+            loadHistoryLogs();
+            fetchCollectionCounts();
+            listenToActiveSystems();
+            setupAutoRefresh();
+        });
+    </script>
+</body>
+
+</html>
+

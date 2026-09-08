@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Dashboard — Festival</title>
+    <title>Media Dashboard â€” Festival</title>
     <script src="fest-favicon.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel='stylesheet'
@@ -79,6 +79,7 @@
             animation: fadeIn 0.3s ease-out forwards;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg text-gray-900 font-sans h-[100dvh] overflow-hidden">
@@ -690,18 +691,18 @@
 
                 } catch (err) {
                     console.error(err);
-                    showToast("❌ Failed to upload " + file.name);
+                    showToast("âŒ Failed to upload " + file.name);
                 }
             }
 
-            showToast("✅ Successfully uploaded " + selectedFiles.length + " images!");
+            showToast("âœ… Successfully uploaded " + selectedFiles.length + " images!");
             setTimeout(closeUploadModal, 1000);
         }
 
         async function deleteMedia(id) {
             if (confirm("Delete this image permanently?")) {
                 await db.collection('mediaGallery').doc(id).delete();
-                showToast("🗑️ Image removed.");
+                showToast("ðŸ—‘ï¸ Image removed.");
             }
         }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -48,6 +48,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-[#f8f9fc] min-h-screen text-gray-800 p-4 sm:p-6 lg:p-8">
@@ -275,11 +276,11 @@
                 topicRegistration: isEnabled,
                 updatedAt: new Date()
             }).then(() => {
-                const msg = isEnabled ? `✅ Topic Registration ENABLED for ${programName}` : `ℹ️ Topic Registration DISABLED for ${programName}`;
+                const msg = isEnabled ? `âœ… Topic Registration ENABLED for ${programName}` : `â„¹ï¸ Topic Registration DISABLED for ${programName}`;
                 showToast(msg, isEnabled ? "#10B981" : "#6B7280");
             }).catch(err => {
                 console.error(err);
-                showToast("❌ Update failed: " + err.message, "#EF4444");
+                showToast("âŒ Update failed: " + err.message, "#EF4444");
             });
         }
 
@@ -303,10 +304,10 @@
             });
 
             batch.commit().then(() => {
-                showToast(`✅ ${actionText}D Topic Registration for all programs in ${sectionName}`, isEnabled ? "#10B981" : "#6B7280");
+                showToast(`âœ… ${actionText}D Topic Registration for all programs in ${sectionName}`, isEnabled ? "#10B981" : "#6B7280");
             }).catch(err => {
                 console.error(err);
-                showToast("❌ Bulk update failed: " + err.message, "#EF4444");
+                showToast("âŒ Bulk update failed: " + err.message, "#EF4444");
             });
         }
 
@@ -464,3 +465,4 @@
 </body>
 
 </html>
+

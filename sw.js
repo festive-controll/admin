@@ -13,6 +13,7 @@ const URLS_TO_CACHE = [
     './topicRegistration.html',
     './registeredTopics.html',
     './subjectTab.html',
+    './history.html',
     './viewCandidateData.html',
     './viewProgramData.html',
     './viewSectionData.html',

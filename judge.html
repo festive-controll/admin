@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -97,6 +97,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body>
 
@@ -193,7 +194,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             let pId = urlParams.get('id') || localStorage.getItem('viewProgramId');
             if (!pId) {
-                document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">❌ Program ID not specified.</div>`;
+                document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">âŒ Program ID not specified.</div>`;
                 return;
             }
 
@@ -223,7 +224,7 @@
                 // 3. Fetch program details
                 const pDoc = await db.collection('programs').doc(pId).get();
                 if (!pDoc.exists) {
-                    document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">❌ Program document not found.</div>`;
+                    document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">âŒ Program document not found.</div>`;
                     return;
                 }
                 activeProg = { id: pDoc.id, ...pDoc.data() };
@@ -428,13 +429,13 @@
                 }
 
                 document.getElementById('topProgTitle').innerText = `${activeProg.name || 'Program'} (${activeProg.code || ''})`;
-                document.getElementById('topProgMeta').innerText = `VENUE: ${activeProg.resolvedVenue} • SECTION: ${activeProg.section || 'BIDAYA'}`;
+                document.getElementById('topProgMeta').innerText = `VENUE: ${activeProg.resolvedVenue} â€¢ SECTION: ${activeProg.section || 'BIDAYA'}`;
 
                 await renderSheets();
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">❌ Error loading judgement sheet data: ${err.message}</div>`;
+                document.getElementById('sheetsContainer').innerHTML = `<div class="text-center py-20 text-red-500 font-bold">âŒ Error loading judgement sheet data: ${err.message}</div>`;
             }
         }
 
@@ -648,7 +649,7 @@
         }
 
         async function exportPdf() {
-            showToast("⏳ Generating PDF...", "#f59e0b");
+            showToast("â³ Generating PDF...", "#f59e0b");
             try {
                 const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
                 if (!jsPDFLib) throw new Error("jsPDF library not loaded");
@@ -694,15 +695,15 @@
                 }
 
                 pdf.save(`Judgesheet_${activeProg?.code || 'PRG'}_${currentJudgeCount}Judges.pdf`);
-                showToast("✅ PDF downloaded successfully!");
+                showToast("âœ… PDF downloaded successfully!");
             } catch(e) {
                 console.error(e);
-                showToast("❌ PDF Export failed: " + e.message, "#ef4444");
+                showToast("âŒ PDF Export failed: " + e.message, "#ef4444");
             }
         }
 
         async function exportPng() {
-            showToast("⏳ Rendering PNG image...", "#f59e0b");
+            showToast("â³ Rendering PNG image...", "#f59e0b");
             try {
                 const firstSheet = document.getElementById(`pdfSingleSheet_1`);
                 let dataUrl = null;
@@ -719,11 +720,11 @@
                     a.download = `Judgesheet_${activeProg?.code || 'PRG'}.png`;
                     a.href = dataUrl;
                     a.click();
-                    showToast("✅ PNG image downloaded!");
+                    showToast("âœ… PNG image downloaded!");
                 }
             } catch(e) {
                 console.error(e);
-                showToast("❌ PNG Export failed: " + e.message, "#ef4444");
+                showToast("âŒ PNG Export failed: " + e.message, "#ef4444");
             }
         }
 
@@ -731,3 +732,4 @@
     </script>
 </body>
 </html>
+

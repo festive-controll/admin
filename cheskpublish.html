@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -37,6 +37,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
 
@@ -171,7 +172,7 @@
                     resultsPublished: shouldPublish
                 });
                 Toastify({
-                    text: shouldPublish ? "✅ Results published!" : "ℹ️ Results unpublished.",
+                    text: shouldPublish ? "âœ… Results published!" : "â„¹ï¸ Results unpublished.",
                     duration: 3000,
                     gravity: "top",
                     position: "right",
@@ -180,7 +181,7 @@
             } catch (err) {
                 console.error("Error updating publish status: ", err);
                 Toastify({
-                    text: "❌ Error updating status.",
+                    text: "âŒ Error updating status.",
                     duration: 3000,
                     gravity: "top",
                     position: "right",
@@ -191,3 +192,4 @@
     </script>
 </body>
 </html>
+

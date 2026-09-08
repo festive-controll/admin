@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -87,6 +87,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
@@ -225,7 +226,7 @@
                 class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                 <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                     <span id="results-count">Showing results</span>
-                    <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
+                    <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
                     <div class="relative ml-2 sm:ml-0">
                         <select id="cand-per-page" onchange="changeCandPerPage(this.value)"
                             class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -433,7 +434,7 @@
         var editingCandidateId = null;
         var activeDropdownId = null;
         var activeTeamsData = [];
-        var allTeamsColorMap = {};  // team name → color (all teams, for display)
+        var allTeamsColorMap = {};  // team name â†’ color (all teams, for display)
         var activeSectionsData = [];
         var candCurrentPage = 1;
         var candItemsPerPage = 25;
@@ -447,7 +448,7 @@
             if (!file) return;
 
             if (file.size > 2 * 1024 * 1024) {
-                return showToast("❌ File too large. Max 2MB allowed.");
+                return showToast("âŒ File too large. Max 2MB allowed.");
             }
 
             const preview = document.getElementById('candImagePreview');
@@ -472,13 +473,13 @@
 
                 if (data.secure_url) {
                     selectedImageUrl = data.secure_url;
-                    showToast("✅ Photo uploaded!");
+                    showToast("âœ… Photo uploaded!");
                 } else {
                     throw new Error("Upload failed");
                 }
             } catch (err) {
                 console.error(err);
-                showToast("❌ Failed to upload photo.");
+                showToast("âŒ Failed to upload photo.");
                 preview.innerHTML = `<i class="fi fi-rr-user text-3xl text-gray-200"></i>`;
                 selectedImageUrl = null;
             } finally {
@@ -788,10 +789,10 @@
 
                 batch.commit().then(() => {
                     selectedIds.clear();
-                    typeof showToast === 'function' && showToast("✅ Candidates deleted!");
+                    typeof showToast === 'function' && showToast("âœ… Candidates deleted!");
                 }).catch(err => {
                     console.error("Error deleting candidates:", err);
-                    typeof showToast === 'function' && showToast("❌ Error: " + err.message);
+                    typeof showToast === 'function' && showToast("âŒ Error: " + err.message);
                 });
             }
         }
@@ -805,7 +806,7 @@
                 });
                 batch.commit().then(() => {
                     selectedIds.clear();
-                    typeof showToast === 'function' && showToast("✅ Candidates exported to Auction!");
+                    typeof showToast === 'function' && showToast("âœ… Candidates exported to Auction!");
                     renderUI();
                 });
             }
@@ -842,10 +843,10 @@
                 batch.commit().then(() => {
                     selectedIds.delete(id);
                     activeDropdownId = null;
-                    typeof showToast === 'function' && showToast("✅ Candidate deleted!");
+                    typeof showToast === 'function' && showToast("âœ… Candidate deleted!");
                 }).catch(err => {
                     console.error("Error deleting candidate:", err);
-                    typeof showToast === 'function' && showToast("❌ Error: " + err.message);
+                    typeof showToast === 'function' && showToast("âŒ Error: " + err.message);
                 });
             }
         }
@@ -947,7 +948,7 @@
         }
 
         window.reassignChestNumbers = async function () {
-            if (!confirm('⚠️ This will REASSIGN chest numbers for ALL candidates based on their team Series:\n\nSeries 100 → 101, 102...\nSeries 200 → 201, 202...\nSeries 300 → 301, 302...\n\nThis action cannot be undone. Continue?')) return;
+            if (!confirm('âš ï¸ This will REASSIGN chest numbers for ALL candidates based on their team Series:\n\nSeries 100 â†’ 101, 102...\nSeries 200 â†’ 201, 202...\nSeries 300 â†’ 301, 302...\n\nThis action cannot be undone. Continue?')) return;
 
             const btn = document.getElementById('btn-reassign-chest');
             const origHtml = btn.innerHTML;
@@ -961,7 +962,7 @@
                     .sort((a, b) => parseInt(a.chestNoSeries) - parseInt(b.chestNoSeries));
 
                 if (sortedTeams.length === 0) {
-                    typeof showToast === 'function' && showToast('❌ No teams with chest series found. Set "Chest No. Series Base" in Teams settings first.');
+                    typeof showToast === 'function' && showToast('âŒ No teams with chest series found. Set "Chest No. Series Base" in Teams settings first.');
                     return;
                 }
 
@@ -1027,10 +1028,10 @@
                 });
 
                 for (const batch of batches) await batch.commit();
-                typeof showToast === 'function' && showToast(`✅ Reassigned chest numbers for ${opCount} candidates!`);
+                typeof showToast === 'function' && showToast(`âœ… Reassigned chest numbers for ${opCount} candidates!`);
             } catch (err) {
                 console.error('Reassign error:', err);
-                typeof showToast === 'function' && showToast('❌ Error: ' + err.message);
+                typeof showToast === 'function' && showToast('âŒ Error: ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = origHtml;
@@ -1039,7 +1040,7 @@
 
         window.exportToCSV = function () {
             if (candidatesData.length === 0) {
-                typeof showToast === 'function' && showToast("❌ No data to export");
+                typeof showToast === 'function' && showToast("âŒ No data to export");
                 return;
             }
 
@@ -1066,7 +1067,7 @@
             link.click();
             document.body.removeChild(link);
 
-            typeof showToast === 'function' && showToast("✅ CSV Exported!");
+            typeof showToast === 'function' && showToast("âœ… CSV Exported!");
         };
 
         window.autoGenerateChestNo = function () {
@@ -1081,7 +1082,7 @@
             const seriesBase = teamObj && teamObj.chestNoSeries ? parseInt(teamObj.chestNoSeries) : null;
 
             if (!seriesBase || !selectedTeam) {
-                // No team/series — fallback to global max + 1
+                // No team/series â€” fallback to global max + 1
                 let maxChest = 0;
                 candidatesData.forEach(c => {
                     let num = parseInt(String(c.chestNo).replace(/\D/g, ''), 10) || 0;
@@ -1089,7 +1090,7 @@
                 });
                 chestInput.value = maxChest + 1;
             } else {
-                // Block: chestNoSeries=100 → 100-199, chestNoSeries=200 → 200-299
+                // Block: chestNoSeries=100 â†’ 100-199, chestNoSeries=200 â†’ 200-299
                 const blockStart = seriesBase + 3;   // Ordinary candidates start at seriesBase + 3
                 const blockEnd = seriesBase + 98;  // 101+98=199, 201+98=299
 
@@ -1204,7 +1205,7 @@
             const active = document.getElementById('candActive').checked;
 
             if (!chestNo || !name || !section) {
-                return typeof showToast === 'function' ? showToast("❌ Please fill out all required fields (*)") : alert("❌ Please fill out all required fields (*)");
+                return typeof showToast === 'function' ? showToast("âŒ Please fill out all required fields (*)") : alert("âŒ Please fill out all required fields (*)");
             }
 
             // Preserve existing team and auction fields if editing to prevent resetting bid details
@@ -1255,7 +1256,7 @@
 
             if (editingCandidateId !== null) {
                 db.collection('candidates').doc(editingCandidateId).update(payload).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Candidate updated!");
+                    typeof showToast === 'function' && showToast("âœ… Candidate updated!");
                     window.closeCandidateSidebar();
                 });
             } else {
@@ -1263,7 +1264,7 @@
                     payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 }
                 db.collection('candidates').add(payload).then(() => {
-                    typeof showToast === 'function' && showToast("✅ Candidate added!");
+                    typeof showToast === 'function' && showToast("âœ… Candidate added!");
                     window.closeCandidateSidebar();
                 });
             }
@@ -1276,7 +1277,7 @@
         if (window.candFestDataUnsub) window.candFestDataUnsub();
 
         if (typeof db !== 'undefined') {
-            // 0. All-teams color listener (no isActive filter — ensures colors always show)
+            // 0. All-teams color listener (no isActive filter â€” ensures colors always show)
             db.collection('teams').onSnapshot(snap => {
                 allTeamsColorMap = {};
                 snap.forEach(doc => {
@@ -1307,7 +1308,7 @@
                 }
             });
 
-            // 1. Teams Listener (Only active) — for sidebar dropdown & series data
+            // 1. Teams Listener (Only active) â€” for sidebar dropdown & series data
             window.candTeamsUnsub = db.collection('teams').where('isActive', '==', true).onSnapshot(snap => {
                 activeTeamsData = [];
                 const tmTeam = isTeamManager ? localStorage.getItem('managerTeam') : null;
@@ -1499,7 +1500,7 @@
                                 </div>
                                 <div>
                                     <h3 class="text-[16px] font-bold text-gray-900 leading-tight" id="tm-modal-cand-name">Candidate Name</h3>
-                                    <p class="text-[12px] text-gray-500 mt-0.5" id="tm-modal-cand-sub">Team • Section • Class</p>
+                                    <p class="text-[12px] text-gray-500 mt-0.5" id="tm-modal-cand-sub">Team â€¢ Section â€¢ Class</p>
                                 </div>
                             </div>
                             <button onclick="window.closeTMRegisteredProgramsModal()" class="w-9 h-9 rounded-full bg-white border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-all shadow-sm">
@@ -1535,7 +1536,7 @@
 
             if (chestBadge) chestBadge.innerText = cand.chestNo ? '#' + cand.chestNo : '#--';
             if (nameEl) nameEl.innerText = cand.name || 'Candidate';
-            if (subEl) subEl.innerText = `${cand.team || 'Team'} • ${cand.section || 'Section'} ${cand.class ? '• Class ' + cand.class : ''}`;
+            if (subEl) subEl.innerText = `${cand.team || 'Team'} â€¢ ${cand.section || 'Section'} ${cand.class ? 'â€¢ Class ' + cand.class : ''}`;
 
             if (bodyEl) {
                 bodyEl.innerHTML = `
@@ -1663,7 +1664,7 @@
                                                 <h4 class="text-[14px] font-bold text-gray-900 group-hover:text-brand-blue transition-colors leading-tight">${p.name}</h4>
                                                 <div class="flex items-center gap-2 mt-1">
                                                     <span class="text-[11px] text-gray-500 font-medium">${p.section}</span>
-                                                    <span class="text-gray-300">•</span>
+                                                    <span class="text-gray-300">â€¢</span>
                                                     <span class="text-[10px] text-gray-600 font-bold bg-white border border-gray-200 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.type}</span>
                                                 </div>
                                             </div>

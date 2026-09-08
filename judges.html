@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -77,6 +77,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
@@ -235,7 +236,7 @@
         function copyShareableLink() {
             const url = new URL('judgeRegistration.html', window.location.href).href;
             navigator.clipboard.writeText(url).then(() => {
-                showToast("✅ Shareable link copied!");
+                showToast("âœ… Shareable link copied!");
             }).catch(err => {
                 console.error("Could not copy text: ", err);
             });
@@ -297,7 +298,7 @@
         }
 
         async function saveJudge() {
-            if (!db) return typeof showToast === 'function' ? showToast("❌ Database connection error (db is null)") : alert("❌ Database connection error");
+            if (!db) return typeof showToast === 'function' ? showToast("âŒ Database connection error (db is null)") : alert("âŒ Database connection error");
 
             const name = document.getElementById('judgeName').value.trim();
             const username = document.getElementById('judgeUsername').value.trim();
@@ -305,7 +306,7 @@
             const whatsapp = document.getElementById('judgeWhatsapp').value.trim();
 
             if (!name || !username || !pass || !whatsapp) {
-                return typeof showToast === 'function' ? showToast("❌ All fields are required") : alert("Required fields missing");
+                return typeof showToast === 'function' ? showToast("âŒ All fields are required") : alert("Required fields missing");
             }
 
             const btn = document.getElementById('btn-save-judge');
@@ -319,15 +320,15 @@
             try {
                 if (editingJudgeId) {
                     await db.collection('judges').doc(editingJudgeId).update(payload);
-                    typeof showToast === 'function' && showToast("✅ Judge updated!");
+                    typeof showToast === 'function' && showToast("âœ… Judge updated!");
                 } else {
                     payload.createdAt = new Date();
                     await db.collection('judges').add(payload);
-                    typeof showToast === 'function' && showToast("✅ Judge added!");
+                    typeof showToast === 'function' && showToast("âœ… Judge added!");
                 }
                 closeJudgeSidebar();
             } catch (err) {
-                typeof showToast === 'function' ? showToast("❌ Error: " + err.message) : alert("❌ Error: " + err.message);
+                typeof showToast === 'function' ? showToast("âŒ Error: " + err.message) : alert("âŒ Error: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fi fi-rr-disk text-xs"></i> <span id="btn-save-judge-text">${originalText}</span>`;
@@ -511,7 +512,7 @@
         async function approveJudge(id) {
             try {
                 await db.collection('judges').doc(id).update({ status: 'approved' });
-                showToast("✅ Judge approved");
+                showToast("âœ… Judge approved");
             } catch (e) {
                 console.error(e);
             }
@@ -521,7 +522,7 @@
             if (confirm("Are you sure you want to reject this judge?")) {
                 try {
                     await db.collection('judges').doc(id).update({ status: 'disapproved' });
-                    showToast("✅ Judge rejected");
+                    showToast("âœ… Judge rejected");
                 } catch (e) {
                     console.error(e);
                 }
@@ -533,7 +534,7 @@
                 try {
                     await db.collection('judges').doc(id).delete();
                     selectedJudgeIds.delete(id);
-                    showToast("✅ Judge deleted");
+                    showToast("âœ… Judge deleted");
                 } catch (e) {
                     console.error(e);
                 }
@@ -553,7 +554,7 @@
                     });
                     await batch.commit();
                     selectedJudgeIds.clear();
-                    typeof showToast === 'function' && showToast("✅ Selected judges deleted");
+                    typeof showToast === 'function' && showToast("âœ… Selected judges deleted");
                 } catch (e) {
                     console.error(e);
                 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -44,6 +44,7 @@
             line-height: 1;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-transparent text-brand-textDark font-sans h-[100dvh] overflow-hidden w-full relative flex flex-col">
@@ -80,7 +81,7 @@
         <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <div>
                 <h2 class="text-[15px] font-bold text-gray-800" id="templateSidebarTitle">Add Template</h2>
-                <p id="templateSidebarSubtitle" class="text-[12px] text-gray-400 mt-0.5">Define name → value mapping</p>
+                <p id="templateSidebarSubtitle" class="text-[12px] text-gray-400 mt-0.5">Define name â†’ value mapping</p>
             </div>
             <button type="button" onclick="closeTemplateSidebar()"
                 class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-colors"><i
@@ -108,21 +109,29 @@
                         style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Add
                         New Entry</label>
 
-                    <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                        <!-- Percentage Input -->
+                        <div style="width: 42%;">
+                            <input type="text" id="tpl-input-percentage"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('tpl-input-label').focus();}"
+                                style="width: 100%; height: 44px; padding: 0 10px; background-color: #ffffff; border: 2px solid #334155; border-radius: 10px; font-size: 13px; font-weight: 700; color: #0f172a; outline: none; display: block;"
+                                placeholder="Percentage (e.g. 80%-100%)">
+                        </div>
+
                         <!-- Name Input -->
-                        <div style="width: 55%;">
+                        <div style="width: 28%;">
                             <input type="text" id="tpl-input-label"
                                 onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('tpl-input-points').focus();}"
-                                style="width: 100%; height: 44px; padding: 0 12px; background-color: #ffffff; border: 2px solid #334155; border-radius: 10px; font-size: 14px; font-weight: 700; color: #0f172a; outline: none; display: block;"
-                                placeholder="Name (e.g. 1st)">
+                                style="width: 100%; height: 44px; padding: 0 10px; background-color: #ffffff; border: 2px solid #334155; border-radius: 10px; font-size: 13px; font-weight: 700; color: #0f172a; outline: none; display: block;"
+                                placeholder="Pattern (e.g. 1st)">
                         </div>
 
                         <!-- Value Input -->
-                        <div style="width: 25%;">
+                        <div style="width: 22%;">
                             <input type="number" id="tpl-input-points"
                                 onkeydown="if(event.key==='Enter'){event.preventDefault();addTemplateValueCard();}"
-                                style="width: 100%; height: 44px; padding: 0 4px; background-color: #ffffff; border: 2px solid #334155; border-radius: 10px; font-size: 14px; font-weight: 900; color: #0f172a; text-align: center; outline: none; display: block;"
-                                placeholder="Value">
+                                style="width: 100%; height: 44px; padding: 0 4px; background-color: #ffffff; border: 2px solid #334155; border-radius: 10px; font-size: 13px; font-weight: 900; color: #0f172a; text-align: center; outline: none; display: block;"
+                                placeholder="Marks">
                         </div>
 
                         <!-- Add Button -->
@@ -184,7 +193,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ── Auth Guard ─────────────────────────────────────────────────
+        // â”€â”€ Auth Guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'index.html';
 
         function showToast(msg) {
@@ -218,9 +227,10 @@
 
         function renderTemplateCard(t, type) {
             const rowsHtml = (t.values || []).map(v =>
-                `<div class="grid grid-cols-2 gap-2 py-1.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 px-2 rounded-md transition-colors">
-                    <span class="text-[13px] font-bold text-gray-700">${v.label}</span>
-                    <span class="text-[13px] font-bold text-brand-blue">${v.points} <span class="text-[10px] text-gray-400 font-medium">pts</span></span>
+                `<div class="grid grid-cols-3 gap-1 py-1.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 px-2 rounded-md transition-colors items-center">
+                    <span class="text-[12px] font-semibold text-gray-500 truncate" title="${v.percentage || ''}">${v.percentage || '-'}</span>
+                    <span class="text-[13px] font-bold text-gray-700 truncate">${v.label}</span>
+                    <span class="text-[13px] font-bold text-brand-blue truncate">${v.points} <span class="text-[10px] text-gray-400 font-medium">pts</span></span>
                 </div>`
             ).join('');
 
@@ -247,9 +257,10 @@
                     </div>
                 </div>
                 <div class="px-3 pt-3 pb-5 flex-1 flex flex-col bg-gray-50/30 rounded-b-2xl">
-                    <div class="grid grid-cols-2 gap-2 pb-2 mb-1 px-2">
+                    <div class="grid grid-cols-3 gap-1 pb-2 mb-1 px-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Percentage</span>
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pattern Name</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Points</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Marks</span>
                     </div>
                     <div class="flex-1 overflow-y-auto pr-1 space-y-0.5 max-h-[160px] custom-scrollbar">
                         ${rowsHtml || '<div class="px-2 py-4 text-center"><span class="text-[12px] text-gray-400 italic">No values defined</span></div>'}
@@ -266,6 +277,7 @@
             const nameInput = document.getElementById('tpl-name');
             nameInput.value = '';
 
+            document.getElementById('tpl-input-percentage').value = '';
             document.getElementById('tpl-input-label').value = '';
             document.getElementById('tpl-input-points').value = '';
 
@@ -309,12 +321,15 @@
             }
 
             container.innerHTML = currentTemplateValues.map((v, index) => `
-                <div class="flex items-center justify-between p-3.5 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0 relative ${editingTemplateValueIndex === index ? 'bg-blue-50/20' : ''}">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <div class="w-9 h-9 rounded-xl ${editingTemplateValueIndex === index ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'} border flex items-center justify-center text-brand-blue font-black text-[13px] shrink-0 transition-colors shadow-sm">
-                            ${v.points}
+                <div class="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0 relative ${editingTemplateValueIndex === index ? 'bg-blue-50/20' : ''}">
+                    <div class="grid grid-cols-3 items-center gap-2 flex-1 min-w-0 pr-2">
+                        <span class="text-[12px] font-semibold text-gray-600 truncate" title="${v.percentage || ''}">${v.percentage || '-'}</span>
+                        <span class="text-[13px] font-bold text-gray-800 truncate">${v.label}</span>
+                        <div class="flex items-center">
+                            <span class="px-2 py-0.5 rounded-lg ${editingTemplateValueIndex === index ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'} border font-black text-[12px] text-brand-blue shadow-sm">
+                                ${v.points} pts
+                            </span>
                         </div>
-                        <div class="truncate text-[13.5px] font-bold text-gray-800 pr-2">${v.label}</div>
                     </div>
                     <div class="flex items-center gap-1.5 transition-opacity shrink-0">
                         <button type="button" onclick="editTemplateValueCard(${index})"
@@ -332,16 +347,17 @@
             const total = currentTemplateValues.reduce((s, v) => s + Number(v.points), 0);
             summary.classList.remove('hidden');
             summary.style.display = 'flex';
-            sumText.textContent = `${currentTemplateValues.length} entry(s) · Total Points: ${total}`;
+            sumText.textContent = `${currentTemplateValues.length} entry(s) Â· Total Points: ${total}`;
             sumTextH.textContent = `Total Points: ${total}`;
         }
 
         function editTemplateValueCard(index) {
             const val = currentTemplateValues[index];
+            document.getElementById('tpl-input-percentage').value = val.percentage || '';
             document.getElementById('tpl-input-label').value = val.label;
             document.getElementById('tpl-input-points').value = val.points;
             editingTemplateValueIndex = index;
-            document.getElementById('tpl-input-label').focus();
+            document.getElementById('tpl-input-percentage').focus();
 
             document.getElementById('tpl-add-label').innerText = 'Edit Entry';
             const btn = document.getElementById('tpl-add-btn');
@@ -350,23 +366,25 @@
         }
 
         function addTemplateValueCard() {
+            const percInput = document.getElementById('tpl-input-percentage');
             const labelInput = document.getElementById('tpl-input-label');
             const pointsInput = document.getElementById('tpl-input-points');
+            const percentage = percInput.value.trim();
             const label = labelInput.value.trim();
             const points = pointsInput.value;
 
-            if (!label || points === '') return showToast('<b>❌</b> Please fill both name and value.');
+            if (!label || points === '') return showToast('<b>âŒ</b> Please fill pattern name and marks.');
 
             if (editingTemplateValueIndex === -1) {
                 if (currentTemplateValues.some(v => v.label.toLowerCase() === label.toLowerCase())) {
-                    return showToast('<b>⚠️</b> Name "' + label + '" already exists.');
+                    return showToast('<b>âš ï¸</b> Pattern "' + label + '" already exists.');
                 }
-                currentTemplateValues.push({ label: label, points: Number(points) });
+                currentTemplateValues.push({ percentage: percentage, label: label, points: Number(points) });
             } else {
                 if (currentTemplateValues.some((v, idx) => idx !== editingTemplateValueIndex && v.label.toLowerCase() === label.toLowerCase())) {
-                    return showToast('<b>⚠️</b> Name "' + label + '" already exists.');
+                    return showToast('<b>âš ï¸</b> Pattern "' + label + '" already exists.');
                 }
-                currentTemplateValues[editingTemplateValueIndex] = { label: label, points: Number(points) };
+                currentTemplateValues[editingTemplateValueIndex] = { percentage: percentage, label: label, points: Number(points) };
                 editingTemplateValueIndex = -1;
                 document.getElementById('tpl-add-label').innerText = 'Add New Entry';
                 const btn = document.getElementById('tpl-add-btn');
@@ -374,9 +392,10 @@
                 btn.style.backgroundColor = '#134e8e';
             }
 
+            percInput.value = '';
             labelInput.value = '';
             pointsInput.value = '';
-            labelInput.focus();
+            percInput.focus();
             renderTemplateValueCards();
         }
 
@@ -384,6 +403,7 @@
             currentTemplateValues.splice(index, 1);
             if (editingTemplateValueIndex === index) {
                 editingTemplateValueIndex = -1;
+                document.getElementById('tpl-input-percentage').value = '';
                 document.getElementById('tpl-input-label').value = '';
                 document.getElementById('tpl-input-points').value = '';
                 document.getElementById('tpl-add-label').innerText = 'Add New Entry';
@@ -400,18 +420,18 @@
             const name = document.getElementById('tpl-name').value.trim();
             const editId = document.getElementById('tpl-edit-id').value;
 
-            if (!name) return showToast('<b>❌</b> Template Name is required.');
-            if (currentTemplateValues.length === 0) return showToast('<b>❌</b> Add at least one value & point pair.');
+            if (!name) return showToast('<b>âŒ</b> Template Name is required.');
+            if (currentTemplateValues.length === 0) return showToast('<b>âŒ</b> Add at least one value & point pair.');
 
             const payload = { name, values: currentTemplateValues, type: 'position', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
             const col = 'positionTemplates';
 
             const btn = document.querySelector('#templateSidebar button[onclick="saveTemplate()"]');
             const origHTML = btn ? btn.innerHTML : '';
-            if (btn) { btn.disabled = true; btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…'; }
+            if (btn) { btn.disabled = true; btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦'; }
 
-            const done = () => { showToast('<b>✅</b> Template ' + (editId ? 'updated' : 'added') + '!'); closeTemplateSidebar(); if (btn) { btn.disabled = false; btn.innerHTML = origHTML; } };
-            const fail = (err) => { showToast('<b>❌</b> ' + err.message); if (btn) { btn.disabled = false; btn.innerHTML = origHTML; } };
+            const done = () => { showToast('<b>âœ…</b> Template ' + (editId ? 'updated' : 'added') + '!'); closeTemplateSidebar(); if (btn) { btn.disabled = false; btn.innerHTML = origHTML; } };
+            const fail = (err) => { showToast('<b>âŒ</b> ' + err.message); if (btn) { btn.disabled = false; btn.innerHTML = origHTML; } };
 
             if (editId) {
                 db.collection(col).doc(editId).update(payload).then(done).catch(fail);
@@ -424,8 +444,8 @@
         function deleteTemplate(type, id) {
             if (confirm('Are you sure you want to delete this template?')) {
                 db.collection('positionTemplates').doc(id).delete()
-                    .then(() => showToast('<b>🗑️</b> Template deleted.'))
-                    .catch(err => showToast('<b>❌</b> ' + err.message));
+                    .then(() => showToast('<b>ðŸ—‘ï¸</b> Template deleted.'))
+                    .catch(err => showToast('<b>âŒ</b> ' + err.message));
             }
         }
 

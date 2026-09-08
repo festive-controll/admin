@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candidate Analytics — Festival Dashboard</title>
+    <title>Candidate Analytics â€” Festival Dashboard</title>
     <link rel="icon" href="favicon.ico" sizes="any">
 
     <!-- Firebase SDKs -->
@@ -47,6 +47,7 @@
         i[class^="fi-"] { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
         .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 <body class="bg-brand-bg text-brand-textDark font-sans h-[100dvh] overflow-y-auto w-full relative">
 
@@ -283,7 +284,7 @@
             _activeReady = true;
             updateRankings();
             if (!silent && typeof Toastify !== 'undefined') {
-                Toastify({ text: "✅ Candidate Analytics Refreshed", duration: 2500, gravity: "top", position: "center",
+                Toastify({ text: "âœ… Candidate Analytics Refreshed", duration: 2500, gravity: "top", position: "center",
                     style: { background: "#fff", color: "#333", boxShadow: "0 4px 15px -3px rgba(0,0,0,0.1)", borderRadius: "10px", border: "1px solid #eaeaea", padding: "12px 24px", fontSize: "14px", fontWeight: "600" } }).showToast();
             }
         }
@@ -429,7 +430,7 @@
             var fileName = type === 'overall' ? 'Top_Candidates.csv' : `Top_Candidates_${secName}.csv`;
 
             if (dataToExport.length === 0) {
-                return Toastify({ text: "❌ No data to export", duration: 3000, gravity: "top", position: "center", style: { background: "#fff", color: "#ef4444" } }).showToast();
+                return Toastify({ text: "âŒ No data to export", duration: 3000, gravity: "top", position: "center", style: { background: "#fff", color: "#ef4444" } }).showToast();
             }
 
             var headers = ["Rank", "Chest No", "Name", "Team", "Section", "Total Points", "Programs"];
@@ -443,7 +444,7 @@
             link.href = URL.createObjectURL(blob);
             link.download = fileName;
             link.click();
-            Toastify({ text: "✅ CSV Exported", duration: 2500, gravity: "top", position: "center" }).showToast();
+            Toastify({ text: "âœ… CSV Exported", duration: 2500, gravity: "top", position: "center" }).showToast();
         }
 
         window.applyFilters = applyFilters;
@@ -456,3 +457,4 @@
     </script>
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -63,6 +63,7 @@
             background-color: #f9fafb;
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg font-sans min-h-screen p-4 sm:p-6 md:p-8">
@@ -163,7 +164,7 @@
                 class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                 <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                     <span id="results-count">Showing results</span>
-                    <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
+                    <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
                     <div class="relative ml-2 sm:ml-0">
                         <select id="pp-select" onchange="window.handlePageLimit(this.value)"
                             class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 cursor-pointer text-[12px]">
@@ -361,7 +362,7 @@
                         <div class="col-span-1 text-[13px] font-medium text-gray-400 text-center">${startIdx + i + 1}</div>
                         <div class="col-span-4 flex flex-col min-w-0">
                             <span class="text-[14px] font-semibold text-gray-900 leading-tight truncate">${prog.name}</span>
-                            <span class="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">${prog.code || 'PRG'} • <span class="text-brand-blue font-bold">${prog.section}</span>${prog.category ? ` • ${prog.category}` : ''}${prog.venueType ? ` • ${prog.venueType}` : ''}</span>
+                            <span class="text-[11px] text-gray-400 mt-1 uppercase tracking-wider">${prog.code || 'PRG'} â€¢ <span class="text-brand-blue font-bold">${prog.section}</span>${prog.category ? ` â€¢ ${prog.category}` : ''}${prog.venueType ? ` â€¢ ${prog.venueType}` : ''}</span>
                         </div>
                         <div class="col-span-6 grid grid-flow-col auto-cols-auto gap-4 items-center">`;
                         rankedTeams.forEach(t => {
@@ -418,8 +419,8 @@
                         html += `
                     <div class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col h-full hover:shadow-md transition-shadow">
                         <div class="flex justify-between items-start mb-3">
-                            <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">${p.code || 'PRG'}${p.venueType ? ` • ${p.venueType}` : ''}</span>
-                            <span class="px-2 py-0.5 bg-gray-50 rounded text-[9px] font-bold text-gray-400 uppercase">${p.section}${p.category ? ` • ${p.category}` : ''}</span>
+                            <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">${p.code || 'PRG'}${p.venueType ? ` â€¢ ${p.venueType}` : ''}</span>
+                            <span class="px-2 py-0.5 bg-gray-50 rounded text-[9px] font-bold text-gray-400 uppercase">${p.section}${p.category ? ` â€¢ ${p.category}` : ''}</span>
                         </div>
                         <h3 class="text-md font-bold text-gray-900 mb-4 leading-tight truncate">${p.name}</h3>
                         <div class="flex-1 space-y-1 mb-5">${items || '<div class="text-center py-4 text-[11px] text-gray-300 italic">No winners recorded</div>'}</div>

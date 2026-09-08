@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -103,6 +103,7 @@
             box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.5);
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg text-brand-textDark font-sans h-screen overflow-hidden flex flex-col">
@@ -627,14 +628,14 @@
             reader.onload = (e) => {
                 posterConfig[target] = e.target.result;
                 renderCanvas();
-                showToast('<b>📸</b> Preview updated!');
+                showToast('<b>ðŸ“¸</b> Preview updated!');
             };
             reader.readAsDataURL(file);
         }
 
         // --- Firebase Data Persistence ---
         function savePosterConfig() {
-            showToast('<b>⏳</b> Saving configuration...');
+            showToast('<b>â³</b> Saving configuration...');
             
             // In a real app, we might upload to Storage first, then save URLs to Firestore.
             // For this setup tool, we'll save to a specific doc in 'settings' collection.
@@ -643,10 +644,10 @@
                 ...posterConfig,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                showToast('<b>✅</b> Configuration saved successfully!');
+                showToast('<b>âœ…</b> Configuration saved successfully!');
             }).catch(err => {
                 console.error(err);
-                showToast('<b>❌</b> Error saving: ' + err.message);
+                showToast('<b>âŒ</b> Error saving: ' + err.message);
             });
         }
 
@@ -700,3 +701,4 @@
 </body>
 
 </html>
+

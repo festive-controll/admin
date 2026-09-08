@@ -21,7 +21,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/cobe" rel="stylesheet">
 
 
 
@@ -90,6 +89,7 @@
             }
         }
     </style>
+<script type="module" src="/device-tracker.js"></script>
 </head>
 
 <body class="bg-brand-bg text-brand-textDark font-sans h-[100dvh] overflow-hidden w-full relative">
@@ -209,6 +209,12 @@
                             <div
                                 class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                             </div> Set Limits
+                        </a>
+                        <a href="#" data-tab="device-limits" onclick="event.preventDefault(); showOwnerTab('device-limits')"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                            </div> Team Device Limits
                         </a>
                         <a href="#" data-tab="section-order"
                             onclick="event.preventDefault(); showOwnerTab('section-order')"
@@ -509,6 +515,96 @@
                     </div>
                 </div>
 
+                <!-- Team Device Limits Tab -->
+                <div id="tpl-device-limits" class="hidden animate-in fade-in duration-500">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6 gap-4">
+                        <div>
+                            <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fi fi-rr-computer text-brand-blue"></i> Team Device Limits
+                            </h1>
+                            <p class="text-[13px] text-gray-500 mt-1">
+                                Configure allowed device limits for each team (Default: 1 device per team). A team can enter from authorized devices only.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <button onclick="resetAllTeamsDevices()"
+                                class="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                                <i class="fi fi-rr-refresh text-xs"></i> Reset All Team Devices
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats & Global Config Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-50 text-brand-blue flex items-center justify-center text-xl shrink-0">
+                                <i class="fi fi-rr-users-alt"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Teams</p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-0.5" id="dev-stat-teams">0</h3>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl shrink-0">
+                                <i class="fi fi-rr-devices"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Active Devices Connected</p>
+                                <h3 class="text-2xl font-bold text-gray-800 mt-0.5" id="dev-stat-active">0</h3>
+                            </div>
+                        </div>
+
+                        <!-- Global Policy Config -->
+                        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Default Team Limit</span>
+                                <span class="text-[11px] text-gray-400">Apply in bulk</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="global-default-device-limit" min="1" max="10" value="1"
+                                    class="w-20 px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-center font-bold outline-none focus:ring-2 focus:ring-brand-blue/20">
+                                <button onclick="applyDefaultLimitToAllTeams()"
+                                    class="bg-brand-blue text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-opacity-90 transition-all flex-1">
+                                    Set For All Teams
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teams Table Card -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50">
+                            <div class="relative w-full sm:w-80">
+                                <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                <input type="text" id="dev-team-search" oninput="renderTeamDeviceLimitsUI()" placeholder="Search team name..."
+                                    class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-[13px] outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                            </div>
+                            <div class="text-[12px] text-gray-500 font-medium">
+                                Changes to device limits take effect instantly.
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto w-full">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="border-b border-gray-100 bg-gray-50/70 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
+                                        <th class="py-3 px-6">Team</th>
+                                        <th class="py-3 px-6 text-center">Allowed Limit</th>
+                                        <th class="py-3 px-6 text-center">Active Connected</th>
+                                        <th class="py-3 px-6">Registered Devices Info</th>
+                                        <th class="py-3 px-6 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="team-device-limits-tbody" class="divide-y divide-gray-100 text-[13px]">
+                                    <tr><td colspan="5" class="py-12 text-center text-gray-400">Loading team device settings...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Section Order Tab -->
                 <div id="tpl-section-order" class="hidden animate-in fade-in duration-500">
                     <div
@@ -598,7 +694,7 @@
                                                 <td class="px-6 py-3.5 font-semibold text-gray-800 text-[13.5px]">Main
                                                     Stage</td>
                                                 <td class="px-4 py-3.5 whitespace-nowrap"><span
-                                                        class="px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-bold">📱
+                                                        class="px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-bold">ðŸ“±
                                                         On</span></td>
                                                 <td class="px-6 py-3.5 text-right whitespace-nowrap">
                                                     <div class="flex items-center justify-end gap-1.5">
@@ -1353,7 +1449,7 @@
                             class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                             <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                                 <span id="du-pagination-label">Loading...</span>
-                                <span class="text-gray-300 text-[10px] hidden sm:inline">●</span>
+                                <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
                                 <div class="relative ml-2 sm:ml-0">
                                     <select id="du-user-per-page" onchange="duChangeUserPerPage(this.value)"
                                         class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -1961,7 +2057,7 @@
                 <div class="relative">
                     <select id="ar-role"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
-                        <option value="" disabled selected>Select a role…</option>
+                        <option value="" disabled selected>Select a roleâ€¦</option>
                         <option value="Admin">Admin</option>
                         <option value="Team Manager">Team Manager</option>
                         <option value="Media">Media</option>
@@ -1981,7 +2077,7 @@
                 <div class="relative">
                     <select id="ar-team"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
-                        <option value="" disabled selected>Select a team…</option>
+                        <option value="" disabled selected>Select a teamâ€¦</option>
                     </select>
                     <i
                         class="fi fi-rr-angle-small-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
@@ -2104,7 +2200,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
-            // ── Auth Guard ─────────────────────────────────────────────────
+            // â”€â”€ Auth Guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             (function () {
                 const isLoggedIn = localStorage.getItem('isLoggedIn');
                 const userRole = localStorage.getItem('userRole');
@@ -2126,7 +2222,7 @@
         // Roles and permissions are now handled dynamically via localStorage inside functions
 
 
-        // ── Firebase ───────────────────────────────────────────────────
+        // â”€â”€ Firebase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         var firebaseConfig = {
             apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
             authDomain: "festie-s1u2h3.firebaseapp.com",
@@ -2141,7 +2237,7 @@
 
 
 
-        // ── Toast ──────────────────────────────────────────────────────
+        // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function showToast(msg) {
             Toastify({
                 text: msg, duration: 2500, gravity: "top", position: "center",
@@ -2150,7 +2246,7 @@
             }).showToast();
         }
 
-        // ── UI helpers ─────────────────────────────────────────────────
+        // â”€â”€ UI helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function updateFestDataUI(name, isActive, logos = {}) {
             const ch = name ? name.charAt(0).toUpperCase() : 'S';
             const logo = logos.logo192 || logos.logo512 || logos.logo;
@@ -2236,7 +2332,7 @@
             }
         }
 
-        // ── Real-time Session Watcher ──────────────────────────────────
+        // â”€â”€ Real-time Session Watcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const currentId = localStorage.getItem('festUserId');
         if (currentId && localStorage.getItem('userRole') !== 'owner') {
             db.collection('festUsers').doc(currentId).onSnapshot(doc => {
@@ -2268,7 +2364,7 @@
 
         // Action Menu Logic centralized below
 
-        // ── Users Panel Data Management ────────────────────────────────
+        // â”€â”€ Users Panel Data Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let duOwnerUser = null;
         let duFestUsersList = [];
         let duAllUsers = [];
@@ -2324,8 +2420,8 @@
                 <div class="col-span-4 flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-brand-blue font-bold text-sm shrink-0">${duInitial(u.name || u.username)}</div>
                     <div class="flex flex-col">
-                        <span class="text-[13.5px] font-bold text-gray-900 leading-none">${u.name || u.username || '—'}</span>
-                        <span class="text-[12px] text-gray-400 mt-1">${u.email || u.username || '—'}</span>
+                        <span class="text-[13.5px] font-bold text-gray-900 leading-none">${u.name || u.username || 'â€”'}</span>
+                        <span class="text-[12px] text-gray-400 mt-1">${u.email || u.username || 'â€”'}</span>
                     </div>
                 </div>
                 <div class="col-span-3 flex flex-col gap-1.5 items-start">
@@ -2371,10 +2467,10 @@
                     </div>
                     <div class="flex flex-col overflow-hidden w-full">
                         <h4 class="text-[15px] font-bold text-gray-900 leading-tight truncate w-full flex items-center gap-1">
-                            ${u.name || u.username || '—'}
+                            ${u.name || u.username || 'â€”'}
                             ${!isActive ? '<div class="w-2 h-2 rounded-full bg-red-500 ml-1" title="Inactive"></div>' : ''}
                         </h4>
-                        <p class="text-[12px] text-gray-500 truncate w-full mt-0.5">${u.email || u.username || '—'}</p>
+                        <p class="text-[12px] text-gray-500 truncate w-full mt-0.5">${u.email || u.username || 'â€”'}</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-between w-full mt-auto">
@@ -2387,7 +2483,7 @@
             </div>`;
         }
 
-        // ── Global Action Menu System ──────────────────────────────────
+        // â”€â”€ Global Action Menu System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let activeDropdownId = null;
         function openActionMenu(userId, event) {
             event.stopPropagation();
@@ -2439,7 +2535,7 @@
         document.addEventListener('click', closeAllDropdowns);
         window.addEventListener('scroll', closeAllDropdowns, true);
 
-        // ── Grade & Pattern Templates ─────────────────────────────────
+        // â”€â”€ Grade & Pattern Templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // Managed by embedded iframes: cardsetupGrade.html & cardsetupPosit.html
 
 
@@ -2521,7 +2617,7 @@
         db.collection('teams').where('isActive', '==', true).onSnapshot(snap => {
             const select = document.getElementById('ar-team');
             const currentVal = select ? select.value : '';
-            let optionsHTML = '<option value="" disabled selected>Select a team…</option>';
+            let optionsHTML = '<option value="" disabled selected>Select a teamâ€¦</option>';
             snap.forEach(doc => {
                 const team = doc.data();
                 optionsHTML += `<option value="${team.name}">${team.name}</option>`;
@@ -2573,7 +2669,7 @@
                     const style = document.createElement('style');
                     style.id = 'admin-offline-style';
                     style.innerHTML = `
-                        @import url('https://api.fontshare.com/v2/css?f[]=clash-grotesk@200,300,400,500,600,700&display=swap');
+                        /* Cobe font family */
                         @keyframes error-slide-up { from{opacity:0;transform:translateY(24px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
                         @keyframes error-float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
                         @keyframes bg-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -2591,7 +2687,7 @@
                             animation: error-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
                             position: relative;
                             z-index: 10;
-                            font-family: 'Clash Grotesk', sans-serif;
+                            font-family: 'Cobe', sans-serif;
                             display: flex;
                             flex-direction: column;
                             align-items: center;
@@ -2808,13 +2904,13 @@
             if (bc) bc.className = isTable ? inactiveClassList : activeClassList;
         }
 
-        // ── Tab switching (for future tabs) ────────────────────────────
+        // â”€â”€ Tab switching (for future tabs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function showOwnerTab(tab) {
             const currentRole = localStorage.getItem('userRole');
             const canManage = localStorage.getItem('userManagement') === 'true';
             const isAsstOwner = localStorage.getItem('semiOwner') === 'true';
             if (tab === 'users' && currentRole !== 'owner' && !isAsstOwner && !canManage) {
-                showToast('<b>🚫</b> Access denied.');
+                showToast('<b>ðŸš«</b> Access denied.');
                 // If this was triggered by URL, fallback to grade templates
                 if (window.location.search.includes('tab=users')) {
                     showOwnerTab('grade');
@@ -2848,6 +2944,7 @@
                 'token': 'Access Tokens',
                 'topic': 'Topic Registration',
                 'limits': 'Set Limits',
+                'device-limits': 'Team Device Limits',
                 'bulk-candidates': 'Bulk Candidate Import',
                 'bulk-programs': 'Bulk Program Import',
                 'bulk-schedule': 'Bulk Schedule Import',
@@ -2876,9 +2973,10 @@
             // Refresh dynamic content for these tabs if needed
             if (tab === 'notify') setupNotifyListener();
             if (tab === 'alerts') loadAlertsHistory();
+            if (tab === 'device-limits') loadTeamDeviceLimits();
         }
 
-        // ── Manage Account ─────────────────────────────────────────────
+        // â”€â”€ Manage Account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function toggleEdit(id) {
             const el = document.getElementById(id);
             el.disabled = !el.disabled;
@@ -2947,16 +3045,16 @@
 
             if (promise) {
                 promise.then(() => {
-                    showToast('<b>✅</b> Updated! Logout and Login again.');
+                    showToast('<b>âœ…</b> Updated! Logout and Login again.');
                     setTimeout(() => {
                         localStorage.removeItem('isLoggedIn');
                         window.location.href = 'index.html';
                     }, 1500);
-                }).catch(err => showToast('<b>❌</b> ' + err.message));
+                }).catch(err => showToast('<b>âŒ</b> ' + err.message));
             }
         }
 
-        // ── Fest Data ──────────────────────────────────────────────────
+        // â”€â”€ Fest Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function openFestData(e) {
             if (e) e.preventDefault();
             toggleDropdown();
@@ -3000,9 +3098,9 @@
             };
 
             db.collection('config').doc('festData').set(payload, { merge: true }).then(() => {
-                showToast('<b>✅</b> Fest data updated!');
+                showToast('<b>âœ…</b> Fest data updated!');
                 closeFestData();
-            }).catch(err => showToast('<b>❌</b> ' + err.message));
+            }).catch(err => showToast('<b>âŒ</b> ' + err.message));
         }
 
         window.toggleLiveDraft = function (checked) {
@@ -3010,9 +3108,9 @@
                 liveDraft: checked,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true }).then(() => {
-                showToast(`<b>✅</b> Live Draft turned ${checked ? 'ON' : 'OFF'}`);
+                showToast(`<b>âœ…</b> Live Draft turned ${checked ? 'ON' : 'OFF'}`);
             }).catch(err => {
-                showToast('<b>❌</b> ' + err.message);
+                showToast('<b>âŒ</b> ' + err.message);
                 const sidebarToggle = document.getElementById('sidebar-live-draft');
                 if (sidebarToggle) sidebarToggle.checked = !checked;
                 const settingsToggle = document.getElementById('edit-live-draft');
@@ -3022,7 +3120,7 @@
 
         function closeAllSidebars() { closeManageAccount(); closeFestData(); closeLimitSidebar(); }
 
-        // ── Assign Role Sidebar ────────────────────────────────────────
+        // â”€â”€ Assign Role Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let currentEditId = null;
 
         function openAssignRole(userId = null) {
@@ -3157,7 +3255,7 @@
             const btn = document.querySelector('#assignRoleSidebar button[onclick="arSave()"]');
             const origHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…';
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦';
 
             const payload = {
                 name,
@@ -3186,11 +3284,11 @@
                 closeAssignRole();
                 btn.disabled = false;
                 btn.innerHTML = origHTML;
-                showToast(`<b>✅</b> User successfully ${currentEditId ? 'updated' : 'added'}!`);
+                showToast(`<b>âœ…</b> User successfully ${currentEditId ? 'updated' : 'added'}!`);
             }).catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = origHTML;
-                showToast('<b>❌</b> Error: ' + err.message);
+                showToast('<b>âŒ</b> Error: ' + err.message);
             });
         }
 
@@ -3201,30 +3299,30 @@
             setTimeout(() => el.classList.remove('border-red-400', 'ring-2', 'ring-red-200'), 1800);
         }
 
-        // ── Manage User Status & Deletion ──────────────────────────────
+        // â”€â”€ Manage User Status & Deletion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function toggleUserStatus(userId, currentStatus) {
             const newStatus = !currentStatus;
             db.collection('festUsers').doc(userId).update({ isActive: newStatus })
-                .then(() => showToast(`<b>✅</b> User account ${newStatus ? 'activated' : 'deactivated'}!`))
-                .catch(err => showToast('<b>❌</b> Error updating status: ' + err.message));
+                .then(() => showToast(`<b>âœ…</b> User account ${newStatus ? 'activated' : 'deactivated'}!`))
+                .catch(err => showToast('<b>âŒ</b> Error updating status: ' + err.message));
         }
 
         function deleteUser(userId) {
             if (confirm("Are you sure you want to completely remove this user? This action cannot be undone.")) {
                 db.collection('festUsers').doc(userId).delete()
-                    .then(() => showToast('<b>🗑️</b> User deleted successfully!'))
-                    .catch(err => showToast("<b>❌</b> Error deleting user: " + err.message));
+                    .then(() => showToast('<b>ðŸ—‘ï¸</b> User deleted successfully!'))
+                    .catch(err => showToast("<b>âŒ</b> Error deleting user: " + err.message));
             }
         }
 
-        // ── Permissions Logic ──────────────────────────────────────────
+        // â”€â”€ Permissions Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let currentPermUserId = null;
         function openPermissions(userId) {
             const currentRole = localStorage.getItem('userRole');
             const isAsstOwner = localStorage.getItem('semiOwner') === 'true';
 
             if (currentRole !== 'owner' && !isAsstOwner) {
-                showToast('<b>🚫</b> Access denied.');
+                showToast('<b>ðŸš«</b> Access denied.');
                 return;
             }
             const user = duFestUsersList.find(u => u.id === userId);
@@ -3256,7 +3354,7 @@
             const btn = document.getElementById('btn-save-perms');
             const origHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…';
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦';
 
             const permissions = {
                 innerDashboard: document.getElementById('perm-inner-dashboard').checked,
@@ -3271,15 +3369,15 @@
                     closePermissions();
                     btn.disabled = false;
                     btn.innerHTML = origHTML;
-                    showToast('<b>✅</b> Permissions updated successfully!');
+                    showToast('<b>âœ…</b> Permissions updated successfully!');
                 }).catch(err => {
-                    showToast('<b>❌</b> Error: ' + err.message);
+                    showToast('<b>âŒ</b> Error: ' + err.message);
                     btn.disabled = false;
                     btn.innerHTML = origHTML;
                 });
         }
 
-        // ── UI Controls ────────────────────────────────────────────────
+        // â”€â”€ UI Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function toggleSidebar() {
             const s = document.getElementById('ownerSidebar');
             const o = document.getElementById('ownerSidebarOverlay');
@@ -3311,7 +3409,7 @@
             document.getElementById('profileDropdownOwner').classList.toggle('hidden');
         }
 
-        // ── Access Requests Management ───────────────────────────────
+        // â”€â”€ Access Requests Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function setupNotifyListener() {
             db.collection('requests').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                 const table = document.getElementById('requestTable');
@@ -3355,16 +3453,16 @@
             if (allow) {
                 db.collection('festUsers').doc(adminId).update({ 'permissions.resultManagement': true })
                     .then(() => {
-                        showToast("<b>✅</b> Access Granted!");
+                        showToast("<b>âœ…</b> Access Granted!");
                         return db.collection('requests').doc(requestId).delete();
-                    }).catch(err => showToast("<b>❌</b> " + err.message));
+                    }).catch(err => showToast("<b>âŒ</b> " + err.message));
             } else {
                 db.collection('requests').doc(requestId).delete()
-                    .then(() => showToast("<b>🗑️</b> Request Denied."));
+                    .then(() => showToast("<b>ðŸ—‘ï¸</b> Request Denied."));
             }
         }
 
-        // ── Token Generation Logic ────────────────────────────────────
+        // â”€â”€ Token Generation Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let tokenTimer = null;
         function generateToken() {
             const timeVal = parseInt(document.getElementById('tokenTime').value) || 60;
@@ -3379,7 +3477,7 @@
                 .then(() => {
                     document.getElementById('tokenDisplay').value = otp;
                     startTokenCountdown(timeVal);
-                    showToast("<b>🔑</b> Token Generated!");
+                    showToast("<b>ðŸ”‘</b> Token Generated!");
                 }).finally(() => {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fi fi-rr-refresh"></i> Generate Token';
@@ -3407,7 +3505,7 @@
             }, 1000);
         }
 
-        // ── System Alerts Logic ────────────────────────────────────────
+        // â”€â”€ System Alerts Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         async function sendAlert(e) {
             e.preventDefault();
             const title = document.getElementById('alertTitle').value;
@@ -3427,11 +3525,11 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     readBy: []
                 });
-                showToast("<b>✅</b> Alert sent successfully");
+                showToast("<b>âœ…</b> Alert sent successfully");
                 document.getElementById('alertForm').reset();
                 loadAlertsHistory();
             } catch (err) {
-                showToast("<b>❌</b> Error sending alert: " + err.message);
+                showToast("<b>âŒ</b> Error sending alert: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = origHTML;
@@ -3481,17 +3579,17 @@
         function deleteAlert(id) {
             if (confirm('Are you sure you want to delete this alert? It will be removed for everyone.')) {
                 db.collection('alerts').doc(id).delete()
-                    .then(() => showToast('<b>✅</b> Alert deleted'))
-                    .catch(err => showToast('<b>❌</b> Error deleting: ' + err.message));
+                    .then(() => showToast('<b>âœ…</b> Alert deleted'))
+                    .catch(err => showToast('<b>âŒ</b> Error deleting: ' + err.message));
             }
         }
 
-        // ── Topic Registration Windows & Sets Logic ────────────────────
+        // â”€â”€ Topic Registration Windows & Sets Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         function saveTopicSettings() {
             const start = document.getElementById('topic-start').value;
             const end = document.getElementById('topic-end').value;
             db.collection('config').doc('topicReg').set({ start, end })
-                .then(() => showToast("<b>✅</b> Topic window saved!"));
+                .then(() => showToast("<b>âœ…</b> Topic window saved!"));
         }
 
         db.collection('config').doc('topicReg').onSnapshot(doc => {
@@ -3521,28 +3619,217 @@
             const name = document.getElementById('lim-name').value.trim();
             const minCount = document.getElementById('lim-min').value;
             const maxCount = document.getElementById('lim-max').value;
-            if (!name) return showToast("<b>❌</b> Set Name is required.");
+            if (!name) return showToast("<b>âŒ</b> Set Name is required.");
             const payload = { name, minCount, maxCount };
-            if (editingLimitId) db.collection('programSets').doc(editingLimitId).update(payload).then(() => { showToast("<b>✅</b> Set updated!"); closeLimitSidebar(); });
-            else db.collection('programSets').add(payload).then(() => { showToast("<b>✅</b> Set added!"); closeLimitSidebar(); });
+            if (editingLimitId) db.collection('programSets').doc(editingLimitId).update(payload).then(() => { showToast("<b>âœ…</b> Set updated!"); closeLimitSidebar(); });
+            else db.collection('programSets').add(payload).then(() => { showToast("<b>âœ…</b> Set added!"); closeLimitSidebar(); });
         }
         function deleteLimit(id) { if (confirm("Delete this set?")) db.collection('programSets').doc(id).delete(); }
 
         db.collection('programSets').onSnapshot(snap => {
             allLimits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-
-
             const tb = document.getElementById('limits-table-body');
-            if (tb) { if (allLimits.length === 0) tb.innerHTML = "<div class='text-center py-8 text-[13px] text-gray-400'>No sets defined.</div>"; else tb.innerHTML = allLimits.map(l => `<div class="grid grid-cols-12 gap-4 items-center p-3.5 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow"><div class="col-span-5 font-bold text-[13px] text-gray-800">${l.name}</div><div class="col-span-3 text-center text-[13px] font-medium text-gray-500">${l.minCount}</div><div class="col-span-3 text-center text-[13px] font-medium text-gray-500">${l.maxCount}</div><div class="col-span-1 flex gap-3 justify-end"><i class="fi fi-rr-edit text-gray-400 hover:text-brand-blue cursor-pointer transition-colors" onclick="openLimitSidebar('${l.id}')"></i><i class="fi fi-rr-trash text-gray-400 hover:text-red-500 cursor-pointer transition-colors" onclick="deleteLimit('${l.id}')"></i></div></div>`).join(''); }
+            if (tb) {
+                if (allLimits.length === 0) tb.innerHTML = "<div class='text-center py-8 text-[13px] text-gray-400'>No sets defined.</div>";
+                else tb.innerHTML = allLimits.map(l => `<div class="grid grid-cols-12 gap-4 items-center p-3.5 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow"><div class="col-span-5 font-bold text-[13px] text-gray-800">${l.name}</div><div class="col-span-3 text-center text-[13px] font-medium text-gray-500">${l.minCount}</div><div class="col-span-3 text-center text-[13px] font-medium text-gray-500">${l.maxCount}</div><div class="col-span-1 flex gap-3 justify-end"><i class="fi fi-rr-edit text-gray-400 hover:text-brand-blue cursor-pointer transition-colors" onclick="openLimitSidebar('${l.id}')"></i><i class="fi fi-rr-trash text-gray-400 hover:text-red-500 cursor-pointer transition-colors" onclick="deleteLimit('${l.id}')"></i></div></div>`).join('');
+            }
         });
 
-        // ── Grade & Pattern Templates Logic Removed (Using cardsetup.html iframe) ──
+        // ── Team Device Limits Logic ──────────────────────────────────────────
+        let teamDeviceLimitsData = [];
+        let devLimitsUnsub = null;
+
+        function loadTeamDeviceLimits() {
+            if (typeof db === 'undefined') return;
+            if (devLimitsUnsub) return; // Already listening
+
+            devLimitsUnsub = db.collection('teams').orderBy('name', 'asc').onSnapshot(snap => {
+                teamDeviceLimitsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTeamDeviceLimitsUI();
+            }, err => {
+                console.error("Error loading team device limits:", err);
+            });
+        }
+
+        // Auto-initialize if opening innerDashboard directly
+        if (typeof db !== 'undefined') {
+            loadTeamDeviceLimits();
+        }
+
+        function renderTeamDeviceLimitsUI() {
+            const tbody = document.getElementById('team-device-limits-tbody');
+            const statTeams = document.getElementById('dev-stat-teams');
+            const statActive = document.getElementById('dev-stat-active');
+            if (!tbody) return;
+
+            const searchQ = (document.getElementById('dev-team-search')?.value || '').toLowerCase().trim();
+            const teams = teamDeviceLimitsData.filter(t => !searchQ || (t.name && t.name.toLowerCase().includes(searchQ)));
+
+            const totalTeams = teamDeviceLimitsData.length;
+            let totalActiveDevs = 0;
+            teamDeviceLimitsData.forEach(t => {
+                const devs = Array.isArray(t.registeredDevices) ? t.registeredDevices : [];
+                totalActiveDevs += devs.length;
+            });
+
+            if (statTeams) statTeams.innerText = totalTeams;
+            if (statActive) statActive.innerText = totalActiveDevs;
+
+            if (teams.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-12 text-center text-gray-400 font-medium">No teams found matching search.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = teams.map(t => {
+                const limit = parseInt(t.deviceLimit, 10) > 0 ? parseInt(t.deviceLimit, 10) : 1;
+                const devs = Array.isArray(t.registeredDevices) ? t.registeredDevices : [];
+                const devCount = devs.length;
+                const isFull = devCount >= limit;
+                const badgeColor = isFull ? 'bg-amber-50 text-amber-700 border border-amber-200' : (devCount > 0 ? 'bg-blue-50 text-brand-blue border border-blue-100' : 'bg-gray-50 text-gray-500 border border-gray-200');
+
+                let devListHtml = '';
+                if (devs.length === 0) {
+                    devListHtml = `<span class="text-xs text-gray-400 italic">No device logged in yet</span>`;
+                } else {
+                    devListHtml = `<div class="flex flex-wrap gap-1.5 max-w-md">` + devs.map((d, i) => {
+                        const label = typeof d === 'string' ? d.substring(0, 8) + '...' : `${d.deviceType || 'Device'} (${d.os || 'OS'} / ${d.browser || 'Browser'})`;
+                        return `<span class="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md border border-gray-200" title="${typeof d === 'object' ? (d.deviceId + ' - ' + (d.lastLogin || '')) : d}">
+                            <i class="fi fi-rr-computer text-[10px] text-gray-400"></i> ${label}
+                        </span>`;
+                    }).join('') + `</div>`;
+                }
+
+                return `
+                <tr class="hover:bg-gray-50/70 transition-colors">
+                    <td class="py-3.5 px-6">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm" style="background-color: ${t.color || '#134E8E'}"></span>
+                            <div>
+                                <div class="font-bold text-gray-900">${t.name}</div>
+                                <div class="text-[11px] text-gray-400 font-mono">Series: ${t.chestNoSeries || 'Auto'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-6 text-center">
+                        <div class="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg p-1">
+                            <button onclick="updateTeamDeviceLimit('${t.id}', ${limit - 1})" ${limit <= 1 ? 'disabled' : ''} class="w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-gray-600 hover:bg-white hover:shadow-sm disabled:opacity-30 disabled:hover:bg-transparent">
+                                <i class="fi fi-rr-minus text-[10px]"></i>
+                            </button>
+                            <span class="w-8 text-center font-bold text-gray-800 text-xs">${limit}</span>
+                            <button onclick="updateTeamDeviceLimit('${t.id}', ${limit + 1})" class="w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-gray-600 hover:bg-white hover:shadow-sm">
+                                <i class="fi fi-rr-plus text-[10px]"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-6 text-center">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">
+                            <i class="fi fi-rr-computer text-[10px]"></i> ${devCount} / ${limit} Active
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-6">
+                        ${devListHtml}
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                        <button onclick="resetTeamDevices('${t.id}', '${t.name.replace(/'/g, "\\'")}')"
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all inline-flex items-center gap-1 shadow-sm">
+                            <i class="fi fi-rr-refresh text-[10px]"></i> Reset Devices
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function updateTeamDeviceLimit(teamId, newLimit) {
+            const limit = Math.max(1, parseInt(newLimit, 10) || 1);
+            if (typeof db === 'undefined') return;
+            try {
+                await db.collection('teams').doc(teamId).update({ deviceLimit: limit });
+                showToast(`<b>✅</b> Device limit updated to ${limit}!`);
+            } catch (err) {
+                console.error("Error updating device limit:", err);
+                showToast("<b>❌</b> Failed to update device limit.");
+            }
+        }
+
+        async function resetTeamDevices(teamId, teamName) {
+            if (!confirm(`Reset registered devices for "${teamName}"?\n\nThis will clear currently authorized devices and allow the team manager to log in from a new device.`)) {
+                return;
+            }
+            if (typeof db === 'undefined') return;
+            try {
+                const teamUpdate = db.collection('teams').doc(teamId).update({ registeredDevices: [] });
+                // Also reset festUsers for this team
+                const userSnap = await db.collection('festUsers').where('team', '==', teamName).get().catch(() => null);
+                const userUpdates = [];
+                if (userSnap && !userSnap.empty) {
+                    userSnap.docs.forEach(uDoc => {
+                        userUpdates.push(uDoc.ref.update({ registeredDevices: [], activeDeviceId: '' }).catch(() => {}));
+                    });
+                }
+                await Promise.all([teamUpdate, ...userUpdates]);
+                showToast(`<b>✅</b> Devices reset for "${teamName}"!`);
+            } catch (err) {
+                console.error("Error resetting devices:", err);
+                showToast("<b>❌</b> Failed to reset devices.");
+            }
+        }
+
+        async function resetAllTeamsDevices() {
+            if (!confirm("Are you sure you want to reset registered devices for ALL teams?\n\nEvery team manager will be able to register their device on next login.")) {
+                return;
+            }
+            if (typeof db === 'undefined') return;
+            try {
+                const snap = await db.collection('teams').get();
+                const batch = db.batch();
+                snap.docs.forEach(doc => {
+                    batch.update(doc.ref, { registeredDevices: [] });
+                });
+                // Also reset all festUsers
+                const userSnap = await db.collection('festUsers').get().catch(() => null);
+                if (userSnap && !userSnap.empty) {
+                    userSnap.docs.forEach(uDoc => {
+                        const d = uDoc.data();
+                        if (d.role === 'Team Manager' || d.team) {
+                            batch.update(uDoc.ref, { registeredDevices: [], activeDeviceId: '' });
+                        }
+                    });
+                }
+                await batch.commit();
+                showToast("<b>✅</b> All team devices reset successfully!");
+            } catch (err) {
+                console.error("Error resetting all devices:", err);
+                showToast("<b>❌</b> Failed to reset all devices.");
+            }
+        }
+
+        async function applyDefaultLimitToAllTeams() {
+            const val = parseInt(document.getElementById('global-default-device-limit')?.value, 10) || 1;
+            if (val < 1) return showToast("<b>❌</b> Limit must be at least 1.");
+
+            if (!confirm(`Set device limit of ${val} device(s) for ALL teams?`)) return;
+
+            if (typeof db === 'undefined') return;
+            try {
+                const snap = await db.collection('teams').get();
+                const batch = db.batch();
+                snap.docs.forEach(doc => {
+                    batch.update(doc.ref, { deviceLimit: val });
+                });
+                await batch.commit();
+                showToast(`<b>✅</b> Applied ${val} device limit to all teams!`);
+            } catch (err) {
+                console.error("Error setting limit to all teams:", err);
+                showToast("<b>❌</b> Failed to update teams.");
+            }
+        }
+
+        // â”€â”€ Grade & Pattern Templates Logic Removed (Using cardsetup.html iframe) â”€â”€
 
 
-        // ═══════════════════════════════════════════════════════════════
-        // BULK IMPORT — CANDIDATE DATA
-        // ═══════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // BULK IMPORT â€” CANDIDATE DATA
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let CAND_HEADERS = ['name', 'section', 'admissionNo', 'class', 'status'];
         const PROG_HEADERS = ['code', 'name', 'section', 'type', 'venueType', 'subStage', 'maxParticipants', 'status', 'progSet', 'gradeTemplate', 'positionTemplate'];
         const SCHEDULE_HEADERS = ['programCode', 'dateTime', 'venue', 'judgeCount', 'judge1', 'judge2', 'judge3'];
@@ -3629,7 +3916,7 @@
                         callback({ headers, rows });
                     } catch (err) {
                         console.error('XLSX parse error:', err);
-                        typeof showToast === 'function' ? showToast('<b>❌</b> Error reading Excel file: ' + err.message) : alert('Error reading Excel');
+                        typeof showToast === 'function' ? showToast('<b>âŒ</b> Error reading Excel file: ' + err.message) : alert('Error reading Excel');
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -3748,7 +4035,7 @@
                     return !headers.some(hdr => hdr.toLowerCase().replace(/[^a-z0-9]/g, '') === normH);
                 });
                 if (missingHeaders.length) {
-                    showToast('<b>❌</b> Missing columns: ' + missingHeaders.join(', '));
+                    showToast('<b>âŒ</b> Missing columns: ' + missingHeaders.join(', '));
                     input.value = '';
                     return;
                 }
@@ -3831,12 +4118,12 @@
             preview.classList.remove('hidden');
             const totalValid = bulkCandidateRows.filter(r => r._valid).length;
             const totalError = bulkCandidateRows.length - totalValid;
-            countEl.innerText = `(${bulkCandidateRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkCandidateRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkCandidateRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
                 <div class="bg-red-50 border border-red-100 rounded-xl p-4 space-y-1">
-                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors — they will be skipped during import:</div>
+                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors â€” they will be skipped during import:</div>
                     ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
                 </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All rows are valid!</div>';
 
@@ -3859,7 +4146,7 @@
 
         function importCandidates() {
             const validRows = bulkCandidateRows.filter(r => r._valid);
-            if (!validRows.length) { showToast('<b>⚠️</b> No valid rows to import.'); return; }
+            if (!validRows.length) { showToast('<b>âš ï¸</b> No valid rows to import.'); return; }
             const btn = document.getElementById('btn-import-cands');
             btn.disabled = true; btn.innerText = 'Importing...';
 
@@ -3937,22 +4224,22 @@
 
             batch.commit()
                 .then(() => {
-                    showToast('<b>✅</b> ' + validRows.length + ' candidates imported!');
+                    showToast('<b>âœ…</b> ' + validRows.length + ' candidates imported!');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
                     bulkCandidateRows = [];
                     renderCandidatePreview();
                 })
                 .catch(err => {
-                    showToast('<b>❌</b> ' + err.message);
+                    showToast('<b>âŒ</b> ' + err.message);
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
                 });
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // BULK IMPORT — PROGRAM DATA
-        // ═══════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // BULK IMPORT â€” PROGRAM DATA
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkProgramRows = [];
         let bulkProgramValidSections = [];
         let bulkProgramValidSets = [];
@@ -4003,7 +4290,7 @@
         }
 
         window.clearAllProgramsFromFirebase = async function () {
-            if (!confirm("⚠️ Are you sure you want to PERMANENTLY delete ALL existing programs from Firebase database? This action cannot be undone.")) return;
+            if (!confirm("âš ï¸ Are you sure you want to PERMANENTLY delete ALL existing programs from Firebase database? This action cannot be undone.")) return;
 
             const btn = document.getElementById('btn-clear-progs');
             if (btn) { btn.disabled = true; btn.innerText = 'Deleting...'; }
@@ -4011,7 +4298,7 @@
             try {
                 const snap = await db.collection('programs').get();
                 if (snap.empty) {
-                    showToast('<b>ℹ️</b> No existing programs found in Firebase database.');
+                    showToast('<b>â„¹ï¸</b> No existing programs found in Firebase database.');
                     return;
                 }
 
@@ -4035,14 +4322,14 @@
 
                 window.bulkExistingCodesMap = {};
                 window.bulkExistingCodes = [];
-                showToast(`<b>✅</b> Successfully deleted ${deletedCount} program(s) from Firebase!`);
+                showToast(`<b>âœ…</b> Successfully deleted ${deletedCount} program(s) from Firebase!`);
 
                 if (typeof bulkProgramRows !== 'undefined' && bulkProgramRows.length > 0) {
                     revalidateAllProgramRows();
                 }
             } catch (err) {
                 console.error("Error clearing programs:", err);
-                showToast('<b>❌</b> Failed to delete programs: ' + err.message);
+                showToast('<b>âŒ</b> Failed to delete programs: ' + err.message);
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -4091,7 +4378,7 @@
                     return !headers.some(hdr => hdr.toLowerCase().replace(/[^a-z0-9]/g, '') === normH);
                 });
                 if (missingHeaders.length) {
-                    showToast('<b>❌</b> Missing columns: ' + missingHeaders.join(', '));
+                    showToast('<b>âŒ</b> Missing columns: ' + missingHeaders.join(', '));
                     input.value = '';
                     return;
                 }
@@ -4251,12 +4538,12 @@
 
             const totalValid = bulkProgramRows.filter(r => r._valid).length;
             const totalError = bulkProgramRows.length - totalValid;
-            countEl.innerText = `(${bulkProgramRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkProgramRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkProgramRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
                 <div class="bg-red-50 border border-red-100 rounded-xl p-4 space-y-1">
-                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors — they will be skipped unless corrected:</div>
+                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors â€” they will be skipped unless corrected:</div>
                     ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
                 </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All rows are valid!</div>';
 
@@ -4279,7 +4566,7 @@
 
         async function importPrograms() {
             const validRows = bulkProgramRows.filter(r => r._valid);
-            if (!validRows.length) { showToast('<b>⚠️</b> No valid rows to import.'); return; }
+            if (!validRows.length) { showToast('<b>âš ï¸</b> No valid rows to import.'); return; }
             const btn = document.getElementById('btn-import-progs');
             btn.disabled = true; btn.innerText = 'Importing...';
             const allowOverwrite = document.getElementById('chk-overwrite-prog')?.checked;
@@ -4353,21 +4640,21 @@
                     await batch.commit();
                 }
 
-                showToast('<b>✅</b> ' + importedCount + ' programs imported successfully!');
+                showToast('<b>âœ…</b> ' + importedCount + ' programs imported successfully!');
                 bulkProgramRows = [];
                 renderProgramPreview();
             } catch (err) {
                 console.error("Import programs error:", err);
-                showToast('<b>❌</b> ' + err.message);
+                showToast('<b>âŒ</b> ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // BULK IMPORT — GRADE & POSITION TEMPLATES
-        // ═══════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // BULK IMPORT â€” GRADE & POSITION TEMPLATES
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkGradeTplRows = [];
         let bulkPosTplRows = [];
 
@@ -4397,7 +4684,7 @@
                     return !headers.some(hdr => hdr.toLowerCase().replace(/[^a-z0-9]/g, '') === normH);
                 });
                 if (missing.length) {
-                    showToast('<b>❌</b> Missing columns: ' + missing.join(', '));
+                    showToast('<b>âŒ</b> Missing columns: ' + missing.join(', '));
                     input.value = '';
                     return;
                 }
@@ -4422,7 +4709,7 @@
             preview.classList.remove('hidden');
             const totalValid = rows.filter(r => r._valid).length;
             const totalError = rows.length - totalValid;
-            countEl.innerText = `(${rows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${rows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = rows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
@@ -4455,7 +4742,7 @@
         async function importTpl(type) {
             const rows = type === 'grade' ? bulkGradeTplRows : bulkPosTplRows;
             const validRows = rows.filter(r => r._valid);
-            if (!validRows.length) return showToast('<b>⚠️</b> No valid rows to import.');
+            if (!validRows.length) return showToast('<b>âš ï¸</b> No valid rows to import.');
 
             const btn = document.getElementById(type === 'grade' ? 'btn-import-grades' : 'btn-import-pos');
             btn.disabled = true; btn.innerText = 'Importing...';
@@ -4485,20 +4772,20 @@
                 }
 
                 await batch.commit();
-                showToast(`<b>✅</b> ${Object.keys(groups).length} templates imported!`);
+                showToast(`<b>âœ…</b> ${Object.keys(groups).length} templates imported!`);
                 if (type === 'grade') bulkGradeTplRows = []; else bulkPosTplRows = [];
                 renderTplPreview(type);
             } catch (err) {
-                showToast('<b>❌</b> ' + err.message);
+                showToast('<b>âŒ</b> ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // BULK IMPORT — JUDGMENT DATA
-        // ═══════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // BULK IMPORT â€” JUDGMENT DATA
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkJudgementRows = [];
         let bulkJudgementPrograms = {};
         let bulkJudgementCandidates = {};
@@ -4586,7 +4873,7 @@
                     return normH === 'programcode' || normH === 'code';
                 });
                 if (!hasProgCode) {
-                    showToast('<b>❌</b> Missing column: programCode');
+                    showToast('<b>âŒ</b> Missing column: programCode');
                     input.value = '';
                     return;
                 }
@@ -4642,7 +4929,7 @@
             preview.classList.remove('hidden');
             const totalValid = bulkJudgementRows.filter(r => r._valid).length;
             const totalError = bulkJudgementRows.length - totalValid;
-            countEl.innerText = `(${bulkJudgementRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkJudgementRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkJudgementRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
@@ -4684,7 +4971,7 @@
 
         async function importJudgements() {
             const validRows = bulkJudgementRows.filter(r => r._valid);
-            if (!validRows.length) return showToast('<b>⚠️</b> No valid rows to import.');
+            if (!validRows.length) return showToast('<b>âš ï¸</b> No valid rows to import.');
 
             const btn = document.getElementById('btn-import-judg');
             btn.disabled = true; btn.innerText = 'Importing...';
@@ -4775,21 +5062,21 @@
                 });
 
                 await batch.commit();
-                showToast(`<b>✅</b> ${validRows.length} judgment entries imported successfully!`);
+                showToast(`<b>âœ…</b> ${validRows.length} judgment entries imported successfully!`);
                 bulkJudgementRows = [];
                 renderJudgementPreview();
             } catch (err) {
                 console.error("Import judgements error:", err);
-                showToast('<b>❌</b> ' + err.message);
+                showToast('<b>âŒ</b> ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // BULK IMPORT — SCHEDULE DATA
-        // ═══════════════════════════════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        // BULK IMPORT â€” SCHEDULE DATA
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkScheduleRows = [];
         let bulkSchedulePrograms = {};
         let bulkScheduleVenuesMap = {};
@@ -4885,7 +5172,7 @@
                     return normH === 'programcode' || normH === 'code';
                 });
                 if (!hasProgCode) {
-                    typeof showToast === 'function' ? showToast('<b>❌</b> Missing column: programCode') : alert('Missing column: programCode');
+                    typeof showToast === 'function' ? showToast('<b>âŒ</b> Missing column: programCode') : alert('Missing column: programCode');
                     input.value = '';
                     return;
                 }
@@ -4942,7 +5229,7 @@
                     revalidateAllScheduleRows();
                 } catch (err) {
                     console.error("Error loading schedule upload data:", err);
-                    typeof showToast === 'function' ? showToast('<b>❌</b> Error loading data: ' + err.message) : alert(err.message);
+                    typeof showToast === 'function' ? showToast('<b>âŒ</b> Error loading data: ' + err.message) : alert(err.message);
                 } finally {
                     input.value = '';
                 }
@@ -4959,7 +5246,7 @@
             preview.classList.remove('hidden');
             const totalValid = bulkScheduleRows.filter(r => r._valid).length;
             const totalError = bulkScheduleRows.length - totalValid;
-            countEl.innerText = `(${bulkScheduleRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkScheduleRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkScheduleRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
@@ -5030,7 +5317,7 @@
 
         async function importSchedules() {
             const validRows = bulkScheduleRows.filter(r => r._valid);
-            if (!validRows.length) return typeof showToast === 'function' ? showToast('<b>⚠️</b> No valid rows to import.') : alert('No valid rows to import.');
+            if (!validRows.length) return typeof showToast === 'function' ? showToast('<b>âš ï¸</b> No valid rows to import.') : alert('No valid rows to import.');
 
             const btn = document.getElementById('btn-import-sched');
             btn.disabled = true; btn.innerText = 'Importing...';
@@ -5074,12 +5361,12 @@
                     await batch.commit();
                 }
 
-                typeof showToast === 'function' ? showToast(`<b>✅</b> ${updatedCount} program schedule(s) updated successfully!`) : alert(`${updatedCount} program schedule(s) updated!`);
+                typeof showToast === 'function' ? showToast(`<b>âœ…</b> ${updatedCount} program schedule(s) updated successfully!`) : alert(`${updatedCount} program schedule(s) updated!`);
                 bulkScheduleRows = [];
                 renderSchedulePreview();
             } catch (err) {
                 console.error("Import schedules error:", err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> ' + err.message) : alert(err.message);
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> ' + err.message) : alert(err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
@@ -5111,7 +5398,7 @@
             });
         }
 
-        // ── Logout ─────────────────────────────────────────────────────
+        // â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         document.addEventListener('DOMContentLoaded', () => {
             const role = localStorage.getItem('userRole');
             const bcBase = document.getElementById('breadcrumb-base');
@@ -5293,8 +5580,8 @@
                 updatedAt: new Date()
             };
             db.collection('config').doc('judgesheet').set(jsConfig)
-                .then(() => showToast('<b>✅</b> Judge Sheet Template saved successfully!'))
-                .catch(err => showToast('<b>❌</b> Error saving template: ' + err.message));
+                .then(() => showToast('<b>âœ…</b> Judge Sheet Template saved successfully!'))
+                .catch(err => showToast('<b>âŒ</b> Error saving template: ' + err.message));
         }
 
         // Run preview init after a short delay to ensure DOM readiness
@@ -5388,12 +5675,12 @@
 
                 if (id) {
                     await db.collection('news').doc(id).update(newsData);
-                    showToast('<b>✅</b> News updated successfully!');
+                    showToast('<b>âœ…</b> News updated successfully!');
                 } else {
                     newsData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                     newsData.isMain = false; // By default
                     await db.collection('news').add(newsData);
-                    showToast('<b>✅</b> News added successfully!');
+                    showToast('<b>âœ…</b> News added successfully!');
                 }
 
                 resetNewsForm();
@@ -5401,7 +5688,7 @@
 
             } catch (err) {
                 console.error(err);
-                showToast('<b>❌</b> Error: ' + err.message);
+                showToast('<b>âŒ</b> Error: ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = id ? '<i class="fi fi-rr-disk"></i> Update News' : '<i class="fi fi-rr-disk"></i> Submit News';
@@ -5480,17 +5767,17 @@
             if (!confirm("Are you sure you want to delete this news?")) return;
             try {
                 await db.collection('news').doc(id).delete();
-                showToast('<b>✅</b> News deleted!');
+                showToast('<b>âœ…</b> News deleted!');
                 loadNews();
             } catch (err) {
-                showToast('<b>❌</b> ' + err.message);
+                showToast('<b>âŒ</b> ' + err.message);
             }
         }
 
         async function updateMainNews() {
             const selected = document.querySelector('input[name="mainNewsSelection"]:checked');
             if (!selected) {
-                showToast('<b>⚠️</b> Please select a news item first.');
+                showToast('<b>âš ï¸</b> Please select a news item first.');
                 return;
             }
             const btn = document.getElementById('btn-update-main-news');
@@ -5509,11 +5796,11 @@
                 batch.update(db.collection('news').doc(selected.value), { isMain: true });
 
                 await batch.commit();
-                showToast('<b>✅</b> Main news updated successfully!');
+                showToast('<b>âœ…</b> Main news updated successfully!');
                 loadNews();
             } catch (err) {
                 console.error(err);
-                showToast('<b>❌</b> ' + err.message);
+                showToast('<b>âŒ</b> ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fi fi-rr-star"></i> Set as Main News';
@@ -5597,10 +5884,10 @@
                     batch.update(docRef, { order: idx + 1 });
                 });
                 await batch.commit();
-                typeof showToast === 'function' ? showToast('<b>✅</b> Section order saved successfully!') : alert('Section order saved!');
+                typeof showToast === 'function' ? showToast('<b>âœ…</b> Section order saved successfully!') : alert('Section order saved!');
             } catch (err) {
                 console.error("Error saving section order:", err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to save section order.') : alert('Failed to save section order.');
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to save section order.') : alert('Failed to save section order.');
             }
         }
 
@@ -5691,10 +5978,10 @@
                 }
                 input.value = '';
                 if (waCheckbox) waCheckbox.checked = true;
-                typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type added successfully!') : alert('Venue Type added!');
+                typeof showToast === 'function' ? showToast('<b>âœ…</b> Venue Type added successfully!') : alert('Venue Type added!');
             } catch (err) {
                 console.error("Error adding venue type:", err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to add venue type.') : alert('Failed to add venue type.');
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to add venue type.') : alert('Failed to add venue type.');
             }
         }
 
@@ -5707,7 +5994,7 @@
                     venueTypesList = venueTypesList.filter(vt => vt.id !== id);
                     renderVenueTypesList();
                 }
-                typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type deleted successfully!') : alert('Venue Type deleted!');
+                typeof showToast === 'function' ? showToast('<b>âœ…</b> Venue Type deleted successfully!') : alert('Venue Type deleted!');
             } catch (err) {
                 console.error("Error deleting venue type:", err);
             }
@@ -5807,7 +6094,7 @@
                 if (waCheckbox) waCheckbox.checked = true;
             } catch (err) {
                 console.error("Error adding sub stage:", err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to add sub stage.') : alert('Failed to add sub stage.');
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to add sub stage.') : alert('Failed to add sub stage.');
             }
         }
 
@@ -5819,7 +6106,7 @@
                 }
             } catch (err) {
                 console.error("Error deleting sub stage:", err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to delete sub stage.') : alert('Failed to delete sub stage.');
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to delete sub stage.') : alert('Failed to delete sub stage.');
             }
         }
 
@@ -5870,11 +6157,11 @@
                     status: 'approved',
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                typeof showToast === 'function' ? showToast('<b>✅</b> Registration approved!') : alert('Registration approved!');
+                typeof showToast === 'function' ? showToast('<b>âœ…</b> Registration approved!') : alert('Registration approved!');
                 loadPendingApprovals();
             } catch (err) {
                 console.error(err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to approve.') : alert('Failed to approve.');
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to approve.') : alert('Failed to approve.');
             }
         }
 
@@ -5885,11 +6172,11 @@
                     status: 'rejected',
                     rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                typeof showToast === 'function' ? showToast('<b>✅</b> Registration rejected!') : alert('Registration rejected!');
+                typeof showToast === 'function' ? showToast('<b>âœ…</b> Registration rejected!') : alert('Registration rejected!');
                 loadPendingApprovals();
             } catch (err) {
                 console.error(err);
-                typeof showToast === 'function' ? showToast('<b>❌</b> Failed to reject.') : alert('Failed to reject.');
+                typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to reject.') : alert('Failed to reject.');
             }
         }
 
