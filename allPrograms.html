@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -60,6 +60,42 @@
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
+        }
+
+        /* Sort dropdown in table header */
+        .sort-dropdown-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .sort-dropdown-wrap select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            padding-right: 18px;
+            outline: none;
+        }
+        .sort-dropdown-wrap select:focus {
+            outline: none;
+        }
+        .sort-dropdown-wrap .sort-chevron {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 9px;
+            color: #9ca3af;
+        }
+        .sort-dropdown-wrap select option {
+            font-weight: 500;
+            color: #111827;
+            background: #fff;
         }
 
         /* Dropdown animation */
@@ -136,6 +172,17 @@
                             <select id="filter-section" onchange="applyProgFilters()"
                                 class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
                                 <option value="All">All Categories</option>
+                            </select>
+                            <i
+                                class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                        </div>
+                        <div class="relative w-full sm:w-auto min-w-[130px]">
+                            <select id="sort-venue-type" onchange="applyProgFilters()"
+                                class="w-full appearance-none border border-gray-200 rounded-full py-2 pl-4 pr-10 bg-gray-50 text-[13px] text-gray-700 outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] cursor-pointer font-medium">
+                                <option value="All">All Types</option>
+                                <option value="Stage">Stage</option>
+                                <option value="Non-Stage">Non-Stage</option>
+                                <option value="Sports">Sports</option>
                             </select>
                             <i
                                 class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
@@ -1261,6 +1308,11 @@
             renderProgsUI();
         }
 
+        function getProgVenueTypeFilter() {
+            const el = document.getElementById('sort-venue-type');
+            return el ? el.value : 'All';
+        }
+
         function renderProgsUI() {
             const tableList = document.getElementById('prog-table-list');
             const cardsList = document.getElementById('prog-cards-list');
@@ -1270,6 +1322,16 @@
             const categoryFilter = document.getElementById('filter-section') ? document.getElementById('filter-section').value : 'All';
             if (categoryFilter !== 'All') {
                 filtered = filtered.filter(p => p.section === categoryFilter);
+            }
+
+            // Venue-type sort/filter (Stage / Non-Stage / Sports)
+            const venueTypeFilter = getProgVenueTypeFilter();
+            if (venueTypeFilter !== 'All') {
+                filtered = filtered.filter(p => {
+                    const vn = (p.venueTypeName || '').toLowerCase().trim();
+                    const target = venueTypeFilter.toLowerCase();
+                    return vn === target || vn.includes(target);
+                });
             }
 
             if (progSearchQuery) {
