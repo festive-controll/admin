@@ -126,7 +126,7 @@
         </header>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
             <!-- Stat 1: Total Candidates -->
             <div
                 class="bg-white rounded-2xl p-5 border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] flex items-center justify-between">
@@ -172,6 +172,18 @@
                 </div>
                 <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
                     <i class="fi fi-rr-edit text-lg text-orange-400"></i>
+                </div>
+            </div>
+
+            <!-- Stat 5: Negative Points -->
+            <div
+                class="bg-white rounded-2xl p-5 border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Negative Points</p>
+                    <h2 id="st-negative-points" class="text-2xl font-black text-red-500 leading-none">0</h2>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                    <i class="fi fi-rr-minus-circle text-lg text-red-500"></i>
                 </div>
             </div>
         </div>
@@ -250,11 +262,11 @@
                     <div class="p-6 space-y-4">
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">Team Captain</span>
-                            <span id="vt-detail-captain" class="font-bold text-gray-900">â€”</span>
+                            <span id="vt-detail-captain" class="font-bold text-gray-900">—</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">Assistant Captain</span>
-                            <span id="vt-detail-assistant" class="font-bold text-gray-900">â€”</span>
+                            <span id="vt-detail-assistant" class="font-bold text-gray-900">—</span>
                         </div>
                         <div class="h-px bg-gray-100"></div>
                         <div class="flex justify-between items-center text-sm">
@@ -296,7 +308,7 @@
                 </div>
 
                 <!-- Top Performers Card -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
                     <div class="px-5 py-4 border-b border-gray-100 bg-[#FAFAFA]/50 flex items-center gap-2.5">
                         <i class="fi fi-rr-medal text-brand-yellow text-sm"></i>
                         <h3 class="text-[12px] font-black text-gray-500 tracking-widest uppercase">Top Performers</h3>
@@ -306,6 +318,24 @@
                         <div class="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-40">
                             <i class="fi fi-rr-medal text-4xl mb-3"></i>
                             <p class="text-xs font-bold uppercase tracking-widest">No toppers yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Negative Points & Penalties Card -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="px-5 py-4 border-b border-gray-100 bg-[#FAFAFA]/50 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fi fi-rr-minus-circle text-red-500 text-sm"></i>
+                            <h3 class="text-[12px] font-black text-gray-500 tracking-widest uppercase">Negative Points & Penalties</h3>
+                        </div>
+                        <span id="vt-penalty-badge" class="px-2.5 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-full border border-red-100 shadow-sm">0 PTS</span>
+                    </div>
+
+                    <div id="vt-penalties-list" class="p-5 flex-1 flex flex-col gap-3">
+                        <div class="flex flex-col items-center justify-center text-center py-6 opacity-40">
+                            <i class="fi fi-rr-check-circle text-3xl mb-2 text-emerald-500"></i>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-500">No negative points</p>
                         </div>
                     </div>
                 </div>
@@ -340,8 +370,12 @@
                 const isTeamManager = userRole === 'Team Manager';
 
                 let allTeamCandidates = [];
-                let candidatePointsMap = {}; // candId -> points
+                let candidatePointsMap = {}; // candId -> net published points
+                let candidateEarnedMap = {}; // candId -> gross earned published points
+                let candidateNegativeMap = {}; // candId -> negative points
+                let teamNegativeRecords = [];
                 let teamSeriesBase = 0;
+                let currentTeamName = teamNameFromStore || '';
 
                 if (!teamId) {
                     const vtName = document.getElementById('vt-name');
@@ -364,6 +398,7 @@
                     if (doc.exists) {
                         const t = doc.data();
                         const teamName = t.name;
+                        currentTeamName = teamName;
                         teamSeriesBase = parseInt(t.chestNoSeries) || 0;
                         safeText('vt-name', teamName);
 
@@ -466,29 +501,36 @@
                         const candCountEl = document.getElementById('st-total-candidates');
                         if (candCountEl) candCountEl.innerText = snap.size;
 
-                        // Fetch Results to calculate points
-                        fetchPointsData(allTeamCandidates, teamColor);
+                        // Fetch Results to calculate points & negative marks
+                        fetchPointsData(allTeamCandidates, teamColor, teamName);
                     });
                 }
 
                 let unsubPrograms = null;
                 let unsubResults = null;
+                let unsubNegativeMarks = null;
 
-                function fetchPointsData(candidates, teamColor) {
+                function fetchPointsData(candidates, teamColor, teamName) {
                     const candIds = candidates.map(c => c.id);
                     if (candIds.length === 0) {
                         candidatePointsMap = {};
-                        renderStats(0, 0, 0);
-                        renderTeamCandidates();
+                        candidateEarnedMap = {};
+                        candidateNegativeMap = {};
+                        teamNegativeRecords = [];
+                        renderStats(0, 0, 0, 0);
+                        renderTeamCandidates(teamColor);
                         renderToppers([]);
+                        renderTeamPenalties([], 0);
                         return;
                     }
 
                     if (unsubPrograms) unsubPrograms();
                     if (unsubResults) unsubResults();
+                    if (unsubNegativeMarks) unsubNegativeMarks();
 
                     let programsData = [];
                     let resultsData = [];
+                    let negativeMarksData = [];
 
                     function calculateAndRender() {
                         const publishedProgramIds = new Set();
@@ -498,25 +540,66 @@
                             }
                         });
 
-                        let totalPoints = 0;
-                        let publishedPoints = 0;
-                        let unpublishedPoints = 0;
+                        // Calculate Negative Points
+                        candidateNegativeMap = {};
+                        candIds.forEach(id => { candidateNegativeMap[id] = 0; });
+                        teamNegativeRecords = [];
+                        let totalTeamPenalty = 0;
+
+                        const activeNegs = negativeMarksData.filter(d => d.status !== 'Removed');
+                        activeNegs.forEach(neg => {
+                            const pts = parseInt(neg.marks) || parseInt(neg.points) || 0;
+                            const negTeams = Array.isArray(neg.teams) ? neg.teams : [neg.teams].filter(Boolean);
+                            const negCandIds = Array.isArray(neg.candidateIds) ? neg.candidateIds : [neg.candidateIds].filter(Boolean);
+                            
+                            let isTeamAffected = false;
+                            if (negTeams.includes(teamName)) {
+                                isTeamAffected = true;
+                            }
+
+                            negCandIds.forEach(cId => {
+                                if (candIds.includes(cId)) {
+                                    candidateNegativeMap[cId] = (candidateNegativeMap[cId] || 0) + pts;
+                                    isTeamAffected = true;
+                                }
+                            });
+
+                            if (isTeamAffected) {
+                                totalTeamPenalty += pts;
+                                teamNegativeRecords.push(neg);
+                            }
+                        });
+
+                        let grossTotalPoints = 0;
+                        let grossPublishedPoints = 0;
+                        let grossUnpublishedPoints = 0;
+                        candidateEarnedMap = {};
                         candidatePointsMap = {};
 
                         resultsData.forEach(r => {
                             if (candIds.includes(r.candidateId)) {
                                 const pts = parseInt(r.totalPoints) || parseInt(r.points) || 0;
-                                totalPoints += pts;
+                                grossTotalPoints += pts;
                                 if (publishedProgramIds.has(r.programId)) {
-                                    publishedPoints += pts;
-                                    candidatePointsMap[r.candidateId] = (candidatePointsMap[r.candidateId] || 0) + pts;
+                                    grossPublishedPoints += pts;
+                                    candidateEarnedMap[r.candidateId] = (candidateEarnedMap[r.candidateId] || 0) + pts;
                                 } else {
-                                    unpublishedPoints += pts;
+                                    grossUnpublishedPoints += pts;
                                 }
                             }
                         });
 
-                        renderStats(totalPoints, publishedPoints, unpublishedPoints);
+                        // Deduct candidate negative points for published points
+                        candIds.forEach(cId => {
+                            const earned = candidateEarnedMap[cId] || 0;
+                            const penalty = candidateNegativeMap[cId] || 0;
+                            candidatePointsMap[cId] = earned - penalty;
+                        });
+
+                        const netPublishedPoints = grossPublishedPoints - totalTeamPenalty;
+                        const netTotalPoints = grossTotalPoints - totalTeamPenalty;
+
+                        renderStats(netTotalPoints, netPublishedPoints, grossUnpublishedPoints, totalTeamPenalty);
                         renderTeamCandidates(teamColor);
 
                         const toppers = candidates
@@ -526,6 +609,7 @@
                             .slice(0, 5);
 
                         renderToppers(toppers);
+                        renderTeamPenalties(teamNegativeRecords, totalTeamPenalty);
                     }
 
                     unsubPrograms = db.collection('programs').onSnapshot(snap => {
@@ -537,15 +621,27 @@
                         resultsData = snap.docs.map(d => d.data());
                         calculateAndRender();
                     });
+
+                    unsubNegativeMarks = db.collection('negativeMarks').onSnapshot(snap => {
+                        negativeMarksData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        calculateAndRender();
+                    });
                 }
 
-                function renderStats(total, published, unpublished) {
+                function renderStats(total, published, unpublished, negative) {
                     const totEl = document.getElementById('st-total-points');
                     const pubEl = document.getElementById('st-published-points');
                     const unpubEl = document.getElementById('st-unpublished-points');
+                    const negEl = document.getElementById('st-negative-points');
                     if (totEl) totEl.innerText = total;
-                    if (pubEl) pubEl.innerText = published;
+                    if (pubEl) {
+                        pubEl.innerText = published;
+                        pubEl.className = published < 0 
+                            ? 'text-2xl font-black text-red-600 leading-none' 
+                            : 'text-2xl font-black text-green-600 leading-none';
+                    }
                     if (unpubEl) unpubEl.innerText = unpublished;
+                    if (negEl) negEl.innerText = negative > 0 ? `-${negative}` : '0';
                 }
 
                 window.renderTeamCandidates = function (teamColor) {
@@ -572,13 +668,20 @@
                     }
 
                     container.innerHTML = filtered.map(c => {
-                        const pts = candidatePointsMap[c.id] || 0;
+                        const pts = candidatePointsMap[c.id] !== undefined ? candidatePointsMap[c.id] : 0;
+                        const penalty = candidateNegativeMap[c.id] || 0;
                         const initial = c.name ? c.name.charAt(0).toUpperCase() : '?';
                         const isCap = c.isCaptain || (c.chestNo && teamSeriesBase && String(c.chestNo) === String(teamSeriesBase + 1));
                         const isAsst = c.isAssistantCaptain || (c.chestNo && teamSeriesBase && String(c.chestNo) === String(teamSeriesBase + 2));
                         const roleBadge = isCap
                             ? `<span class="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[9px] font-bold uppercase tracking-wider">Captain</span>`
                             : (isAsst ? `<span class="ml-2 px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-[9px] font-bold uppercase tracking-wider">Asst Captain</span>` : '');
+
+                        const ptsDisplay = pts < 0
+                            ? `<span class="text-red-500 font-black">${pts}</span> <span class="text-[10px] text-red-400 tracking-tighter">PTS</span>`
+                            : (penalty > 0
+                                ? `<span class="text-gray-900 font-bold">${pts}</span> <span class="text-[10px] text-gray-400 tracking-tighter">PTS</span><div class="text-[9px] text-red-500 font-bold tracking-tight">(-${penalty} penalty)</div>`
+                                : `${pts} <span class="text-[10px] text-gray-400 tracking-tighter">PTS</span>`);
 
                         return `
                         <div class="grid grid-cols-12 gap-4 items-center py-3.5 px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors group cursor-pointer" onclick="viewCandidateProfile('${c.id}', '${c.name.replace(/'/g, "\\'")}')">
@@ -592,10 +695,10 @@
                                 <span class="text-[13.5px] font-bold text-gray-900 group-hover:text-brand-blue transition-colors flex items-center">${c.name}${roleBadge}</span>
                             </div>
                             <div class="col-span-2 text-center">
-                                <span class="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-600 rounded-md text-[10px] font-bold uppercase tracking-wider">${c.section || 'â€”'}</span>
+                                <span class="px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-600 rounded-md text-[10px] font-bold uppercase tracking-wider">${c.section || '—'}</span>
                             </div>
-                            <div class="col-span-2 text-center font-bold text-sm text-gray-900">
-                                ${pts} <span class="text-[10px] text-gray-400 tracking-tighter">PTS</span>
+                            <div class="col-span-2 text-center font-bold text-sm">
+                                ${ptsDisplay}
                             </div>
                             <div class="col-span-1 text-right">
                                 <button class="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-brand-blue hover:border-brand-blue/30 shadow-sm transition-all">
@@ -639,6 +742,48 @@
                         </div>
                     </div>
                     `;
+                    }).join('');
+                }
+
+                function renderTeamPenalties(penalties, totalPenalty) {
+                    const badge = document.getElementById('vt-penalty-badge');
+                    if (badge) {
+                        badge.innerText = totalPenalty > 0 ? `-${totalPenalty} PTS` : '0 PTS';
+                        badge.className = totalPenalty > 0 
+                            ? 'px-2.5 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-full border border-red-100 shadow-sm' 
+                            : 'px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded-full border border-gray-100 shadow-sm';
+                    }
+
+                    const container = document.getElementById('vt-penalties-list');
+                    if (!container) return;
+
+                    if (!penalties || penalties.length === 0) {
+                        container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center text-center py-6 opacity-40">
+                            <i class="fi fi-rr-check-circle text-3xl mb-2 text-emerald-500"></i>
+                            <p class="text-xs font-bold uppercase tracking-widest text-gray-500">No negative points</p>
+                        </div>`;
+                        return;
+                    }
+
+                    container.innerHTML = penalties.map(neg => {
+                        const pts = parseInt(neg.marks) || parseInt(neg.points) || 0;
+                        const dateStr = neg.timestamp?.toDate ? neg.timestamp.toDate().toLocaleDateString() : (neg.timestamp?.seconds ? new Date(neg.timestamp.seconds * 1000).toLocaleDateString() : 'N/A');
+                        const candNames = Array.isArray(neg.candidateNames) && neg.candidateNames.length > 0 
+                            ? neg.candidateNames.join(', ') 
+                            : (neg.candidateName || 'Team Penalty');
+
+                        return `
+                        <div class="bg-red-50/50 border border-red-100 rounded-xl p-3 flex justify-between items-center hover:bg-white hover:shadow-sm transition-all">
+                            <div class="flex flex-col max-w-[70%]">
+                                <span class="font-bold text-[13px] text-gray-900 truncate" title="${neg.purpose || 'Penalty'}">${neg.purpose || 'Penalty'}</span>
+                                <span class="text-[11px] text-gray-500 truncate" title="${candNames}">${candNames}</span>
+                                <span class="text-[10px] text-gray-400 font-mono-custom mt-0.5">${dateStr}</span>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-[14px] font-black text-red-500">-${pts} <span class="text-[9px] font-bold text-red-300">PTS</span></span>
+                            </div>
+                        </div>`;
                     }).join('');
                 }
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -241,6 +241,8 @@
         let filesData = [];
         let fileSearchQuery = '';
         let activeFileDropdownId = null;
+        let contentFilesList = [];
+        let mediaGalleryList = [];
         
         // Upload State
         let selectedFilesArray = [];
@@ -248,15 +250,44 @@
         const CLOUDINARY_PRESET = "festiveDB";
         const MAX_STORAGE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
+        function showNotification(msg, isError = false) {
+            if (typeof window.parent !== 'undefined' && typeof window.parent.showToast === 'function') {
+                window.parent.showToast(msg);
+                return;
+            }
+            let toast = document.getElementById('cf-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'cf-toast';
+                toast.className = 'fixed bottom-6 right-6 z-[300] text-white text-[13px] font-medium px-4 py-2.5 rounded-lg shadow-lg transition-all duration-300 opacity-0 pointer-events-none transform translate-y-2';
+                document.body.appendChild(toast);
+            }
+            toast.className = `fixed bottom-6 right-6 z-[300] text-white text-[13px] font-medium px-4 py-2.5 rounded-lg shadow-lg transition-all duration-300 pointer-events-none ${isError ? 'bg-red-600' : 'bg-gray-900'} opacity-100 translate-y-0`;
+            toast.innerText = msg;
+            setTimeout(() => {
+                toast.className = toast.className.replace('opacity-100 translate-y-0', 'opacity-0 translate-y-2');
+            }, 2800);
+        }
+
         function initFilesModule() {
+            if (!window.db) {
+                window.db = (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+            }
+            if (window.db) {
+                setupRealtimeListener();
+                return;
+            }
             let retries = 0;
             const dbCheckInterval = setInterval(() => {
+                if (!window.db) {
+                    window.db = (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+                }
                 if (window.db) {
                     clearInterval(dbCheckInterval);
                     setupRealtimeListener();
-                } else if (retries > 50) { 
+                } else if (retries > 10) { 
                     clearInterval(dbCheckInterval);
-                    console.warn("Firestore not detected after 5s. Running UI logic locally.");
+                    console.warn("Firestore not detected. Running UI logic locally.");
                     renderFilesUI();
                 }
                 retries++;
@@ -266,34 +297,42 @@
         function setupRealtimeListener() {
             if (window.filesUnsub) window.filesUnsub(); 
             if (window.mediaUnsub) window.mediaUnsub(); 
-            
-            let contentFilesList = [];
-            let mediaGalleryList = [];
 
             function mergeAndRenderFiles() {
                 const map = new Map();
 
                 // Add contentFiles docs
                 contentFilesList.forEach(item => {
-                    if (item.url) map.set(item.url, item);
+                    if (item.url) {
+                        map.set(item.url, {
+                            ...item,
+                            contentFileId: item.id
+                        });
+                    }
                 });
 
                 // Add mediaGallery docs
                 mediaGalleryList.forEach(item => {
-                    if (item.url && !map.has(item.url)) {
-                        let typeStr = item.type || 'image/jpeg';
-                        if (typeStr === 'video') typeStr = 'video/mp4';
-                        else if (typeStr === 'audio') typeStr = 'audio/mp3';
-                        else if (typeStr === 'image') typeStr = 'image/jpeg';
+                    if (item.url) {
+                        if (map.has(item.url)) {
+                            const existing = map.get(item.url);
+                            existing.mediaGalleryId = item.id;
+                        } else {
+                            let typeStr = item.type || 'image/jpeg';
+                            if (typeStr === 'video') typeStr = 'video/mp4';
+                            else if (typeStr === 'audio') typeStr = 'audio/mp3';
+                            else if (typeStr === 'image') typeStr = 'image/jpeg';
 
-                        map.set(item.url, {
-                            id: item.id,
-                            name: item.name || item.albumName || 'Media Manager Upload',
-                            size: item.size || 1572864,
-                            type: typeStr,
-                            url: item.url,
-                            createdAt: item.createdAt || new Date()
-                        });
+                            map.set(item.url, {
+                                id: item.id,
+                                mediaGalleryId: item.id,
+                                name: item.name || item.albumName || 'Media Manager Upload',
+                                size: item.size || 1572864,
+                                type: typeStr,
+                                url: item.url,
+                                createdAt: item.createdAt || new Date()
+                            });
+                        }
                     }
                 });
 
@@ -515,7 +554,7 @@
                     }
                 }
 
-                if (typeof showToast === 'function') showToast("âœ… All files uploaded successfully!");
+                showNotification("✅ All files uploaded successfully!");
                 
                 setTimeout(() => {
                     closeUploadView();
@@ -639,7 +678,7 @@
                         <div class="flex-1 overflow-hidden pr-2">
                             <h3 class="text-[14px] font-semibold text-gray-900 truncate mb-1" title="${d.name}">${d.name}</h3>
                             <div class="flex items-center gap-2 text-[12px] text-gray-500">
-                                <span>${sizeStr}</span> â€¢ <span>${dateStr}</span>
+                                <span>${sizeStr}</span> • <span>${dateStr}</span>
                             </div>
                         </div>
                         <button onclick="openFileMenu('${d.id}', event)" class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors text-gray-400"><i class="fi fi-rr-menu-dots-vertical text-[12px]"></i></button>
@@ -678,18 +717,65 @@
                 window.open(file.url, '_blank'); 
                 window.fileCloseDropdowns(); 
             };
-            document.getElementById('btn-file-delete').onclick = (e) => { 
+            document.getElementById('btn-file-delete').onclick = async (e) => { 
                 if(e) e.stopPropagation();
+                if(!file) return;
                 if(confirm("Are you sure you want to delete this file?")) {
-                    if (window.db) {
-                        window.db.collection('contentFiles').doc(id).delete().then(() => {
-                            if (typeof showToast === 'function') showToast("âœ… File deleted");
-                        });
-                    } else {
-                        filesData = filesData.filter(f => f.id !== id);
-                        renderFilesUI();
-                    }
                     window.fileCloseDropdowns();
+
+                    const fileUrl = file.url;
+                    const fileId = file.id;
+                    const contentFileId = file.contentFileId;
+                    const mediaGalleryId = file.mediaGalleryId;
+
+                    // Optimistically remove from local state immediately
+                    contentFilesList = contentFilesList.filter(f => f.id !== fileId && f.url !== fileUrl && f.id !== contentFileId);
+                    mediaGalleryList = mediaGalleryList.filter(f => f.id !== fileId && f.url !== fileUrl && f.id !== mediaGalleryId);
+                    filesData = filesData.filter(f => f.id !== fileId && (fileUrl ? f.url !== fileUrl : true));
+                    renderFilesUI();
+
+                    if (window.db) {
+                        try {
+                            const deletePromises = [];
+
+                            // 1. Delete known direct doc IDs
+                            if (contentFileId) {
+                                deletePromises.push(window.db.collection('contentFiles').doc(contentFileId).delete().catch(() => {}));
+                            }
+                            if (mediaGalleryId) {
+                                deletePromises.push(window.db.collection('mediaGallery').doc(mediaGalleryId).delete().catch(() => {}));
+                            }
+                            if (fileId) {
+                                deletePromises.push(window.db.collection('contentFiles').doc(fileId).delete().catch(() => {}));
+                                deletePromises.push(window.db.collection('mediaGallery').doc(fileId).delete().catch(() => {}));
+                            }
+
+                            // 2. Query and delete all matching docs by URL in both contentFiles and mediaGallery
+                            if (fileUrl) {
+                                const cfQuery = await window.db.collection('contentFiles').where('url', '==', fileUrl).get().catch(() => null);
+                                if (cfQuery && !cfQuery.empty) {
+                                    cfQuery.forEach(doc => {
+                                        deletePromises.push(doc.ref.delete().catch(() => {}));
+                                    });
+                                }
+
+                                const mgQuery = await window.db.collection('mediaGallery').where('url', '==', fileUrl).get().catch(() => null);
+                                if (mgQuery && !mgQuery.empty) {
+                                    mgQuery.forEach(doc => {
+                                        deletePromises.push(doc.ref.delete().catch(() => {}));
+                                    });
+                                }
+                            }
+
+                            await Promise.all(deletePromises);
+                            showNotification("✅ File deleted successfully");
+                        } catch (err) {
+                            console.error("Error deleting file:", err);
+                            showNotification("❌ Error deleting file", true);
+                        }
+                    } else {
+                        showNotification("✅ File deleted");
+                    }
                 }
             };
         };

@@ -195,43 +195,41 @@
     // Expose function globally
     window.updatePageFaviconAndManifest = updatePageFaviconAndManifest;
 
-    let retryCount = 0;
+    let listenerStarted = false;
     
     // Start a listener automatically if Firebase is available, else fallback to REST
     function initListener() {
+        if (listenerStarted) return;
+        listenerStarted = true;
+
         if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
             try {
                 const db = firebase.firestore();
                 db.collection('config').doc('festData').onSnapshot(doc => {
                     if (doc.exists) updatePageFaviconAndManifest(doc.data());
                 }, err => console.warn("Favicon sync error:", err));
+                return;
             } catch (e) {
                 console.error("Error setting up automatic favicon listener:", e);
             }
-        } else {
-            retryCount++;
-            if (retryCount < 10) {
-                // Retry for 1 second (10 * 100ms) to see if firebase loads
-                setTimeout(initListener, 100);
-            } else {
-                // Fallback to REST API if Firebase is not present on this page
-                fetch('https://firestore.googleapis.com/v1/projects/festie-s1u2h3/databases/(default)/documents/config/festData')
-                    .then(res => res.json())
-                    .then(json => {
-                        if (json && json.fields) {
-                            const doc = json.fields;
-                            const data = {};
-                            for (const key in doc) {
-                                if (doc[key].stringValue !== undefined) data[key] = doc[key].stringValue;
-                                else if (doc[key].booleanValue !== undefined) data[key] = doc[key].booleanValue;
-                                else if (doc[key].integerValue !== undefined) data[key] = doc[key].integerValue;
-                            }
-                            updatePageFaviconAndManifest(data);
-                        }
-                    })
-                    .catch(err => console.warn("Favicon REST fetch error:", err));
-            }
         }
+
+        // Direct fetch via REST API with zero timeout loop
+        fetch('https://firestore.googleapis.com/v1/projects/festie-s1u2h3/databases/(default)/documents/config/festData')
+            .then(res => res.json())
+            .then(json => {
+                if (json && json.fields) {
+                    const doc = json.fields;
+                    const data = {};
+                    for (const key in doc) {
+                        if (doc[key].stringValue !== undefined) data[key] = doc[key].stringValue;
+                        else if (doc[key].booleanValue !== undefined) data[key] = doc[key].booleanValue;
+                        else if (doc[key].integerValue !== undefined) data[key] = doc[key].integerValue;
+                    }
+                    updatePageFaviconAndManifest(data);
+                }
+            })
+            .catch(err => console.warn("Favicon REST fetch error:", err));
     }
 
     // Run when the DOM is ready or immediately

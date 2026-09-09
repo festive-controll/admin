@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -288,14 +288,24 @@
         const MAX_STORAGE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 
         function initModule() {
+            if (!window.db) {
+                window.db = (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+            }
+            if (window.db) {
+                setupRealtimeListeners();
+                return;
+            }
             let retries = 0;
             const dbCheckInterval = setInterval(() => {
+                if (!window.db) {
+                    window.db = (window.parent && window.parent.db) || ((typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) ? firebase.firestore() : null);
+                }
                 if (window.db) {
                     clearInterval(dbCheckInterval);
                     setupRealtimeListeners();
-                } else if (retries > 50) { 
+                } else if (retries > 10) { 
                     clearInterval(dbCheckInterval);
-                    console.warn("Firestore not detected after 5s. Running locally with mock data.");
+                    console.warn("Firestore not detected. Running locally with mock data.");
                     loadMockData();
                 }
                 retries++;

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -139,31 +139,46 @@
         var allPrograms = [];
         var allRegistrations = [];
         var allCandidates = [];
+        var isRegInitialized = false;
+        var regRenderDebounceTimer = null;
+
+        function queueRenderProgramsAndRegs() {
+            if (regRenderDebounceTimer) cancelAnimationFrame(regRenderDebounceTimer);
+            regRenderDebounceTimer = requestAnimationFrame(() => {
+                renderProgramsAndRegs();
+            });
+        }
 
         function initRegistrations() {
-            if(typeof db === 'undefined') {
-                if(window.db) window.db = db;
+            if (isRegInitialized) return;
+            if (typeof db === 'undefined') {
+                if (window.db) window.db = db;
                 else return;
             }
+            isRegInitialized = true;
             
             // Initial render call to show loading properly
-            renderProgramsAndRegs();
+            queueRenderProgramsAndRegs();
             
             // Fetch candidates first to get names
             db.collection('candidates').get().then(snap => {
                 allCandidates = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                
-                // Listen to programs
-                db.collection('programs').orderBy('name').onSnapshot(progSnap => {
-                    allPrograms = progSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                    
-                    // Listen to registrations
-                    db.collection('registrations').onSnapshot(regSnap => {
-                        allRegistrations = regSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                        renderProgramsAndRegs();
-                    });
-                });
-            });
+                queueRenderProgramsAndRegs();
+            }).catch(err => console.error("Candidates fetch error:", err));
+
+            // Listen to programs
+            if (window.regProgUnsub) window.regProgUnsub();
+            window.regProgUnsub = db.collection('programs').orderBy('name').onSnapshot(progSnap => {
+                allPrograms = progSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                queueRenderProgramsAndRegs();
+            }, err => console.error("Programs error:", err));
+            
+            // Listen to registrations
+            if (window.regRegsUnsub) window.regRegsUnsub();
+            window.regRegsUnsub = db.collection('registrations').onSnapshot(regSnap => {
+                allRegistrations = regSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                queueRenderProgramsAndRegs();
+            }, err => console.error("Registrations error:", err));
         }
 
         function compareProgramCodes(codeARaw, codeBRaw) {

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -135,8 +135,18 @@
         var currentSectionFilter = 'ALL';
         var currentTopicFilter = 'ALL';
         var currentSearch = '';
+        var isDataInitialized = false;
+        var renderDebounceTimer = null;
+
+        function queueRenderUI() {
+            if (renderDebounceTimer) cancelAnimationFrame(renderDebounceTimer);
+            renderDebounceTimer = requestAnimationFrame(() => {
+                renderUI();
+            });
+        }
 
         function checkDbInit() {
+            if (isDataInitialized) return;
             if (!db) {
                 if (window.db) db = window.db;
                 else if (window.parent && window.parent.db) db = window.parent.db;
@@ -144,8 +154,6 @@
             }
             if (db) {
                 initData();
-            } else {
-                setTimeout(checkDbInit, 200);
             }
         }
 
@@ -163,59 +171,63 @@
             }
         }
 
-        // Initialize Firestore Listeners
-        function initData() {
-            function compareProgramCodes(codeARaw, codeBRaw) {
-                const codeA = String(codeARaw || '').trim();
-                const codeB = String(codeBRaw || '').trim();
-                if (!codeA) return 1;
-                if (!codeB) return -1;
+        function compareProgramCodes(codeARaw, codeBRaw) {
+            const codeA = String(codeARaw || '').trim();
+            const codeB = String(codeBRaw || '').trim();
+            if (!codeA) return 1;
+            if (!codeB) return -1;
 
-                const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
-                const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+            const matchA = codeA.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
+            const matchB = codeB.match(/^([A-Za-z]+)[-_\s]*(\d+)(.*)$/);
 
-                if (matchA && matchB) {
-                    const prefixA = matchA[1].toUpperCase();
-                    const prefixB = matchB[1].toUpperCase();
-                    const catA = prefixA[0];
-                    const catB = prefixB[0];
+            if (matchA && matchB) {
+                const prefixA = matchA[1].toUpperCase();
+                const prefixB = matchB[1].toUpperCase();
+                const catA = prefixA[0];
+                const catB = prefixB[0];
 
-                    if (catA !== catB) return catA.localeCompare(catB);
+                if (catA !== catB) return catA.localeCompare(catB);
 
-                    const subA = prefixA.slice(1);
-                    const subB = prefixB.slice(1);
+                const subA = prefixA.slice(1);
+                const subB = prefixB.slice(1);
 
-                    if (subA !== subB) {
-                        if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
-                        if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
-                        return subA.localeCompare(subB);
-                    }
-
-                    const numA = parseInt(matchA[2], 10);
-                    const numB = parseInt(matchB[2], 10);
-                    if (numA !== numB) return numA - numB;
-
-                    return matchA[3].localeCompare(matchB[3]);
+                if (subA !== subB) {
+                    if (subA.startsWith('X') && subB.startsWith('Y')) return -1;
+                    if (subA.startsWith('Y') && subB.startsWith('X')) return 1;
+                    return subA.localeCompare(subB);
                 }
 
-                return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+                const numA = parseInt(matchA[2], 10);
+                const numB = parseInt(matchB[2], 10);
+                if (numA !== numB) return numA - numB;
+
+                return matchA[3].localeCompare(matchB[3]);
             }
 
-            if (typeof db !== 'undefined') {
-                // Fetch Sections
-                db.collection('sections').where('isActive', '==', true).onSnapshot(secSnap => {
-                    allSections = secSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    renderSectionTabs();
-                    renderUI();
-                });
+            return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+        }
 
-                // Fetch Programs
-                db.collection('programs').onSnapshot(progSnap => {
-                    allPrograms = progSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    allPrograms.sort((a, b) => compareProgramCodes(a.code, b.code));
-                    renderUI();
-                });
-            }
+        // Initialize Firestore Listeners
+        function initData() {
+            if (isDataInitialized) return;
+            if (typeof db === 'undefined' || !db) return;
+            isDataInitialized = true;
+
+            // Fetch Sections
+            if (window.topicSecUnsub) window.topicSecUnsub();
+            window.topicSecUnsub = db.collection('sections').where('isActive', '==', true).onSnapshot(secSnap => {
+                allSections = secSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderSectionTabs();
+                queueRenderUI();
+            }, err => console.error("Sections error:", err));
+
+            // Fetch Programs
+            if (window.topicProgUnsub) window.topicProgUnsub();
+            window.topicProgUnsub = db.collection('programs').onSnapshot(progSnap => {
+                allPrograms = progSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allPrograms.sort((a, b) => compareProgramCodes(a.code, b.code));
+                queueRenderUI();
+            }, err => console.error("Programs error:", err));
         }
 
         function renderSectionTabs() {
@@ -457,8 +469,9 @@
         }
 
         // Run on load
-        document.addEventListener('DOMContentLoaded', checkDbInit);
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkDbInit);
+        } else {
             checkDbInit();
         }
     </script>

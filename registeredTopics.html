@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -195,6 +195,14 @@
                 }
             }
 
+            let rtRenderDebounceTimer = null;
+            function queueRenderUI() {
+                if (rtRenderDebounceTimer) cancelAnimationFrame(rtRenderDebounceTimer);
+                rtRenderDebounceTimer = requestAnimationFrame(() => {
+                    renderUI();
+                });
+            }
+
             function initDataListeners() {
                 if (!db) {
                     renderEmptyState("Database connection unavailable");
@@ -202,7 +210,8 @@
                 }
 
                 // Real-time listener for programs
-                db.collection('programs').onSnapshot(pSnap => {
+                if (window.rtProgUnsub) window.rtProgUnsub();
+                window.rtProgUnsub = db.collection('programs').onSnapshot(pSnap => {
                     allProgramsMap = {};
                     pSnap.docs.forEach(d => {
                         const pData = { id: d.id, ...d.data() };
@@ -211,13 +220,14 @@
                         if (pData.programId) allProgramsMap[pData.programId] = pData;
                         if (pData.code) allProgramsMap[pData.code] = pData;
                     });
-                    renderUI();
+                    queueRenderUI();
                 }, err => {
                     console.error("Error fetching programs:", err);
                 });
 
                 // Real-time listener for candidates
-                db.collection('candidates').onSnapshot(cSnap => {
+                if (window.rtCandUnsub) window.rtCandUnsub();
+                window.rtCandUnsub = db.collection('candidates').onSnapshot(cSnap => {
                     allCandidatesMap = {};
                     cSnap.docs.forEach(d => {
                         const cData = { id: d.id, ...d.data() };
@@ -225,15 +235,16 @@
                         if (cData.id) allCandidatesMap[cData.id] = cData;
                         if (cData.chestNo) allCandidatesMap[String(cData.chestNo).trim()] = cData;
                     });
-                    renderUI();
+                    queueRenderUI();
                 }, err => {
                     console.error("Error fetching candidates:", err);
                 });
 
                 // Real-time listener for registrations
-                db.collection('registrations').onSnapshot(snap => {
+                if (window.rtRegUnsub) window.rtRegUnsub();
+                window.rtRegUnsub = db.collection('registrations').onSnapshot(snap => {
                     allRegistrations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderUI();
+                    queueRenderUI();
                 }, err => {
                     console.error("Error loading topic registrations:", err);
                     renderEmptyState("Error loading topic registrations");

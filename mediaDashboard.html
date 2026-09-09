@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -204,6 +204,9 @@
                                         <th
                                             class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
                                             Album</th>
+                                        <th
+                                            class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
+                                            Orientation</th>
                                         <th
                                             class="px-6 py-4 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
                                             Upload Date</th>
@@ -560,15 +563,28 @@
             }
 
             emptyState.classList.add('hidden');
-            tbody.innerHTML = filtered.map(m => `
+            tbody.innerHTML = filtered.map(m => {
+                const isVideo = (m.type === 'video' || (m.type && m.type.startsWith('video/')));
+                const isAudio = (m.type === 'audio' || (m.type && m.type.startsWith('audio/')));
+                const isLandscape = m.orientation === 'landscape';
+
+                return `
                 <tr class="hover:bg-gray-50 transition-colors group">
                     <td class="px-6 py-4">
-                        <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 shadow-sm relative">
-                            ${(m.type === 'video' || (m.type && m.type.startsWith('video/'))) ? `<video src="${m.url}" class="w-full h-full object-cover"></video><div class="absolute inset-0 flex items-center justify-center bg-black/20"><i class="fi fi-rr-play text-white text-[10px]"></i></div>` : (m.type === 'audio' || (m.type && m.type.startsWith('audio/'))) ? `<div class="w-full h-full flex items-center justify-center bg-blue-50"><i class="fi fi-rr-music-alt text-brand-blue"></i></div>` : `<img src="${m.url}" class="w-full h-full object-cover">`}
+                        <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 shadow-sm relative bg-gray-50 flex items-center justify-center">
+                            ${isVideo ? `<video src="${m.url}" class="w-full h-full object-cover transition-transform ${isLandscape ? '-rotate-90 scale-125' : ''}"></video><div class="absolute inset-0 flex items-center justify-center bg-black/20"><i class="fi fi-rr-play text-white text-[10px]"></i></div>` : isAudio ? `<div class="w-full h-full flex items-center justify-center bg-blue-50"><i class="fi fi-rr-music-alt text-brand-blue"></i></div>` : `<img src="${m.url}" class="w-full h-full object-cover">`}
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <span class="text-sm font-bold text-gray-800">${m.albumName || 'General'}</span>
+                        ${m.name ? `<p class="text-xs text-gray-400 truncate max-w-xs">${m.name}</p>` : ''}
+                    </td>
+                    <td class="px-6 py-4">
+                        ${isVideo ? `
+                            <button onclick="toggleMediaOrientation('${m.id}', '${m.orientation || 'portrait'}')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${isLandscape ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-gray-100 text-gray-700 border border-gray-200'} hover:opacity-80 transition-all cursor-pointer" title="Click to toggle portrait / landscape">
+                                <span>${isLandscape ? '🔄 Landscape (Rotated Left)' : '📱 Portrait'}</span>
+                            </button>
+                        ` : `<span class="text-xs text-gray-400">—</span>`}
                     </td>
                     <td class="px-6 py-4">
                         <span class="text-sm text-gray-500">${m.createdAt ? new Date(m.createdAt.toDate()).toLocaleDateString() : 'Just now'}</span>
@@ -579,7 +595,28 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
+        }
+
+        async function toggleMediaOrientation(id, currentOrientation) {
+            const newOrientation = currentOrientation === 'landscape' ? 'portrait' : 'landscape';
+            try {
+                await db.collection('mediaGallery').doc(id).update({ orientation: newOrientation });
+                const docSnap = await db.collection('mediaGallery').doc(id).get().catch(() => null);
+                if (docSnap && docSnap.exists) {
+                    const url = docSnap.data().url;
+                    if (url) {
+                        const cfSnap = await db.collection('contentFiles').where('url', '==', url).get().catch(() => null);
+                        if (cfSnap && !cfSnap.empty) {
+                            cfSnap.forEach(d => d.ref.update({ orientation: newOrientation }).catch(() => {}));
+                        }
+                    }
+                }
+                showToast(`🔄 Orientation updated to ${newOrientation}`);
+            } catch (err) {
+                console.error("Error updating orientation:", err);
+                showToast("❌ Failed to update orientation");
+            }
         }
 
         function updateStats() {
@@ -598,9 +635,20 @@
 
         function handleModalFileSelect(event) {
             const files = Array.from(event.target.files);
-            selectedFiles = [...selectedFiles, ...files];
+            const newItems = files.map(file => ({
+                file: file,
+                orientation: 'portrait'
+            }));
+            selectedFiles = [...selectedFiles, ...newItems];
             renderModalFileList();
             validateUploadForm();
+        }
+
+        function setFileOrientation(index, orientation) {
+            if (selectedFiles[index]) {
+                selectedFiles[index].orientation = orientation;
+                renderModalFileList();
+            }
         }
 
         function renderModalFileList() {
@@ -613,15 +661,40 @@
             }
 
             listWrap.classList.remove('hidden');
-            container.innerHTML = selectedFiles.map((f, i) => `
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+            container.innerHTML = selectedFiles.map((item, i) => {
+                const f = item.file;
+                const isVideo = f.type.startsWith('video');
+                const isAudio = f.type.startsWith('audio');
+                const isLandscape = item.orientation === 'landscape';
+
+                return `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
                     <div class="flex items-center gap-3 overflow-hidden">
-                        <i class="fi fi-rr-${f.type.startsWith('video') ? 'video-camera-alt' : f.type.startsWith('audio') ? 'music-alt' : 'picture'} text-brand-blue"></i>
-                        <span class="text-[13px] font-medium text-gray-800 truncate">${f.name}</span>
+                        <div class="w-8 h-8 rounded-xl ${isVideo ? 'bg-purple-50 text-purple-600' : isAudio ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-brand-blue'} flex items-center justify-center shrink-0">
+                            <i class="fi fi-rr-${isVideo ? 'video-camera-alt' : isAudio ? 'music-alt' : 'picture'} text-sm"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <span class="text-[13px] font-medium text-gray-800 truncate block">${f.name}</span>
+                            <span class="text-[10px] text-gray-400 font-semibold">${(f.size / (1024 * 1024)).toFixed(1)} MB</span>
+                        </div>
                     </div>
-                    <button onclick="removeFile(${i})" class="text-gray-400 hover:text-brand-red"><i class="fi fi-rr-cross-small"></i></button>
+                    <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                        ${isVideo ? `
+                            <div class="flex items-center bg-white border border-gray-200 rounded-xl p-0.5 shadow-2xs">
+                                <button type="button" onclick="setFileOrientation(${i}, 'portrait')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${!isLandscape ? 'bg-brand-blue text-white shadow-xs' : 'text-gray-500 hover:text-gray-800'}">
+                                    📱 Portrait
+                                </button>
+                                <button type="button" onclick="setFileOrientation(${i}, 'landscape')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${isLandscape ? 'bg-brand-blue text-white shadow-xs' : 'text-gray-500 hover:text-gray-800'}">
+                                    🔄 Landscape
+                                </button>
+                            </div>
+                        ` : ''}
+                        <button onclick="removeFile(${i})" class="w-8 h-8 rounded-xl hover:bg-red-50 text-gray-400 hover:text-brand-red flex items-center justify-center transition-colors">
+                            <i class="fi fi-rr-cross-small text-lg"></i>
+                        </button>
+                    </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function removeFile(index) {
@@ -657,8 +730,9 @@
             progressWrap.classList.remove('hidden');
 
             for (let i = 0; i < selectedFiles.length; i++) {
-                const file = selectedFiles[i];
-                document.getElementById('upload-status-text').innerText = `Uploading image ${i + 1} of ${selectedFiles.length}...`;
+                const fileItem = selectedFiles[i];
+                const file = fileItem.file;
+                document.getElementById('upload-status-text').innerText = `Uploading media ${i + 1} of ${selectedFiles.length}...`;
 
                 try {
                     const formData = new FormData();
@@ -679,6 +753,7 @@
                         public_id: cloudData.public_id || '',
                         albumId: albumId,
                         albumName: albumName,
+                        orientation: fileItem.orientation || 'portrait',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
@@ -691,18 +766,31 @@
 
                 } catch (err) {
                     console.error(err);
-                    showToast("âŒ Failed to upload " + file.name);
+                    showToast("❌ Failed to upload " + file.name);
                 }
             }
 
-            showToast("âœ… Successfully uploaded " + selectedFiles.length + " images!");
+            showToast("✅ Successfully uploaded " + selectedFiles.length + " items!");
             setTimeout(closeUploadModal, 1000);
         }
 
         async function deleteMedia(id) {
             if (confirm("Delete this image permanently?")) {
-                await db.collection('mediaGallery').doc(id).delete();
-                showToast("ðŸ—‘ï¸ Image removed.");
+                try {
+                    const docSnap = await db.collection('mediaGallery').doc(id).get().catch(() => null);
+                    const url = docSnap && docSnap.exists ? docSnap.data().url : null;
+                    await db.collection('mediaGallery').doc(id).delete();
+                    if (url) {
+                        const cfSnap = await db.collection('contentFiles').where('url', '==', url).get().catch(() => null);
+                        if (cfSnap && !cfSnap.empty) {
+                            cfSnap.forEach(d => d.ref.delete().catch(() => {}));
+                        }
+                    }
+                    showToast("🗑️ Image removed.");
+                } catch (err) {
+                    console.error("Error removing image:", err);
+                    showToast("❌ Failed to delete image.");
+                }
             }
         }
 
