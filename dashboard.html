@@ -1909,6 +1909,11 @@
                     if (currentCrumb) { currentCrumb.classList.remove('hidden'); currentCrumb.innerText = sectionName + ' Topics'; }
                     loader.classList.add('hidden');
 
+                    // Trigger data fetch after scripts are injected
+                    if (typeof window.fetchTMTopicData === 'function') {
+                        window.fetchTMTopicData(sectionName);
+                    }
+
                 }).catch(e => { showToast("Failed to load topic dashboard."); loader.classList.add('hidden'); });
         }
 
