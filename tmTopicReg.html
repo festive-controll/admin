@@ -398,7 +398,7 @@
 
             if (reg) {
                 db.collection('registrations').doc(reg.id).update(updateData).then(() => {
-                    typeof showToast === 'function' && showToast("âœ… Topic Details Saved Successfully!");
+                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!");
                     btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 }).catch(err => {
@@ -412,7 +412,7 @@
                 updateData.candidateIds = [];
                 updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 db.collection('registrations').add(updateData).then(() => {
-                    typeof showToast === 'function' && showToast("âœ… Topic Details Saved Successfully!");
+                    typeof showToast === 'function' && showToast("✅ Topic Details Saved Successfully!");
                     btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Details';
                     btn.disabled = false;
                 }).catch(err => {

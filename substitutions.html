@@ -131,7 +131,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                 <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                     <span id="results-count">Showing 0 results</span>
-                    <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
+                    <span class="text-gray-300 text-[10px] hidden sm:inline">•</span>
                     <div class="relative ml-2 sm:ml-0">
                         <select id="subs-per-page" class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
                             <option value="15">15</option>
@@ -516,7 +516,7 @@
 
                 await batch.commit();
 
-                typeof showToast === 'function' ? showToast("âœ… Substitution deleted & registration reverted!") : alert("Substitution deleted successfully!");
+                typeof showToast === 'function' ? showToast("✅ Substitution deleted & registration reverted!") : alert("Substitution deleted successfully!");
             } catch (err) {
                 console.error(err);
                 typeof showToast === 'function' ? showToast("âŒ Delete Error: " + err.message) : alert("Error: " + err.message);
@@ -781,7 +781,7 @@
                 await batch.commit();
 
                 // Success
-                typeof showToast === 'function' && showToast("âœ… Substitution Saved & Applied!");
+                typeof showToast === 'function' && showToast("✅ Substitution Saved & Applied!");
                 closeSubSidebar();
             } catch (err) {
                 console.error(err);

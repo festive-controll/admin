@@ -503,8 +503,8 @@
 
 
             btn.innerHTML = '<div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>'; btn.disabled = true;
-            if (existing) db.collection('registrations').doc(existing.id).update(payload).then(() => { typeof showToast === 'function' && showToast("âœ… Registration Updated!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; });
-            else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); db.collection('registrations').add(payload).then(() => { typeof showToast === 'function' && showToast("âœ… Registration Successful!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; }); }
+            if (existing) db.collection('registrations').doc(existing.id).update(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Updated!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; });
+            else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); db.collection('registrations').add(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Successful!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; }); }
         };
     </script>
 </body>

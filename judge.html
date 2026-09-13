@@ -429,7 +429,7 @@
                 }
 
                 document.getElementById('topProgTitle').innerText = `${activeProg.name || 'Program'} (${activeProg.code || ''})`;
-                document.getElementById('topProgMeta').innerText = `VENUE: ${activeProg.resolvedVenue} â€¢ SECTION: ${activeProg.section || 'BIDAYA'}`;
+                document.getElementById('topProgMeta').innerText = `VENUE: ${activeProg.resolvedVenue} • SECTION: ${activeProg.section || 'BIDAYA'}`;
 
                 await renderSheets();
 
@@ -695,7 +695,7 @@
                 }
 
                 pdf.save(`Judgesheet_${activeProg?.code || 'PRG'}_${currentJudgeCount}Judges.pdf`);
-                showToast("âœ… PDF downloaded successfully!");
+                showToast("✅ PDF downloaded successfully!");
             } catch(e) {
                 console.error(e);
                 showToast("âŒ PDF Export failed: " + e.message, "#ef4444");
@@ -720,7 +720,7 @@
                     a.download = `Judgesheet_${activeProg?.code || 'PRG'}.png`;
                     a.href = dataUrl;
                     a.click();
-                    showToast("âœ… PNG image downloaded!");
+                    showToast("✅ PNG image downloaded!");
                 }
             } catch(e) {
                 console.error(e);

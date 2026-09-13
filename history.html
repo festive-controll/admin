@@ -686,7 +686,7 @@
             }
 
             if (manualTrigger) {
-                showToast("âœ… Current visit & IP logged successfully!", "success");
+                showToast("✅ Current visit & IP logged successfully!", "success");
                 refreshAllData();
             }
         }
@@ -942,7 +942,7 @@
                 document.getElementById('statDbStatusText').innerText = "Healthy (Online)";
                 document.getElementById('statDbStatusText').className = "text-2xl font-black text-emerald-600";
 
-                showToast(`âœ… Database Speed Test Complete! Read: ${readLatency}ms | Write: ${writeLatency}ms`, "success");
+                showToast(`✅ Database Speed Test Complete! Read: ${readLatency}ms | Write: ${writeLatency}ms`, "success");
             } catch (err) {
                 console.error("DB Speed Test Failed:", err);
                 document.getElementById('testWriteLatency').innerText = "Failed";

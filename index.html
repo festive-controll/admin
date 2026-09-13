@@ -146,7 +146,7 @@
             transition-delay: 0.15s;
         }
 
-        /* â”€â”€ System Offline Screen â”€â”€ */
+        /* ── System Offline Screen ── */
         @keyframes slide-up { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 
         /* Cobe font family */
@@ -288,7 +288,7 @@
             .error-subtitle { font-size: 20px; }
         }
 
-        /* â”€â”€ Security Lock Modal â”€â”€ */
+        /* ── Security Lock Modal ── */
         @keyframes scan-line { 0%{top:8%} 50%{top:88%} 100%{top:8%} }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
         @keyframes bio-slide-up { from{opacity:0;transform:translateY(32px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
@@ -982,7 +982,7 @@
                     });
                 }
 
-                // â”€â”€ System Status Gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                // ── System Status Gate ──────────────────────────────────
                 if (data && data.isActive === false) {
                     showOfflineScreen(festName);
                 } else {
@@ -998,7 +998,7 @@
 
         // --- Connectivity Monitoring ---
         window.addEventListener('online', () => {
-            showToast("<b>âœ…</b> Connection restored.");
+            showToast("<b>✅</b> Connection restored.");
         });
 
         window.addEventListener('offline', () => {
@@ -1263,7 +1263,7 @@
                     firebase.firestore().collection('admin').doc('credentials').set({ username: 'admin', password: '81119', name: 'Kauthukam' }).catch(() => { });
                     firebase.firestore().collection('config').doc('festData').set({ name: 'Kauthukam', isActive: true }).catch(() => { });
 
-                    showToast('<b>âœ…</b> Successfully logged in!');
+                    showToast('<b>✅</b> Successfully logged in!');
                     localStorage.setItem('isLoggedIn', 'true');
                     handleRememberMe(user);
                     window.location.href = 'dashboard.html';
@@ -1273,7 +1273,7 @@
                 }
             };
 
-            // â”€â”€ Step 1: Check Owner (admin) credentials â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Step 1: Check Owner (admin) credentials ──────────────────
             const dbRef = firebase.firestore().collection('admin').doc('credentials');
 
             dbRef.get().then((doc) => {
@@ -1528,7 +1528,7 @@
                                 completeFestUserLogin();
                             }
                         } else {
-                            // â”€â”€ Step 3: Check Judges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                            // ── Step 3: Check Judges ─────────────────────────────
                             firebase.firestore().collection('judges')
                                 .where('username', '==', user)
                                 .where('pass', '==', pass)
@@ -1540,11 +1540,11 @@
                                         
                                         if (judgeData.status && judgeData.status !== 'approved' && judgeData.status !== 'APPROVED') {
                                             resetBtn();
-                                            showToast('<b>ðŸš«</b> Your account is not approved yet.');
+                                            showToast('<b>🚫</b> Your account is not approved yet.');
                                             return;
                                         }
 
-                                        showToast('<b>âœ…</b> Successfully logged in!');
+                                        showToast('<b>✅</b> Successfully logged in!');
                                         localStorage.setItem('isLoggedIn', 'true');
                                         localStorage.setItem('userRole', 'judge');
                                         localStorage.setItem('festUserId', judgeDoc.id);

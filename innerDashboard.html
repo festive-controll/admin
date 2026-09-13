@@ -1482,7 +1482,7 @@
                             class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                             <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                                 <span id="du-pagination-label">Loading...</span>
-                                <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
+                                <span class="text-gray-300 text-[10px] hidden sm:inline">•</span>
                                 <div class="relative ml-2 sm:ml-0">
                                     <select id="du-user-per-page" onchange="duChangeUserPerPage(this.value)"
                                         class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -2237,7 +2237,7 @@
                 <div class="relative">
                     <select id="ar-role"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
-                        <option value="" disabled selected>Select a roleâ€¦</option>
+                        <option value="" disabled selected>Select a role…</option>
                         <option value="Admin">Admin</option>
                         <option value="Team Manager">Team Manager</option>
                         <option value="Media">Media</option>
@@ -2257,7 +2257,7 @@
                 <div class="relative">
                     <select id="ar-team"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
-                        <option value="" disabled selected>Select a teamâ€¦</option>
+                        <option value="" disabled selected>Select a team…</option>
                     </select>
                     <i
                         class="fi fi-rr-angle-small-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
@@ -2380,7 +2380,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
-            // â”€â”€ Auth Guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ── Auth Guard ─────────────────────────────────────────────────
             (function () {
                 const isLoggedIn = localStorage.getItem('isLoggedIn');
                 const userRole = localStorage.getItem('userRole');
@@ -2402,7 +2402,7 @@
         // Roles and permissions are now handled dynamically via localStorage inside functions
 
 
-        // â”€â”€ Firebase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Firebase ───────────────────────────────────────────────────
         var firebaseConfig = {
             apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
             authDomain: "festie-s1u2h3.firebaseapp.com",
@@ -2417,7 +2417,7 @@
 
 
 
-        // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Toast ──────────────────────────────────────────────────────
         function showToast(msg, duration = 2500) {
             Toastify({
                 text: msg, duration: duration, gravity: "top", position: "center",
@@ -2426,7 +2426,7 @@
             }).showToast();
         }
 
-        // â”€â”€ UI helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── UI helpers ─────────────────────────────────────────────────
         function updateFestDataUI(name, isActive, logos = {}) {
             const ch = name ? name.charAt(0).toUpperCase() : 'S';
             const logo = logos.logo192 || logos.logo512 || logos.logo;
@@ -2559,7 +2559,7 @@
 
         // Action Menu Logic centralized below
 
-        // â”€â”€ Users Panel Data Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Users Panel Data Management ────────────────────────────────
         let duOwnerUser = null;
         let duFestUsersList = [];
         let duAllUsers = [];
@@ -2615,8 +2615,8 @@
                 <div class="col-span-4 flex items-center gap-3">
                     <div class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-brand-blue font-bold text-sm shrink-0">${duInitial(u.name || u.username)}</div>
                     <div class="flex flex-col">
-                        <span class="text-[13.5px] font-bold text-gray-900 leading-none">${u.name || u.username || 'â€”'}</span>
-                        <span class="text-[12px] text-gray-400 mt-1">${u.email || u.username || 'â€”'}</span>
+                        <span class="text-[13.5px] font-bold text-gray-900 leading-none">${u.name || u.username || '—'}</span>
+                        <span class="text-[12px] text-gray-400 mt-1">${u.email || u.username || '—'}</span>
                     </div>
                 </div>
                 <div class="col-span-3 flex flex-col gap-1.5 items-start">
@@ -2662,10 +2662,10 @@
                     </div>
                     <div class="flex flex-col overflow-hidden w-full">
                         <h4 class="text-[15px] font-bold text-gray-900 leading-tight truncate w-full flex items-center gap-1">
-                            ${u.name || u.username || 'â€”'}
+                            ${u.name || u.username || '—'}
                             ${!isActive ? '<div class="w-2 h-2 rounded-full bg-red-500 ml-1" title="Inactive"></div>' : ''}
                         </h4>
-                        <p class="text-[12px] text-gray-500 truncate w-full mt-0.5">${u.email || u.username || 'â€”'}</p>
+                        <p class="text-[12px] text-gray-500 truncate w-full mt-0.5">${u.email || u.username || '—'}</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-between w-full mt-auto">
@@ -2678,7 +2678,7 @@
             </div>`;
         }
 
-        // â”€â”€ Global Action Menu System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Global Action Menu System ──────────────────────────────────
         let activeDropdownId = null;
         function openActionMenu(userId, event) {
             event.stopPropagation();
@@ -2730,7 +2730,7 @@
         document.addEventListener('click', closeAllDropdowns);
         window.addEventListener('scroll', closeAllDropdowns, true);
 
-        // â”€â”€ Grade & Pattern Templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Grade & Pattern Templates ─────────────────────────────────
         // Managed by embedded iframes: cardsetupGrade.html & cardsetupPosit.html
 
 
@@ -2812,7 +2812,7 @@
         db.collection('teams').where('isActive', '==', true).onSnapshot(snap => {
             const select = document.getElementById('ar-team');
             const currentVal = select ? select.value : '';
-            let optionsHTML = '<option value="" disabled selected>Select a teamâ€¦</option>';
+            let optionsHTML = '<option value="" disabled selected>Select a team…</option>';
             snap.forEach(doc => {
                 const team = doc.data();
                 optionsHTML += `<option value="${team.name}">${team.name}</option>`;
@@ -3099,13 +3099,13 @@
             if (bc) bc.className = isTable ? inactiveClassList : activeClassList;
         }
 
-        // â”€â”€ Tab switching (for future tabs) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Tab switching (for future tabs) ────────────────────────────
         function showOwnerTab(tab) {
             const currentRole = localStorage.getItem('userRole');
             const canManage = localStorage.getItem('userManagement') === 'true';
             const isAsstOwner = localStorage.getItem('semiOwner') === 'true';
             if (tab === 'users' && currentRole !== 'owner' && !isAsstOwner && !canManage) {
-                showToast('<b>ðŸš«</b> Access denied.');
+                showToast('<b>🚫</b> Access denied.');
                 // If this was triggered by URL, fallback to grade templates
                 if (window.location.search.includes('tab=users')) {
                     showOwnerTab('grade');
@@ -3438,7 +3438,7 @@
             showToast('<b>✅</b> Owner Biometric Verified! Owner Dashboard Unlocked.');
         }
 
-        // â”€â”€ Manage Account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Manage Account ─────────────────────────────────────────────
         function toggleEdit(id) {
             const el = document.getElementById(id);
             el.disabled = !el.disabled;
@@ -3507,7 +3507,7 @@
 
             if (promise) {
                 promise.then(() => {
-                    showToast('<b>âœ…</b> Updated! Logout and Login again.');
+                    showToast('<b>✅</b> Updated! Logout and Login again.');
                     setTimeout(() => {
                         localStorage.removeItem('isLoggedIn');
                         window.location.href = 'index.html';
@@ -3516,7 +3516,7 @@
             }
         }
 
-        // â”€â”€ Fest Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Fest Data ──────────────────────────────────────────────────
         function openFestData(e) {
             if (e) e.preventDefault();
             toggleDropdown();
@@ -3560,7 +3560,7 @@
             };
 
             db.collection('config').doc('festData').set(payload, { merge: true }).then(() => {
-                showToast('<b>âœ…</b> Fest data updated!');
+                showToast('<b>✅</b> Fest data updated!');
                 closeFestData();
             }).catch(err => showToast('<b>âŒ</b> ' + err.message));
         }
@@ -3570,7 +3570,7 @@
                 liveDraft: checked,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true }).then(() => {
-                showToast(`<b>âœ…</b> Live Draft turned ${checked ? 'ON' : 'OFF'}`);
+                showToast(`<b>✅</b> Live Draft turned ${checked ? 'ON' : 'OFF'}`);
             }).catch(err => {
                 showToast('<b>âŒ</b> ' + err.message);
                 const sidebarToggle = document.getElementById('sidebar-live-draft');
@@ -3582,7 +3582,7 @@
 
         function closeAllSidebars() { closeManageAccount(); closeFestData(); closeLimitSidebar(); }
 
-        // â”€â”€ Assign Role Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Assign Role Sidebar ────────────────────────────────────────
         let currentEditId = null;
 
         function openAssignRole(userId = null) {
@@ -3717,7 +3717,7 @@
             const btn = document.querySelector('#assignRoleSidebar button[onclick="arSave()"]');
             const origHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦';
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…';
 
             const payload = {
                 name,
@@ -3746,7 +3746,7 @@
                 closeAssignRole();
                 btn.disabled = false;
                 btn.innerHTML = origHTML;
-                showToast(`<b>âœ…</b> User successfully ${currentEditId ? 'updated' : 'added'}!`);
+                showToast(`<b>✅</b> User successfully ${currentEditId ? 'updated' : 'added'}!`);
             }).catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = origHTML;
@@ -3761,30 +3761,30 @@
             setTimeout(() => el.classList.remove('border-red-400', 'ring-2', 'ring-red-200'), 1800);
         }
 
-        // â”€â”€ Manage User Status & Deletion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Manage User Status & Deletion ──────────────────────────────
         function toggleUserStatus(userId, currentStatus) {
             const newStatus = !currentStatus;
             db.collection('festUsers').doc(userId).update({ isActive: newStatus })
-                .then(() => showToast(`<b>âœ…</b> User account ${newStatus ? 'activated' : 'deactivated'}!`))
+                .then(() => showToast(`<b>✅</b> User account ${newStatus ? 'activated' : 'deactivated'}!`))
                 .catch(err => showToast('<b>âŒ</b> Error updating status: ' + err.message));
         }
 
         function deleteUser(userId) {
             if (confirm("Are you sure you want to completely remove this user? This action cannot be undone.")) {
                 db.collection('festUsers').doc(userId).delete()
-                    .then(() => showToast('<b>ðŸ—‘ï¸</b> User deleted successfully!'))
+                    .then(() => showToast('<b>🗑️ï¸</b> User deleted successfully!'))
                     .catch(err => showToast("<b>âŒ</b> Error deleting user: " + err.message));
             }
         }
 
-        // â”€â”€ Permissions Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Permissions Logic ──────────────────────────────────────────
         let currentPermUserId = null;
         function openPermissions(userId) {
             const currentRole = localStorage.getItem('userRole');
             const isAsstOwner = localStorage.getItem('semiOwner') === 'true';
 
             if (currentRole !== 'owner' && !isAsstOwner) {
-                showToast('<b>ðŸš«</b> Access denied.');
+                showToast('<b>🚫</b> Access denied.');
                 return;
             }
             const user = duFestUsersList.find(u => u.id === userId);
@@ -3816,7 +3816,7 @@
             const btn = document.getElementById('btn-save-perms');
             const origHTML = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Savingâ€¦';
+            btn.innerHTML = '<div class="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div> Saving…';
 
             const permissions = {
                 innerDashboard: document.getElementById('perm-inner-dashboard').checked,
@@ -3831,7 +3831,7 @@
                     closePermissions();
                     btn.disabled = false;
                     btn.innerHTML = origHTML;
-                    showToast('<b>âœ…</b> Permissions updated successfully!');
+                    showToast('<b>✅</b> Permissions updated successfully!');
                 }).catch(err => {
                     showToast('<b>âŒ</b> Error: ' + err.message);
                     btn.disabled = false;
@@ -3839,7 +3839,7 @@
                 });
         }
 
-        // â”€â”€ UI Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── UI Controls ────────────────────────────────────────────────
         function toggleSidebar() {
             const s = document.getElementById('ownerSidebar');
             const o = document.getElementById('ownerSidebarOverlay');
@@ -3871,7 +3871,7 @@
             document.getElementById('profileDropdownOwner').classList.toggle('hidden');
         }
 
-        // â”€â”€ Access Requests Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Access Requests Management ───────────────────────────────
         function setupNotifyListener() {
             db.collection('requests').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
                 const table = document.getElementById('requestTable');
@@ -3915,16 +3915,16 @@
             if (allow) {
                 db.collection('festUsers').doc(adminId).update({ 'permissions.resultManagement': true })
                     .then(() => {
-                        showToast("<b>âœ…</b> Access Granted!");
+                        showToast("<b>✅</b> Access Granted!");
                         return db.collection('requests').doc(requestId).delete();
                     }).catch(err => showToast("<b>âŒ</b> " + err.message));
             } else {
                 db.collection('requests').doc(requestId).delete()
-                    .then(() => showToast("<b>ðŸ—‘ï¸</b> Request Denied."));
+                    .then(() => showToast("<b>🗑️ï¸</b> Request Denied."));
             }
         }
 
-        // â”€â”€ Token Generation Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Token Generation Logic ────────────────────────────────────
         let tokenTimer = null;
         function generateToken() {
             const timeVal = parseInt(document.getElementById('tokenTime').value) || 60;
@@ -3967,7 +3967,7 @@
             }, 1000);
         }
 
-        // â”€â”€ System Alerts Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── System Alerts Logic ────────────────────────────────────────
         async function sendAlert(e) {
             e.preventDefault();
             const title = document.getElementById('alertTitle').value;
@@ -3987,7 +3987,7 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     readBy: []
                 });
-                showToast("<b>âœ…</b> Alert sent successfully");
+                showToast("<b>✅</b> Alert sent successfully");
                 document.getElementById('alertForm').reset();
                 loadAlertsHistory();
             } catch (err) {
@@ -4041,17 +4041,17 @@
         function deleteAlert(id) {
             if (confirm('Are you sure you want to delete this alert? It will be removed for everyone.')) {
                 db.collection('alerts').doc(id).delete()
-                    .then(() => showToast('<b>âœ…</b> Alert deleted'))
+                    .then(() => showToast('<b>✅</b> Alert deleted'))
                     .catch(err => showToast('<b>âŒ</b> Error deleting: ' + err.message));
             }
         }
 
-        // â”€â”€ Topic Registration Windows & Sets Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Topic Registration Windows & Sets Logic ────────────────────
         function saveTopicSettings() {
             const start = document.getElementById('topic-start').value;
             const end = document.getElementById('topic-end').value;
             db.collection('config').doc('topicReg').set({ start, end })
-                .then(() => showToast("<b>âœ…</b> Topic window saved!"));
+                .then(() => showToast("<b>✅</b> Topic window saved!"));
         }
 
         db.collection('config').doc('topicReg').onSnapshot(doc => {
@@ -4083,8 +4083,8 @@
             const maxCount = document.getElementById('lim-max').value;
             if (!name) return showToast("<b>âŒ</b> Set Name is required.");
             const payload = { name, minCount, maxCount };
-            if (editingLimitId) db.collection('programSets').doc(editingLimitId).update(payload).then(() => { showToast("<b>âœ…</b> Set updated!"); closeLimitSidebar(); });
-            else db.collection('programSets').add(payload).then(() => { showToast("<b>âœ…</b> Set added!"); closeLimitSidebar(); });
+            if (editingLimitId) db.collection('programSets').doc(editingLimitId).update(payload).then(() => { showToast("<b>✅</b> Set updated!"); closeLimitSidebar(); });
+            else db.collection('programSets').add(payload).then(() => { showToast("<b>✅</b> Set added!"); closeLimitSidebar(); });
         }
         function deleteLimit(id) { if (confirm("Delete this set?")) db.collection('programSets').doc(id).delete(); }
 
@@ -4312,11 +4312,11 @@
             }
         }
 
-        // â”€â”€ Grade & Pattern Templates Logic Removed (Using cardsetup.html iframe) â”€â”€
+        // ── Grade & Pattern Templates Logic Removed (Using cardsetup.html iframe) ──
 
 
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // BULK IMPORT â€” CANDIDATE DATA
+        // BULK IMPORT — CANDIDATE DATA
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let CAND_HEADERS = ['name', 'section', 'admissionNo', 'class', 'status'];
         const PROG_HEADERS = ['code', 'name', 'section', 'type', 'venueType', 'subStage', 'maxParticipants', 'status', 'progSet', 'gradeTemplate', 'positionTemplate'];
@@ -4606,12 +4606,12 @@
             preview.classList.remove('hidden');
             const totalValid = bulkCandidateRows.filter(r => r._valid).length;
             const totalError = bulkCandidateRows.length - totalValid;
-            countEl.innerText = `(${bulkCandidateRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkCandidateRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkCandidateRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
                 <div class="bg-red-50 border border-red-100 rounded-xl p-4 space-y-1">
-                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors â€” they will be skipped during import:</div>
+                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors — they will be skipped during import:</div>
                     ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
                 </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All rows are valid!</div>';
 
@@ -4712,7 +4712,7 @@
 
             batch.commit()
                 .then(() => {
-                    showToast('<b>âœ…</b> ' + validRows.length + ' candidates imported!');
+                    showToast('<b>✅</b> ' + validRows.length + ' candidates imported!');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fi fi-rr-upload"></i> Import All Valid';
                     bulkCandidateRows = [];
@@ -4726,7 +4726,7 @@
         }
 
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // BULK IMPORT â€” PROGRAM DATA
+        // BULK IMPORT — PROGRAM DATA
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkProgramRows = [];
         let bulkProgramValidSections = [];
@@ -4810,7 +4810,7 @@
 
                 window.bulkExistingCodesMap = {};
                 window.bulkExistingCodes = [];
-                showToast(`<b>âœ…</b> Successfully deleted ${deletedCount} program(s) from Firebase!`);
+                showToast(`<b>✅</b> Successfully deleted ${deletedCount} program(s) from Firebase!`);
 
                 if (typeof bulkProgramRows !== 'undefined' && bulkProgramRows.length > 0) {
                     revalidateAllProgramRows();
@@ -5026,12 +5026,12 @@
 
             const totalValid = bulkProgramRows.filter(r => r._valid).length;
             const totalError = bulkProgramRows.length - totalValid;
-            countEl.innerText = `(${bulkProgramRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkProgramRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkProgramRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
                 <div class="bg-red-50 border border-red-100 rounded-xl p-4 space-y-1">
-                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors â€” they will be skipped unless corrected:</div>
+                    <div class="text-[13px] font-bold text-red-600 mb-2"><i class="fi fi-rr-exclamation"></i> ${errorRows.length} row(s) have errors — they will be skipped unless corrected:</div>
                     ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
                 </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All rows are valid!</div>';
 
@@ -5128,7 +5128,7 @@
                     await batch.commit();
                 }
 
-                showToast('<b>âœ…</b> ' + importedCount + ' programs imported successfully!');
+                showToast('<b>✅</b> ' + importedCount + ' programs imported successfully!');
                 bulkProgramRows = [];
                 renderProgramPreview();
             } catch (err) {
@@ -5141,7 +5141,7 @@
         }
 
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // BULK IMPORT â€” GRADE & POSITION TEMPLATES
+        // BULK IMPORT — GRADE & POSITION TEMPLATES
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkGradeTplRows = [];
         let bulkPosTplRows = [];
@@ -5197,7 +5197,7 @@
             preview.classList.remove('hidden');
             const totalValid = rows.filter(r => r._valid).length;
             const totalError = rows.length - totalValid;
-            countEl.innerText = `(${rows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${rows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = rows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
@@ -5260,7 +5260,7 @@
                 }
 
                 await batch.commit();
-                showToast(`<b>âœ…</b> ${Object.keys(groups).length} templates imported!`);
+                showToast(`<b>✅</b> ${Object.keys(groups).length} templates imported!`);
                 if (type === 'grade') bulkGradeTplRows = []; else bulkPosTplRows = [];
                 renderTplPreview(type);
             } catch (err) {
@@ -5272,7 +5272,7 @@
         }
 
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // BULK IMPORT â€” JUDGMENT DATA
+        // BULK IMPORT — JUDGMENT DATA
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkJudgementRows = [];
         let bulkJudgementPrograms = {};
@@ -5417,7 +5417,7 @@
             preview.classList.remove('hidden');
             const totalValid = bulkJudgementRows.filter(r => r._valid).length;
             const totalError = bulkJudgementRows.length - totalValid;
-            countEl.innerText = `(${bulkJudgementRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkJudgementRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkJudgementRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
@@ -5550,7 +5550,7 @@
                 });
 
                 await batch.commit();
-                showToast(`<b>âœ…</b> ${validRows.length} judgment entries imported successfully!`);
+                showToast(`<b>✅</b> ${validRows.length} judgment entries imported successfully!`);
                 bulkJudgementRows = [];
                 renderJudgementPreview();
             } catch (err) {
@@ -5563,7 +5563,7 @@
         }
 
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-        // BULK IMPORT â€” SCHEDULE DATA
+        // BULK IMPORT — SCHEDULE DATA
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let bulkScheduleRows = [];
         let bulkSchedulePrograms = {};
@@ -5734,7 +5734,7 @@
             preview.classList.remove('hidden');
             const totalValid = bulkScheduleRows.filter(r => r._valid).length;
             const totalError = bulkScheduleRows.length - totalValid;
-            countEl.innerText = `(${bulkScheduleRows.length} rows â€” ${totalValid} valid, ${totalError} with errors)`;
+            countEl.innerText = `(${bulkScheduleRows.length} rows — ${totalValid} valid, ${totalError} with errors)`;
 
             const errorRows = bulkScheduleRows.filter(r => !r._valid);
             errBox.innerHTML = errorRows.length ? `
@@ -5849,7 +5849,7 @@
                     await batch.commit();
                 }
 
-                typeof showToast === 'function' ? showToast(`<b>âœ…</b> ${updatedCount} program schedule(s) updated successfully!`) : alert(`${updatedCount} program schedule(s) updated!`);
+                typeof showToast === 'function' ? showToast(`<b>✅</b> ${updatedCount} program schedule(s) updated successfully!`) : alert(`${updatedCount} program schedule(s) updated!`);
                 bulkScheduleRows = [];
                 renderSchedulePreview();
             } catch (err) {
@@ -5886,7 +5886,7 @@
             });
         }
 
-        // â”€â”€ Logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Logout ─────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const role = localStorage.getItem('userRole');
             const bcBase = document.getElementById('breadcrumb-base');
@@ -6082,7 +6082,7 @@
                 updatedAt: new Date()
             };
             db.collection('config').doc('judgesheet').set(jsConfig)
-                .then(() => showToast('<b>âœ…</b> Judge Sheet Template saved successfully!'))
+                .then(() => showToast('<b>✅</b> Judge Sheet Template saved successfully!'))
                 .catch(err => showToast('<b>âŒ</b> Error saving template: ' + err.message));
         }
 
@@ -6177,12 +6177,12 @@
 
                 if (id) {
                     await db.collection('news').doc(id).update(newsData);
-                    showToast('<b>âœ…</b> News updated successfully!');
+                    showToast('<b>✅</b> News updated successfully!');
                 } else {
                     newsData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                     newsData.isMain = false; // By default
                     await db.collection('news').add(newsData);
-                    showToast('<b>âœ…</b> News added successfully!');
+                    showToast('<b>✅</b> News added successfully!');
                 }
 
                 resetNewsForm();
@@ -6269,7 +6269,7 @@
             if (!confirm("Are you sure you want to delete this news?")) return;
             try {
                 await db.collection('news').doc(id).delete();
-                showToast('<b>âœ…</b> News deleted!');
+                showToast('<b>✅</b> News deleted!');
                 loadNews();
             } catch (err) {
                 showToast('<b>âŒ</b> ' + err.message);
@@ -6298,7 +6298,7 @@
                 batch.update(db.collection('news').doc(selected.value), { isMain: true });
 
                 await batch.commit();
-                showToast('<b>âœ…</b> Main news updated successfully!');
+                showToast('<b>✅</b> Main news updated successfully!');
                 loadNews();
             } catch (err) {
                 console.error(err);
@@ -6386,7 +6386,7 @@
                     batch.update(docRef, { order: idx + 1 });
                 });
                 await batch.commit();
-                typeof showToast === 'function' ? showToast('<b>âœ…</b> Section order saved successfully!') : alert('Section order saved!');
+                typeof showToast === 'function' ? showToast('<b>✅</b> Section order saved successfully!') : alert('Section order saved!');
             } catch (err) {
                 console.error("Error saving section order:", err);
                 typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to save section order.') : alert('Failed to save section order.');
@@ -6480,7 +6480,7 @@
                 }
                 input.value = '';
                 if (waCheckbox) waCheckbox.checked = true;
-                typeof showToast === 'function' ? showToast('<b>âœ…</b> Venue Type added successfully!') : alert('Venue Type added!');
+                typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type added successfully!') : alert('Venue Type added!');
             } catch (err) {
                 console.error("Error adding venue type:", err);
                 typeof showToast === 'function' ? showToast('<b>âŒ</b> Failed to add venue type.') : alert('Failed to add venue type.');
@@ -6496,7 +6496,7 @@
                     venueTypesList = venueTypesList.filter(vt => vt.id !== id);
                     renderVenueTypesList();
                 }
-                typeof showToast === 'function' ? showToast('<b>âœ…</b> Venue Type deleted successfully!') : alert('Venue Type deleted!');
+                typeof showToast === 'function' ? showToast('<b>✅</b> Venue Type deleted successfully!') : alert('Venue Type deleted!');
             } catch (err) {
                 console.error("Error deleting venue type:", err);
             }
@@ -6659,7 +6659,7 @@
                     status: 'approved',
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                typeof showToast === 'function' ? showToast('<b>âœ…</b> Registration approved!') : alert('Registration approved!');
+                typeof showToast === 'function' ? showToast('<b>✅</b> Registration approved!') : alert('Registration approved!');
                 loadPendingApprovals();
             } catch (err) {
                 console.error(err);
@@ -6674,7 +6674,7 @@
                     status: 'rejected',
                     rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                typeof showToast === 'function' ? showToast('<b>âœ…</b> Registration rejected!') : alert('Registration rejected!');
+                typeof showToast === 'function' ? showToast('<b>✅</b> Registration rejected!') : alert('Registration rejected!');
                 loadPendingApprovals();
             } catch (err) {
                 console.error(err);

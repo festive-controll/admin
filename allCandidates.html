@@ -226,7 +226,7 @@
                 class="flex flex-col sm:flex-row justify-between items-center py-3 px-4 sm:px-6 bg-white border-t border-gray-100 text-[13px] text-gray-600">
                 <div class="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                     <span id="results-count">Showing results</span>
-                    <span class="text-gray-300 text-[10px] hidden sm:inline">â—</span>
+                    <span class="text-gray-300 text-[10px] hidden sm:inline">•</span>
                     <div class="relative ml-2 sm:ml-0">
                         <select id="cand-per-page" onchange="changeCandPerPage(this.value)"
                             class="appearance-none border border-gray-200 rounded-md py-1 pl-2 pr-6 bg-white outline-none hover:border-gray-300 focus:border-gray-400 cursor-pointer">
@@ -473,7 +473,7 @@
 
                 if (data.secure_url) {
                     selectedImageUrl = data.secure_url;
-                    showToast("âœ… Photo uploaded!");
+                    showToast("✅ Photo uploaded!");
                 } else {
                     throw new Error("Upload failed");
                 }
@@ -789,7 +789,7 @@
 
                 batch.commit().then(() => {
                     selectedIds.clear();
-                    typeof showToast === 'function' && showToast("âœ… Candidates deleted!");
+                    typeof showToast === 'function' && showToast("✅ Candidates deleted!");
                 }).catch(err => {
                     console.error("Error deleting candidates:", err);
                     typeof showToast === 'function' && showToast("âŒ Error: " + err.message);
@@ -806,7 +806,7 @@
                 });
                 batch.commit().then(() => {
                     selectedIds.clear();
-                    typeof showToast === 'function' && showToast("âœ… Candidates exported to Auction!");
+                    typeof showToast === 'function' && showToast("✅ Candidates exported to Auction!");
                     renderUI();
                 });
             }
@@ -843,7 +843,7 @@
                 batch.commit().then(() => {
                     selectedIds.delete(id);
                     activeDropdownId = null;
-                    typeof showToast === 'function' && showToast("âœ… Candidate deleted!");
+                    typeof showToast === 'function' && showToast("✅ Candidate deleted!");
                 }).catch(err => {
                     console.error("Error deleting candidate:", err);
                     typeof showToast === 'function' && showToast("âŒ Error: " + err.message);
@@ -1028,7 +1028,7 @@
                 });
 
                 for (const batch of batches) await batch.commit();
-                typeof showToast === 'function' && showToast(`âœ… Reassigned chest numbers for ${opCount} candidates!`);
+                typeof showToast === 'function' && showToast(`✅ Reassigned chest numbers for ${opCount} candidates!`);
             } catch (err) {
                 console.error('Reassign error:', err);
                 typeof showToast === 'function' && showToast('âŒ Error: ' + err.message);
@@ -1067,7 +1067,7 @@
             link.click();
             document.body.removeChild(link);
 
-            typeof showToast === 'function' && showToast("âœ… CSV Exported!");
+            typeof showToast === 'function' && showToast("✅ CSV Exported!");
         };
 
         window.autoGenerateChestNo = function () {
@@ -1082,7 +1082,7 @@
             const seriesBase = teamObj && teamObj.chestNoSeries ? parseInt(teamObj.chestNoSeries) : null;
 
             if (!seriesBase || !selectedTeam) {
-                // No team/series â€” fallback to global max + 1
+                // No team/series — fallback to global max + 1
                 let maxChest = 0;
                 candidatesData.forEach(c => {
                     let num = parseInt(String(c.chestNo).replace(/\D/g, ''), 10) || 0;
@@ -1256,7 +1256,7 @@
 
             if (editingCandidateId !== null) {
                 db.collection('candidates').doc(editingCandidateId).update(payload).then(() => {
-                    typeof showToast === 'function' && showToast("âœ… Candidate updated!");
+                    typeof showToast === 'function' && showToast("✅ Candidate updated!");
                     window.closeCandidateSidebar();
                 });
             } else {
@@ -1264,7 +1264,7 @@
                     payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 }
                 db.collection('candidates').add(payload).then(() => {
-                    typeof showToast === 'function' && showToast("âœ… Candidate added!");
+                    typeof showToast === 'function' && showToast("✅ Candidate added!");
                     window.closeCandidateSidebar();
                 });
             }
@@ -1277,7 +1277,7 @@
         if (window.candFestDataUnsub) window.candFestDataUnsub();
 
         if (typeof db !== 'undefined') {
-            // 0. All-teams color listener (no isActive filter â€” ensures colors always show)
+            // 0. All-teams color listener (no isActive filter — ensures colors always show)
             db.collection('teams').onSnapshot(snap => {
                 allTeamsColorMap = {};
                 snap.forEach(doc => {
@@ -1308,7 +1308,7 @@
                 }
             });
 
-            // 1. Teams Listener (Only active) â€” for sidebar dropdown & series data
+            // 1. Teams Listener (Only active) — for sidebar dropdown & series data
             window.candTeamsUnsub = db.collection('teams').where('isActive', '==', true).onSnapshot(snap => {
                 activeTeamsData = [];
                 const tmTeam = isTeamManager ? localStorage.getItem('managerTeam') : null;
@@ -1500,7 +1500,7 @@
                                 </div>
                                 <div>
                                     <h3 class="text-[16px] font-bold text-gray-900 leading-tight" id="tm-modal-cand-name">Candidate Name</h3>
-                                    <p class="text-[12px] text-gray-500 mt-0.5" id="tm-modal-cand-sub">Team â€¢ Section â€¢ Class</p>
+                                    <p class="text-[12px] text-gray-500 mt-0.5" id="tm-modal-cand-sub">Team • Section • Class</p>
                                 </div>
                             </div>
                             <button onclick="window.closeTMRegisteredProgramsModal()" class="w-9 h-9 rounded-full bg-white border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-all shadow-sm">
@@ -1536,7 +1536,7 @@
 
             if (chestBadge) chestBadge.innerText = cand.chestNo ? '#' + cand.chestNo : '#--';
             if (nameEl) nameEl.innerText = cand.name || 'Candidate';
-            if (subEl) subEl.innerText = `${cand.team || 'Team'} â€¢ ${cand.section || 'Section'} ${cand.class ? 'â€¢ Class ' + cand.class : ''}`;
+            if (subEl) subEl.innerText = `${cand.team || 'Team'} • ${cand.section || 'Section'} ${cand.class ? '• Class ' + cand.class : ''}`;
 
             if (bodyEl) {
                 bodyEl.innerHTML = `
@@ -1664,7 +1664,7 @@
                                                 <h4 class="text-[14px] font-bold text-gray-900 group-hover:text-brand-blue transition-colors leading-tight">${p.name}</h4>
                                                 <div class="flex items-center gap-2 mt-1">
                                                     <span class="text-[11px] text-gray-500 font-medium">${p.section}</span>
-                                                    <span class="text-gray-300">â€¢</span>
+                                                    <span class="text-gray-300">•</span>
                                                     <span class="text-[10px] text-gray-600 font-bold bg-white border border-gray-200 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.type}</span>
                                                 </div>
                                             </div>

@@ -236,7 +236,7 @@
         function copyShareableLink() {
             const url = new URL('judgeRegistration.html', window.location.href).href;
             navigator.clipboard.writeText(url).then(() => {
-                showToast("âœ… Shareable link copied!");
+                showToast("✅ Shareable link copied!");
             }).catch(err => {
                 console.error("Could not copy text: ", err);
             });
@@ -320,11 +320,11 @@
             try {
                 if (editingJudgeId) {
                     await db.collection('judges').doc(editingJudgeId).update(payload);
-                    typeof showToast === 'function' && showToast("âœ… Judge updated!");
+                    typeof showToast === 'function' && showToast("✅ Judge updated!");
                 } else {
                     payload.createdAt = new Date();
                     await db.collection('judges').add(payload);
-                    typeof showToast === 'function' && showToast("âœ… Judge added!");
+                    typeof showToast === 'function' && showToast("✅ Judge added!");
                 }
                 closeJudgeSidebar();
             } catch (err) {
@@ -512,7 +512,7 @@
         async function approveJudge(id) {
             try {
                 await db.collection('judges').doc(id).update({ status: 'approved' });
-                showToast("âœ… Judge approved");
+                showToast("✅ Judge approved");
             } catch (e) {
                 console.error(e);
             }
@@ -522,7 +522,7 @@
             if (confirm("Are you sure you want to reject this judge?")) {
                 try {
                     await db.collection('judges').doc(id).update({ status: 'disapproved' });
-                    showToast("âœ… Judge rejected");
+                    showToast("✅ Judge rejected");
                 } catch (e) {
                     console.error(e);
                 }
@@ -534,7 +534,7 @@
                 try {
                     await db.collection('judges').doc(id).delete();
                     selectedJudgeIds.delete(id);
-                    showToast("âœ… Judge deleted");
+                    showToast("✅ Judge deleted");
                 } catch (e) {
                     console.error(e);
                 }
@@ -554,7 +554,7 @@
                     });
                     await batch.commit();
                     selectedJudgeIds.clear();
-                    typeof showToast === 'function' && showToast("âœ… Selected judges deleted");
+                    typeof showToast === 'function' && showToast("✅ Selected judges deleted");
                 } catch (e) {
                     console.error(e);
                 }

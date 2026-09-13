@@ -860,7 +860,7 @@
                 websiteConfig.heroSlides.push(selectedFileForSlide.url);
                 renderSlides();
                 saveWebsiteConfig();
-                if (window.showToast) showToast("âœ… Hero slide added!");
+                if (window.showToast) showToast("✅ Hero slide added!");
                 else alert("Hero slide added successfully!");
                 closeSlidePicker();
             }
@@ -888,7 +888,7 @@
 
             try {
                 await db.collection('config').doc('website').set(websiteConfig);
-                if (window.showToast) showToast("âœ… Website settings saved!");
+                if (window.showToast) showToast("✅ Website settings saved!");
                 else alert("Settings saved successfully!");
                 document.getElementById('status-text').innerText = websiteConfig.isWebsiteOn ? 'Online' : 'Offline';
                 document.getElementById('status-text').className = websiteConfig.isWebsiteOn ? 'text-sm font-bold text-green-600' : 'text-sm font-bold text-red-600';
@@ -1100,7 +1100,7 @@
             try {
                 await batch.commit();
                 renderCoordinatorsList();
-                if (window.showToast) showToast("âœ… Reordered successfully!");
+                if (window.showToast) showToast("✅ Reordered successfully!");
             } catch (err) {
                 console.error("Error saving order batch:", err);
             }
@@ -1130,7 +1130,7 @@
                 batch.update(db.collection('coordinators').doc(targetItem.id), { order: targetItem.order });
                 await batch.commit();
                 renderCoordinatorsList();
-                if (window.showToast) showToast("âœ… Order updated!");
+                if (window.showToast) showToast("✅ Order updated!");
             } catch (err) {
                 console.error("Error moving coordinator:", err);
             }
@@ -1314,7 +1314,7 @@
                     await db.collection('coordinators').add(payload);
                 }
                 closeCoordinatorModal();
-                if (window.showToast) showToast("âœ… Person saved successfully!");
+                if (window.showToast) showToast("✅ Person saved successfully!");
                 else alert("Saved successfully!");
             } catch (e) {
                 console.error("Save coordinator error:", e);

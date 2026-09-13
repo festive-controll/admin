@@ -262,7 +262,7 @@
                         <div onclick="window.toggleCandSelection('${c.id}', '${c.name}', event)" class="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
                             <div class="flex flex-col">
                                 <span class="text-[13px] font-bold text-gray-700">${c.name}</span>
-                                <span class="text-[10px] text-gray-400 uppercase tracking-widest">${c.chestNo || 'No Chest'} â€¢ ${c.team || 'No Team'}</span>
+                                <span class="text-[10px] text-gray-400 uppercase tracking-widest">${c.chestNo || 'No Chest'} • ${c.team || 'No Team'}</span>
                             </div>
                             <div class="w-5 h-5 rounded-md border-2 ${isSelected ? 'bg-brand-blue border-brand-blue' : 'border-gray-200'} flex items-center justify-center transition-all">
                                 ${isSelected ? '<i class="fi fi-rr-check text-[10px] text-white"></i>' : ''}

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save Published Result</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: Inter, sans-serif; background: #f8f9fc; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 md:p-8 text-gray-900">
+    <main class="max-w-4xl mx-auto">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <button type="button" onclick="publishPdfBack()" class="text-xs font-semibold text-[#134E8E] mb-2 hover:underline">← Back to Publish Results</button>
+                <h1 class="text-2xl font-bold">Published Result PDF</h1>
+                <p class="text-sm text-gray-500 mt-1">Confirm the date, then save and download the result.</p>
+            </div>
+            <div class="flex items-end gap-3 w-full sm:w-auto">
+                <div class="w-full sm:w-52">
+                    <label for="publication-date" class="block text-xs font-semibold text-gray-600 mb-1.5">Publication date</label>
+                    <input id="publication-date" type="date" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/40">
+                </div>
+                <div class="shrink-0">
+                    <span class="block text-xs font-semibold text-gray-600 mb-1.5">Published</span>
+                    <div class="h-[42px] min-w-[92px] px-4 flex items-center justify-center bg-green-50 border border-green-200 rounded-lg">
+                        <span id="published-program-count" class="text-lg font-extrabold text-green-700">0</span>
+                        <span class="ml-1.5 text-xs font-semibold text-green-700">Programs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section id="publish-preview" class="space-y-5">
+            <div class="p-10 text-center text-sm text-gray-400">Loading published result…</div>
+        </section>
+
+        <div class="flex justify-end mt-5">
+            <button id="save-pdf-button" type="button" onclick="savePublishedResultPdf()" disabled
+                class="px-5 py-3 rounded-xl bg-[#134E8E] text-white text-sm font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#0e3d70] transition-colors">
+                Save &amp; Download PDF
+            </button>
+        </div>
+
+        <section class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h2 class="text-base font-bold text-gray-900">Saved PDF History</h2>
+                <p class="text-xs text-gray-500 mt-0.5">Download previously saved published results.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                        <tr><th class="px-6 py-3">Date</th><th class="px-6 py-3">Time</th><th class="px-6 py-3 text-right">Action</th></tr>
+                    </thead>
+                    <tbody id="published-pdf-history">
+                        <tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">Loading saved PDFs…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        var publishPdfPrograms = [];
+        var publishPdfResults = [];
+        var publishedPdfHistory = [];
+
+        document.getElementById('publication-date').value = new Date().toISOString().slice(0, 10);
+
+        function publishPdfEscape(value) {
+            return String(value == null ? '' : value).replace(/[&<>'"]/g, function (char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char];
+            });
+        }
+
+        function publishPdfPosition(result) {
+            var label = result.positionLabel || result.position || '';
+            if (!label) return '';
+            if (/^\d+$/.test(String(label))) {
+                var number = Number(label);
+                var mod100 = number % 100;
+                var suffix = mod100 >= 11 && mod100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' })[number % 10] || 'th';
+                return number + suffix;
+            }
+            return String(label);
+        }
+
+        function publishPdfPositionNumber(result) {
+            var match = String(result.positionLabel || result.position || '').match(/\d+/);
+            return match ? Number(match[0]) : 999;
+        }
+
+        function publishPdfName(result) {
+            return result.candidateName || result.name || result.team || 'Unknown';
+        }
+
+        function publishPdfChest(result) {
+            return result.chestNo || result.chestNumber || (result.isGroupResult ? 'Group' : '-');
+        }
+
+        function renderPublishPdfPreview() {
+            var preview = document.getElementById('publish-preview');
+            if (!publishPdfPrograms.length) {
+                preview.innerHTML = '<div class="bg-white border border-gray-200 rounded-2xl px-6 py-10 text-center text-sm text-gray-400">No unsaved published results. Saved results are available in the history table below.</div>';
+                document.getElementById('save-pdf-button').disabled = true;
+                return;
+            }
+            preview.innerHTML = publishPdfPrograms.map(function (program) {
+                var category = program.category || program.section || 'General';
+                var programResults = publishPdfResults.filter(function (result) { return result.programId === program.id; });
+                var rows = programResults.map(function (result) {
+                    return '<tr class="border-t border-gray-100">' +
+                        '<td class="px-6 py-4 font-bold text-[#134E8E]">' + publishPdfEscape(publishPdfPosition(result) || '-') + '</td>' +
+                        '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfChest(result)) + '</td>' +
+                        '<td class="px-6 py-4 font-medium">' + publishPdfEscape(publishPdfName(result)) + '</td></tr>';
+                }).join('');
+                return '<article class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">' +
+                    '<div class="px-6 sm:px-8 py-6 bg-[#134E8E] text-white">' +
+                    '<div class="text-xs uppercase tracking-[0.22em] text-blue-200 font-bold mb-2">Official Result</div>' +
+                    '<h2 class="text-xl font-extrabold">' + publishPdfEscape(program.name || 'Program') + ' - (' + publishPdfEscape(category) + ')</h2></div>' +
+                    '<div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">' +
+                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th></tr></thead>' +
+                    '<tbody>' + (rows || '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No positioned winners found.</td></tr>') + '</tbody></table></div></article>';
+            }).join('');
+            document.getElementById('save-pdf-button').disabled = publishPdfPrograms.length === 0;
+        }
+
+        async function initPublishPdf() {
+            if (typeof db === 'undefined') {
+                document.getElementById('publish-preview').innerHTML = '<div class="p-10 text-center text-red-600">Database connection is unavailable. Open this page from the admin dashboard.</div>';
+                return;
+            }
+            loadPublishedPdfHistory();
+            try {
+                var data = await Promise.all([
+                    db.collection('programs').where('resultsPublished', '==', true).get(),
+                    db.collection('programResults').get()
+                ]);
+                publishPdfPrograms = data[0].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
+                    .filter(function (program) { return !program.resultPdfSavedAt; })
+                    .sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || '')); });
+                document.getElementById('published-program-count').textContent = publishPdfPrograms.length;
+                var publishedIds = new Set(publishPdfPrograms.map(function (program) { return program.id; }));
+                publishPdfResults = data[1].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
+                    .filter(function (result) { return publishedIds.has(result.programId) && publishPdfPosition(result); })
+                    .sort(function (a, b) { return publishPdfPositionNumber(a) - publishPdfPositionNumber(b); });
+                renderPublishPdfPreview();
+            } catch (error) {
+                document.getElementById('publish-preview').innerHTML = '<div class="p-10 text-center text-red-600">' + publishPdfEscape(error.message) + '</div>';
+            }
+        }
+
+        function publishPdfLoadJsPdf() {
+            if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+            return new Promise(function (resolve, reject) {
+                var existing = document.getElementById('jspdf-library');
+                // A failed script can remain in the dashboard head after changing modules.
+                // Remove it so a fresh source can be tried instead of waiting forever.
+                if (existing) existing.remove();
+                var sources = [
+                    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+                    'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+                    'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'
+                ];
+                var sourceIndex = 0;
+                var script = document.createElement('script');
+                script.id = 'jspdf-library';
+                script.onload = resolve;
+                script.onerror = function () {
+                    sourceIndex++;
+                    if (sourceIndex < sources.length) script.src = sources[sourceIndex];
+                    else {
+                        script.remove();
+                        reject(new Error('Could not load the PDF library from any available source. Check the internet connection or content blocker.'));
+                    }
+                };
+                script.src = sources[sourceIndex];
+                document.head.appendChild(script);
+            });
+        }
+
+        // Dependency-free PDF writer. This keeps downloads working even when CDN
+        // scripts are blocked by the network, browser, or a content blocker.
+        function publishPdfDownloadNative(dateValue, programs, savedResults) {
+            programs = programs || publishPdfPrograms;
+            savedResults = savedResults || publishPdfResults;
+            function ascii(value) {
+                return String(value == null ? '' : value)
+                    .normalize('NFKD').replace(/[^\x20-\x7E]/g, '?')
+                    .replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            }
+            function textLine(text, x, y, size, bold) {
+                return 'BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x + ' ' + y + ' Td (' + ascii(text) + ') Tj ET\n';
+            }
+            function wrap(value, maxChars) {
+                var words = String(value || '').split(/\s+/), lines = [], line = '';
+                words.forEach(function (word) {
+                    if ((line + ' ' + word).trim().length > maxChars && line) { lines.push(line); line = word; }
+                    else line = (line + ' ' + word).trim();
+                });
+                if (line) lines.push(line);
+                return lines.length ? lines : [''];
+            }
+
+            var pageStreams = [];
+            for (var start = 0; start < programs.length; start += 5) {
+                var programsOnPage = programs.slice(start, start + 5);
+                var stream = '0.075 0.306 0.557 rg\n' + textLine('OFFICIAL PUBLISHED RESULTS', 45, 810, 15, true);
+                stream += '0.3 0.3 0.3 rg\n' + textLine('Published: ' + new Date(dateValue + 'T00:00:00').toLocaleDateString('en-GB'), 430, 810, 9, false);
+                programsOnPage.forEach(function (program, programIndex) {
+                    var category = program.category || program.section || 'General';
+                    var results = savedResults.filter(function (result) { return result.programId === program.id; });
+                    var top = 780 - (programIndex * 148);
+                    stream += '0.82 0.84 0.88 RG 45 ' + (top + 12) + ' m 550 ' + (top + 12) + ' l S\n';
+                    stream += '0.075 0.306 0.557 rg\n';
+                    stream += textLine((program.name || 'Program') + ' - (' + category + ')', 45, top, 12, true);
+                    stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, top - 20, 8, true) + textLine('CHEST NO.', 125, top - 20, 8, true) + textLine('NAME', 210, top - 20, 8, true) + textLine('TEAM', 430, top - 20, 8, true);
+                    var y = top - 39;
+                    if (!results.length) stream += textLine('No positioned winners found.', 45, y, 9, false);
+                    results.slice(0, 4).forEach(function (result) {
+                        stream += '0.075 0.306 0.557 rg\n' + textLine(publishPdfPosition(result) || '-', 45, y, 9, true);
+                        stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfChest(result), 125, y, 9, true);
+                        stream += textLine(String(publishPdfName(result)).slice(0, 34), 210, y, 9, false);
+                        stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 18), 430, y, 9, false);
+                        y -= 18;
+                    });
+                });
+                pageStreams.push(stream);
+            }
+
+            var objects = [];
+            objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+            var pageRefs = [];
+            var nextObject = 5;
+            pageStreams.forEach(function (stream) {
+                var pageObject = nextObject++, contentObject = nextObject++;
+                pageRefs.push(pageObject + ' 0 R');
+                objects[pageObject] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + contentObject + ' 0 R >>';
+                objects[contentObject] = '<< /Length ' + stream.length + ' >>\nstream\n' + stream + 'endstream';
+            });
+            objects[2] = '<< /Type /Pages /Kids [' + pageRefs.join(' ') + '] /Count ' + pageRefs.length + ' >>';
+            objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+            objects[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+
+            var pdf = '%PDF-1.4\n', offsets = [0];
+            for (var i = 1; i < objects.length; i++) {
+                offsets[i] = pdf.length;
+                pdf += i + ' 0 obj\n' + objects[i] + '\nendobj\n';
+            }
+            var xref = pdf.length;
+            pdf += 'xref\n0 ' + objects.length + '\n0000000000 65535 f \n';
+            for (var j = 1; j < objects.length; j++) pdf += String(offsets[j]).padStart(10, '0') + ' 00000 n \n';
+            pdf += 'trailer\n<< /Size ' + objects.length + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+
+            var url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }));
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = 'all-published-results-' + dateValue + '.pdf';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        }
+
+        function publishedPdfDate(value) {
+            if (!value) return null;
+            if (typeof value.toDate === 'function') return value.toDate();
+            if (value.seconds) return new Date(value.seconds * 1000);
+            return new Date(value);
+        }
+
+        function renderPublishedPdfHistory() {
+            var body = document.getElementById('published-pdf-history');
+            if (!body) return;
+            if (!publishedPdfHistory.length) {
+                body.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No PDFs saved yet.</td></tr>';
+                return;
+            }
+            body.innerHTML = publishedPdfHistory.map(function (item, index) {
+                var savedAt = publishedPdfDate(item.savedAt) || new Date(item.publicationDate + 'T00:00:00');
+                return '<tr class="border-t border-gray-100">' +
+                    '<td class="px-6 py-4 font-semibold text-gray-800">' + publishPdfEscape(savedAt.toLocaleDateString('en-GB')) + '</td>' +
+                    '<td class="px-6 py-4 text-gray-600">' + publishPdfEscape(savedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) + '</td>' +
+                    '<td class="px-6 py-4 text-right"><button type="button" onclick="downloadSavedPublishedPdf(' + index + ')" class="px-3 py-2 rounded-lg bg-[#134E8E] text-white text-xs font-bold hover:bg-[#0e3d70]">Download PDF</button></td></tr>';
+            }).join('');
+        }
+
+        async function loadPublishedPdfHistory() {
+            try {
+                var snapshot = await db.collection('publishedResultPdfs').get();
+                publishedPdfHistory = snapshot.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+                publishedPdfHistory.sort(function (a, b) {
+                    return (publishedPdfDate(b.savedAt) || 0) - (publishedPdfDate(a.savedAt) || 0);
+                });
+                renderPublishedPdfHistory();
+            } catch (error) {
+                console.error('Could not load PDF history:', error);
+                var body = document.getElementById('published-pdf-history');
+                if (body) body.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-red-500">Could not load saved PDF history.</td></tr>';
+            }
+        }
+
+        function downloadSavedPublishedPdf(index) {
+            var item = publishedPdfHistory[index];
+            if (!item) return;
+            publishPdfDownloadNative(item.publicationDate, item.programs || [], item.results || []);
+        }
+
+        async function savePublishedResultPdf() {
+            var button = document.getElementById('save-pdf-button');
+            var dateValue = document.getElementById('publication-date').value;
+            if (!dateValue) { alert('Please select the publication date.'); return; }
+            button.disabled = true;
+            button.textContent = 'Preparing PDF…';
+            try {
+                var batch = db.batch();
+                var savedAt = new Date();
+                publishPdfPrograms.forEach(function (program) {
+                    batch.update(db.collection('programs').doc(program.id), {
+                        resultPublishedDate: dateValue,
+                        resultPdfSavedAt: savedAt
+                    });
+                });
+                var savedPrograms = publishPdfPrograms.map(function (program) {
+                    return { id: program.id, name: program.name || '', category: program.category || '', section: program.section || '' };
+                });
+                var savedResults = publishPdfResults.map(function (result) {
+                    return {
+                        programId: result.programId || '', positionLabel: result.positionLabel || '', position: result.position || '',
+                        chestNo: result.chestNo || result.chestNumber || '', candidateName: result.candidateName || '',
+                        name: result.name || '', team: result.team || '', isGroupResult: result.isGroupResult === true
+                    };
+                });
+                var historyRef = db.collection('publishedResultPdfs').doc();
+                var historyItem = {
+                    publicationDate: dateValue, savedAt: savedAt, programCount: savedPrograms.length,
+                    programs: savedPrograms, results: savedResults
+                };
+                batch.set(historyRef, historyItem);
+                await batch.commit();
+                publishedPdfHistory.unshift(Object.assign({ id: historyRef.id }, historyItem));
+                renderPublishedPdfHistory();
+                // Generate locally: exactly five program-result sections per page.
+                publishPdfDownloadNative(dateValue, savedPrograms, savedResults);
+                publishPdfPrograms = [];
+                publishPdfResults = [];
+                document.getElementById('published-program-count').textContent = '0';
+                renderPublishPdfPreview();
+                button.textContent = 'Saved & Downloaded';
+                return;
+                var jsPDF = window.jspdf.jsPDF;
+                var pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+                var pageWidth = pdf.internal.pageSize.getWidth();
+                publishPdfPrograms.forEach(function (program, programIndex) {
+                    if (programIndex > 0) pdf.addPage();
+                    var category = program.category || program.section || 'General';
+                    var y = 22;
+                    pdf.setTextColor(19, 78, 142);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(18);
+                    pdf.text(String(program.name || 'Program') + ' - (' + category + ')', pageWidth / 2, y, { align: 'center', maxWidth: pageWidth - 36 });
+                    y += 10;
+                    pdf.setTextColor(80, 80, 80);
+                    pdf.setFontSize(10);
+                    pdf.text('Published: ' + new Date(dateValue + 'T00:00:00').toLocaleDateString('en-GB'), pageWidth / 2, y, { align: 'center' });
+                    y += 10;
+                    pdf.setDrawColor(215, 220, 228);
+                    pdf.line(18, y, pageWidth - 18, y);
+                    y += 9;
+
+                    var programResults = publishPdfResults.filter(function (result) { return result.programId === program.id; });
+                    if (!programResults.length) {
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text('No positioned winners found.', 20, y);
+                    }
+                    programResults.forEach(function (result) {
+                        if (y > 276) { pdf.addPage(); y = 22; }
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.setTextColor(19, 78, 142);
+                        pdf.setFontSize(12);
+                        pdf.text(publishPdfPosition(result) || '-', 20, y);
+                        pdf.setTextColor(35, 35, 35);
+                        pdf.text(String(publishPdfChest(result)), 48, y);
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(String(publishPdfName(result)), 82, y, { maxWidth: 105 });
+                        y += 9;
+                    });
+                });
+
+                pdf.save('all-published-results-' + dateValue + '.pdf');
+                button.textContent = 'Saved & Downloaded';
+            } catch (error) {
+                console.error(error);
+                alert(error.message || 'Could not create the PDF.');
+                button.textContent = 'Save & Download PDF';
+            } finally {
+                button.disabled = publishPdfPrograms.length === 0;
+            }
+        }
+
+        function publishPdfBack() {
+            if (typeof loadModule === 'function') loadModule('cheskpublish');
+            else window.location.href = 'cheskpublish.html';
+        }
+
+        initPublishPdf();
+    </script>
+</body>
+</html>

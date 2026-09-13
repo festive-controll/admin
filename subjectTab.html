@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subject Tab â€” Judge Saved Topics</title>
+    <title>Subject Tab — Judge Saved Topics</title>
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
@@ -552,7 +552,7 @@
                         <td class="py-4 px-5 align-top">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-brand-blue border border-blue-100 uppercase tracking-wider inline-block mb-1">${p.code || 'PRG'}</span>
                             <div class="font-bold text-gray-900 text-[14px] leading-tight">${p.name || 'Unnamed Program'}</div>
-                            <div class="text-[11px] text-gray-400 font-medium mt-0.5">${p.section || 'General'} ${p.category ? 'â€¢ ' + p.category : ''}</div>
+                            <div class="text-[11px] text-gray-400 font-medium mt-0.5">${p.section || 'General'} ${p.category ? '• ' + p.category : ''}</div>
                         </td>
                         <td class="py-4 px-5 align-top">
                             ${judgesHtml}
@@ -609,7 +609,7 @@
                     const prog = allPrograms.find(p => p.id === progId);
                     if (prog && prog.topic) {
                         navigator.clipboard.writeText(prog.topic).then(() => {
-                            showToast("âœ… Topic copied to clipboard!");
+                            showToast("✅ Topic copied to clipboard!");
                         }).catch(() => {
                             showToast("Topic: " + prog.topic);
                         });
@@ -622,7 +622,7 @@
 
                     activeEditProgId = progId;
                     document.getElementById('modalProgTitle').innerText = prog.name || 'Edit Saved Topic';
-                    document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} â€¢ ${prog.section || 'General'}`;
+                    document.getElementById('modalProgCode').innerText = `${prog.code || 'PRG'} • ${prog.section || 'General'}`;
                     document.getElementById('modalTopicInput').value = prog.topic || '';
 
                     const overlay = document.getElementById('editTopicModalOverlay');
@@ -655,7 +655,7 @@
                         updatedByJudge: 'Admin',
                         topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }).then(() => {
-                        showToast(isClear ? "Topic cleared successfully!" : "âœ… Topic updated successfully!");
+                        showToast(isClear ? "Topic cleared successfully!" : "✅ Topic updated successfully!");
                         closeEditModal();
                         if (btn) btn.disabled = false;
                     }).catch(err => {
@@ -726,6 +726,9 @@
                     // Helper to check if program is non-stage or non-stage related
                     function checkIsNonStage(p) {
                         if (p.isNonStage === true || p.isStage === false) return true;
+                        const code = (p.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        if (/^[A-Z]*X\d+/i.test(code)) return true;
+                        if (/^[A-Z]*Y\d+/i.test(code)) return false;
                         const str = `${p.venueTypeName || ''} ${p.venue || ''} ${p.category || ''} ${p.progSet || ''} ${p.type || ''} ${p.section || ''}`.toLowerCase();
                         if (str.includes('non-stage') || str.includes('non stage') || str.includes('nonstage') || str.includes('non_stage')) return true;
                         return false;
@@ -826,10 +829,10 @@
                         const workbook = XLSX.utils.book_new();
                         XLSX.utils.book_append_sheet(workbook, worksheet, "Non-Stage Saved Topics");
                         XLSX.writeFile(workbook, fileName);
-                        showToast("âœ… Non-Stage Judge Saved Topics exported to Excel!");
+                        showToast("✅ Non-Stage Judge Saved Topics exported to Excel!");
                     } else {
                         exportRowsToCSV(excelRows, fileName);
-                        showToast("âœ… Exported as CSV (Excel compatible)!");
+                        showToast("✅ Exported as CSV (Excel compatible)!");
                     }
                 };
 

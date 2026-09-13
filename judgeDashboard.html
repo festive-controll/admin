@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Judge Dashboard â€” Festival</title>
+    <title>Judge Dashboard — Festival</title>
     <script src="fest-favicon.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel='stylesheet'
@@ -725,7 +725,7 @@
                     updatedByJudge: judgeId,
                     topicUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showToast("âœ… Topic saved successfully!");
+                showToast("✅ Topic saved successfully!");
                 btn.innerHTML = '<i class="fi fi-rr-check text-green-300"></i> Saved';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
@@ -785,7 +785,7 @@
                     pass: newPassword
                 });
 
-                showToast("âœ… Credentials updated successfully!");
+                showToast("✅ Credentials updated successfully!");
                 closeCredentialsModal();
             } catch (err) {
                 console.error("Error updating credentials:", err);
@@ -846,7 +846,7 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 document.getElementById('groupRegModal').classList.add('hidden');
-                showToast("âœ… Registration submitted. Waiting for Admin approval.");
+                showToast("✅ Registration submitted. Waiting for Admin approval.");
                 // Now open the modal in locked state
                 await actuallyOpenEvaluateModal(scanTargetProgramId, 'pending');
             } catch (err) {
@@ -1028,7 +1028,10 @@
                     if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
                 });
 
-                const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+                const progType = (prog.type || '').toLowerCase();
+                const progSection = (prog.section || '').toLowerCase();
+                const isGeneral = progType === 'general';
+                const isGroup = progType === 'group' || progSection === 'kulliya' || isGeneral;
 
                 let gOpts = '<option value="">None</option>';
                 let pOpts = '<option value="">None</option>';
@@ -1058,10 +1061,23 @@
                 let html = '';
 
                 if (isGroup) {
-                    regSnap.forEach(doc => {
-                        const reg = doc.data();
-                        const teamName = reg.team || 'Unknown Team';
-                        const existing = existingResults.find(r => r.team === teamName && r.isGroupResult);
+                    let teamsToEval = [];
+                    if (!regSnap.empty) {
+                        regSnap.forEach(doc => {
+                            const reg = doc.data();
+                            if (reg.team) teamsToEval.push(reg.team);
+                        });
+                    } else if (isGeneral && allTeams && allTeams.length > 0) {
+                        teamsToEval = allTeams.map(t => t.name);
+                    }
+                    teamsToEval = [...new Set(teamsToEval)];
+
+                    if (teamsToEval.length === 0) {
+                        html = '<div class="text-center py-10 text-gray-400">No teams found to evaluate.</div>';
+                    }
+
+                    teamsToEval.forEach(teamName => {
+                        const existing = existingResults.find(r => r.team === teamName && (r.isGroupResult || r.isGeneralResult));
                         
                         html += `
                         <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-brand-blue/30 transition-colors mb-4 group-eval-card" data-team="${teamName}">
@@ -1070,8 +1086,16 @@
                                     <div class="w-10 h-10 rounded-xl bg-blue-50 text-brand-blue flex items-center justify-center font-black text-lg shrink-0">${teamName.charAt(0).toUpperCase()}</div>
                                     <div>
                                         <h4 class="text-sm font-bold text-gray-900">${teamName}</h4>
-                                        <p class="text-[11px] font-medium text-gray-500 uppercase tracking-widest mt-1">Group Performance</p>
-                                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                        <p class="text-[11px] font-medium text-gray-500 uppercase tracking-widest mt-1">${isGeneral ? 'General Program • Team Entry' : 'Group Performance'}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 block">Total Points</span>
+                                    <span class="text-xl font-black text-brand-gold eval-total-pts">${existing ? (existing.totalPoints || 0) : 0}</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
                                 <div class="bg-gray-50/70 p-3.5 rounded-xl border border-gray-200/80 flex flex-col justify-between gap-3">
                                     <div>
                                         <label class="block text-[11px] font-extrabold text-gray-600 uppercase tracking-widest mb-1.5">Position Mark</label>
@@ -1081,7 +1105,7 @@
                                     </div>
                                     <div>
                                         <span class="eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
-                                            ðŸ† Position: None
+                                            🏆 Position: None
                                         </span>
                                     </div>
                                 </div>
@@ -1095,7 +1119,7 @@
                                     </div>
                                     <div>
                                         <span class="eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
-                                            ðŸŽ–ï¸ Grade: None
+                                            🎖️ Grade: None
                                         </span>
                                     </div>
                                 </div>
@@ -1244,7 +1268,7 @@
                                     </div>
                                     <div>
                                         <span class="eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
-                                            ðŸ† Position: None
+                                            🏆 Position: None
                                         </span>
                                     </div>
                                 </div>
@@ -1258,7 +1282,7 @@
                                     </div>
                                     <div>
                                         <span class="eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1">
-                                            ðŸŽ–ï¸ Grade: None
+                                            🎖️ Grade: None
                                         </span>
                                     </div>
                                 </div>
@@ -1368,12 +1392,12 @@
                     pPts = pObj ? Number(pObj.points || pObj.value || 0) : 0;
 
                     if (posBadge) {
-                        posBadge.innerHTML = pLbl ? `ðŸ† Position: <b>${pLbl}</b> (${pPts} pts)` : 'ðŸ† Position: None';
+                        posBadge.innerHTML = pLbl ? `🏆 Position: <b>${pLbl}</b> (${pPts} pts)` : '🏆 Position: None';
                         posBadge.className = pLbl ? 'eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-amber-50 text-amber-800 font-extrabold text-xs border border-amber-200 flex items-center justify-center gap-1 shadow-sm' : 'eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
                     }
                 } else {
                     if (posBadge) {
-                        posBadge.innerHTML = 'ðŸ† Position: None';
+                        posBadge.innerHTML = '🏆 Position: None';
                         posBadge.className = 'eval-pos-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
                     }
                 }
@@ -1413,12 +1437,12 @@
                     gPts = gObj ? Number(gObj.points || gObj.value || 0) : 0;
 
                     if (gradeBadge) {
-                        gradeBadge.innerHTML = gLbl ? `ðŸŽ–ï¸ Grade: <b>${gLbl}</b> (${gPts} pts)` : 'ðŸŽ–ï¸ Grade: None';
+                        gradeBadge.innerHTML = gLbl ? `🎖️ Grade: <b>${gLbl}</b> (${gPts} pts)` : '🎖️ Grade: None';
                         gradeBadge.className = gLbl ? 'eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-blue-50 text-brand-blue font-extrabold text-xs border border-blue-200 flex items-center justify-center gap-1 shadow-sm' : 'eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
                     }
                 } else {
                     if (gradeBadge) {
-                        gradeBadge.innerHTML = 'ðŸŽ–ï¸ Grade: None';
+                        gradeBadge.innerHTML = '🎖️ Grade: None';
                         gradeBadge.className = 'eval-grade-badge w-full py-1.5 px-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-xs border border-gray-200 flex items-center justify-center gap-1';
                     }
                 }
@@ -1448,7 +1472,10 @@
 
             try {
                 const prog = assignedPrograms.find(p => p.id === evalProgramId);
-                const isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+                const progType = (prog && prog.type || '').toLowerCase();
+                const progSection = (prog && prog.section || '').toLowerCase();
+                const isGeneral = progType === 'general';
+                const isGroup = progType === 'group' || progSection === 'kulliya' || isGeneral;
                 
                 const batch = db.batch();
                 let hasAnySavedResult = false;
@@ -1479,6 +1506,7 @@
                             batch.set(docRef, {
                                 programId: evalProgramId,
                                 isGroupResult: true,
+                                isGeneralResult: isGeneral,
                                 team: teamName,
                                 name: teamName,
                                 posMarks: posMarks,
@@ -1548,7 +1576,7 @@
                 });
 
                 await batch.commit();
-                showToast("âœ… Results saved successfully!");
+                showToast("✅ Results saved successfully!");
                 closeEvaluateModal();
             } catch (err) {
                 console.error("Save error:", err);

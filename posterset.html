@@ -644,7 +644,7 @@
                 ...posterConfig,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                showToast('<b>âœ…</b> Configuration saved successfully!');
+                showToast('<b>✅</b> Configuration saved successfully!');
             }).catch(err => {
                 console.error(err);
                 showToast('<b>âŒ</b> Error saving: ' + err.message);

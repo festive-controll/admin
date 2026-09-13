@@ -1102,8 +1102,8 @@
         function copyTeamShareableLink() {
             const url = new URL('teamRegister.html', window.location.href).href;
             navigator.clipboard.writeText(url).then(() => {
-                if (typeof showToast === 'function') showToast("âœ… Shareable team registration link copied!");
-                else alert("âœ… Shareable link copied: " + url);
+                if (typeof showToast === 'function') showToast("✅ Shareable team registration link copied!");
+                else alert("✅ Shareable link copied: " + url);
             }).catch(err => {
                 console.error("Could not copy text: ", err);
             });

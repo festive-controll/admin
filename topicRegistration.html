@@ -288,7 +288,7 @@
                 topicRegistration: isEnabled,
                 updatedAt: new Date()
             }).then(() => {
-                const msg = isEnabled ? `âœ… Topic Registration ENABLED for ${programName}` : `â„¹ï¸ Topic Registration DISABLED for ${programName}`;
+                const msg = isEnabled ? `✅ Topic Registration ENABLED for ${programName}` : `â„¹ï¸ Topic Registration DISABLED for ${programName}`;
                 showToast(msg, isEnabled ? "#10B981" : "#6B7280");
             }).catch(err => {
                 console.error(err);
@@ -316,7 +316,7 @@
             });
 
             batch.commit().then(() => {
-                showToast(`âœ… ${actionText}D Topic Registration for all programs in ${sectionName}`, isEnabled ? "#10B981" : "#6B7280");
+                showToast(`✅ ${actionText}D Topic Registration for all programs in ${sectionName}`, isEnabled ? "#10B981" : "#6B7280");
             }).catch(err => {
                 console.error(err);
                 showToast("âŒ Bulk update failed: " + err.message, "#EF4444");

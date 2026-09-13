@@ -351,6 +351,12 @@
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                                 </div> Publish Results
                             </a>
+                            <a href="#" onclick="event.preventDefault(); sessionStorage.removeItem('publishProgramId'); loadModule('pblish')"
+                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                                <div
+                                    class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                                </div> Published Data
+                            </a>
                         </div>
                     </div>
 
@@ -1042,7 +1048,7 @@
             }
         })();
 
-        // â”€â”€ Auto Log PC Access to Firestore access_history â”€â”€
+        // ── Auto Log PC Access to Firestore access_history ──
         (async function autoLogDashboardAccess() {
             try {
                 let clientIp = '127.0.0.1';
@@ -1096,7 +1102,7 @@
             }
         })();
 
-        // â”€â”€ Real-Time Active System Heartbeat Ping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Real-Time Active System Heartbeat Ping ─────────────────────
         (function initActiveSystemHeartbeat() {
             async function sendHeartbeat() {
                 try {
@@ -1144,7 +1150,7 @@
             setInterval(sendHeartbeat, 12000); // Heartbeat every 12 seconds
         })();
 
-        // â”€â”€ Auth Guard & Session Watcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Auth Guard & Session Watcher ──────────────────────────────
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'index.html';
         }
@@ -1435,7 +1441,7 @@
             }
         }
 
-        // â”€â”€ UI States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── UI States ──────────────────────────────────────────────────
         function updateUserDataUI(username) {
             const role = localStorage.getItem('userRole') || 'USER';
             const name = localStorage.getItem('festUserName') || username || 'User';
@@ -1533,7 +1539,7 @@
             }).showToast();
         }
 
-        // â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Navigation ────────────────────────────────────────────────
         function toggleSidebar() {
             const s = document.getElementById('sidebar');
             const o = document.getElementById('sidebarOverlay');
@@ -1586,7 +1592,7 @@
 
         }
 
-        // â”€â”€ Module System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Module System ──────────────────────────────────────────────
         function loadModule(moduleName) {
             const isWebBlocked = localStorage.getItem('blockAccess') === 'true';
             if (moduleName === 'website' && isWebBlocked) {
@@ -1698,6 +1704,7 @@
                         'judges': 'Judges',
                         'venues': 'Venues',
                         'allResult': 'All Results',
+                        'pblish': 'Result PDF',
                         'contentFile': 'File',
                         'gallery': 'Gallery',
                         'downloads': 'Downloads',
@@ -1761,7 +1768,7 @@
                 });
         }
 
-        // â”€â”€ TM Dedicated Table Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── TM Dedicated Table Loading ─────────────────────────────────
         function loadTMSection(sectionName) {
             // Close sidebar on mobile after selection
             const sidebar = document.getElementById('sidebar');
@@ -1934,7 +1941,7 @@
             document.getElementById('breadcrumb-current')?.classList.add('hidden');
         }
 
-        // â”€â”€ Real-time Listeners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Real-time Listeners ────────────────────────────────────────
         let statsUnsub = [];
         function setupDashboardStats() {
             statsUnsub.forEach(u => u());
@@ -2011,7 +2018,7 @@
             });
         }
 
-        // â”€â”€ Sidebars RESTORED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Sidebars RESTORED ──────────────────────────────────────────
         function openManageAccount(e) { e?.preventDefault(); toggleDropdown(); document.getElementById('rightSidebarOverlay').classList.remove('hidden'); document.getElementById('manageAccountSidebar').classList.remove('translate-x-full'); populateManageFields(); }
         function closeManageAccount() { document.getElementById('manageAccountSidebar').classList.add('translate-x-full'); document.getElementById('rightSidebarOverlay').classList.add('hidden'); }
 
@@ -2155,7 +2162,7 @@
             if (el) el.type = el.type === 'password' ? 'text' : 'password';
         }
 
-        // â”€â”€ Results OTP Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Results OTP Flow ──────────────────────────────────────────
         function requestAccessModal() { document.getElementById('otpModal').classList.remove('hidden'); }
         function verifyOTP() {
             const val = document.getElementById('otp-input').value;
@@ -2171,7 +2178,7 @@
             });
         }
 
-        // â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Notifications ──────────────────────────────────────────────
         let activeAlerts = [];
 
         function listenForAlerts() {
@@ -2256,7 +2263,7 @@
             document.getElementById('alertDetailModal').classList.add('hidden');
         }
 
-        // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Init ──────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const username = localStorage.getItem('festUserName') || 'User';
             updateUserDataUI(username);

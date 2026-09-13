@@ -263,11 +263,11 @@
             try {
                 if(editingVenueId) {
                     await db.collection('venues').doc(editingVenueId).update(payload);
-                    typeof showToast === 'function' && showToast("âœ… Venue updated!");
+                    typeof showToast === 'function' && showToast("✅ Venue updated!");
                 } else {
                     payload.createdAt = new Date();
                     await db.collection('venues').add(payload);
-                    typeof showToast === 'function' && showToast("âœ… Venue added!");
+                    typeof showToast === 'function' && showToast("✅ Venue added!");
                 }
                 closeVenueSidebar();
             } catch(err) {
@@ -390,7 +390,7 @@
                 try {
                     await db.collection('venues').doc(id).delete();
                     selectedVenueIds.delete(id);
-                    typeof showToast === 'function' && showToast("âœ… Venue deleted");
+                    typeof showToast === 'function' && showToast("✅ Venue deleted");
                 } catch(e) {
                     console.error(e);
                 }
@@ -409,7 +409,7 @@
                     });
                     await batch.commit();
                     selectedVenueIds.clear();
-                    typeof showToast === 'function' && showToast("âœ… Selected venues deleted");
+                    typeof showToast === 'function' && showToast("✅ Selected venues deleted");
                 } catch(e) {
                     console.error(e);
                 }

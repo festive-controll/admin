@@ -1,32 +1,39 @@
-Here is the information you will need to provide to set up Firebase and Cloudinary for your project:
+To make Thugra finish first, publish these 20 programs:
 
-================================
-1. FIREBASE CONFIGURATION
-================================
-To connect your web app to Firebase, you need the following keys from your Firebase Project Settings (usually added to your firebase.js or main.js file):
+1. Shoot Out - AZ21
+2. Arm Wrestling - AZ23
+3. Ball Out - AZ7
+4. Blind Walk - BZ12
+5. Target Shot - BZ13
+6. Ball Whistling - BZ3
+7. Biscuit Eating - BZ4
+8. Shoot Out - THZ1
+9. Arm Wrestling - THZ14
+10. Rope Skipping - THZ16
+11. Penalty - THZ4
+12. Ball Out - THZ9
+13. Shoot Out - TZ17
+14. Arm Wrestling - TZ19
+15. Penalty - TZ4
+16. Ball Out - TZ7
+17. Penalty - UZ12
+18. Ball Out - UZ18
+19. Balloon Breaking - UZ19
+20. Ball Whistling - UZ3
 
-- apiKey: (e.g., "AIzaSyDOCXI...")
-- authDomain: (e.g., "your-project.firebaseapp.com")
-- projectId: (e.g., "your-project-id")
-- storageBucket: (e.g., "your-project.appspot.com")
-- messagingSenderId: (e.g., "1234567890")
-- appId: (e.g., "1:1234567890:web:abc123def456")
-- measurementId: (Optional for analytics, e.g., "G-ABCDEFG")
+Keep these 6 programs unpublished:
 
-Where to find this: 
-Go to the Firebase Console -> Click the Gear icon (Project Settings) -> General tab -> Scroll down to "Your apps" and look for the Firebase SDK snippet.
+1. Balloon Breaking - BZ1
+2. Musical Chair - BZ14
+3. Rope Skipping - TZ18
+4. Blind Walk - UZ14
+5. Mirror Target - UZ15
+6. Shoot Out - UZ16
 
+Expected standings:
+Thugra: 49
+Thuluth: 46
+Reyhani: 46 (after the active 5-point penalty)
+Diwani: 45
 
-================================
-2. CLOUDINARY CONFIGURATION
-================================
-To upload images or media to Cloudinary, you will need the following details from your Cloudinary Account:
-
-- Cloud Name: (e.g., "dztxhabcd")
-- API Key: (e.g., "123456789012345")
-- API Secret: (e.g., "abcd1234efgh5678" - keep this safe, usually used in backend)
-- Upload Preset: (Required if you are uploading directly from the frontend/browser without a backend server. You will need to create an "unsigned" upload preset in Cloudinary).
-
-Where to find this: 
-Go to your Cloudinary Dashboard -> Programmable Media -> Dashboard (Look at the "Product Environment Credentials" section).
-For Upload Preset: Go to Settings -> Upload -> Scroll down to "Upload presets" and click "Add upload preset" (make sure the Signing Mode is "Unsigned").
+Thugra finishes first by 3 points. These totals use all 26 currently published result programs and depend on the current results and penalty remaining unchanged.
