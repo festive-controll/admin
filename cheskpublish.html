@@ -43,17 +43,45 @@
 
     <div class="max-w-full w-full mx-auto relative">
         <!-- Header Section -->
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
             <div>
                 <h1 class="text-xl sm:text-[22px] font-semibold text-gray-900 leading-tight">Publish Results</h1>
                 <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">Manage visibility of program results</p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-col xs:flex-row sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="relative sm:w-44">
+                    <select id="category-filter" onchange="renderTable()"
+                        class="w-full appearance-none pl-3 pr-9 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/30 transition-all cursor-pointer">
+                        <option value="all">All programs</option>
+                        <option value="sports">Sports</option>
+                        <option value="stage">Stage</option>
+                        <option value="non-stage">Non-stage</option>
+                    </select>
+                    <i class="fi fi-rr-angle-small-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
                 <div class="relative w-full sm:w-64">
                     <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                     <input type="text" id="search-input" oninput="renderTable()" placeholder="Search programs..." 
                         class="w-full pl-8 pr-4 py-2 bg-white border border-gray-200 rounded-full text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/30 transition-all">
                 </div>
+            </div>
+        </div>
+
+        <!-- Result counts for the selected program category -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5" aria-live="polite">
+            <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-lg bg-blue-50 text-[#134E8E] flex items-center justify-center"><i class="fi fi-rr-cloud-upload-alt"></i></span>
+                    <div><p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Uploaded results</p><p id="uploaded-count-label" class="text-[12px] text-gray-500 mt-0.5">All programs</p></div>
+                </div>
+                <span id="uploaded-count" class="text-2xl font-bold text-gray-900">0</span>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                <div class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><i class="fi fi-rr-check-circle"></i></span>
+                    <div><p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Published results</p><p id="published-count-label" class="text-[12px] text-gray-500 mt-0.5">All programs</p></div>
+                </div>
+                <span id="published-count" class="text-2xl font-bold text-green-600">0</span>
             </div>
         </div>
 
@@ -127,13 +155,52 @@
             renderTable();
         }
 
+        function resolveProgramCategory(prog) {
+            const rawType = [prog.venueTypeName, prog.venueType, prog.venue_type, prog.category]
+                .find(value => typeof value === 'string' && value.trim());
+            const normalized = String(rawType || '').toLowerCase().replace(/[\s_-]+/g, '');
+            if (normalized.includes('sport')) return 'sports';
+            if (normalized.includes('nonstage')) return 'non-stage';
+            if (normalized === 'stage' || normalized.endsWith('stage')) return 'stage';
+
+            // Legacy program codes use X for non-stage and Y for stage.
+            const code = String(prog.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (/^[A-Z]*X\d+/.test(code)) return 'non-stage';
+            if (/^[A-Z]*Y\d+/.test(code)) return 'stage';
+            return '';
+        }
+
+        function updateCountBar(categoryPrograms, selectedCategory) {
+            const uploadedCount = document.getElementById('uploaded-count');
+            const publishedCount = document.getElementById('published-count');
+            const uploadedLabel = document.getElementById('uploaded-count-label');
+            const publishedLabel = document.getElementById('published-count-label');
+            const categoryFilter = document.getElementById('category-filter');
+            if (!uploadedCount || !publishedCount || !uploadedLabel || !publishedLabel) return;
+
+            const label = categoryFilter && categoryFilter.selectedOptions.length
+                ? categoryFilter.selectedOptions[0].text
+                : (selectedCategory === 'all' ? 'All programs' : selectedCategory);
+            uploadedCount.textContent = categoryPrograms.length;
+            publishedCount.textContent = categoryPrograms.filter(p => p.resultsPublished === true).length;
+            uploadedLabel.textContent = label;
+            publishedLabel.textContent = label;
+        }
+
         function renderTable() {
             const container = document.getElementById('table-body');
             const searchInput = document.getElementById('search-input');
-            if (!container || !searchInput) return;
+            const categoryFilter = document.getElementById('category-filter');
+            if (!container || !searchInput || !categoryFilter) return;
             const searchQ = searchInput.value.toLowerCase().trim();
+            const selectedCategory = categoryFilter.value;
 
             let filtered = programsWithResults;
+            if (selectedCategory !== 'all') {
+                filtered = filtered.filter(p => resolveProgramCategory(p) === selectedCategory);
+            }
+            updateCountBar(filtered, selectedCategory);
+
             if (searchQ) {
                 filtered = filtered.filter(p => 
                     (p.name || '').toLowerCase().includes(searchQ) || 

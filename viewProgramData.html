@@ -774,14 +774,17 @@
         </div>
         <div class="p-6 flex-1 overflow-y-auto custom-scrollbar space-y-6">
             <!-- Team Selection -->
-            <div>
+            <div id="regTeamContainer">
                 <label class="block text-[13px] font-bold text-gray-700 mb-2 uppercase tracking-wide">Select Team *</label>
-                <div class="relative">
-                    <select id="regTeamSelect" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[14px] focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer">
+                <div class="relative hidden">
+                    <select id="regTeamSelect">
                         <option value="" disabled selected>Loading teams...</option>
                     </select>
-                    <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                 </div>
+                <div id="regTeamCheckboxes" tabindex="0" onkeydown="handleTeamRegistrationEnter(event)" class="space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-3 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500">
+                    <p class="text-xs text-gray-400">Loading teams...</p>
+                </div>
+                <p class="mt-2 text-[11px] font-medium text-gray-400">Select teams, then press Enter to register.</p>
             </div>
 
             <!-- Member Count (For Group Programs) -->
@@ -791,10 +794,11 @@
             </div>
 
             <!-- Chest Numbers -->
-            <div>
+            <div id="regChestContainer">
                 <label id="regChestLabel" class="block text-[13px] font-bold text-gray-700 mb-2 uppercase tracking-wide">Chest Number(s) *</label>
-                <textarea id="regChestNumbers" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[14px] focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono" placeholder="For groups, separate with commas (e.g. 101, 102, 103)"></textarea>
+                <textarea id="regChestNumbers" rows="3" oninput="handleRegistrationChestInput()" onkeydown="handleRegistrationChestEnter(event)" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[14px] focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono" placeholder="Enter one or more chest numbers (e.g. 101, 102, 103)"></textarea>
                 <p id="regChestHint" class="text-[11px] text-gray-400 mt-2 font-medium">Please ensure chest numbers belong to the selected team.</p>
+                <div id="regCandidatePreview" class="hidden mt-3 space-y-2"></div>
             </div>
         </div>
         <div class="p-5 border-t border-gray-100 bg-white flex justify-end gap-3 sticky bottom-0 z-10">
@@ -1039,7 +1043,13 @@
         };
 
         window.openRegistrationSidebar = function() {
-            if (window.currentProgram && (window.currentProgram.isUnlimited || window.currentProgram.maxParticipants === 'unlimited')) {
+            const program = window.currentProgram || {};
+            const isUnlimited = !!program.isUnlimited || program.maxParticipants === 'unlimited';
+            const isGeneral = String(program.type || '').toLowerCase() === 'general';
+            const isGroup = String(program.type || '').toLowerCase() === 'group' ||
+                String(program.section || '').toLowerCase() === 'kulliya';
+            const isTeamOnlyRegistration = isGroup || (isGeneral && isUnlimited);
+            if (isUnlimited && !isGeneral && !isGroup) {
                 if (typeof vpToast === 'function') vpToast('🚫 Cannot add registrations: General Unlimited program open to all candidates.', '#F59E0B');
                 return;
             }
@@ -1050,27 +1060,64 @@
             // Reset fields
             document.getElementById('regTeamSelect').value = "";
             document.getElementById('regChestNumbers').value = "";
+            document.querySelectorAll('#regTeamCheckboxes input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
             
-            const isGroup = (window.currentProgram && (window.currentProgram.type === 'Group' || (window.currentProgram.section || '').toLowerCase() === 'kulliya'));
             const countContainer = document.getElementById('regMemberCountContainer');
+            const teamContainer = document.getElementById('regTeamContainer');
+            const chestContainer = document.getElementById('regChestContainer');
             const chestLabel = document.getElementById('regChestLabel');
             const chestHint = document.getElementById('regChestHint');
 
-            if(isGroup) {
-                countContainer.classList.remove('hidden');
-                document.getElementById('regMemberCount').value = window.currentProgram.maxParticipants || 1;
-                chestLabel.innerText = "Member Chest Numbers *";
-                chestHint.innerText = "Enter all member chest numbers separated by commas.";
-            } else {
+            if (isTeamOnlyRegistration) {
+                teamContainer.classList.remove('hidden');
                 countContainer.classList.add('hidden');
+                chestContainer.classList.add('hidden');
+                document.getElementById('regMemberCount').value = 0;
+            } else {
+                teamContainer.classList.add('hidden');
+                countContainer.classList.add('hidden');
+                chestContainer.classList.remove('hidden');
                 document.getElementById('regMemberCount').value = 1;
-                chestLabel.innerText = "Chest Number *";
-                chestHint.innerText = "Enter the candidate's chest number.";
+                chestLabel.innerText = "Chest Numbers *";
+                chestHint.innerText = "Enter one or more chest numbers, then press Enter to select the team automatically.";
             }
 
             overlay.classList.remove('hidden');
             setTimeout(() => { overlay.classList.remove('opacity-0'); overlay.classList.add('opacity-100'); }, 10);
             sidebar.classList.remove('translate-x-full');
+        };
+
+        window.handleRegistrationChestInput = function() {
+            const preview = document.getElementById('regCandidatePreview');
+            const raw = document.getElementById('regChestNumbers')?.value || '';
+            const chestNumbers = String(raw).split(/[\s,]+/).map(value => value.trim()).filter(Boolean);
+            if (!preview || chestNumbers.length === 0) {
+                if (preview) { preview.innerHTML = ''; preview.classList.add('hidden'); }
+                return [];
+            }
+
+            const candidates = window.viewProgramCandidatesData || [];
+            const matches = chestNumbers.map(chestNo => ({
+                chestNo,
+                candidate: candidates.find(item => String(item.chestNo || '').trim().toLowerCase() === chestNo.toLowerCase())
+            }));
+            preview.innerHTML = matches.map(item => item.candidate ? `
+                <div class="flex items-center justify-between rounded-xl border border-green-100 bg-green-50 px-3 py-2">
+                    <div><span class="font-mono text-xs font-bold text-green-700">#${item.chestNo}</span><span class="ml-2 text-xs font-semibold text-gray-800">${item.candidate.name || 'Candidate'}</span></div>
+                    <span class="text-[11px] font-bold text-blue-600">${item.candidate.team || 'No team'}</span>
+                </div>` : `
+                <div class="flex items-center justify-between rounded-xl border border-red-100 bg-red-50 px-3 py-2">
+                    <span class="font-mono text-xs font-bold text-red-600">#${item.chestNo}</span><span class="text-[11px] font-bold text-red-500">Not found</span>
+                </div>`).join('');
+            preview.classList.remove('hidden');
+            return matches;
+        };
+
+        window.handleTeamRegistrationEnter = async function(event) {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            if (document.getElementById('btn-save-admin-reg')?.disabled) return;
+            await window.saveAdminRegistration();
         };
 
         window.closeRegistrationSidebar = function() {
@@ -1083,6 +1130,76 @@
             setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         };
 
+        window.handleRegistrationChestEnter = async function(event) {
+            if (event.key !== 'Enter' || event.shiftKey) return;
+            event.preventDefault();
+            if (document.getElementById('btn-save-admin-reg')?.disabled) return;
+
+            const program = window.currentProgram || {};
+            const isGroup = String(program.type || '').toLowerCase() === 'group' ||
+                String(program.section || '').toLowerCase() === 'kulliya';
+            if (isGroup) return;
+
+            const input = document.getElementById('regChestNumbers');
+            const chestNumbers = String(input?.value || '').split(/[\s,]+/).map(value => value.trim()).filter(Boolean);
+            if (chestNumbers.length === 0) return;
+
+            let candidates = window.viewProgramCandidatesData || [];
+            if (candidates.length === 0 && window.db) {
+                const candidateSnap = await window.db.collection('candidates').get();
+                candidates = candidateSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                window.viewProgramCandidatesData = candidates;
+            }
+            const matches = chestNumbers.map(chestNo => candidates.find(candidate =>
+                String(candidate.chestNo || '').trim().toLowerCase() === chestNo.toLowerCase()
+            ));
+            const missing = chestNumbers.filter((chestNo, index) => !matches[index]);
+            if (missing.length > 0) {
+                vpToast(`âŒ Chest number(s) not found: ${missing.join(', ')}`, '#EF4444');
+                return;
+            }
+
+            input.value = chestNumbers.join(', ');
+            window.handleRegistrationChestInput();
+
+            const groupedByTeam = new Map();
+            matches.forEach(candidate => {
+                if (!candidate.team) return;
+                if (!groupedByTeam.has(candidate.team)) groupedByTeam.set(candidate.team, []);
+                groupedByTeam.get(candidate.team).push(String(candidate.chestNo));
+            });
+            if (groupedByTeam.size === 0) return vpToast('âŒ No team found for the entered candidates.', '#EF4444');
+
+            const teamSaveBtn = document.getElementById('btn-save-admin-reg');
+            teamSaveBtn.disabled = true;
+            teamSaveBtn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
+            try {
+                const programId = localStorage.getItem('viewProgramId');
+                const writes = [];
+                for (const [team, teamChests] of groupedByTeam) {
+                    const existing = await window.db.collection('registrations')
+                        .where('programId', '==', programId).where('team', '==', team).get();
+                    const savedChests = existing.empty ? [] : (existing.docs[0].data().chestNumbers || []);
+                    const combinedChests = [...new Set([...savedChests, ...teamChests].map(String))];
+                    const payload = { programId, team, chestNumbers: combinedChests, memberCount: combinedChests.length, updatedAt: new Date() };
+                    if (existing.empty) {
+                        payload.createdAt = new Date();
+                        writes.push(window.db.collection('registrations').add(payload));
+                    } else {
+                        writes.push(existing.docs[0].ref.update(payload));
+                    }
+                }
+                await Promise.all(writes);
+                vpToast(`✅ ${matches.length} candidate(s) registered from ${groupedByTeam.size} team(s).`, '#10B981');
+                closeRegistrationSidebar();
+            } catch (err) {
+                vpToast('âŒ Error: ' + err.message, '#EF4444');
+            } finally {
+                teamSaveBtn.disabled = false;
+                teamSaveBtn.innerHTML = '<i class="fi fi-rr-disk"></i> Register Now';
+            }
+        };
+
         window.saveAdminRegistration = async function() {
             const db = window.db;
             const programId = localStorage.getItem('viewProgramId');
@@ -1091,14 +1208,59 @@
             const team = document.getElementById('regTeamSelect').value;
             const memberCountInput = document.getElementById('regMemberCount').value;
             const chestsRaw = document.getElementById('regChestNumbers').value.trim();
+            const program = window.currentProgram || {};
+            const isGeneral = String(program.type || '').toLowerCase() === 'general';
+            const isGroup = String(program.type || '').toLowerCase() === 'group' ||
+                String(program.section || '').toLowerCase() === 'kulliya';
+            const isUnlimited = !!program.isUnlimited || program.maxParticipants === 'unlimited';
+            const isTeamOnlyRegistration = isGroup || (isGeneral && isUnlimited);
+
+            // The button remains as an accessibility fallback for Individual
+            // programs and follows the same preview-and-register flow as Enter.
+            if (!isTeamOnlyRegistration) {
+                return window.handleRegistrationChestEnter({
+                    key: 'Enter', shiftKey: false, preventDefault: function() {}
+                });
+            }
+
+            const selectedTeams = [...document.querySelectorAll('#regTeamCheckboxes input[type="checkbox"]:checked')]
+                .map(checkbox => checkbox.value);
+            if (selectedTeams.length === 0) return vpToast("âŒ Please select at least one team.");
+
+            const teamSaveBtn = document.getElementById('btn-save-admin-reg');
+            teamSaveBtn.disabled = true;
+            teamSaveBtn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
+            try {
+                const writes = [];
+                for (const selectedTeam of selectedTeams) {
+                    const existing = await db.collection('registrations')
+                        .where('programId', '==', programId).where('team', '==', selectedTeam).get();
+                    const payload = { programId, team: selectedTeam, chestNumbers: [], memberCount: 0, updatedAt: new Date() };
+                    if (existing.empty) {
+                        payload.createdAt = new Date();
+                        writes.push(db.collection('registrations').add(payload));
+                    } else {
+                        writes.push(existing.docs[0].ref.update(payload));
+                    }
+                }
+                await Promise.all(writes);
+                vpToast(`✅ ${selectedTeams.length} team(s) registered successfully!`, '#10B981');
+                closeRegistrationSidebar();
+            } catch (err) {
+                vpToast('âŒ Error: ' + err.message, '#EF4444');
+            } finally {
+                teamSaveBtn.disabled = false;
+                teamSaveBtn.innerHTML = '<i class="fi fi-rr-disk"></i> Register Now';
+            }
+            return;
 
             if(!team) return vpToast("âŒ Please select a team.");
-            if(!chestsRaw) return vpToast("âŒ Please enter chest number(s).");
+            if(!isTeamOnlyRegistration && !chestsRaw) return vpToast("âŒ Please enter chest number(s).");
 
-            const memberCount = parseInt(memberCountInput) || 1;
-            const chests = chestsRaw.split(',').map(s => s.trim()).filter(s => s !== "");
+            const chests = isTeamOnlyRegistration ? [] : chestsRaw.split(/[\s,]+/).map(s => s.trim()).filter(s => s !== "");
+            const memberCount = isTeamOnlyRegistration ? 0 : chests.length;
 
-            if(chests.length === 0) return vpToast("âŒ Invalid chest numbers.");
+            if(!isTeamOnlyRegistration && chests.length === 0) return vpToast("âŒ Invalid chest numbers.");
 
             const btn = document.getElementById('btn-save-admin-reg');
             btn.disabled = true;
@@ -1106,14 +1268,16 @@
 
             try {
                 // Validation: Check if chests belong to the team
-                const candSnap = await db.collection('candidates')
-                    .where('team', '==', team)
-                    .get();
-                const teamChests = candSnap.docs.map(d => d.data().chestNo);
-                const invalidChests = chests.filter(c => !teamChests.includes(c));
+                if (!isTeamOnlyRegistration) {
+                    const candSnap = await db.collection('candidates')
+                        .where('team', '==', team)
+                        .get();
+                    const teamChests = new Set(candSnap.docs.map(d => String(d.data().chestNo || '').trim().toLowerCase()));
+                    const invalidChests = chests.filter(c => !teamChests.has(String(c).trim().toLowerCase()));
 
-                if(invalidChests.length > 0) {
-                    throw new Error(`The following chest numbers do not belong to ${team}: ${invalidChests.join(', ')}`);
+                    if(invalidChests.length > 0) {
+                        throw new Error(`The following chest numbers do not belong to ${team}: ${invalidChests.join(', ')}`);
+                    }
                 }
 
                 const ts = new Date();
@@ -1243,7 +1407,11 @@
                                 for(let opt of gSel.options) if (opt.text === existingResult.gradeLabel) opt.selected = true;
                             }
                             if (pSel && existingResult.positionLabel) {
-                                for(let opt of pSel.options) if (opt.text === existingResult.positionLabel) opt.selected = true;
+                                for (let opt of pSel.options) {
+                                    const optionLabel = (opt.value.split('|')[1] || opt.text).trim();
+                                    const savedLabel = String(existingResult.positionLabel).replace(/\s*\([^)]*pts?\)\s*$/i, '').trim();
+                                    if (optionLabel.toLowerCase() === savedLabel.toLowerCase()) opt.selected = true;
+                                }
                             }
                         }
                     }
@@ -1298,7 +1466,11 @@
                                 for(let opt of gSel.options) if (opt.text === existingResult.gradeLabel) opt.selected = true;
                             }
                             if (pSel && existingResult.positionLabel) {
-                                for(let opt of pSel.options) if (opt.text === existingResult.positionLabel) opt.selected = true;
+                                for (let opt of pSel.options) {
+                                    const optionLabel = (opt.value.split('|')[1] || opt.text).trim();
+                                    const savedLabel = String(existingResult.positionLabel).replace(/\s*\([^)]*pts?\)\s*$/i, '').trim();
+                                    if (optionLabel.toLowerCase() === savedLabel.toLowerCase()) opt.selected = true;
+                                }
                             }
                         }
                     }
@@ -1362,7 +1534,7 @@
                         const pText = pSel.options[pSel.selectedIndex].text;
                         let gPts = 0, pPts = 0, gLbl = '', pLbl = '';
                         if(gSel.value && gSel.value !== "0|_") { gPts = parseInt(gSel.value.split('|')[0]) || 0; gLbl = gText; }
-                        if(pSel.value && pSel.value !== "0|_") { pPts = parseInt(pSel.value.split('|')[0]) || 0; pLbl = pText; }
+                        if(pSel.value && pSel.value !== "0|_") { const parts = pSel.value.split('|'); pPts = parseInt(parts[0]) || 0; pLbl = parts[1] || pText.replace(/\s*\([^)]*pts?\)\s*$/i, ''); }
 
                         // Use team as key for group / general results
                         const docId = `${programId}_group_${teamName.replace(/\s/g,'_')}`;
@@ -1404,7 +1576,7 @@
                         const pText = pSel.options[pSel.selectedIndex].text;
                         let gPts = 0, pPts = 0, gLbl = '', pLbl = '';
                         if(gSel.value && gSel.value !== "0|_") { const parts = gSel.value.split('|'); gPts = parseInt(parts[0]) || 0; gLbl = gText; }
-                        if(pSel.value && pSel.value !== "0|_") { const parts = pSel.value.split('|'); pPts = parseInt(parts[0]) || 0; pLbl = pText; }
+                        if(pSel.value && pSel.value !== "0|_") { const parts = pSel.value.split('|'); pPts = parseInt(parts[0]) || 0; pLbl = parts[1] || pText.replace(/\s*\([^)]*pts?\)\s*$/i, ''); }
 
                         const docId = `${programId}_${cId}`;
                         const docRef = db.collection('programResults').doc(docId);
@@ -2539,8 +2711,63 @@
                 });
             };
 
+            async function syncResultPointsFromPositionTemplate(programId, templateRef) {
+                if (!programId || !templateRef) return 0;
+
+                // Older programs may contain the template name instead of its ID.
+                const templatesSnap = await db.collection('positionTemplates').get();
+                const wantedTemplate = String(templateRef).trim().toLowerCase();
+                const templateDoc = templatesSnap.docs.find(doc => {
+                    const template = doc.data() || {};
+                    return doc.id.toLowerCase() === wantedTemplate ||
+                        String(template.name || '').trim().toLowerCase() === wantedTemplate;
+                });
+                if (!templateDoc) return 0;
+
+                const template = templateDoc.data() || {};
+                const values = template.values || template.positions || template.items || [];
+                const pointsByLabel = new Map(values.map(value => {
+                    const label = String(value.label || value.position || value.name || '').trim();
+                    return [label.toLowerCase(), {
+                        label: label,
+                        points: Number(value.points ?? value.value ?? 0)
+                    }];
+                }));
+                const resultsSnap = await db.collection('programResults').where('programId', '==', programId).get();
+                if (resultsSnap.empty) return 0;
+
+                const batch = db.batch();
+                let changedResults = 0;
+                resultsSnap.forEach(resultDoc => {
+                    const result = resultDoc.data() || {};
+                    const labelKey = String(result.positionLabel || '')
+                        .replace(/\s*\([^)]*pts?\)\s*$/i, '')
+                        .trim()
+                        .toLowerCase();
+                    if (!labelKey || !pointsByLabel.has(labelKey)) return;
+
+                    const mappedPosition = pointsByLabel.get(labelKey);
+                    const gradePoints = Number(result.gradePoints || 0);
+                    const totalPoints = gradePoints + mappedPosition.points;
+                    if (Number(result.positionPoints) === mappedPosition.points &&
+                        Number(result.totalPoints) === totalPoints &&
+                        result.positionLabel === mappedPosition.label) return;
+
+                    batch.update(resultDoc.ref, {
+                        positionLabel: mappedPosition.label,
+                        positionPoints: mappedPosition.points,
+                        totalPoints: totalPoints,
+                        updatedAt: new Date()
+                    });
+                    changedResults++;
+                });
+
+                if (changedResults > 0) await batch.commit();
+                return changedResults;
+            }
+
             // Save Settings
-            window.saveProgramSettings = function () {
+            window.saveProgramSettings = async function () {
                 // Get db at call-time (dashboard sets window.db after login)
                 var db = window.db;
                 var programId = localStorage.getItem('viewProgramId');
@@ -2588,15 +2815,19 @@
 
                 if (btn) { btn.disabled = true; btn.querySelector('span').innerText = 'Saving...'; }
 
-                db.collection('programs').doc(programId).update(payload)
-                    .then(function() {
-                        vpToast('✅ Settings saved successfully', '#10B981');
-                        if (btn) { btn.disabled = false; btn.querySelector('span').innerText = 'Save Settings'; }
-                    })
-                    .catch(function(err) {
-                        vpToast('âŒ Error: ' + err.message, '#EF4444');
-                        if (btn) { btn.disabled = false; btn.querySelector('span').innerText = 'Save Settings'; }
-                    });
+                try {
+                    await db.collection('programs').doc(programId).update(payload);
+
+                    if (payload.enableScoring && payload.positionTemplateId) {
+                        await syncResultPointsFromPositionTemplate(programId, payload.positionTemplateId);
+                    }
+
+                    vpToast('✅ Settings saved successfully', '#10B981');
+                } catch (err) {
+                    vpToast('âŒ Error: ' + err.message, '#EF4444');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.querySelector('span').innerText = 'Save Settings'; }
+                }
             };
 
             window.toggleGroupFields = function() {
@@ -2868,12 +3099,20 @@
             db.collection('teams').onSnapshot(snap => {
                 window.allTeamsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 const regTeamSelect = document.getElementById('regTeamSelect');
+                const regTeamCheckboxes = document.getElementById('regTeamCheckboxes');
                 if(regTeamSelect) {
                     let opts = '<option value="" disabled selected>Select Team</option>';
                     snap.forEach(doc => {
                         opts += `<option value="${doc.data().name}">${doc.data().name}</option>`;
                     });
                     regTeamSelect.innerHTML = opts;
+                }
+                if (regTeamCheckboxes) {
+                    regTeamCheckboxes.innerHTML = window.allTeamsData.map(team => `
+                        <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 hover:border-blue-300 hover:bg-blue-50/40">
+                            <input type="checkbox" value="${team.name}" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-[13px] font-semibold text-gray-700">${team.name}</span>
+                        </label>`).join('') || '<p class="text-xs text-gray-400">No teams available.</p>';
                 }
             });
 
@@ -3173,6 +3412,18 @@
 
                     toggleTemplateState('progGrading', 'progGradeTemplate', 'icon-grade-template');
                     toggleTemplateState('progScoring', 'progScoreTemplate', 'icon-score-template');
+
+                    // Repair previously saved results from the template already
+                    // assigned to this program (including legacy name references).
+                    const assignedPositionTemplate = p.positionTemplateId || p.positionTemplate;
+                    const syncKey = `${programId}|${assignedPositionTemplate || ''}`;
+                    if (p.enableScoring && assignedPositionTemplate && window.lastPositionTemplateSyncKey !== syncKey) {
+                        window.lastPositionTemplateSyncKey = syncKey;
+                        syncResultPointsFromPositionTemplate(programId, assignedPositionTemplate).catch(err => {
+                            window.lastPositionTemplateSyncKey = '';
+                            console.error('Unable to synchronize position-template points:', err);
+                        });
+                    }
                 }
                 else {
                     document.getElementById('vp-name').innerText = "Program Not Found";
@@ -3197,11 +3448,17 @@
             // Fetch Registrations & Candidates for this Program
             db.collection('candidates').get().then(candSnap => {
                 const allCandidates = candSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Inline button handlers execute in the window scope, so expose the
+                // loaded candidates under an explicit, module-specific name.
+                window.viewProgramCandidatesData = allCandidates;
 
                 db.collection('registrations').where('programId', '==', programId).onSnapshot(regSnap => {
                     const regs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     const regContainer = document.getElementById('registrations-list-container');
-                    const isUnlimProg = window.currentProgram && (window.currentProgram.isUnlimited || window.currentProgram.maxParticipants === 'unlimited');
+                    const registrationProgram = window.currentProgram || {};
+                    const isUnlimitedProgram = !!registrationProgram.isUnlimited || registrationProgram.maxParticipants === 'unlimited';
+                    const isGeneralProgram = String(registrationProgram.type || '').toLowerCase() === 'general';
+                    const isUnlimProg = isUnlimitedProgram && !isGeneralProgram;
                     const addRegBtn = document.getElementById('btn-add-registration');
 
                     if (isUnlimProg) {
@@ -3409,7 +3666,7 @@
                                     <div class="flex items-end md:items-center gap-6 self-start md:self-auto ml-[56px] md:ml-0">
                                         <div class="text-center">
                                             <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">POSITION</div>
-                                            <div class="text-[16px] font-black text-gray-800">${r.positionLabel || '-'}</div>
+                                            <div class="text-[16px] font-black text-gray-800">${r.positionLabel ? `${String(r.positionLabel).replace(/\s*\([^)]*pts?\)\s*$/i, '')} (${Number(r.positionPoints || 0)} pts)` : '-'}</div>
                                         </div>
                                         <div class="w-px h-8 bg-gray-100 hidden md:block"></div>
                                         <div class="text-center">
@@ -3422,7 +3679,7 @@
                                             <div class="text-[18px] font-black text-brand-blue">${r.totalPoints}</div>
                                         </div>
                                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                             <button onclick="const cand = allCandidates.find(c => c.id === '${r.candidateId}'); window.open('poster.html?name=${encodeURIComponent(r.name)}&chest=${r.chestNo}&pos=${encodeURIComponent(r.positionLabel)}&prog=${encodeURIComponent(window.currentProgram.name)}&photo=' + encodeURIComponent(cand?.imageUrl || ''), '_blank')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors" title="Design Poster"><i class="fi fi-rr-edit"></i></button>
+                                             <button onclick="const cand = (window.viewProgramCandidatesData || []).find(c => c.id === '${r.candidateId}'); window.open('poster.html?name=${encodeURIComponent(r.name)}&chest=${r.chestNo}&pos=${encodeURIComponent(r.positionLabel)}&prog=${encodeURIComponent(window.currentProgram.name)}&photo=' + encodeURIComponent(cand?.imageUrl || ''), '_blank')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors" title="Design Poster"><i class="fi fi-rr-edit"></i></button>
                                              <button onclick="if(confirm('Delete Result?')) db.collection('programResults').doc('${r.id}').delete()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors ${isTeamManager ? '!hidden' : ''}" title="Delete Result"><i class="fi fi-rr-trash"></i></button>
                                          </div>
                                     </div>
@@ -3458,7 +3715,7 @@
                                 let pHtml = '<option value="0|_">None</option>';
                                 const vals = tdoc.data().values || [];
                                 vals.forEach(v => {
-                                    pHtml += `<option value="${v.points}|_">${v.label} (${v.points} pts)</option>`;
+                                    pHtml += `<option value="${v.points}|${v.label}">${v.label} (${v.points} pts)</option>`;
                                 });
                                 window.globalPosOpts = pHtml;
                                 const sidebar = document.getElementById('resultsSidebar');

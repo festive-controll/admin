@@ -31,6 +31,16 @@
         </div>
     </div>
 
+    <div id="tmt-other-modal" class="hidden fixed inset-0 z-[100] bg-gray-950/45 p-4 items-center justify-center" onclick="if (event.target === this) window.closeOtherTopics()">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-100 overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="tmt-other-title">
+            <div class="flex items-start justify-between gap-4 px-5 py-4 border-b border-gray-100">
+                <div><h2 id="tmt-other-title" class="text-[16px] font-bold text-gray-900">Other Teams' Responses</h2><p id="tmt-other-subtitle" class="text-[11px] text-gray-500 mt-0.5"></p></div>
+                <button type="button" onclick="window.closeOtherTopics()" class="w-8 h-8 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-500 flex items-center justify-center" aria-label="Close popup"><i class="fi fi-rr-cross-small"></i></button>
+            </div>
+            <div id="tmt-other-content" class="p-5 max-h-[65vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
     <script>
         document.getElementById('tmt-title').innerText = (window.currentTMSection || 'Section') + ' Topic Registration';
         var section = window.currentTMSection;
@@ -70,6 +80,26 @@
                 hour12: true
             });
         }
+
+        function tmtEscapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        window.enforceTopicOptionLimit = function (progId, changedCheckbox) {
+            const prog = window.tmtProgramsList.find(p => p.id === progId);
+            const limit = Math.max(1, parseInt(prog && prog.topicOptionsPerTeam, 10) || 1);
+            const boxes = Array.from(document.querySelectorAll(`input[name="tmt-option-${progId}"]`));
+            const checked = boxes.filter(box => box.checked);
+            if (checked.length > limit) {
+                changedCheckbox.checked = false;
+                if (typeof showToast === 'function') showToast(`You can select only ${limit} topic${limit === 1 ? '' : 's'} for this program.`);
+            }
+            const count = boxes.filter(box => box.checked).length;
+            const counter = document.getElementById(`tmt-option-count-${progId}`);
+            if (counter) counter.textContent = `${count} / ${limit} selected`;
+        };
 
         function compareProgramCodes(codeARaw, codeBRaw) {
             const codeA = String(codeARaw || '').trim();
@@ -204,6 +234,13 @@
 
             container.innerHTML = window.tmtProgramsList.map(prog => {
                 const reg = window.tmtRegistrationsList.find(r => r.programId === prog.id);
+                const topicStatus = String((reg && reg.topicStatus) || 'Not Submitted').toLowerCase();
+                const isApproved = topicStatus === 'approved' || topicStatus === 'accepted';
+                const isFormLocked = !isUnlocked || isApproved;
+                const optionsEnabled = !!prog.topicOptionsEnabled && Array.isArray(prog.topicOptions) && prog.topicOptions.length > 0;
+                const optionLimit = Math.min(prog.topicOptions ? prog.topicOptions.length : 1, Math.max(1, parseInt(prog.topicOptionsPerTeam, 10) || 1));
+                const selectedOptions = reg && Array.isArray(reg.selectedTopicOptions)
+                    ? reg.selectedTopicOptions.filter(option => prog.topicOptions && prog.topicOptions.includes(option)) : [];
                 const isGroup = (prog.type || '').toLowerCase().includes('group') || (prog.section || '').toLowerCase() === 'kulliya';
 
                 let totalSlots = 1;
@@ -222,7 +259,7 @@
                 const activeSlot = window.tmtActiveTabs[prog.id];
 
                 let tabsHTML = '';
-                if (totalSlots > 1) {
+                if (!optionsEnabled && totalSlots > 1) {
                     tabsHTML = `
                         <div class="flex overflow-x-auto no-scrollbar border-b border-gray-100 mb-4 gap-4 scroll-smooth">
                             ${Array.from({ length: totalSlots }, (_, idx) => {
@@ -245,7 +282,25 @@
                 }
 
                 let contentsHTML = '';
-                for (let slotNum = 1; slotNum <= totalSlots; slotNum++) {
+                if (optionsEnabled) {
+                    contentsHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Topics</label>
+                                <span id="tmt-option-count-${prog.id}" class="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">${selectedOptions.length} / ${optionLimit} selected</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500">Choose up to ${optionLimit} topic${optionLimit === 1 ? '' : 's'} for your team.</p>
+                            <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                ${prog.topicOptions.map((option, index) => {
+                                    const checked = selectedOptions.includes(option);
+                                    return `<label class="flex items-start gap-2.5 p-3 rounded-xl border ${checked ? 'border-brand-blue bg-blue-50/60' : 'border-gray-200 bg-white'} ${!isFormLocked ? 'cursor-pointer hover:border-blue-200' : 'cursor-not-allowed opacity-70'} transition-all">
+                                        <input type="checkbox" name="tmt-option-${prog.id}" value="${tmtEscapeHtml(option)}" ${checked ? 'checked' : ''} ${isFormLocked ? 'disabled' : ''} onchange="window.enforceTopicOptionLimit('${prog.id}', this)" class="mt-0.5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue">
+                                        <span class="text-[12px] font-semibold text-gray-700 leading-snug"><span class="text-gray-400 mr-1">${index + 1}.</span>${tmtEscapeHtml(option)}</span>
+                                    </label>`;
+                                }).join('')}
+                            </div>
+                        </div>`;
+                } else for (let slotNum = 1; slotNum <= totalSlots; slotNum++) {
                     const chestNo = regChests[slotNum - 1] || null;
                     let topicData = {};
                     if (reg && reg.topics) {
@@ -259,7 +314,7 @@
 
                     contentsHTML += `
                         <div id="tmt-inputs-${prog.id}-${slotNum}" class="tmt-inputs-${prog.id} ${isHidden} space-y-3">
-                            ${renderTopicInputs(prog.id, slotNum, name, author, content, !isUnlocked)}
+                            ${renderTopicInputs(prog.id, slotNum, name, author, content, isFormLocked)}
                         </div>`;
                 }
 
@@ -275,11 +330,15 @@
                     statusBadge = `<span class="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full shadow-sm"><i class="fi fi-rr-edit text-[9px] mr-1"></i>Not Submitted</span>`;
                 }
 
-                const limitInfo = totalSlots > 1 ? `${totalSlots} Sets / Slots` : '1 Topic Set';
+                const limitInfo = optionsEnabled ? `${prog.topicOptions.length} Options / Select up to ${optionLimit}` : (totalSlots > 1 ? `${totalSlots} Sets / Slots` : '1 Topic Set');
 
-                const btnClass = isUnlocked
+                const btnClass = !isFormLocked
                     ? 'bg-gray-50 hover:bg-[#FFB33F] text-gray-800 border border-gray-200 hover:border-transparent cursor-pointer'
                     : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed';
+                const viewOtherButton = status.toLowerCase() === 'rejected' ? `
+                    <button type="button" onclick="window.viewOtherTopics('${prog.id}')" class="w-full mt-2 bg-white hover:bg-blue-50 text-brand-blue border border-blue-200 font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fi fi-rr-eye text-xs"></i> View Other
+                    </button>` : '';
 
                 return `
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
@@ -294,13 +353,72 @@
                     ${tabsHTML}
                     <div class="mt-auto">
                         ${contentsHTML}
-                        <button id="tmt-btn-${prog.id}" onclick="window.saveTMTopic('${prog.id}')" ${!isUnlocked ? 'disabled' : ''} class="w-full mt-4 ${btnClass} font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
-                            <i class="fi fi-${isUnlocked ? 'rr-disk' : 'rr-lock'} text-xs"></i> ${!isUnlocked ? 'Registration Closed' : (reg ? 'Update' : 'Save') + ' Topic Details'}
+                        <button id="tmt-btn-${prog.id}" onclick="window.saveTMTopic('${prog.id}')" ${isFormLocked ? 'disabled' : ''} class="w-full mt-4 ${btnClass} font-bold text-[12px] py-2.5 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fi fi-${isFormLocked ? 'rr-lock' : 'rr-disk'} text-xs"></i> ${isApproved ? 'Approved — Editing Locked' : (!isUnlocked ? 'Registration Closed' : (reg ? 'Update' : 'Save') + (optionsEnabled ? ' Topic Selection' : ' Topic Details'))}
                         </button>
+                        ${viewOtherButton}
                     </div>
                 </div>`;
             }).join('');
         };
+
+        window.closeOtherTopics = function () {
+            const modal = document.getElementById('tmt-other-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.viewOtherTopics = function (progId) {
+            const modal = document.getElementById('tmt-other-modal');
+            const content = document.getElementById('tmt-other-content');
+            const subtitle = document.getElementById('tmt-other-subtitle');
+            const prog = window.tmtProgramsList.find(p => p.id === progId);
+            const currentTeam = localStorage.getItem('managerTeam') || '';
+            if (!modal || !content || !prog) return;
+
+            subtitle.textContent = `${prog.code || ''}${prog.code ? ' • ' : ''}${prog.name || 'Program'}`;
+            content.innerHTML = '<div class="py-8 text-center text-[12px] text-gray-400"><div class="w-5 h-5 border-2 border-gray-200 border-t-brand-blue rounded-full animate-spin mx-auto mb-2"></div>Loading responses...</div>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            db.collection('registrations').where('programId', '==', progId).get().then(snap => {
+                const responses = [];
+                snap.docs.forEach(doc => {
+                    const registration = doc.data() || {};
+                    if (registration.team === currentTeam) return;
+                    if (Array.isArray(registration.selectedTopicOptions) && registration.selectedTopicOptions.length) {
+                        registration.selectedTopicOptions.forEach(name => responses.push({ team: registration.team || 'Other Team', name, author: '', content: '' }));
+                        return;
+                    }
+                    const topics = registration.topics && typeof registration.topics === 'object' ? Object.values(registration.topics) : [];
+                    const validTopics = topics.filter(topic => topic && (topic.name || topic.author || topic.content));
+                    if (validTopics.length) validTopics.forEach(topic => responses.push({ team: registration.team || 'Other Team', ...topic }));
+                    else if (registration.topicName || registration.topicAuthor || registration.topicContent) responses.push({
+                        team: registration.team || 'Other Team', name: registration.topicName || '', author: registration.topicAuthor || '', content: registration.topicContent || ''
+                    });
+                });
+
+                if (!responses.length) {
+                    content.innerHTML = '<div class="py-8 text-center text-[12px] font-medium text-gray-500 bg-gray-50 rounded-xl border border-gray-100">No responses from other teams yet.</div>';
+                    return;
+                }
+                content.innerHTML = `<ol class="space-y-3">${responses.map((response, index) => `
+                    <li class="flex gap-3 p-3.5 rounded-xl border border-gray-200 bg-gray-50/60">
+                        <span class="shrink-0 w-7 h-7 rounded-full bg-blue-100 text-brand-blue text-[11px] font-bold flex items-center justify-center">${index + 1}</span>
+                        <div class="min-w-0"><p class="text-[13px] font-bold text-gray-800 break-words">${tmtEscapeHtml(response.name || 'Untitled response')}</p>
+                            <p class="text-[10px] font-semibold text-brand-blue mt-0.5">${tmtEscapeHtml(response.team)}</p>
+                            ${response.author ? `<p class="text-[11px] text-gray-600 mt-1"><span class="font-semibold">Author:</span> ${tmtEscapeHtml(response.author)}</p>` : ''}
+                            ${response.content ? `<p class="text-[11px] text-gray-500 mt-1 whitespace-pre-wrap break-words">${tmtEscapeHtml(response.content)}</p>` : ''}
+                        </div>
+                    </li>`).join('')}</ol>`;
+            }).catch(error => {
+                console.error('Failed to load other topic responses:', error);
+                content.innerHTML = '<div class="py-8 text-center text-[12px] font-medium text-red-600 bg-red-50 rounded-xl border border-red-100">Could not load other teams\' responses. Please try again.</div>';
+            });
+        };
+
+        document.addEventListener('keydown', event => { if (event.key === 'Escape') window.closeOtherTopics(); });
 
         function renderTopicInputs(progId, slotNum, name, author, content, disabled = false) {
             const disabledAttr = disabled ? 'disabled' : '';
@@ -343,7 +461,49 @@
             if (totalSlots < 1) totalSlots = 1;
 
             const reg = window.tmtRegistrationsList.find(r => r.programId === progId);
+            const currentStatus = String((reg && reg.topicStatus) || '').toLowerCase();
+            if (currentStatus === 'approved' || currentStatus === 'accepted') {
+                return typeof showToast === 'function' && showToast('This topic has been approved and can no longer be edited.');
+            }
             const regChests = reg ? (reg.chestNumbers || []) : [];
+
+            if (prog.topicOptionsEnabled && Array.isArray(prog.topicOptions) && prog.topicOptions.length > 0) {
+                const optionLimit = Math.min(prog.topicOptions.length, Math.max(1, parseInt(prog.topicOptionsPerTeam, 10) || 1));
+                const selectedOptions = Array.from(document.querySelectorAll(`input[name="tmt-option-${progId}"]:checked`)).map(el => el.value);
+                if (!selectedOptions.length) return typeof showToast === 'function' && showToast('Select at least one topic.');
+                if (selectedOptions.length > optionLimit) return typeof showToast === 'function' && showToast(`You can select only ${optionLimit} topics.`);
+                if (selectedOptions.some(option => !prog.topicOptions.includes(option))) return typeof showToast === 'function' && showToast('One or more selected topics are no longer available. Refresh and try again.');
+
+                const status = (reg && reg.topicStatus) || 'Pending';
+                const optionTopics = {};
+                selectedOptions.forEach((name, index) => { optionTopics['option' + (index + 1)] = { name, author: '', content: '', status }; });
+                const updateData = {
+                    programId: progId, programName: prog.name, programCode: prog.code,
+                    team, section, selectedTopicOptions: selectedOptions, topics: optionTopics,
+                    topicName: selectedOptions[0], topicAuthor: '', topicContent: '', topicStatus: status,
+                    topicSelectionMode: 'options', updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                const btn = document.getElementById('tmt-btn-' + progId);
+                btn.innerHTML = '<div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>';
+                btn.disabled = true;
+                let writePromise;
+                if (reg) writePromise = db.collection('registrations').doc(reg.id).update(updateData);
+                else {
+                    updateData.chestNumbers = [];
+                    updateData.candidateIds = [];
+                    updateData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    writePromise = db.collection('registrations').add(updateData);
+                }
+                return writePromise.then(() => {
+                    if (typeof showToast === 'function') showToast('✅ Topic selections saved successfully!');
+                }).catch(err => {
+                    console.error(err);
+                    if (typeof showToast === 'function') showToast('❌ Error saving topics.');
+                }).finally(() => {
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Topic Selection';
+                    btn.disabled = false;
+                });
+            }
 
             let topics = reg && reg.topics ? { ...reg.topics } : {};
             let firstName = '', firstAuthor = '', firstContent = '';

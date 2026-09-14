@@ -10,6 +10,7 @@
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
@@ -205,7 +206,7 @@
                                 placeholder="Search programs..."
                                 class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] transition-all">
                         </div>
-                        <button onclick="downloadProgCSV()"
+                        <button onclick="downloadProgExcel()"
                             class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
                             <i class="fi fi-rr-file-export text-xs"></i>
                             <span class="hidden md:inline">Export</span>
@@ -225,7 +226,7 @@
                             selected</span>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <button onclick="downloadProgCSV(true)"
+                        <button onclick="downloadProgExcel(true)"
                             class="flex items-center justify-center gap-2 px-4 py-1.5 bg-brand-blue border border-transparent rounded-md text-[13px] font-medium text-white hover:bg-opacity-90 shadow-sm transition-colors">
                             <i class="fi fi-rr-file-export text-sm"></i> Export Selected
                         </button>
@@ -731,7 +732,7 @@
 
         let sectionOrderMap = {};
 
-        function downloadProgCSV(onlySelected = false) {
+        function downloadProgExcel(onlySelected = false) {
             let data = programsData;
             if (onlySelected) {
                 data = programsData.filter(p => selectedProgIds.has(p.id));
@@ -758,19 +759,23 @@
                 p.conceptNote || ''
             ]);
 
-            let csvContent = "data:text/csv;charset=utf-8,"
-                + headers.join(",") + "\n"
-                + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+            if (typeof XLSX === 'undefined') {
+                return typeof showToast === 'function' && showToast("❌ Excel exporter is still loading. Please try again.");
+            }
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Programs_Export_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+            worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+            worksheet['!cols'] = headers.map((header, columnIndex) => ({
+                wch: Math.min(50, Math.max(
+                    String(header).length,
+                    ...rows.map(row => String(row[columnIndex] ?? '').length)
+                ) + 2)
+            }));
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Programs');
+            XLSX.writeFile(workbook, `Programs_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
 
-            typeof showToast === 'function' && showToast("✅ CSV Downloaded!");
+            typeof showToast === 'function' && showToast("✅ Excel file downloaded!");
         }
 
         // Section fetching for dropdown
