@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Schedule</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        :root { --accent: #ef4d4f; --accent-soft: #fff6f6; --text: #232326; --muted: #73737c; --line: #e5e6e9; }
+        body { margin: 0; min-height: 100vh; background: #fafbfc; color: var(--text); font-family: Inter, sans-serif; }
+        button, input, select { font: inherit; }
+        .page { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 38px 0 52px; }
+        .title { display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; }
+        .title-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: var(--accent); background: #ffe9e9; font-size: 18px; }
+        .beta { margin-left: 5px; padding: 3px 8px; color: var(--accent); background: #fff0f0; border-radius: 5px; font-size: 10px; font-weight: 700; }
+        .steps { display: flex; justify-content: center; align-items: flex-start; margin: 46px auto 78px; }
+        .step-wrap { display: flex; align-items: flex-start; }
+        .step { width: 78px; text-align: center; border: 0; padding: 0; color: #a8a9ae; background: transparent; cursor: pointer; }
+        .step-dot { display: grid; place-items: center; width: 36px; height: 36px; margin: 0 auto 11px; border: 1px solid #e1e2e5; border-radius: 50%; background: #fff; font-size: 13px; font-weight: 600; }
+        .step-label { display: block; font-size: 9px; font-weight: 600; text-transform: uppercase; }
+        .connector { width: 58px; height: 1px; margin-top: 18px; background: #d7d9dd; }
+        .step.active { color: var(--accent); }
+        .step.active .step-dot { color: #fff; border-color: var(--accent); background: var(--accent); box-shadow: 0 2px 5px #ef4d4f33; }
+        .step.done .step-dot { color: var(--accent); border-color: #ffc8c8; background: var(--accent-soft); }
+        .wizard-card { padding: 30px; border: 1px solid #dedfe3; border-radius: 18px; background: #fff; box-shadow: 0 4px 16px #1b1b1b0a; }
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; }
+        fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+        legend, .field-label { margin-bottom: 13px; color: #4b4b51; font-size: 14px; font-weight: 600; }
+        .choice { position: relative; display: flex; min-height: 94px; align-items: flex-start; gap: 14px; padding: 22px 20px; border: 1px solid #dedfe3; border-radius: 14px; cursor: pointer; transition: .18s ease; }
+        .choice:hover { border-color: #f2a2a3; background: #fffafa; }
+        .choice:has(input:checked) { border-color: #ff7779; background: var(--accent-soft); box-shadow: 0 0 0 1px #ff77791a; }
+        .choice input { position: absolute; opacity: 0; }
+        .radio { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; border: 1px solid #dfe0e4; border-radius: 50%; background: #fff; }
+        .choice:has(input:checked) .radio { border: 5px solid var(--accent); }
+        .choice-title { display: block; margin-bottom: 7px; font-size: 15px; font-weight: 600; }
+        .choice-copy { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .step-panel { display: none; }
+        .step-panel.active { display: block; animation: fade .2s ease; }
+        @keyframes fade { from { opacity: 0; transform: translateY(3px); } }
+        .panel-heading { margin: 0 0 7px; font-size: 20px; }
+        .panel-copy { margin: 0 0 26px; color: var(--muted); font-size: 14px; }
+        .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field { display: flex; flex-direction: column; }
+        .field input, .field select { width: 100%; padding: 16px; border: 1px solid #dedfe3; border-radius: 11px; color: #444; background: #fff; outline: none; font-size: 14px; }
+        .field input:focus, .field select:focus { border-color: #ff7779; box-shadow: 0 0 0 3px #ef4d4f12; }
+        .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .summary div { padding: 18px; border-radius: 11px; background: #f7f7f8; font-size: 13px; }
+        .summary strong { display: block; margin-bottom: 6px; font-size: 14px; }
+        .actions { display: flex; justify-content: space-between; align-items: center; padding: 30px 14px 0; }
+        .back, .next { border: 0; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .back { color: #3d3d42; background: transparent; }
+        .back:disabled { visibility: hidden; }
+        .next { padding: 13px 21px; border-radius: 10px; color: #fff; background: var(--accent); box-shadow: 0 2px 5px #ef4d4f30; }
+        .next:hover { background: #df4143; }
+        .notice { display: none; margin-top: 18px; padding: 15px; border-radius: 11px; color: #267343; background: #ebfff2; font-size: 14px; text-align: center; }
+        @media (max-width: 650px) {
+            .page { width: min(100% - 22px, 580px); padding-top: 24px; }
+            .title { font-size: 19px; }
+            .steps { margin: 32px auto 46px; overflow-x: auto; justify-content: flex-start; padding-bottom: 8px; }
+            .step-dot { width: 31px; height: 31px; font-size: 11px; }
+            .connector { width: 22px; margin-top: 15px; }
+            .step { width: 54px; }
+            .option-grid, .fields, .summary { grid-template-columns: 1fr; }
+            .wizard-card { padding: 19px; }
+            .choice { min-height: 88px; padding: 19px 17px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="title">
+            <span class="title-icon" aria-hidden="true">▣</span>
+            <span>Auto Schedule</span><span class="beta">BETA</span>
+        </header>
+
+        <nav class="steps" aria-label="Schedule creation steps" id="steps"></nav>
+
+        <section class="wizard-card">
+            <div class="step-panel active" data-panel="0">
+                <div class="option-grid">
+                    <fieldset><legend>Existing schedule</legend>
+                        <label class="choice"><input type="radio" name="existing" value="unscheduled" checked><span class="radio"></span><span><span class="choice-title">Unscheduled only</span><span class="choice-copy">Leave programmes with an existing schedule untouched.</span></span></label>
+                    </fieldset>
+                    <fieldset><legend>Programme set</legend>
+                        <label class="choice"><input type="radio" name="programmes" value="all" checked><span class="radio"></span><span><span class="choice-title">All programmes</span><span class="choice-copy">Use every programme matching the selected schedule scope.</span></span></label>
+                    </fieldset>
+                    <label class="choice"><input type="radio" name="existing" value="include"><span class="radio"></span><span><span class="choice-title">Include existing schedules</span><span class="choice-copy">Allow the proposal to move and update existing slots.</span></span></label>
+                    <label class="choice"><input type="radio" name="programmes" value="selected"><span class="radio"></span><span><span class="choice-title">Selected programmes only</span><span class="choice-copy">Choose the exact programmes for this proposal.</span></span></label>
+                </div>
+            </div>
+            <div class="step-panel" data-panel="1"><h2 class="panel-heading">Choose schedule period</h2><p class="panel-copy">Set the dates and daily working hours for the festival.</p><div class="fields"><label class="field"><span class="field-label">Start date</span><input type="date" id="startDate"></label><label class="field"><span class="field-label">End date</span><input type="date" id="endDate"></label></div></div>
+            <div class="step-panel" data-panel="2"><h2 class="panel-heading">Select festival days</h2><p class="panel-copy">Choose how many active scheduling days the proposal can use.</p><div class="fields"><label class="field"><span class="field-label">Number of days</span><select id="days"><option>1 day</option><option>2 days</option><option>3 days</option><option>4 days</option><option>5 days</option></select></label><label class="field"><span class="field-label">Break between programmes</span><select><option>10 minutes</option><option>15 minutes</option><option>20 minutes</option><option>30 minutes</option></select></label></div></div>
+            <div class="step-panel" data-panel="3"><h2 class="panel-heading">Programme durations</h2><p class="panel-copy">Provide a default duration. Individual programme durations can be adjusted later.</p><div class="fields"><label class="field"><span class="field-label">Default duration</span><select><option>15 minutes</option><option selected>30 minutes</option><option>45 minutes</option><option>60 minutes</option></select></label><label class="field"><span class="field-label">Daily start time</span><input type="time" value="09:00"></label></div></div>
+            <div class="step-panel" data-panel="4"><h2 class="panel-heading">Choose venues</h2><p class="panel-copy">Select which venue group the automatic scheduler may use.</p><div class="option-grid"><label class="choice"><input type="radio" name="venues" checked><span class="radio"></span><span><span class="choice-title">All available venues</span><span class="choice-copy">Let Auto Schedule make the best use of every active venue.</span></span></label><label class="choice"><input type="radio" name="venues"><span class="radio"></span><span><span class="choice-title">Select venues</span><span class="choice-copy">Limit this proposal to a custom venue list.</span></span></label></div></div>
+            <div class="step-panel" data-panel="5"><h2 class="panel-heading">Review and generate</h2><p class="panel-copy">Confirm your setup. Auto Schedule will create a proposal you can review before publishing.</p><div class="summary"><div><strong>Scope</strong><span id="summaryScope">Unscheduled programmes</span></div><div><strong>Programme set</strong><span id="summaryPrograms">All programmes</span></div><div><strong>Schedule period</strong><span id="summaryDates">Dates not set</span></div><div><strong>Venues</strong><span id="summaryVenues">All available venues</span></div></div><div class="notice" id="notice">Schedule proposal generated successfully.</div></div>
+        </section>
+
+        <div class="actions"><button class="back" id="backBtn" type="button">‹ &nbsp; Schedule</button><button class="next" id="nextBtn" type="button">Next &nbsp;›</button></div>
+    </main>
+    <script>
+        const labels = ['Scope', 'Timing', 'Days', 'Durations', 'Venues', 'AI'];
+        const stepsEl = document.getElementById('steps');
+        let current = 0;
+        labels.forEach((label, index) => {
+            const wrap = document.createElement('div'); wrap.className = 'step-wrap';
+            const button = document.createElement('button'); button.type = 'button'; button.className = 'step'; button.dataset.step = index;
+            button.innerHTML = `<span class="step-dot">${index + 1}</span><span class="step-label">${label}</span>`;
+            button.addEventListener('click', () => { if (index <= current) showStep(index); });
+            wrap.appendChild(button);
+            if (index < labels.length - 1) { const line = document.createElement('span'); line.className = 'connector'; wrap.appendChild(line); }
+            stepsEl.appendChild(wrap);
+        });
+        function showStep(index) {
+            current = Math.max(0, Math.min(labels.length - 1, index));
+            document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i === current));
+            document.querySelectorAll('.step').forEach((s, i) => { s.classList.toggle('active', i === current); s.classList.toggle('done', i < current); });
+            document.getElementById('backBtn').disabled = current === 0;
+            document.getElementById('backBtn').innerHTML = current === 0 ? '‹ &nbsp; Schedule' : '‹ &nbsp; Back';
+            document.getElementById('nextBtn').innerHTML = current === labels.length - 1 ? 'Generate &nbsp;✦' : 'Next &nbsp;›';
+            if (current === 5) updateSummary();
+        }
+        function updateSummary() {
+            const existing = document.querySelector('input[name="existing"]:checked').value;
+            const programmes = document.querySelector('input[name="programmes"]:checked').value;
+            const venue = document.querySelector('input[name="venues"]:checked').closest('.choice').querySelector('.choice-title').textContent;
+            const start = document.getElementById('startDate').value, end = document.getElementById('endDate').value;
+            document.getElementById('summaryScope').textContent = existing === 'unscheduled' ? 'Unscheduled programmes' : 'Include existing schedules';
+            document.getElementById('summaryPrograms').textContent = programmes === 'all' ? 'All programmes' : 'Selected programmes only';
+            document.getElementById('summaryDates').textContent = start || end ? `${start || '—'} to ${end || '—'}` : 'Dates not set';
+            document.getElementById('summaryVenues').textContent = venue;
+        }
+        document.getElementById('backBtn').addEventListener('click', () => showStep(current - 1));
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (current < labels.length - 1) showStep(current + 1);
+            else { const notice = document.getElementById('notice'); notice.style.display = 'block'; document.getElementById('nextBtn').textContent = 'Generated ✓'; }
+        });
+        showStep(0);
+    </script>
+</body>
+</html>

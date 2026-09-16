@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -72,9 +72,16 @@
             <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-3">
                     <span class="w-9 h-9 rounded-lg bg-blue-50 text-[#134E8E] flex items-center justify-center"><i class="fi fi-rr-cloud-upload-alt"></i></span>
-                    <div><p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Uploaded results</p><p id="uploaded-count-label" class="text-[12px] text-gray-500 mt-0.5">All programs</p></div>
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Uploaded results <span class="text-gray-300">/</span> Total programs</p>
+                        <p id="uploaded-count-label" class="text-[12px] text-gray-500 mt-0.5">All programs</p>
+                    </div>
                 </div>
-                <span id="uploaded-count" class="text-2xl font-bold text-gray-900">0</span>
+                <div class="text-right">
+                    <span id="uploaded-count" class="text-2xl font-bold text-gray-900">0</span>
+                    <span class="text-lg font-semibold text-gray-400"> / </span>
+                    <span id="total-category-count" class="text-lg font-semibold text-gray-400">0</span>
+                </div>
             </div>
             <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-3">
@@ -172,16 +179,20 @@
 
         function updateCountBar(categoryPrograms, selectedCategory) {
             const uploadedCount = document.getElementById('uploaded-count');
+            const totalCategoryCount = document.getElementById('total-category-count');
             const publishedCount = document.getElementById('published-count');
             const uploadedLabel = document.getElementById('uploaded-count-label');
             const publishedLabel = document.getElementById('published-count-label');
             const categoryFilter = document.getElementById('category-filter');
-            if (!uploadedCount || !publishedCount || !uploadedLabel || !publishedLabel) return;
+            if (!uploadedCount || !totalCategoryCount || !publishedCount || !uploadedLabel || !publishedLabel) return;
 
             const label = categoryFilter && categoryFilter.selectedOptions.length
                 ? categoryFilter.selectedOptions[0].text
                 : (selectedCategory === 'all' ? 'All programs' : selectedCategory);
             uploadedCount.textContent = categoryPrograms.length;
+            totalCategoryCount.textContent = selectedCategory === 'all'
+                ? allPrograms.length
+                : allPrograms.filter(p => resolveProgramCategory(p) === selectedCategory).length;
             publishedCount.textContent = categoryPrograms.filter(p => p.resultsPublished === true).length;
             uploadedLabel.textContent = label;
             publishedLabel.textContent = label;
@@ -228,7 +239,10 @@
                 
                 const isPrinted = isPublished && !!prog.resultPdfSavedAt;
                 const actionBtn = isPrinted
-                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-[11px] font-bold text-[#134E8E]"><i class="fi fi-rr-print"></i> Printed</span>`
+                    ? `<div class="flex items-center justify-end gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-[11px] font-bold text-[#134E8E]"><i class="fi fi-rr-print"></i> Printed</span>
+                        <button type="button" onclick="deletePublishedPdfForProgram('${prog.id}', this)" class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="Delete PDF and restore results" aria-label="Delete PDF and restore results"><i class="fi fi-rr-trash"></i></button>
+                       </div>`
                     : isPublished
                     ? `<button onclick="togglePublish('${prog.id}', false)" class="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-bold text-gray-600 hover:bg-gray-50 flex items-center justify-end gap-2 ml-auto transition-colors"><i class="fi fi-rr-cross-circle text-red-500"></i> Unpublish</button>`
                     : `<button onclick="togglePublish('${prog.id}', true)" class="px-3 py-1.5 bg-[#FFB33F] border border-transparent rounded-lg text-[11px] font-bold text-white shadow-sm hover:bg-opacity-90 flex items-center justify-end gap-2 ml-auto transition-colors"><i class="fi fi-rr-megaphone"></i> Publish</button>`;
@@ -246,6 +260,62 @@
             container.innerHTML = html;
         }
 
+        async function deletePublishedPdfForProgram(programId, button) {
+            if (button) button.disabled = true;
+            try {
+                const snapshot = await db.collection('publishedResultPdfs').get();
+                const historyDoc = snapshot.docs.find(doc => {
+                    const programs = doc.data().programs || [];
+                    return programs.some(program => program.id === programId);
+                });
+
+                if (!historyDoc) {
+                    throw new Error('The saved PDF record for this program could not be found.');
+                }
+
+                const savedPrograms = historyDoc.data().programs || [];
+                const count = savedPrograms.length;
+                const confirmed = confirm(
+                    'Delete this saved PDF?\n\n' +
+                    count + ' published program' + (count === 1 ? '' : 's') +
+                    ' from this PDF will return to the unsaved list so the PDF can be created again.'
+                );
+                if (!confirmed) {
+                    if (button) button.disabled = false;
+                    return;
+                }
+
+                const batch = db.batch();
+                batch.delete(historyDoc.ref);
+                savedPrograms.forEach(program => {
+                    if (!program.id) return;
+                    batch.update(db.collection('programs').doc(program.id), {
+                        resultPublishedDate: firebase.firestore.FieldValue.delete(),
+                        resultPdfSavedAt: firebase.firestore.FieldValue.delete()
+                    });
+                });
+                await batch.commit();
+
+                Toastify({
+                    text: 'PDF deleted. Published results restored.',
+                    duration: 3000,
+                    gravity: 'top',
+                    position: 'right',
+                    style: { background: '#10B981', borderRadius: '8px', fontSize: '13px', fontWeight: '600' }
+                }).showToast();
+            } catch (err) {
+                console.error('Error deleting published PDF:', err);
+                if (button) button.disabled = false;
+                Toastify({
+                    text: err.message || 'Could not delete the saved PDF.',
+                    duration: 3500,
+                    gravity: 'top',
+                    position: 'right',
+                    style: { background: '#EF4444', borderRadius: '8px', fontSize: '13px', fontWeight: '600' }
+                }).showToast();
+            }
+        }
+
         async function togglePublish(progId, shouldPublish) {
             try {
                 const publishUpdate = { resultsPublished: shouldPublish };
@@ -256,18 +326,8 @@
                 }
                 await db.collection('programs').doc(progId).update(publishUpdate);
 
-                // Open the publication sheet for the program that was just published.
-                if (shouldPublish) {
-                    sessionStorage.setItem('publishProgramId', progId);
-                    if (typeof loadModule === 'function') {
-                        loadModule('pblish');
-                    } else {
-                        window.location.href = `pblish.html?programId=${encodeURIComponent(progId)}`;
-                    }
-                    return;
-                }
                 Toastify({
-                    text: "Results unpublished.",
+                    text: shouldPublish ? "Results published." : "Results unpublished.",
                     duration: 3000,
                     gravity: "top",
                     position: "right",

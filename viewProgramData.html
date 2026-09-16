@@ -784,7 +784,7 @@
                 <div id="regTeamCheckboxes" tabindex="0" onkeydown="handleTeamRegistrationEnter(event)" class="space-y-2 rounded-2xl border border-gray-200 bg-gray-50 p-3 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500">
                     <p class="text-xs text-gray-400">Loading teams...</p>
                 </div>
-                <p class="mt-2 text-[11px] font-medium text-gray-400">Select teams, then press Enter to register.</p>
+                <p id="regTeamHelp" class="mt-2 text-[11px] font-medium text-gray-400">Choose the team for each programme set.</p>
             </div>
 
             <!-- Member Count (For Group Programs) -->
@@ -797,7 +797,7 @@
             <div id="regChestContainer">
                 <label id="regChestLabel" class="block text-[13px] font-bold text-gray-700 mb-2 uppercase tracking-wide">Chest Number(s) *</label>
                 <textarea id="regChestNumbers" rows="3" oninput="handleRegistrationChestInput()" onkeydown="handleRegistrationChestEnter(event)" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[14px] focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono" placeholder="Enter one or more chest numbers (e.g. 101, 102, 103)"></textarea>
-                <p id="regChestHint" class="text-[11px] text-gray-400 mt-2 font-medium">Please ensure chest numbers belong to the selected team.</p>
+                <p id="regChestHint" class="text-[11px] text-gray-400 mt-2 font-medium">Enter one or more chest numbers, then press Enter to register.</p>
                 <div id="regCandidatePreview" class="hidden mt-3 space-y-2"></div>
             </div>
         </div>
@@ -1042,13 +1042,50 @@
             setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         };
 
+        window.renderGroupSetTeamSelectors = function() {
+            const container = document.getElementById('regTeamCheckboxes');
+            if (!container) return;
+            const program = window.currentProgram || {};
+            const setCount = Math.max(1, Math.min(20, parseInt(program.groupSetsCount, 10) || 1));
+            const teams = window.allTeamsData || [];
+
+            container.innerHTML = '';
+            teams.forEach(team => {
+                for (let setNumber = 1; setNumber <= setCount; setNumber++) {
+                    const wrapper = document.createElement('label');
+                    wrapper.className = 'flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 hover:border-blue-300 hover:bg-blue-50/40';
+                    const left = document.createElement('span');
+                    left.className = 'flex items-center gap-3';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = team.name || '';
+                    checkbox.dataset.setNumber = String(setNumber);
+                    checkbox.className = 'reg-set-team-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500';
+                    const name = document.createElement('span');
+                    name.className = 'text-[13px] font-semibold text-gray-700';
+                    name.textContent = team.name || 'Unnamed team';
+                    left.append(checkbox, name);
+                    const badge = document.createElement('span');
+                    badge.className = 'rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600';
+                    badge.textContent = `SET ${setNumber}`;
+                    wrapper.append(left, badge);
+                    container.appendChild(wrapper);
+                }
+            });
+
+            const help = document.getElementById('regTeamHelp');
+            if (help) help.textContent = setCount > 1
+                ? `Each team appears ${setCount} times—once for every set. Tick the required team entries.`
+                : 'Tick the teams to register.';
+        };
+
         window.openRegistrationSidebar = function() {
             const program = window.currentProgram || {};
             const isUnlimited = !!program.isUnlimited || program.maxParticipants === 'unlimited';
             const isGeneral = String(program.type || '').toLowerCase() === 'general';
             const isGroup = String(program.type || '').toLowerCase() === 'group' ||
                 String(program.section || '').toLowerCase() === 'kulliya';
-            const isTeamOnlyRegistration = isGroup || (isGeneral && isUnlimited);
+            const isTeamOnlyRegistration = isGroup || isGeneral;
             if (isUnlimited && !isGeneral && !isGroup) {
                 if (typeof vpToast === 'function') vpToast('🚫 Cannot add registrations: General Unlimited program open to all candidates.', '#F59E0B');
                 return;
@@ -1073,6 +1110,7 @@
                 countContainer.classList.add('hidden');
                 chestContainer.classList.add('hidden');
                 document.getElementById('regMemberCount').value = 0;
+                window.renderGroupSetTeamSelectors();
             } else {
                 teamContainer.classList.add('hidden');
                 countContainer.classList.add('hidden');
@@ -1213,7 +1251,7 @@
             const isGroup = String(program.type || '').toLowerCase() === 'group' ||
                 String(program.section || '').toLowerCase() === 'kulliya';
             const isUnlimited = !!program.isUnlimited || program.maxParticipants === 'unlimited';
-            const isTeamOnlyRegistration = isGroup || (isGeneral && isUnlimited);
+            const isTeamOnlyRegistration = isGroup || isGeneral;
 
             // The button remains as an accessibility fallback for Individual
             // programs and follows the same preview-and-register flow as Enter.
@@ -1223,8 +1261,9 @@
                 });
             }
 
-            const selectedTeams = [...document.querySelectorAll('#regTeamCheckboxes input[type="checkbox"]:checked')]
-                .map(checkbox => checkbox.value);
+            const selectedSetTeams = [...document.querySelectorAll('#regTeamCheckboxes .reg-set-team-checkbox:checked')]
+                .map(checkbox => ({ team: checkbox.value, setNumber: parseInt(checkbox.dataset.setNumber, 10) || 1 }));
+            const selectedTeams = selectedSetTeams;
             if (selectedTeams.length === 0) return vpToast("âŒ Please select at least one team.");
 
             const teamSaveBtn = document.getElementById('btn-save-admin-reg');
@@ -1232,15 +1271,24 @@
             teamSaveBtn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
             try {
                 const writes = [];
-                for (const selectedTeam of selectedTeams) {
+                for (const entry of selectedSetTeams) {
                     const existing = await db.collection('registrations')
-                        .where('programId', '==', programId).where('team', '==', selectedTeam).get();
-                    const payload = { programId, team: selectedTeam, chestNumbers: [], memberCount: 0, updatedAt: new Date() };
-                    if (existing.empty) {
+                        .where('programId', '==', programId).where('team', '==', entry.team).get();
+                    const matchingDoc = existing.docs.find(doc => (parseInt(doc.data().setNumber, 10) || 1) === entry.setNumber);
+                    const payload = {
+                        programId,
+                        team: entry.team,
+                        setNumber: entry.setNumber,
+                        setLabel: `Set ${entry.setNumber}`,
+                        chestNumbers: [],
+                        memberCount: parseInt(program.groupParticipantsPerSet, 10) || 0,
+                        updatedAt: new Date()
+                    };
+                    if (!matchingDoc) {
                         payload.createdAt = new Date();
                         writes.push(db.collection('registrations').add(payload));
                     } else {
-                        writes.push(existing.docs[0].ref.update(payload));
+                        writes.push(matchingDoc.ref.update(payload));
                     }
                 }
                 await Promise.all(writes);
@@ -1338,7 +1386,8 @@
                 if (window.programRegistrations && window.programRegistrations.length > 0) {
                     teamsList = window.programRegistrations.map(reg => ({
                         teamName: reg.team || 'Unknown Team',
-                        memberCount: reg.memberCount || (reg.chestNumbers ? reg.chestNumbers.length : 0)
+                        memberCount: reg.memberCount || (reg.chestNumbers ? reg.chestNumbers.length : 0),
+                        setNumber: parseInt(reg.setNumber, 10) || 1
                     }));
                 } else if (isGeneral && window.allTeamsData && window.allTeamsData.length > 0) {
                     teamsList = window.allTeamsData.map(t => ({
@@ -1355,16 +1404,20 @@
                 teamsList.forEach(item => {
                     const teamName = item.teamName;
                     const memberCount = item.memberCount;
-                    const existingResult = (window.programResultsData || []).find(r => r.team === teamName && (r.isGroupResult || r.isGeneralResult));
+                    const setNumber = item.setNumber || 1;
+                    const entryKey = `${teamName}__set_${setNumber}`;
+                    const existingResult = (window.programResultsData || []).find(r =>
+                        r.team === teamName && (parseInt(r.setNumber, 10) || 1) === setNumber && (r.isGroupResult || r.isGeneralResult)
+                    );
                     const teamObj = (window.allTeamsData || []).find(t => t.name === teamName);
                     const teamColor = teamObj ? teamObj.color : '#134E8E';
                     html += `
                     <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm group-result-card hover:border-blue-200 transition-colors" 
-                        data-team="${teamName}" data-membercount="${memberCount}">
+                        data-team="${teamName}" data-set-number="${setNumber}" data-entry-key="${entryKey}" data-membercount="${memberCount}">
                         <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-xs shrink-0" style="background:${teamColor}">${teamName.substring(0,2).toUpperCase()}</div>
                             <div class="flex-1 truncate">
-                                <h4 class="text-[14px] font-bold text-gray-900 truncate">${teamName}</h4>
+                                <h4 class="text-[14px] font-bold text-gray-900 truncate">${teamName} <span class="ml-1 text-[10px] text-blue-600">SET ${setNumber}</span></h4>
                                 <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5">
                                     <i class="fi fi-rr-${isGeneral ? 'trophy' : 'users'} text-[10px]"></i>
                                     ${isGeneral ? '<span class="font-bold text-blue-600">General Program</span> • Team Entry' : `<span class="font-bold text-blue-600">${memberCount}</span> Members Participating`}
@@ -1372,21 +1425,21 @@
                             </div>
                             <div class="text-right shrink-0">
                                 <div class="text-[10px] font-bold text-yellow-600 uppercase tracking-widest">Team Pts</div>
-                                <div class="text-2xl leading-none mt-0.5 font-black text-yellow-500" id="gpts-${teamName.replace(/\s/g,'_')}">${existingResult ? (existingResult.totalPoints || 0) : 0}</div>
+                                <div class="text-2xl leading-none mt-0.5 font-black text-yellow-500 group-points">${existingResult ? (existingResult.totalPoints || 0) : 0}</div>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Position</label>
                                 <select class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all group-pos-select" 
-                                    data-team="${teamName}" onchange="updateGroupPts('${teamName}')">
+                                    data-team="${teamName}" onchange="updateGroupPts(this)">
                                     ${window.globalPosOpts}
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Grade</label>
                                 <select class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all group-grade-select" 
-                                    data-team="${teamName}" onchange="updateGroupPts('${teamName}')">
+                                    data-team="${teamName}" onchange="updateGroupPts(this)">
                                     ${window.globalGradeOpts}
                                 </select>
                             </div>
@@ -1397,9 +1450,12 @@
                 // Restore existing results
                 teamsList.forEach(item => {
                     const teamName = item.teamName;
-                    const existingResult = (window.programResultsData || []).find(r => r.team === teamName && (r.isGroupResult || r.isGeneralResult));
+                    const setNumber = item.setNumber || 1;
+                    const existingResult = (window.programResultsData || []).find(r => r.team === teamName && (parseInt(r.setNumber, 10) || 1) === setNumber && (r.isGroupResult || r.isGeneralResult));
                     if (existingResult) {
-                        const card = document.querySelector(`.group-result-card[data-team="${teamName}"]`);
+                        const card = [...document.querySelectorAll('.group-result-card')].find(itemCard =>
+                            itemCard.dataset.team === teamName && (parseInt(itemCard.dataset.setNumber, 10) || 1) === setNumber
+                        );
                         if (card) {
                             const gSel = card.querySelector('.group-grade-select');
                             const pSel = card.querySelector('.group-pos-select');
@@ -1489,16 +1545,15 @@
             card.querySelector(`#pts-${cId}`).innerText = (gPts + pPts).toString();
         };
 
-        window.updateGroupPts = function(teamName) {
-            const safeKey = teamName.replace(/\s/g,'_');
-            const card = document.querySelector(`.group-result-card[data-team="${teamName}"]`);
+        window.updateGroupPts = function(selectElement) {
+            const card = selectElement?.closest('.group-result-card');
             if(!card) return;
             const gSel = card.querySelector('.group-grade-select');
             const pSel = card.querySelector('.group-pos-select');
             let gPts = 0, pPts = 0;
             if(gSel.value && gSel.value !== "0|_") gPts = parseInt(gSel.value.split('|')[0]) || 0;
             if(pSel.value && pSel.value !== "0|_") pPts = parseInt(pSel.value.split('|')[0]) || 0;
-            const ptsEl = document.getElementById(`gpts-${safeKey}`);
+            const ptsEl = card.querySelector('.group-points');
             if(ptsEl) ptsEl.innerText = (gPts + pPts).toString();
         };
 
@@ -1527,6 +1582,7 @@
 
                     cards.forEach(card => {
                         const teamName = card.getAttribute('data-team');
+                        const setNumber = parseInt(card.getAttribute('data-set-number'), 10) || 1;
                         const memberCount = parseInt(card.getAttribute('data-membercount')) || 0;
                         const gSel = card.querySelector('.group-grade-select');
                         const pSel = card.querySelector('.group-pos-select');
@@ -1537,7 +1593,8 @@
                         if(pSel.value && pSel.value !== "0|_") { const parts = pSel.value.split('|'); pPts = parseInt(parts[0]) || 0; pLbl = parts[1] || pText.replace(/\s*\([^)]*pts?\)\s*$/i, ''); }
 
                         // Use team as key for group / general results
-                        const docId = `${programId}_group_${teamName.replace(/\s/g,'_')}`;
+                        const baseDocId = `${programId}_group_${teamName.replace(/\s/g,'_')}`;
+                        const docId = setNumber > 1 ? `${baseDocId}_set_${setNumber}` : baseDocId;
                         const docRef = db.collection('programResults').doc(docId);
 
                         if(gPts === 0 && pPts === 0 && !gLbl && !pLbl) {
@@ -1548,6 +1605,8 @@
                                 isGroupResult: true,
                                 isGeneralResult: isGeneral,
                                 team: teamName,
+                                setNumber,
+                                setLabel: `Set ${setNumber}`,
                                 memberCount,
                                 name: teamName, // team name as display name
                                 gradeLabel: gLbl,
@@ -3114,6 +3173,15 @@
                             <span class="text-[13px] font-semibold text-gray-700">${team.name}</span>
                         </label>`).join('') || '<p class="text-xs text-gray-400">No teams available.</p>';
                 }
+                const openRegistrationPanel = document.getElementById('registrationSidebar');
+                const currentRegistrationProgram = window.currentProgram || {};
+                const usesSetTeams = String(currentRegistrationProgram.type || '').toLowerCase() === 'group' ||
+                    String(currentRegistrationProgram.type || '').toLowerCase() === 'general' ||
+                    String(currentRegistrationProgram.section || '').toLowerCase() === 'kulliya';
+                if (usesSetTeams && openRegistrationPanel && !openRegistrationPanel.classList.contains('translate-x-full') &&
+                    typeof window.renderGroupSetTeamSelectors === 'function') {
+                    window.renderGroupSetTeamSelectors();
+                }
             });
 
             db.collection('programSets').onSnapshot(snap => {
@@ -3494,7 +3562,8 @@
                             let teamCands = '';
                             
                             const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
-                            totalCandidatesCount += chestsList.length;
+                            totalCandidatesCount += chestsList.length || 1;
+                            const registrationSetNumber = parseInt(reg.setNumber, 10) || 1;
 
                             if (chestsList.length > 0) {
                                 chestsList.forEach(chest => {
@@ -3516,8 +3585,8 @@
                             html += `
                           <div class="bg-white border border-gray-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-2xl p-5 hover:shadow-md transition-shadow">
                               <div class="flex items-center justify-between mb-3">
-                                <div class="text-[11px] font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1.5 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded shadow-sm self-start"><i class="fi fi-rr-${reg.chestNumbers ? 'users' : 'user'} text-[10px]"></i> ${teamName}</div>
-                                <span class="text-[12px] font-semibold text-gray-500">${chestsList.length} ${chestsList.length === 1 ? 'Candidate' : 'Candidates'}</span>
+                                <div class="text-[11px] font-bold text-orange-500 uppercase tracking-wider flex items-center gap-1.5 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded shadow-sm self-start"><i class="fi fi-rr-${reg.chestNumbers ? 'users' : 'user'} text-[10px]"></i> ${teamName} <span class="text-blue-600">· SET ${registrationSetNumber}</span></div>
+                                <span class="text-[12px] font-semibold text-gray-500">${chestsList.length || reg.memberCount || 0} ${(chestsList.length || reg.memberCount || 0) === 1 ? 'Candidate' : 'Candidates'}</span>
                               </div>
                               <div class="mt-2 pl-2">${teamCands || '<span class="text-[13px] text-gray-400 italic">No candidates added yet</span>'}</div>
                           </div>`;

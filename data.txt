@@ -1,39 +1,30 @@
-To make Thugra finish first, publish these 20 programs:
+Firebase check: 45 programs are currently published.
 
-1. Shoot Out - AZ21
-2. Arm Wrestling - AZ23
-3. Ball Out - AZ7
-4. Blind Walk - BZ12
-5. Target Shot - BZ13
-6. Ball Whistling - BZ3
-7. Biscuit Eating - BZ4
-8. Shoot Out - THZ1
-9. Arm Wrestling - THZ14
-10. Rope Skipping - THZ16
-11. Penalty - THZ4
-12. Ball Out - THZ9
-13. Shoot Out - TZ17
-14. Arm Wrestling - TZ19
-15. Penalty - TZ4
-16. Ball Out - TZ7
-17. Penalty - UZ12
-18. Ball Out - UZ18
-19. Balloon Breaking - UZ19
-20. Ball Whistling - UZ3
+To make Thuluth finish first using only these 45 results, unpublish these 8 programs:
 
-Keep these 6 programs unpublished:
+1. Tug of War - KZ7
+2. Penalty - THZ4
+3. Relay - TZ9
+4. Relay - THZ13
+5. Pot Breaking - TZ21
+6. Musical Chair - BZ14
+7. High Jump - AZ6
+8. Ball Out - TZ7
 
-1. Balloon Breaking - BZ1
-2. Musical Chair - BZ14
-3. Rope Skipping - TZ18
-4. Blind Walk - UZ14
-5. Mirror Target - UZ15
-6. Shoot Out - UZ16
+Keep the other 37 programs published.
 
-Expected standings:
-Thugra: 49
-Thuluth: 46
-Reyhani: 46 (after the active 5-point penalty)
-Diwani: 45
+Current standings with all 45 programs published:
 
-Thugra finishes first by 3 points. These totals use all 26 currently published result programs and depend on the current results and penalty remaining unchanged.
+Diwani: 170
+Thugra: 157
+Reyhani: 142
+Thuluth: 119
+
+Expected standings after unpublishing the 8 programs:
+
+Thuluth: 119
+Thugra: 118
+Diwani: 117
+Reyhani: 95
+
+Thuluth finishes first by 1 point with 37 programs remaining published. This is the smallest possible removal set: no combination of only 7 published programs can reduce Diwani below Thuluth. The calculation uses the current Firebase results and active penalties.

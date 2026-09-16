@@ -274,12 +274,7 @@
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                                 </div> Substitutions
                             </a>
-                            <a href="#" onclick="event.preventDefault(); loadModule('history')"
-                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
-                                <div
-                                    class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
-                                </div> Access & DB History
-                            </a>
+
                         </div>
                     </div>
 
@@ -303,6 +298,12 @@
                                 <div
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
                                 </div> All schedules
+                            </a>
+                            <a href="#" onclick="event.preventDefault(); loadModule('aipublish')"
+                                class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
+                                <div
+                                    class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
+                                </div> AI Schedule
                             </a>
                             <a href="#" onclick="event.preventDefault(); loadModule('judges')"
                                 class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
@@ -1242,9 +1243,16 @@
                     const d = snap.data();
                     if (d && (d.status === 'verified' || d.verified === true)) {
                         const now = Date.now();
-                        const verTime = d.verifiedAtMs || now;
-                        if (now - verTime < 300000) {
+                        // Prefer Firestore's server time so different phone/desktop clocks do
+                        // not prevent a valid biometric approval from reaching this system.
+                        const serverVerifiedAt = d.verifiedAt && typeof d.verifiedAt.toMillis === 'function'
+                            ? d.verifiedAt.toMillis()
+                            : null;
+                        const verTime = serverVerifiedAt || Number(d.verifiedAtMs) || 0;
+                        const verificationAge = verTime ? Math.abs(now - verTime) : Infinity;
+                        if (verificationAge < 600000) {
                             localStorage.setItem('ownerVerified', 'true');
+                            if (d.verificationId) localStorage.setItem('ownerVerificationId', d.verificationId);
                             const icon = document.getElementById('dash-lock-icon');
                             const pad = document.getElementById('dash-lock-pad');
                             const title = document.getElementById('dash-lock-title');
@@ -1261,9 +1269,16 @@
                                 overlay.remove();
                                 if (typeof showToast === 'function') showToast('<b>✅</b> Owner Dashboard Unlocked!');
                             }, 1000);
+                        } else {
+                            const status = document.getElementById('dash-lock-status');
+                            if (status) status.innerHTML = '<span class="text-amber-400">Previous verification expired. Verify again on mobile.</span>';
                         }
                     }
-                }, err => console.warn("Dashboard owner lock sync:", err));
+                }, err => {
+                    console.error("Dashboard owner lock sync:", err);
+                    const status = document.getElementById('dash-lock-status');
+                    if (status) status.innerHTML = '<span class="text-red-400">Sync disconnected. Check this system\'s internet connection.</span>';
+                });
             }
         }
 
@@ -1668,6 +1683,15 @@
                     }
                     container.innerHTML = bodyEl ? bodyEl.innerHTML : html;
 
+                    // Preserve module-specific CSS while the module is mounted. Styles kept in
+                    // the fetched document's <head> would otherwise be lost when only its body
+                    // is injected into the dashboard.
+                    doc.querySelectorAll('head style').forEach(style => {
+                        const moduleStyle = document.createElement('style');
+                        moduleStyle.textContent = style.textContent;
+                        container.prepend(moduleStyle);
+                    });
+
                     // Execute collected inline scripts
                     scriptTexts.forEach(code => {
                         if (!code || !code.trim()) return;
@@ -1702,6 +1726,7 @@
                         'subjectTab': 'Subject Tab',
                         'substitutions': 'Substitutions',
                         'allSchedules': 'All Schedules',
+                        'aipublish': 'AI Schedule',
                         'judges': 'Judges',
                         'venues': 'Venues',
                         'allResult': 'All Results',

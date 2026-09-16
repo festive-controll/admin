@@ -1121,6 +1121,7 @@
                 sessionId: sessionId,
                 status: 'waiting_biometrics',
                 requestTimeMs: now,
+                requestTime: firebase.firestore.FieldValue.serverTimestamp(),
                 requestTimeStr: new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                 username: username || 'admin',
                 ownerName: ownerName || 'Owner',
@@ -1146,7 +1147,7 @@
                 const data = snap.data();
 
                 // Check if the request was rejected by the authorized device
-                if (data && (data.status === 'rejected' || data.status === 'blocked')) {
+                if (data && data.sessionId === _ownerAuthSessionId && (data.status === 'rejected' || data.status === 'blocked')) {
                     if (laser) laser.style.display = 'none';
                     if (icon) icon.className = 'fi fi-rr-cross-circle text-4xl text-red-400 animate-pulse';
                     if (pad) pad.className = 'relative z-10 w-20 h-20 rounded-2xl bg-red-950/80 border-2 border-red-500 shadow-lg shadow-red-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';
@@ -1176,9 +1177,12 @@
                 }
 
                 // Check if this session or current active request has been verified
-                if (data && (data.status === 'verified' || data.verified === true)) {
-                    const verTime = data.verifiedAtMs || now;
-                    if (Date.now() - verTime < 300000) {
+                if (data && data.sessionId === _ownerAuthSessionId && (data.status === 'verified' || data.verified === true)) {
+                    const serverVerifiedAt = data.verifiedAt && typeof data.verifiedAt.toMillis === 'function'
+                        ? data.verifiedAt.toMillis()
+                        : null;
+                    const verTime = serverVerifiedAt || Number(data.verifiedAtMs) || 0;
+                    if (verTime && Math.abs(Date.now() - verTime) < 600000) {
                         // Success! Update UI
                         if (icon) icon.className = 'fi fi-rr-shield-check text-4xl text-emerald-400 animate-bounce';
                         if (pad) pad.className = 'relative z-10 w-20 h-20 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 shadow-lg shadow-emerald-500/30 flex items-center justify-center overflow-hidden transition-all duration-300';

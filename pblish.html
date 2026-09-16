@@ -47,7 +47,7 @@
         <section class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h2 class="text-base font-bold text-gray-900">Saved PDF History</h2>
-                <p class="text-xs text-gray-500 mt-0.5">Download previously saved published results.</p>
+                <p class="text-xs text-gray-500 mt-0.5">Download a saved PDF, or delete it to return its results to the unsaved list.</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
@@ -109,7 +109,7 @@
             }
             preview.innerHTML = publishPdfPrograms.map(function (program) {
                 var category = program.category || program.section || 'General';
-                var programResults = publishPdfResults.filter(function (result) { return result.programId === program.id; });
+                var programResults = publishPdfResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
                 var rows = programResults.map(function (result) {
                     return '<tr class="border-t border-gray-100">' +
                         '<td class="px-6 py-4 font-bold text-[#134E8E]">' + publishPdfEscape(publishPdfPosition(result) || '-') + '</td>' +
@@ -144,7 +144,7 @@
                 document.getElementById('published-program-count').textContent = publishPdfPrograms.length;
                 var publishedIds = new Set(publishPdfPrograms.map(function (program) { return program.id; }));
                 publishPdfResults = data[1].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
-                    .filter(function (result) { return publishedIds.has(result.programId) && publishPdfPosition(result); })
+                    .filter(function (result) { return publishedIds.has(result.programId); })
                     .sort(function (a, b) { return publishPdfPositionNumber(a) - publishPdfPositionNumber(b); });
                 renderPublishPdfPreview();
             } catch (error) {
@@ -167,27 +167,42 @@
                 var sourceIndex = 0;
                 var script = document.createElement('script');
                 script.id = 'jspdf-library';
-                script.onload = resolve;
-                script.onerror = function () {
+                var sourceTimer = null;
+                var finished = false;
+                function tryNextSource() {
+                    clearTimeout(sourceTimer);
                     sourceIndex++;
-                    if (sourceIndex < sources.length) script.src = sources[sourceIndex];
+                    if (sourceIndex < sources.length) {
+                        script.src = sources[sourceIndex];
+                        sourceTimer = setTimeout(tryNextSource, 4000);
+                    }
                     else {
+                        finished = true;
                         script.remove();
                         reject(new Error('Could not load the PDF library from any available source. Check the internet connection or content blocker.'));
                     }
+                }
+                script.onload = function () {
+                    if (finished) return;
+                    clearTimeout(sourceTimer);
+                    if (window.jspdf && window.jspdf.jsPDF) { finished = true; resolve(); }
+                    else tryNextSource();
                 };
+                script.onerror = tryNextSource;
                 script.src = sources[sourceIndex];
+                sourceTimer = setTimeout(tryNextSource, 4000);
                 document.head.appendChild(script);
             });
         }
 
         // Dependency-free PDF writer. This keeps downloads working even when CDN
         // scripts are blocked by the network, browser, or a content blocker.
-        function publishPdfDownloadNative(dateValue, programs, savedResults) {
+        function publishPdfDownloadFallback(dateValue, programs, savedResults, grandTotals) {
             programs = programs || publishPdfPrograms;
             savedResults = savedResults || publishPdfResults;
             function ascii(value) {
                 return String(value == null ? '' : value)
+                    .replace(/[ʿʾ]/g, "'").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
                     .normalize('NFKD').replace(/[^\x20-\x7E]/g, '?')
                     .replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
             }
@@ -211,7 +226,7 @@
                 stream += '0.3 0.3 0.3 rg\n' + textLine('Published: ' + new Date(dateValue + 'T00:00:00').toLocaleDateString('en-GB'), 430, 810, 9, false);
                 programsOnPage.forEach(function (program, programIndex) {
                     var category = program.category || program.section || 'General';
-                    var results = savedResults.filter(function (result) { return result.programId === program.id; });
+                    var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
                     var top = 780 - (programIndex * 148);
                     stream += '0.82 0.84 0.88 RG 45 ' + (top + 12) + ' m 550 ' + (top + 12) + ' l S\n';
                     stream += '0.075 0.306 0.557 rg\n';
@@ -228,6 +243,18 @@
                     });
                 });
                 pageStreams.push(stream);
+            }
+
+            grandTotals = grandTotals || [];
+            if (grandTotals.length) {
+                var totalStream = '0.075 0.306 0.557 rg\n' + textLine('GRAND TOTAL', 45, 800, 18, true);
+                totalStream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 55, 755, 10, true) + textLine('TEAM NAME', 180, 755, 10, true) + textLine('SCORE', 455, 755, 10, true);
+                grandTotals.slice(0, 4).forEach(function (team, index) {
+                    var y = 715 - (index * 55);
+                    totalStream += '0.075 0.306 0.557 rg\n' + textLine((index + 1) + ({ 0: 'st', 1: 'nd', 2: 'rd' }[index] || 'th'), 55, y, 14, true);
+                    totalStream += '0.12 0.12 0.12 rg\n' + textLine(team.name || '-', 180, y, 14, true) + textLine(String(team.points || 0), 455, y, 14, true);
+                });
+                pageStreams.push(totalStream);
             }
 
             var objects = [];
@@ -264,11 +291,156 @@
             setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
         }
 
+        function publishPdfWrapCanvasText(context, value, maxWidth) {
+            var words = String(value || '').split(/\s+/), lines = [], line = '';
+            words.forEach(function (word) {
+                var next = (line + ' ' + word).trim();
+                if (line && context.measureText(next).width > maxWidth) { lines.push(line); line = word; }
+                else line = next;
+            });
+            if (line) lines.push(line);
+            return lines.length ? lines : [''];
+        }
+
+        async function publishPdfDownloadNative(dateValue, programs, savedResults, grandTotals) {
+            programs = programs || publishPdfPrograms;
+            savedResults = savedResults || publishPdfResults;
+            try {
+                await publishPdfLoadJsPdf();
+                var jsPDF = window.jspdf.jsPDF;
+                var pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+                var pageWidth = 1240, pageHeight = 1754;
+                var canvas = document.createElement('canvas');
+                canvas.width = pageWidth; canvas.height = pageHeight;
+                var context = canvas.getContext('2d');
+
+                function beginPage() {
+                    context.fillStyle = '#ffffff'; context.fillRect(0, 0, pageWidth, pageHeight);
+                    context.fillStyle = '#134E8E'; context.font = '700 31px Inter, Arial, sans-serif';
+                    context.fillText('OFFICIAL PUBLISHED RESULTS', 80, 88);
+                    context.fillStyle = '#555555'; context.font = '500 19px Inter, Arial, sans-serif';
+                    context.textAlign = 'right';
+                    context.fillText('Published: ' + new Date(dateValue + 'T00:00:00').toLocaleDateString('en-GB'), 1160, 88);
+                    context.textAlign = 'left';
+                }
+                function addCanvasPage(isFirst) {
+                    if (!isFirst) pdf.addPage();
+                    pdf.addImage(canvas.toDataURL('image/jpeg', 0.94), 'JPEG', 0, 0, 595.28, 841.89, undefined, 'FAST');
+                }
+
+                for (var start = 0; start < programs.length; start += 5) {
+                    beginPage();
+                    programs.slice(start, start + 5).forEach(function (program, programIndex) {
+                        var top = 145 + (programIndex * 310);
+                        var category = program.category || program.section || 'General';
+                        var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
+                        context.strokeStyle = '#d8dee8'; context.lineWidth = 2;
+                        context.beginPath(); context.moveTo(80, top); context.lineTo(1160, top); context.stroke();
+                        context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
+                        var titleLines = publishPdfWrapCanvasText(context, (program.name || 'Program') + ' - (' + category + ')', 1080);
+                        context.fillText(titleLines[0], 80, top + 40);
+                        context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
+                        context.fillText('POSITION', 80, top + 82); context.fillText('CHEST NO.', 245, top + 82);
+                        context.fillText('NAME', 430, top + 82); context.fillText('TEAM', 910, top + 82);
+                        var y = top + 122;
+                        results.slice(0, 4).forEach(function (result) {
+                            context.fillStyle = '#134E8E'; context.font = '700 19px Inter, Arial, sans-serif';
+                            context.fillText(publishPdfPosition(result) || '-', 80, y);
+                            context.fillStyle = '#222222'; context.fillText(String(publishPdfChest(result)), 245, y);
+                            context.font = '500 19px Inter, Arial, sans-serif';
+                            context.fillText(String(publishPdfName(result)), 430, y);
+                            context.fillText(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')), 910, y);
+                            y += 38;
+                        });
+                        if (!results.length) {
+                            context.fillStyle = '#777777'; context.font = '500 19px Inter, Arial, sans-serif';
+                            context.fillText('No positioned winners found.', 80, y);
+                        }
+                    });
+                    addCanvasPage(start === 0);
+                }
+
+                grandTotals = grandTotals || [];
+                if (grandTotals.length) {
+                    beginPage();
+                    context.fillStyle = '#134E8E'; context.font = '800 38px Inter, Arial, sans-serif';
+                    context.fillText('GRAND TOTAL', 80, 180);
+                    context.fillStyle = '#667085'; context.font = '600 18px Inter, Arial, sans-serif';
+                    context.fillText('FINAL TEAM STANDINGS', 80, 220);
+                    context.fillStyle = '#667085'; context.font = '700 17px Inter, Arial, sans-serif';
+                    context.fillText('POSITION', 115, 270); context.fillText('TEAM NAME', 290, 270);
+                    context.textAlign = 'right'; context.fillText('SCORE', 1115, 270); context.textAlign = 'left';
+                    grandTotals.slice(0, 4).forEach(function (team, index) {
+                        var y = 300 + (index * 170);
+                        context.fillStyle = index === 0 ? '#FFB33F' : '#134E8E';
+                        context.fillRect(80, y - 55, 1080, 120);
+                        context.fillStyle = '#ffffff'; context.font = '800 30px Inter, Arial, sans-serif';
+                        context.fillText((index + 1) + ({ 0: 'st', 1: 'nd', 2: 'rd' }[index] || 'th'), 115, y + 18);
+                        context.font = '700 30px Inter, Arial, sans-serif'; context.fillText(String(team.name || '-'), 290, y + 18);
+                        context.textAlign = 'right'; context.font = '800 34px Inter, Arial, sans-serif';
+                        context.fillText(String(team.points || 0) + ' Marks', 1115, y + 18); context.textAlign = 'left';
+                    });
+                    addCanvasPage(programs.length === 0);
+                }
+                pdf.save('all-published-results-' + dateValue + '.pdf');
+            } catch (error) {
+                console.error('Unicode PDF generation failed; using text fallback:', error);
+                publishPdfDownloadFallback(dateValue, programs, savedResults, grandTotals);
+            }
+        }
+
         function publishedPdfDate(value) {
             if (!value) return null;
             if (typeof value.toDate === 'function') return value.toDate();
             if (value.seconds) return new Date(value.seconds * 1000);
             return new Date(value);
+        }
+
+        async function calculatePublishedGrandTotals() {
+            var data = await Promise.all([
+                db.collection('teams').get(),
+                db.collection('programs').where('resultsPublished', '==', true).get(),
+                db.collection('programResults').get(),
+                db.collection('negativeMarks').where('status', '==', 'Active').get()
+            ]);
+            var totals = {};
+            data[0].docs.forEach(function (doc) {
+                var team = doc.data();
+                if (team.isActive !== false && team.name) totals[team.name] = 0;
+            });
+            var publishedIds = new Set(data[1].docs.map(function (doc) { return doc.id; }));
+            data[2].docs.forEach(function (doc) {
+                var result = doc.data();
+                if (publishedIds.has(result.programId) && result.team) {
+                    if (!Object.prototype.hasOwnProperty.call(totals, result.team)) totals[result.team] = 0;
+                    totals[result.team] += Number(result.totalPoints || result.points || 0);
+                }
+            });
+            data[3].docs.forEach(function (doc) {
+                var penalty = doc.data();
+                Array.from(new Set(Array.isArray(penalty.teams) ? penalty.teams : [])).forEach(function (teamName) {
+                    if (Object.prototype.hasOwnProperty.call(totals, teamName)) totals[teamName] -= Number(penalty.marks || penalty.points || 0);
+                });
+            });
+            return Object.keys(totals).map(function (name) { return { name: name, points: totals[name] }; })
+                .sort(function (a, b) { return b.points - a.points || a.name.localeCompare(b.name); });
+        }
+
+        function publishPdfNormalizeGrandTotals(totals) {
+            return (Array.isArray(totals) ? totals : []).map(function (team) {
+                return {
+                    name: team.name || team.teamName || team.team || '',
+                    points: Number(team.points != null ? team.points : (team.score != null ? team.score : team.marks)) || 0
+                };
+            });
+        }
+
+        async function publishPdfResolveGrandTotals(item) {
+            var totals = publishPdfNormalizeGrandTotals(item && item.grandTotals);
+            if (!totals.length || totals.some(function (team) { return !team.name; })) {
+                totals = publishPdfNormalizeGrandTotals(await calculatePublishedGrandTotals());
+            }
+            return totals.sort(function (a, b) { return b.points - a.points || a.name.localeCompare(b.name); });
         }
 
         function renderPublishedPdfHistory() {
@@ -283,7 +455,12 @@
                 return '<tr class="border-t border-gray-100">' +
                     '<td class="px-6 py-4 font-semibold text-gray-800">' + publishPdfEscape(savedAt.toLocaleDateString('en-GB')) + '</td>' +
                     '<td class="px-6 py-4 text-gray-600">' + publishPdfEscape(savedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) + '</td>' +
-                    '<td class="px-6 py-4 text-right"><button type="button" onclick="downloadSavedPublishedPdf(' + index + ')" class="px-3 py-2 rounded-lg bg-[#134E8E] text-white text-xs font-bold hover:bg-[#0e3d70]">Download PDF</button></td></tr>';
+                    '<td class="px-6 py-4"><div class="flex items-center justify-end gap-2">' +
+                    '<button type="button" onclick="downloadSavedPublishedPdf(' + index + ', this)" class="px-3 py-2 rounded-lg bg-[#134E8E] text-white text-xs font-bold hover:bg-[#0e3d70] disabled:opacity-50 disabled:cursor-not-allowed">Download PDF</button>' +
+                    '<button type="button" onclick="exportSavedPublishedExcel(' + index + ')" class="px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-bold hover:bg-green-100" title="Export Excel">Export Excel</button>' +
+                    '<button type="button" onclick="deleteSavedPublishedPdf(' + index + ', this)" class="w-9 h-9 inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete PDF and restore results" aria-label="Delete PDF and restore results">' +
+                    '<svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path></svg>' +
+                    '</button></div></td></tr>';
             }).join('');
         }
 
@@ -302,10 +479,104 @@
             }
         }
 
-        function downloadSavedPublishedPdf(index) {
+        async function downloadSavedPublishedPdf(index, button) {
             var item = publishedPdfHistory[index];
             if (!item) return;
-            publishPdfDownloadNative(item.publicationDate, item.programs || [], item.results || []);
+            var originalText = button ? button.textContent : '';
+            if (button) { button.disabled = true; button.textContent = 'Preparing...'; }
+            try {
+                var totals = [];
+                try { totals = await publishPdfResolveGrandTotals(item); }
+                catch (totalsError) {
+                    totals = publishPdfNormalizeGrandTotals(item.grandTotals);
+                    console.error('Could not calculate PDF totals:', totalsError);
+                }
+                await publishPdfDownloadNative(item.publicationDate, item.programs || [], item.results || [], totals);
+            } catch (error) {
+                console.error('Could not download saved PDF:', error);
+                publishPdfDownloadFallback(item.publicationDate, item.programs || [], item.results || [], item.grandTotals || []);
+            } finally {
+                if (button) { button.disabled = false; button.textContent = originalText; }
+            }
+        }
+
+        function publishPdfXmlEscape(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[char];
+            });
+        }
+
+        async function getCompleteSavedResults(item) {
+            var storedResults = item.results || [];
+            var programIds = new Set((item.programs || []).map(function (program) { return program.id; }).filter(Boolean));
+            if (!programIds.size) return storedResults;
+            try {
+                var snapshot = await db.collection('programResults').get();
+                var currentResults = snapshot.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
+                    .filter(function (result) { return programIds.has(result.programId); });
+                return currentResults.length ? currentResults : storedResults;
+            } catch (error) {
+                console.error('Could not load complete results for Excel:', error);
+                return storedResults;
+            }
+        }
+
+        async function exportSavedPublishedExcel(index) {
+            var item = publishedPdfHistory[index];
+            if (!item) return;
+            var totals = [];
+            try { totals = await publishPdfResolveGrandTotals(item); }
+            catch (totalsError) {
+                totals = publishPdfNormalizeGrandTotals(item.grandTotals);
+                console.error('Could not calculate Excel totals:', totalsError);
+            }
+            var completeResults = await getCompleteSavedResults(item);
+            var rows = [['Program', 'Code', 'Category', 'Result Type', 'Position', 'Chest No.', 'Name', 'Team', 'Marks']];
+            (item.programs || []).forEach(function (program) {
+                var results = completeResults.filter(function (result) { return result.programId === program.id; });
+                if (!results.length) rows.push([program.name || '', program.code || '', program.category || program.section || '', '', '', '', '', '', '']);
+                results.forEach(function (result) {
+                    var resultType = result.isGroupResult ? 'Group' : (result.isGeneralResult ? 'General' : 'Individual');
+                    rows.push([program.name || '', program.code || '', program.category || program.section || '', resultType, publishPdfPosition(result), publishPdfChest(result), publishPdfName(result), result.team || '', Number(result.totalPoints || result.points || 0)]);
+                });
+            });
+            rows.push([]); rows.push(['Grand Total']); rows.push(['Position', 'Team Name', 'Score']);
+            totals.slice(0, 4).forEach(function (team, rank) { rows.push([(rank + 1), team.name || '', team.points || 0]); });
+            var table = '<table>' + rows.map(function (row) { return '<tr>' + row.map(function (cell) { return '<td>' + publishPdfXmlEscape(cell) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+            var blob = new Blob([String.fromCharCode(0xFEFF), table], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            var url = URL.createObjectURL(blob), link = document.createElement('a');
+            link.href = url; link.download = 'all-published-results-' + item.publicationDate + '.xls';
+            document.body.appendChild(link); link.click(); link.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        }
+
+        async function deleteSavedPublishedPdf(index, button) {
+            var item = publishedPdfHistory[index];
+            if (!item || !item.id) return;
+            var programCount = (item.programs || []).length;
+            var message = 'Delete this saved PDF?';
+            if (programCount) message += '\n\n' + programCount + ' published program' + (programCount === 1 ? '' : 's') + ' will return to the unsaved list so you can save them again.';
+            if (!confirm(message)) return;
+
+            if (button) button.disabled = true;
+            try {
+                var batch = db.batch();
+                batch.delete(db.collection('publishedResultPdfs').doc(item.id));
+                (item.programs || []).forEach(function (program) {
+                    if (!program.id) return;
+                    batch.update(db.collection('programs').doc(program.id), {
+                        resultPublishedDate: firebase.firestore.FieldValue.delete(),
+                        resultPdfSavedAt: firebase.firestore.FieldValue.delete()
+                    });
+                });
+                await batch.commit();
+                await initPublishPdf();
+                if (typeof showToast === 'function') showToast('PDF deleted and published results restored.');
+            } catch (error) {
+                console.error('Could not delete saved PDF:', error);
+                alert(error.message || 'Could not delete the saved PDF.');
+                if (button) button.disabled = false;
+            }
         }
 
         async function savePublishedResultPdf() {
@@ -324,26 +595,28 @@
                     });
                 });
                 var savedPrograms = publishPdfPrograms.map(function (program) {
-                    return { id: program.id, name: program.name || '', category: program.category || '', section: program.section || '' };
+                    return { id: program.id, name: program.name || '', code: program.code || '', category: program.category || '', section: program.section || '' };
                 });
                 var savedResults = publishPdfResults.map(function (result) {
                     return {
                         programId: result.programId || '', positionLabel: result.positionLabel || '', position: result.position || '',
                         chestNo: result.chestNo || result.chestNumber || '', candidateName: result.candidateName || '',
-                        name: result.name || '', team: result.team || '', isGroupResult: result.isGroupResult === true
+                        name: result.name || '', team: result.team || '', totalPoints: Number(result.totalPoints || result.points || 0),
+                        isGroupResult: result.isGroupResult === true, isGeneralResult: result.isGeneralResult === true
                     };
                 });
+                var grandTotals = await calculatePublishedGrandTotals();
                 var historyRef = db.collection('publishedResultPdfs').doc();
                 var historyItem = {
                     publicationDate: dateValue, savedAt: savedAt, programCount: savedPrograms.length,
-                    programs: savedPrograms, results: savedResults
+                    programs: savedPrograms, results: savedResults, grandTotals: grandTotals
                 };
                 batch.set(historyRef, historyItem);
                 await batch.commit();
                 publishedPdfHistory.unshift(Object.assign({ id: historyRef.id }, historyItem));
                 renderPublishedPdfHistory();
                 // Generate locally: exactly five program-result sections per page.
-                publishPdfDownloadNative(dateValue, savedPrograms, savedResults);
+                await publishPdfDownloadNative(dateValue, savedPrograms, savedResults, grandTotals);
                 publishPdfPrograms = [];
                 publishPdfResults = [];
                 document.getElementById('published-program-count').textContent = '0';

@@ -2413,6 +2413,13 @@
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
+        // Mobile browsers can have unreliable WebChannel connections. Long polling keeps
+        // the biometric approval write in sync with the desktop dashboard.
+        try {
+            db.settings({ experimentalForceLongPolling: true, merge: true });
+        } catch (settingsError) {
+            console.warn('Firestore transport settings:', settingsError);
+        }
         window.db = db;
 
 
@@ -3408,23 +3415,46 @@
         async function completeOwnerVerificationSuccess() {
             const step2 = document.getElementById('verify-step-biometrics');
             const step3 = document.getElementById('verify-step-success');
+            const hint = document.getElementById('bio-scan-hint');
+            const triggerBtn = document.getElementById('btn-trigger-bio');
 
-            const now = Date.now();
-            const payload = {
-                status: 'verified',
-                verified: true,
-                verifiedAtMs: now,
-                verifiedAt: firebase.firestore.FieldValue.serverTimestamp() || now,
-                verifiedDevice: 'Mobile Device Biometrics'
-            };
+            if (hint) hint.innerText = 'Biometric accepted. Syncing approval with the system...';
+            if (triggerBtn) triggerBtn.disabled = true;
 
             try {
+                if (!window.db || !window.firebase || !firebase.firestore) {
+                    throw new Error('Verification service is not available.');
+                }
+
+                const now = Date.now();
+                const verificationId = 'bio_' + now + '_' + Math.random().toString(36).slice(2, 9);
+                const payload = {
+                    status: 'verified',
+                    verified: true,
+                    verificationId: verificationId,
+                    verifiedAtMs: now,
+                    verifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    verifiedDevice: 'Mobile Device Biometrics',
+                    syncVersion: 2
+                };
+
                 await db.collection('admin').doc('ownerAuthSession').set(payload, { merge: true });
+                // Do not display success while Firestore still has an unsent offline write.
+                if (typeof db.waitForPendingWrites === 'function') {
+                    await Promise.race([
+                        db.waitForPendingWrites(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('System sync timed out.')), 12000))
+                    ]);
+                }
             } catch (err) {
-                console.warn("Could not write verified session to Firestore:", err);
+                console.error("Could not sync verified session to Firestore:", err);
+                if (hint) hint.innerText = 'Biometric passed, but system sync failed. Check internet and try again.';
+                if (triggerBtn) triggerBtn.disabled = false;
+                showToast('<b>❌</b> Biometric passed, but the desktop could not be notified. Please retry.', 5000);
+                return;
             }
 
-            // Mark local storage as Owner Verified
+            // Mark this device only after the shared verification was successfully synced.
             localStorage.setItem('ownerVerified', 'true');
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userRole', 'owner');
