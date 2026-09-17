@@ -47,6 +47,49 @@
         .field { display: flex; flex-direction: column; }
         .field input, .field select { width: 100%; padding: 16px; border: 1px solid #dedfe3; border-radius: 11px; color: #444; background: #fff; outline: none; font-size: 14px; }
         .field input:focus, .field select:focus { border-color: #ff7779; box-shadow: 0 0 0 3px #ef4d4f12; }
+        .timing-panel { display: grid; gap: 18px; }
+        .timing-box { padding: 22px; border: 1px solid #dedfe3; border-radius: 14px; background: #fff; }
+        .timing-box h2 { margin: 0 0 22px; font-size: 15px; font-weight: 700; }
+        .timing-box .fields { gap: 18px; }
+        .timing-box .field-label { margin-bottom: 8px; font-size: 12px; }
+        .timing-box .field input { padding: 11px 14px; border-radius: 14px; font-size: 13px; }
+        .break-heading { display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px; }
+        .break-heading span { font-size: 12px; font-weight: 600; }
+        .icon-button { display: grid; place-items: center; width: 29px; height: 29px; padding: 0; border: 1px solid #d8d9dd; border-radius: 8px; color: #555; background: #fff; cursor: pointer; font-size: 18px; }
+        .icon-button:hover { color: var(--accent); border-color: #f2a2a3; background: #fffafa; }
+        .break-list { display: grid; gap: 12px; }
+        .break-row { display: grid; grid-template-columns: 1fr 1fr 30px; align-items: end; gap: 18px; }
+        .delete-break { margin-bottom: 5px; border: 0; background: transparent; cursor: pointer; font-size: 17px; }
+        .days-box { padding: 24px; border: 1px solid #dedfe3; border-radius: 14px; background: #fff; }
+        .days-box > h2 { margin: 0 0 20px; font-size: 15px; }
+        .day-entry { padding-bottom: 18px; border-bottom: 1px solid #dedfe3; }
+        .day-entry + .day-entry { padding-top: 18px; }
+        .day-title { display: flex; align-items: center; gap: 9px; margin-bottom: 17px; font-size: 13px; font-weight: 600; }
+        .day-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 7px; color: var(--accent); background: #fff0f0; }
+        .remove-day { margin-left: auto; border: 0; color: #777; background: transparent; cursor: pointer; font-size: 17px; }
+        .day-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+        .day-fields .field-label { margin-bottom: 8px; font-size: 12px; }
+        .day-fields input { padding: 11px 13px; }
+        .venue-options { display: flex; gap: 8px; margin-top: 12px; }
+        .venue-chip { position: relative; display: flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #d9dade; border-radius: 8px; cursor: pointer; font-size: 11px; }
+        .venue-chip input { position: absolute; opacity: 0; }
+        .chip-check { width: 15px; height: 15px; border: 1px solid #d4d5d9; border-radius: 4px; background: #fff; }
+        .venue-chip:has(input:checked) .chip-check { display: grid; place-items: center; color: #fff; border-color: var(--accent); background: var(--accent); }
+        .venue-chip:has(input:checked) .chip-check::after { content: '✓'; font-size: 10px; font-weight: 700; }
+        .add-day { margin: 15px 0; padding: 8px 12px; border: 1px solid #d4d5d9; border-radius: 8px; background: #fff; cursor: pointer; font-size: 12px; }
+        .custom-breaks { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #dedfe3; font-size: 11px; }
+        .day-breaks { display: grid; gap: 10px; margin-top: 12px; }
+        .day-breaks:empty { display: none; }
+        .duration-box { padding: 24px; border: 1px solid #dedfe3; border-radius: 14px; background: #fff; }
+        .duration-box > h2 { margin: 0 0 15px; font-size: 15px; }
+        .duration-help { margin-bottom: 16px; padding: 13px 15px; border: 1px solid #d9dade; border-radius: 10px; color: #555; font-size: 11px; line-height: 1.55; }
+        .rule-list { display: grid; gap: 10px; margin-top: 9px; }
+        .rule-row { display: grid; grid-template-columns: 150px minmax(220px, 1fr) 120px auto; align-items: end; gap: 13px; padding: 14px; border: 1px solid #d9dade; border-radius: 10px; }
+        .rule-row .field-label { margin-bottom: 7px; font-size: 11px; }
+        .rule-row select, .rule-row input { padding: 10px 12px; border-radius: 14px; font-size: 12px; }
+        .rule-actions { display: flex; align-items: center; gap: 8px; height: 39px; }
+        .rule-action { border: 0; color: #777; background: transparent; cursor: pointer; font-size: 16px; }
+        .rule-action:disabled { opacity: .3; cursor: default; }
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .summary div { padding: 18px; border-radius: 11px; background: #f7f7f8; font-size: 13px; }
         .summary strong { display: block; margin-bottom: 6px; font-size: 14px; }
@@ -57,6 +100,14 @@
         .next { padding: 13px 21px; border-radius: 10px; color: #fff; background: var(--accent); box-shadow: 0 2px 5px #ef4d4f30; }
         .next:hover { background: #df4143; }
         .notice { display: none; margin-top: 18px; padding: 15px; border-radius: 11px; color: #267343; background: #ebfff2; font-size: 14px; text-align: center; }
+        .ai-report { display: grid; gap: 18px; }
+        .report-status { padding: 18px; border: 1px solid #bfe6cb; border-radius: 12px; color: #246b3a; background: #f1fff5; }
+        .report-status strong { display: block; margin-bottom: 5px; font-size: 15px; }
+        .report-status span { font-size: 12px; }
+        .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .report-item { padding: 16px; border: 1px solid #dedfe3; border-radius: 11px; }
+        .report-item strong { display: block; margin-bottom: 6px; font-size: 11px; color: var(--muted); }
+        .report-item span { font-size: 14px; font-weight: 600; }
         @media (max-width: 650px) {
             .page { width: min(100% - 22px, 580px); padding-top: 24px; }
             .title { font-size: 19px; }
@@ -65,6 +116,11 @@
             .connector { width: 22px; margin-top: 15px; }
             .step { width: 54px; }
             .option-grid, .fields, .summary { grid-template-columns: 1fr; }
+            .break-row { grid-template-columns: 1fr 1fr 26px; gap: 9px; }
+            .day-fields { grid-template-columns: 1fr; }
+            .rule-row { grid-template-columns: 1fr; }
+            .rule-actions { height: auto; justify-content: flex-end; }
+            .report-grid { grid-template-columns: 1fr; }
             .wizard-card { padding: 19px; }
             .choice { min-height: 88px; padding: 19px 17px; }
         }
@@ -92,11 +148,61 @@
                     <label class="choice"><input type="radio" name="programmes" value="selected"><span class="radio"></span><span><span class="choice-title">Selected programmes only</span><span class="choice-copy">Choose the exact programmes for this proposal.</span></span></label>
                 </div>
             </div>
-            <div class="step-panel" data-panel="1"><h2 class="panel-heading">Choose schedule period</h2><p class="panel-copy">Set the dates and daily working hours for the festival.</p><div class="fields"><label class="field"><span class="field-label">Start date</span><input type="date" id="startDate"></label><label class="field"><span class="field-label">End date</span><input type="date" id="endDate"></label></div></div>
-            <div class="step-panel" data-panel="2"><h2 class="panel-heading">Select festival days</h2><p class="panel-copy">Choose how many active scheduling days the proposal can use.</p><div class="fields"><label class="field"><span class="field-label">Number of days</span><select id="days"><option>1 day</option><option>2 days</option><option>3 days</option><option>4 days</option><option>5 days</option></select></label><label class="field"><span class="field-label">Break between programmes</span><select><option>10 minutes</option><option>15 minutes</option><option>20 minutes</option><option>30 minutes</option></select></label></div></div>
-            <div class="step-panel" data-panel="3"><h2 class="panel-heading">Programme durations</h2><p class="panel-copy">Provide a default duration. Individual programme durations can be adjusted later.</p><div class="fields"><label class="field"><span class="field-label">Default duration</span><select><option>15 minutes</option><option selected>30 minutes</option><option>45 minutes</option><option>60 minutes</option></select></label><label class="field"><span class="field-label">Daily start time</span><input type="time" value="09:00"></label></div></div>
+            <div class="step-panel" data-panel="1">
+                <div class="timing-panel">
+                    <section class="timing-box" aria-labelledby="defaultTimingTitle">
+                        <h2 id="defaultTimingTitle">Default timing</h2>
+                        <div class="fields">
+                            <label class="field"><span class="field-label">Default programme duration (minutes)</span><input type="number" id="defaultDuration" value="45" min="1"></label>
+                            <label class="field"><span class="field-label">Gap between programmes (minutes)</span><input type="number" id="programmeGap" value="5" min="0"></label>
+                        </div>
+                    </section>
+                    <section class="timing-box" aria-labelledby="defaultBreaksTitle">
+                        <h2 id="defaultBreaksTitle">Default breaks</h2>
+                        <div class="break-heading"><span>Breaks</span><button class="icon-button" id="addBreakBtn" type="button" aria-label="Add break">+</button></div>
+                        <div class="break-list" id="breakList">
+                            <div class="break-row">
+                                <label class="field"><span class="field-label">From</span><input type="time" value="13:00"></label>
+                                <label class="field"><span class="field-label">To</span><input type="time" value="14:00"></label>
+                                <button class="delete-break" type="button" aria-label="Delete break">⌫</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="step-panel" data-panel="2">
+                <section class="days-box" aria-labelledby="scheduleDaysTitle">
+                    <h2 id="scheduleDaysTitle">Schedule days</h2>
+                    <div id="dayList"></div>
+                    <button class="add-day" id="addDayBtn" type="button">＋ &nbsp; Add schedule day</button>
+                    <div class="custom-breaks"><span>Custom breaks</span><button class="icon-button" id="addCustomBreakBtn" type="button" aria-label="Add custom break">+</button></div>
+                    <div class="day-breaks" id="customBreakList"></div>
+                </section>
+            </div>
+            <div class="step-panel" data-panel="3">
+                <section class="duration-box" aria-labelledby="durationRulesTitle">
+                    <h2 id="durationRulesTitle">Duration rules</h2>
+                    <div class="duration-help">Use this if some programmes need a different time than the default duration.<br>Select a category, collection, programme type, or specific programme and set its minutes.<br>Example: group programmes 60 minutes, speech programmes 10 minutes.</div>
+                    <button class="add-day" id="addRuleBtn" type="button">＋ &nbsp; Add rule</button>
+                    <div class="rule-list" id="ruleList"></div>
+                </section>
+            </div>
             <div class="step-panel" data-panel="4"><h2 class="panel-heading">Choose venues</h2><p class="panel-copy">Select which venue group the automatic scheduler may use.</p><div class="option-grid"><label class="choice"><input type="radio" name="venues" checked><span class="radio"></span><span><span class="choice-title">All available venues</span><span class="choice-copy">Let Auto Schedule make the best use of every active venue.</span></span></label><label class="choice"><input type="radio" name="venues"><span class="radio"></span><span><span class="choice-title">Select venues</span><span class="choice-copy">Limit this proposal to a custom venue list.</span></span></label></div></div>
-            <div class="step-panel" data-panel="5"><h2 class="panel-heading">Review and generate</h2><p class="panel-copy">Confirm your setup. Auto Schedule will create a proposal you can review before publishing.</p><div class="summary"><div><strong>Scope</strong><span id="summaryScope">Unscheduled programmes</span></div><div><strong>Programme set</strong><span id="summaryPrograms">All programmes</span></div><div><strong>Schedule period</strong><span id="summaryDates">Dates not set</span></div><div><strong>Venues</strong><span id="summaryVenues">All available venues</span></div></div><div class="notice" id="notice">Schedule proposal generated successfully.</div></div>
+            <div class="step-panel" data-panel="5">
+                <div class="ai-report">
+                    <div><h2 class="panel-heading">AI schedule report</h2><p class="panel-copy">Your configuration is complete. Review the report, then generate and download the schedule.</p></div>
+                    <div class="report-status"><strong>✓ Ready to generate</strong><span>All required scheduling information has been provided.</span></div>
+                    <div class="report-grid">
+                        <div class="report-item"><strong>Scope</strong><span id="summaryScope">Unscheduled programmes</span></div>
+                        <div class="report-item"><strong>Programme set</strong><span id="summaryPrograms">All programmes</span></div>
+                        <div class="report-item"><strong>Default timing</strong><span id="summaryDates">45 min, 5 min gap</span></div>
+                        <div class="report-item"><strong>Schedule days</strong><span id="summaryDays">1 day</span></div>
+                        <div class="report-item"><strong>Duration rules</strong><span id="summaryRules">1 rule</span></div>
+                        <div class="report-item"><strong>Venues</strong><span id="summaryVenues">All available venues</span></div>
+                    </div>
+                    <div class="notice" id="notice">Schedule created. Your Excel download has started.</div>
+                </div>
+            </div>
         </section>
 
         <div class="actions"><button class="back" id="backBtn" type="button">‹ &nbsp; Schedule</button><button class="next" id="nextBtn" type="button">Next &nbsp;›</button></div>
@@ -127,16 +233,189 @@
             const existing = document.querySelector('input[name="existing"]:checked').value;
             const programmes = document.querySelector('input[name="programmes"]:checked').value;
             const venue = document.querySelector('input[name="venues"]:checked').closest('.choice').querySelector('.choice-title').textContent;
-            const start = document.getElementById('startDate').value, end = document.getElementById('endDate').value;
             document.getElementById('summaryScope').textContent = existing === 'unscheduled' ? 'Unscheduled programmes' : 'Include existing schedules';
             document.getElementById('summaryPrograms').textContent = programmes === 'all' ? 'All programmes' : 'Selected programmes only';
-            document.getElementById('summaryDates').textContent = start || end ? `${start || '—'} to ${end || '—'}` : 'Dates not set';
+            document.getElementById('summaryDates').textContent = `${document.getElementById('defaultDuration').value || 0} min programmes, ${document.getElementById('programmeGap').value || 0} min gaps`;
+            const totalDays = dayList.children.length;
+            const totalRules = ruleList.children.length;
+            document.getElementById('summaryDays').textContent = `${totalDays} ${totalDays === 1 ? 'day' : 'days'}`;
+            document.getElementById('summaryRules').textContent = `${totalRules} ${totalRules === 1 ? 'rule' : 'rules'}`;
             document.getElementById('summaryVenues').textContent = venue;
+        }
+        const breakList = document.getElementById('breakList');
+        document.getElementById('addBreakBtn').addEventListener('click', () => {
+            const row = document.createElement('div');
+            row.className = 'break-row';
+            row.innerHTML = '<label class="field"><span class="field-label">From</span><input type="time" value="13:00"></label><label class="field"><span class="field-label">To</span><input type="time" value="14:00"></label><button class="delete-break" type="button" aria-label="Delete break">⌫</button>';
+            breakList.appendChild(row);
+        });
+        breakList.addEventListener('click', event => {
+            const button = event.target.closest('.delete-break');
+            if (button) button.closest('.break-row').remove();
+        });
+        const dayList = document.getElementById('dayList');
+        let dayCount = 0;
+        function addScheduleDay() {
+            dayCount += 1;
+            const entry = document.createElement('div');
+            entry.className = 'day-entry';
+            entry.innerHTML = `
+                <div class="day-title"><span class="day-number"></span><span class="day-name"></span><button class="remove-day" type="button" aria-label="Delete day">&#128465;</button></div>
+                <div class="day-fields">
+                    <label class="field"><span class="field-label">Date</span><input type="date" value="2026-09-16"></label>
+                    <label class="field"><span class="field-label">Start</span><input type="time" value="07:00"></label>
+                    <label class="field"><span class="field-label">End</span><input type="time" value="21:00"></label>
+                </div>
+                <div class="venue-options">
+                    <label class="venue-chip"><input type="radio" name="day-venue-${dayCount}" value="all" checked><span class="chip-check"></span>All venues</label>
+                    <label class="venue-chip"><input type="radio" name="day-venue-${dayCount}" value="selected"><span class="chip-check"></span>Select venues</label>
+                </div>`;
+            dayList.appendChild(entry);
+            renumberDays();
+        }
+        function renumberDays() {
+            dayList.querySelectorAll('.day-entry').forEach((entry, index) => {
+                entry.querySelector('.day-number').textContent = index + 1;
+                entry.querySelector('.day-name').textContent = `Day ${index + 1}`;
+            });
+        }
+        document.getElementById('addDayBtn').addEventListener('click', addScheduleDay);
+        dayList.addEventListener('click', event => {
+            const button = event.target.closest('.remove-day');
+            if (button && dayList.children.length > 1) {
+                button.closest('.day-entry').remove();
+                renumberDays();
+            }
+        });
+        const customBreakList = document.getElementById('customBreakList');
+        document.getElementById('addCustomBreakBtn').addEventListener('click', () => {
+            const row = document.createElement('div');
+            row.className = 'break-row';
+            row.innerHTML = '<label class="field"><span class="field-label">From</span><input type="time" value="13:00"></label><label class="field"><span class="field-label">To</span><input type="time" value="14:00"></label><button class="delete-break" type="button" aria-label="Delete break">⌫</button>';
+            customBreakList.appendChild(row);
+        });
+        customBreakList.addEventListener('click', event => {
+            const button = event.target.closest('.delete-break');
+            if (button) button.closest('.break-row').remove();
+        });
+        addScheduleDay();
+        const ruleList = document.getElementById('ruleList');
+        let ruleCount = 0;
+        const targetsByType = {
+            'Programme': ['Speech', 'Debate', 'Quiz', 'Essay Writing', 'Drawing', 'Group Song'],
+            'Category': ['Stage', 'Off Stage', 'Individual', 'Group'],
+            'Collection': ['Morning Events', 'Afternoon Events', 'Final Events'],
+            'Programme type': ['Speech programme', 'Performance', 'Written event', 'Team event']
+        };
+        const targetLabels = { 'Programme': 'programmes', 'Category': 'categories', 'Collection': 'collections', 'Programme type': 'programme types' };
+        function updateTargetSearch(row) {
+            const type = row.querySelector('.rule-type').value;
+            const input = row.querySelector('.target-search');
+            const dataList = row.querySelector('datalist');
+            input.value = '';
+            input.placeholder = `Search and select ${targetLabels[type]}`;
+            dataList.innerHTML = targetsByType[type].map(target => `<option value="${target}"></option>`).join('');
+        }
+        function addDurationRule() {
+            ruleCount += 1;
+            const row = document.createElement('div');
+            row.className = 'rule-row';
+            row.innerHTML = `
+                <label class="field"><span class="field-label">Type</span><select class="rule-type"><option>Programme</option><option>Category</option><option>Collection</option><option>Programme type</option></select></label>
+                <label class="field"><span class="field-label">Targets</span><input class="target-search" type="search" list="rule-targets-${ruleCount}" autocomplete="off"><datalist id="rule-targets-${ruleCount}"></datalist></label>
+                <label class="field"><span class="field-label">Duration</span><input type="number" value="45" min="1" aria-label="Duration in minutes"></label>
+                <div class="rule-actions"><button class="rule-action move-up" type="button" aria-label="Move rule up">↑</button><button class="rule-action move-down" type="button" aria-label="Move rule down">↓</button><button class="rule-action delete-rule" type="button" aria-label="Delete rule">&#128465;</button></div>`;
+            ruleList.appendChild(row);
+            updateTargetSearch(row);
+            updateRuleButtons();
+        }
+        function updateRuleButtons() {
+            const rows = [...ruleList.children];
+            rows.forEach((row, index) => {
+                row.querySelector('.move-up').disabled = index === 0;
+                row.querySelector('.move-down').disabled = index === rows.length - 1;
+            });
+        }
+        document.getElementById('addRuleBtn').addEventListener('click', addDurationRule);
+        ruleList.addEventListener('change', event => {
+            if (event.target.matches('.rule-type')) updateTargetSearch(event.target.closest('.rule-row'));
+        });
+        ruleList.addEventListener('click', event => {
+            const row = event.target.closest('.rule-row');
+            if (!row) return;
+            if (event.target.closest('.delete-rule')) row.remove();
+            if (event.target.closest('.move-up') && row.previousElementSibling) ruleList.insertBefore(row, row.previousElementSibling);
+            if (event.target.closest('.move-down') && row.nextElementSibling) ruleList.insertBefore(row.nextElementSibling, row);
+            updateRuleButtons();
+        });
+        addDurationRule();
+        function timeToMinutes(value) {
+            const [hours, minutes] = value.split(':').map(Number);
+            return (hours * 60) + minutes;
+        }
+        function displayTime(totalMinutes) {
+            const hours = Math.floor(totalMinutes / 60) % 24;
+            const minutes = totalMinutes % 60;
+            const suffix = hours >= 12 ? 'PM' : 'AM';
+            return `${String(hours % 12 || 12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${suffix}`;
+        }
+        function escapeCell(value) {
+            return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function createExcelSchedule() {
+            const duration = Math.max(1, Number(document.getElementById('defaultDuration').value) || 45);
+            const gap = Math.max(0, Number(document.getElementById('programmeGap').value) || 0);
+            const rules = [...ruleList.querySelectorAll('.rule-row')].map(row => ({
+                name: row.querySelector('.target-search').value.trim(),
+                duration: Math.max(1, Number(row.querySelector('input[type="number"]').value) || duration)
+            })).filter(rule => rule.name);
+            const breakRows = [...breakList.querySelectorAll('.break-row'), ...customBreakList.querySelectorAll('.break-row')];
+            const breaks = breakRows.map(row => {
+                const times = row.querySelectorAll('input[type="time"]');
+                return [timeToMinutes(times[0].value), timeToMinutes(times[1].value)];
+            });
+            const schedule = [];
+            [...dayList.querySelectorAll('.day-entry')].forEach((day, dayIndex) => {
+                const inputs = day.querySelectorAll('.day-fields input');
+                const date = inputs[0].value;
+                let cursor = timeToMinutes(inputs[1].value);
+                const end = timeToMinutes(inputs[2].value);
+                const venueChoice = day.querySelector('.venue-chip input:checked').value === 'all' ? 'All venues' : 'Selected venues';
+                let programmeIndex = 0;
+                while (cursor + duration <= end && programmeIndex < 500) {
+                    const activeRule = rules.length ? rules[programmeIndex % rules.length] : null;
+                    const programmeDuration = activeRule ? activeRule.duration : duration;
+                    const overlappingBreak = breaks.find(item => cursor < item[1] && cursor + programmeDuration > item[0]);
+                    if (overlappingBreak) { cursor = overlappingBreak[1]; continue; }
+                    if (cursor + programmeDuration > end) break;
+                    schedule.push([dayIndex + 1, date, displayTime(cursor), displayTime(cursor + programmeDuration), activeRule ? activeRule.name : `Programme ${programmeIndex + 1}`, venueChoice, programmeDuration]);
+                    cursor += programmeDuration + gap;
+                    programmeIndex += 1;
+                }
+            });
+            const headers = ['Day', 'Date', 'Start', 'End', 'Programme', 'Venue', 'Duration (minutes)'];
+            const tableRows = [headers, ...schedule].map(row => {
+                return '\x3Ctr>' + row.map(cell => '\x3Ctd>' + escapeCell(cell) + '\x3C/td>').join('') + '\x3C/tr>';
+            }).join('');
+            const workbook = '\x3C!DOCTYPE html>\x3Chtml>\x3Chead>\x3Cmeta charset="UTF-8">\x3C/head>\x3Cbody>\x3Ctable border="1">' + tableRows + '\x3C/table>\x3C/body>\x3C/html>';
+            const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'auto-schedule-' + new Date().toISOString().slice(0, 10) + '.xls';
+            document.body.appendChild(link);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            link.remove();
         }
         document.getElementById('backBtn').addEventListener('click', () => showStep(current - 1));
         document.getElementById('nextBtn').addEventListener('click', () => {
             if (current < labels.length - 1) showStep(current + 1);
-            else { const notice = document.getElementById('notice'); notice.style.display = 'block'; document.getElementById('nextBtn').textContent = 'Generated ✓'; }
+            else {
+                createExcelSchedule();
+                const notice = document.getElementById('notice');
+                notice.style.display = 'block';
+                document.getElementById('nextBtn').textContent = 'Download again';
+            }
         });
         showStep(0);
     </script>

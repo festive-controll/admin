@@ -95,7 +95,7 @@
         <!-- Controls & Filters Bar -->
         <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
             
-            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
                 
                 <!-- Status Filter Tabs -->
                 <div class="flex bg-gray-100/80 p-1 rounded-xl items-center overflow-x-auto no-scrollbar border border-gray-200/60">
@@ -113,12 +113,32 @@
                     </button>
                 </div>
 
-                <!-- Search Input -->
-                <div class="relative flex-1 max-w-md">
-                    <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="searchInput" oninput="onSearchChange(this.value)" 
-                        placeholder="Search topic, candidate, chest no, team or program..." 
-                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                <div class="flex flex-col sm:flex-row flex-1 xl:justify-end gap-3">
+                    <!-- Program & Section Filters -->
+                    <div class="relative sm:w-52">
+                        <i class="fi fi-rr-book-alt absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                        <select id="programFilter" onchange="onProgramFilterChange(this.value)"
+                            class="w-full appearance-none pl-10 pr-9 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all cursor-pointer">
+                            <option value="ALL">All Programs</option>
+                        </select>
+                        <i class="fi fi-rr-angle-small-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                    <div class="relative sm:w-44">
+                        <i class="fi fi-rr-layers absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                        <select id="sectionFilter" onchange="onSectionFilterChange(this.value)"
+                            class="w-full appearance-none pl-10 pr-9 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all cursor-pointer">
+                            <option value="ALL">All Sections</option>
+                        </select>
+                        <i class="fi fi-rr-angle-small-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="relative flex-1 sm:min-w-64 sm:max-w-md">
+                        <i class="fi fi-rr-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="searchInput" oninput="onSearchChange(this.value)" 
+                            placeholder="Search topic, candidate, chest no, team or program..." 
+                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all">
+                    </div>
                 </div>
 
             </div>
@@ -177,6 +197,8 @@
             let allProgramsMap = {};
             let allCandidatesMap = {};
             let currentStatusFilter = 'ALL';
+            let currentProgramFilter = 'ALL';
+            let currentSectionFilter = 'ALL';
             let searchQuery = '';
 
             function showToast(msg, type = 'success') {
@@ -220,6 +242,7 @@
                         if (pData.programId) allProgramsMap[pData.programId] = pData;
                         if (pData.code) allProgramsMap[pData.code] = pData;
                     });
+                    populateProgramAndSectionFilters();
                     queueRenderUI();
                 }, err => {
                     console.error("Error fetching programs:", err);
@@ -244,6 +267,7 @@
                 if (window.rtRegUnsub) window.rtRegUnsub();
                 window.rtRegUnsub = db.collection('registrations').onSnapshot(snap => {
                     allRegistrations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    populateProgramAndSectionFilters();
                     queueRenderUI();
                 }, err => {
                     console.error("Error loading topic registrations:", err);
@@ -272,6 +296,82 @@
                 searchQuery = (val || '').toLowerCase().trim();
                 renderUI();
             };
+
+            window.onProgramFilterChange = function(value) {
+                currentProgramFilter = value || 'ALL';
+                populateProgramAndSectionFilters();
+                renderUI();
+            };
+
+            window.onSectionFilterChange = function(value) {
+                currentSectionFilter = value || 'ALL';
+                renderUI();
+            };
+
+            function getUniquePrograms() {
+                const unique = new Map();
+                allRegistrations.forEach(registration => {
+                    const hasTopics = (registration.topics && Object.values(registration.topics).some(topic =>
+                        topic && (topic.name || topic.author || topic.content)
+                    )) || registration.topicName || registration.topicContent || registration.topicAuthor;
+                    if (!hasTopics) return;
+
+                    let program = allProgramsMap[registration.programId] ||
+                                  allProgramsMap[registration.progId] ||
+                                  allProgramsMap[registration.program];
+
+                    if (!program) {
+                        program = {
+                            id: registration.programId || registration.progId || registration.programCode || registration.code || registration.programName,
+                            programId: registration.programId || registration.progId,
+                            code: registration.programCode || registration.code || 'PRG',
+                            name: registration.programName || registration.progName || registration.program || 'Untitled Program',
+                            section: registration.section || ''
+                        };
+                    }
+
+                    const key = String(program.id || program.programId || program.code || program.name || '').trim();
+                    if (key && !unique.has(key)) unique.set(key, program);
+                });
+                return Array.from(unique.values()).sort((a, b) =>
+                    String(a.code || a.name || '').localeCompare(String(b.code || b.name || ''), undefined, { numeric: true, sensitivity: 'base' })
+                );
+            }
+
+            function setSelectOptions(select, items, allLabel, selectedValue) {
+                if (!select) return;
+                select.replaceChildren();
+                const allOption = document.createElement('option');
+                allOption.value = 'ALL';
+                allOption.textContent = allLabel;
+                select.appendChild(allOption);
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.value;
+                    option.textContent = item.label;
+                    select.appendChild(option);
+                });
+                select.value = items.some(item => item.value === selectedValue) ? selectedValue : 'ALL';
+            }
+
+            function populateProgramAndSectionFilters() {
+                const programs = getUniquePrograms();
+                const programItems = programs.map(program => ({
+                    value: String(program.id || program.programId || program.code || program.name),
+                    label: `${program.code ? program.code + ' - ' : ''}${program.name || 'Untitled Program'}`
+                }));
+                setSelectOptions(document.getElementById('programFilter'), programItems, 'All Programs', currentProgramFilter);
+                if (!programItems.some(item => item.value === currentProgramFilter)) currentProgramFilter = 'ALL';
+
+                const relevantPrograms = currentProgramFilter === 'ALL' ? programs : programs.filter(program =>
+                    String(program.id || program.programId || program.code || program.name) === currentProgramFilter
+                );
+                const sections = [...new Set(relevantPrograms.map(program => String(program.section || '').trim()).filter(Boolean))]
+                    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                const sectionItems = sections.map(section => ({ value: section, label: section }));
+                setSelectOptions(document.getElementById('sectionFilter'), sectionItems, 'All Sections', currentSectionFilter);
+                if (!sections.includes(currentSectionFilter)) currentSectionFilter = 'ALL';
+            }
 
             function renderUI() {
                 const tbody = document.getElementById('topics-tbody');
@@ -408,6 +508,17 @@
                         if (currentStatusFilter === 'Rejected') return st === 'rejected';
                         return true;
                     });
+                }
+
+                // Apply Program and Section Filters
+                if (currentProgramFilter !== 'ALL') {
+                    topicItems = topicItems.filter(item => {
+                        const programKey = String(item.prog.id || item.prog.programId || item.prog.code || item.prog.name || item.programId || '');
+                        return programKey === currentProgramFilter || String(item.programId || '') === currentProgramFilter;
+                    });
+                }
+                if (currentSectionFilter !== 'ALL') {
+                    topicItems = topicItems.filter(item => String(item.prog.section || '').trim() === currentSectionFilter);
                 }
 
                 // Apply Search Query
