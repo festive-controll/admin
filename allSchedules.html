@@ -148,7 +148,7 @@
                     <div class="grid grid-cols-12 gap-3 items-center py-3 px-6 border-b border-gray-200 bg-gray-50 sticky top-0 z-10 shrink-0 shadow-sm">
                         <div class="col-span-1 text-[11px] font-bold text-gray-700 uppercase tracking-wider">Code</div>
                         <div class="col-span-2 text-[11px] font-bold text-gray-700 uppercase tracking-wider">Program Name</div>
-                        <div class="col-span-2 text-[11px] font-bold text-green-700 uppercase tracking-wider">Date & Time</div>
+                        <div class="col-span-2 text-[11px] font-bold text-green-700 uppercase tracking-wider">Starting & Ending Time</div>
                         <div class="col-span-2 text-[11px] font-bold text-blue-700 uppercase tracking-wider">Venue</div>
                         <div class="col-span-1 text-[11px] font-bold text-purple-700 uppercase tracking-wider leading-tight text-center">Judges<br>Count</div>
                         <div class="col-span-4 text-[11px] font-bold text-orange-700 uppercase tracking-wider">Assigned Judges</div>
@@ -653,7 +653,7 @@
                     }
                 }
 
-                if (field === 'time' || field.startsWith('judge')) {
+                if (field === 'time' || field === 'endTime' || field.startsWith('judge')) {
                     payload.judgeAlertSent = false;
                 }
                 
@@ -665,7 +665,7 @@
                     if (field === 'venueId' && payload.venue !== undefined) {
                         programsData[idx].venue = payload.venue;
                     }
-                    if (field === 'time' || field.startsWith('judge')) {
+                    if (field === 'time' || field === 'endTime' || field.startsWith('judge')) {
                         programsData[idx].judgeAlertSent = false;
                     }
                     renderSchedulesUI();
@@ -827,7 +827,10 @@
                     </div>
 
                     <div class="col-span-2 pr-3 pt-1">
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-0.5">Start</label>
                         <input type="datetime-local" onchange="updateProgSchedule('${p.id}', 'time', this.value)" value="${p.time || ''}" class="w-full text-[11.5px] font-medium text-gray-700 ${warnings.length > 0 ? 'bg-red-50 border-red-300 ring-2 ring-red-100' : 'bg-green-50/30 border-green-200 hover:border-green-400'} rounded-md py-1.5 px-2 transition-all outline-none focus:ring-1 focus:ring-green-500 cursor-pointer">
+                        <label class="block text-[9px] font-bold text-gray-400 uppercase mt-1 mb-0.5">End</label>
+                        <input type="datetime-local" min="${p.time || ''}" onchange="updateProgSchedule('${p.id}', 'endTime', this.value)" value="${p.endTime || ''}" class="w-full text-[11.5px] font-medium text-gray-700 bg-green-50/30 border-green-200 hover:border-green-400 rounded-md py-1.5 px-2 transition-all outline-none focus:ring-1 focus:ring-green-500 cursor-pointer">
                         <div id="live-timer-${p.id}" class="mt-1"></div>
                         ${warnings.map(w => `<p class="text-[9px] font-bold text-red-500 mt-1 uppercase leading-tight">${w}</p>`).join('')}
                     </div>

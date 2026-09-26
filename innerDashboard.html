@@ -1738,7 +1738,7 @@
                             <h1 class="text-[1.35rem] font-bold text-gray-800 flex items-center gap-2"><i
                                     class="fi fi-rr-calendar-clock text-blue-600"></i> Bulk Schedule Import</h1>
                             <p class="text-[13px] text-gray-500 mt-1">Download an Excel or CSV template, fill in program
-                                codes, date & time, venue, judge count, and assigned judges to update program schedules
+                                codes, starting and ending time, venue, judge count, and assigned judges to update program schedules
                                 in bulk.</p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -1761,7 +1761,7 @@
                             <i class="fi fi-rr-upload text-4xl text-gray-300 mb-4"></i>
                             <p class="text-[15px] font-semibold text-gray-600">Click to select Excel or CSV file</p>
                             <p class="text-[13px] text-gray-400 mt-2">Supports .xlsx, .xls, and .csv files (programCode,
-                                dateTime, venue, judgeCount, judge1, judge2, judge3)</p>
+                                startTime, endTime, venue, judgeCount, judge1, judge2, judge3)</p>
                             <input type="file" id="bulk-sched-file" accept=".csv, .xlsx, .xls" class="hidden"
                                 onchange="handleScheduleCSV(this)">
                         </div>
@@ -4350,7 +4350,7 @@
         // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let CAND_HEADERS = ['name', 'section', 'admissionNo', 'class', 'status'];
         const PROG_HEADERS = ['code', 'name', 'section', 'type', 'venueType', 'subStage', 'maxParticipants', 'status', 'progSet', 'gradeTemplate', 'positionTemplate'];
-        const SCHEDULE_HEADERS = ['programCode', 'dateTime', 'venue', 'judgeCount', 'judge1', 'judge2', 'judge3'];
+        const SCHEDULE_HEADERS = ['programCode', 'startTime', 'endTime', 'venue', 'judgeCount', 'judge1', 'judge2', 'judge3'];
         const GRADE_HEADERS = ['templateName', 'label', 'points'];
         const POS_HEADERS = ['templateName', 'label', 'points'];
         const JUDGEMENT_HEADERS = ['programCode', 'chestNo', 'team', 'gradeLabel', 'gradePoints', 'positionLabel', 'positionPoints'];
@@ -5643,6 +5643,10 @@
                 r._venueObj = null;
             }
 
+            if (r.startTime && r.endTime && new Date(r.endTime) <= new Date(r.startTime)) {
+                errs.push('Ending time must be after starting time');
+            }
+
             const jCount = Math.max(1, Math.min(10, parseInt(r.judgeCount) || 2));
             r.judgeCount = jCount;
 
@@ -5724,7 +5728,8 @@
 
                     bulkScheduleRows = rows.map((r, i) => {
                         const programCode = String(r.programcode || r.programCode || r.code || '').trim();
-                        const dateTime = String(r.datetime || r.dateTime || r.date || r.time || '').trim();
+                        const startTime = String(r.starttime || r.startTime || r.datetime || r.dateTime || r.date || r.time || '').trim();
+                        const endTime = String(r.endtime || r.endTime || r.endingtime || r.endingTime || '').trim();
                         const venue = String(r.venue || r.venuename || r.venueName || '').trim();
                         const judgeCount = parseInt(r.judgecount || r.judgeCount || 2) || 2;
                         const judge1 = String(r.judge1 || r.j1 || r.judge1name || r.judge1Name || '').trim();
@@ -5733,7 +5738,8 @@
 
                         return {
                             programCode,
-                            dateTime: formatDateTimeLocal(dateTime),
+                            startTime: formatDateTimeLocal(startTime),
+                            endTime: formatDateTimeLocal(endTime),
                             venue,
                             judgeCount,
                             judge1,
@@ -5773,7 +5779,7 @@
                     ${errorRows.map(r => `<div class="text-[12px] text-red-500">Row ${r._rowNum}: ${r._errors.join(', ')}</div>`).join('')}
                 </div>` : '<div class="text-[13px] text-green-600 font-semibold p-3 bg-green-50 rounded-xl border border-green-100"><i class="fi fi-rr-check"></i> All schedule rows are valid!</div>';
 
-            const headers = ['Program Code', 'Date & Time', 'Venue', 'Judges Count', 'Judge 1', 'Judge 2', 'Judge 3'];
+            const headers = ['Program Code', 'Starting Time', 'Ending Time', 'Venue', 'Judges Count', 'Judge 1', 'Judge 2', 'Judge 3'];
 
             tableBox.innerHTML = `
                 <table class="w-full text-left border-collapse whitespace-nowrap">
@@ -5791,7 +5797,10 @@
                             <input type="text" class="w-28 bg-white border ${r._progObj ? 'border-gray-200' : 'border-red-300'} rounded-lg px-2 py-1.5 text-[12px] font-mono" value="${r.programCode.replace(/"/g, '&quot;')}" placeholder="Code" onchange="updateBulkScheduleRow(${r._index}, 'programCode', this.value)">
                         </td>
                         <td class="px-2 py-2">
-                            <input type="datetime-local" class="w-44 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[11.5px]" value="${r.dateTime || ''}" onchange="updateBulkScheduleRow(${r._index}, 'dateTime', this.value)">
+                            <input type="datetime-local" class="w-44 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[11.5px]" value="${r.startTime || ''}" onchange="updateBulkScheduleRow(${r._index}, 'startTime', this.value)">
+                        </td>
+                        <td class="px-2 py-2">
+                            <input type="datetime-local" min="${r.startTime || ''}" class="w-44 bg-white border ${r.startTime && r.endTime && new Date(r.endTime) <= new Date(r.startTime) ? 'border-red-300' : 'border-gray-200'} rounded-lg px-2 py-1 text-[11.5px]" value="${r.endTime || ''}" onchange="updateBulkScheduleRow(${r._index}, 'endTime', this.value)">
                         </td>
                         <td class="px-2 py-2">
                             <select onchange="updateBulkScheduleRow(${r._index}, 'venue', this.value)" class="w-36 bg-white border ${r.venue && !r._venueObj ? 'border-red-300' : 'border-gray-200'} rounded-lg px-2 py-1 text-[12px]">
@@ -5856,7 +5865,8 @@
                         judgeAlertSent: false
                     };
 
-                    if (r.dateTime !== undefined && r.dateTime !== '') updateData.time = r.dateTime;
+                    if (r.startTime !== undefined && r.startTime !== '') updateData.time = r.startTime;
+                    if (r.endTime !== undefined && r.endTime !== '') updateData.endTime = r.endTime;
                     if (r._venueObj) updateData.venueId = r._venueObj.id;
                     if (r.judgeCount) updateData.judgeCount = parseInt(r.judgeCount);
 

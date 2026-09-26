@@ -7,122 +7,205 @@
     <link rel="icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         * { box-sizing: border-box; }
-        :root { --accent: #ef4d4f; --accent-soft: #fff6f6; --text: #232326; --muted: #73737c; --line: #e5e6e9; }
-        body { margin: 0; min-height: 100vh; background: #fafbfc; color: var(--text); font-family: Inter, sans-serif; }
+        :root { 
+            --accent: #ef4d4f; 
+            --accent-soft: #fff6f6; 
+            --accent-hover: #df3a3c;
+            --text: #1e293b; 
+            --muted: #64748b; 
+            --line: #e2e8f0; 
+            --green: #10b981; 
+            --green-soft: #ecfdf5; 
+            --card-bg: #ffffff;
+            --page-bg: #f8fafc;
+        }
+        body { margin: 0; min-height: 100vh; background: var(--page-bg); color: var(--text); font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }
         button, input, select { font: inherit; }
-        .page { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 38px 0 52px; }
-        .title { display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 22px; font-weight: 700; }
-        .title-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: var(--accent); background: #ffe9e9; font-size: 18px; }
-        .beta { margin-left: 5px; padding: 3px 8px; color: var(--accent); background: #fff0f0; border-radius: 5px; font-size: 10px; font-weight: 700; }
-        .steps { display: flex; justify-content: center; align-items: flex-start; margin: 46px auto 78px; }
+        button:focus-visible, input:focus-visible, select:focus-visible, .choice:focus-within, .type-choice:focus-within, .venue-chip:focus-within { outline: 3px solid rgba(239, 77, 79, 0.28); outline-offset: 2px; }
+        .page { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 60px; }
+        .title { display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 22px; font-weight: 800; color: #0f172a; }
+        .title-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: var(--accent); background: #ffe4e4; font-size: 0; }
+        .title-icon::after { content: '\2726'; font-size: 18px; }
+        .beta { margin-left: 5px; padding: 3px 9px; color: var(--accent); background: #fff0f0; border: 1px solid #ffd2d2; border-radius: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; }
+        
+        /* Live DB Status Badge */
+        .db-status-bar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; font-size: 12px; }
+        .db-pill { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 11.5px; transition: all .2s ease; }
+        .db-pill.connected { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .db-pill.loading { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .db-pill.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .db-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2px rgba(255,255,255,0.8); }
+        .db-pill.connected .db-dot { animation: pulseGreen 2s infinite; }
+        @keyframes pulseGreen { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+
+        /* Stepper */
+        .steps { display: flex; justify-content: center; align-items: flex-start; margin: 32px auto 44px; }
         .step-wrap { display: flex; align-items: flex-start; }
-        .step { width: 78px; text-align: center; border: 0; padding: 0; color: #a8a9ae; background: transparent; cursor: pointer; }
-        .step-dot { display: grid; place-items: center; width: 36px; height: 36px; margin: 0 auto 11px; border: 1px solid #e1e2e5; border-radius: 50%; background: #fff; font-size: 13px; font-weight: 600; }
-        .step-label { display: block; font-size: 9px; font-weight: 600; text-transform: uppercase; }
-        .connector { width: 58px; height: 1px; margin-top: 18px; background: #d7d9dd; }
+        .step { width: 84px; text-align: center; border: 0; padding: 0; color: #94a3b8; background: transparent; cursor: pointer; transition: all .2s; }
+        .step-dot { display: grid; place-items: center; width: 38px; height: 38px; margin: 0 auto 10px; border: 1.5px solid #cbd5e1; border-radius: 50%; background: #fff; font-size: 13px; font-weight: 700; color: #64748b; transition: all .2s; }
+        .step-label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .connector { width: 56px; height: 2px; margin-top: 18px; background: #e2e8f0; transition: all .2s; }
         .step.active { color: var(--accent); }
-        .step.active .step-dot { color: #fff; border-color: var(--accent); background: var(--accent); box-shadow: 0 2px 5px #ef4d4f33; }
-        .step.done .step-dot { color: var(--accent); border-color: #ffc8c8; background: var(--accent-soft); }
-        .wizard-card { padding: 30px; border: 1px solid #dedfe3; border-radius: 18px; background: #fff; box-shadow: 0 4px 16px #1b1b1b0a; }
-        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; }
+        .step.active .step-dot { color: #fff; border-color: var(--accent); background: var(--accent); box-shadow: 0 3px 8px rgba(239, 77, 79, 0.35); }
+        .step.done { color: #0f172a; }
+        .step.done .step-dot { color: var(--accent); border-color: #fca5a5; background: #fff1f1; }
+        .step.done + .connector { background: #fca5a5; }
+
+        /* Card */
+        .wizard-card { padding: 32px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05); }
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
         fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-        legend, .field-label { margin-bottom: 13px; color: #4b4b51; font-size: 14px; font-weight: 600; }
-        .choice { position: relative; display: flex; min-height: 94px; align-items: flex-start; gap: 14px; padding: 22px 20px; border: 1px solid #dedfe3; border-radius: 14px; cursor: pointer; transition: .18s ease; }
-        .choice:hover { border-color: #f2a2a3; background: #fffafa; }
-        .choice:has(input:checked) { border-color: #ff7779; background: var(--accent-soft); box-shadow: 0 0 0 1px #ff77791a; }
-        .choice input { position: absolute; opacity: 0; }
-        .radio { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; border: 1px solid #dfe0e4; border-radius: 50%; background: #fff; }
-        .choice:has(input:checked) .radio { border: 5px solid var(--accent); }
-        .choice-title { display: block; margin-bottom: 7px; font-size: 15px; font-weight: 600; }
+        legend, .field-label { margin-bottom: 12px; color: #334155; font-size: 13.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .choice { position: relative; display: flex; min-height: 90px; align-items: flex-start; gap: 14px; padding: 20px 18px; border: 1.5px solid #e2e8f0; border-radius: 14px; cursor: pointer; transition: all .2s ease; background: #fff; }
+        .choice:hover { border-color: #fca5a5; background: #fffafa; }
+        .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
+        .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .radio { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; border: 1.5px solid #cbd5e1; border-radius: 50%; background: #fff; transition: all .2s; }
+        .choice:has(input:checked) .radio { border: 6px solid var(--accent); }
+        .choice-title { display: block; margin-bottom: 5px; font-size: 15px; font-weight: 700; color: #0f172a; }
         .choice-copy { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+        /* Programme Types & Saved Stages from DB */
+        .programme-types { display: none; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+        .programme-types.visible { display: block; animation: fade .2s ease; }
+        .programme-types-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; color: #334155; font-size: 14px; font-weight: 700; }
+        .type-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+        .type-choice { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1.5px solid #e2e8f0; border-radius: 14px; cursor: pointer; transition: all .2s ease; background: #fff; }
+        .type-choice:hover { border-color: #fca5a5; background: #fffafa; }
+        .type-choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent); }
+        .type-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .type-choice-header { display: flex; align-items: center; gap: 10px; }
+        .type-choice:has(input:checked) .radio { border: 6px solid var(--accent); }
+        .type-label { font-size: 14px; font-weight: 700; color: #0f172a; }
+        .type-badge { font-size: 11.5px; color: var(--muted); margin-left: 30px; font-weight: 500; }
+        
+        /* Saved Stages Box */
+        .saved-stages-box { margin-top: 18px; padding: 18px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; }
+        .saved-stages-title { display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 12px; }
+        .saved-stages-title-badge { font-size: 11.5px; background: #e0f2fe; color: #0369a1; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+        .saved-stages-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+        .stage-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 600; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .stage-chip-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #fff1f1; color: var(--accent); font-size: 12px; font-weight: 700; }
+        .stage-chip-place { font-size: 11.5px; color: #64748b; font-weight: 400; margin-left: 3px; }
+        .no-stages-warning { font-size: 12.5px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 10px; line-height: 1.5; }
+
+        /* Panels & Form Fields */
         .step-panel { display: none; }
         .step-panel.active { display: block; animation: fade .2s ease; }
-        @keyframes fade { from { opacity: 0; transform: translateY(3px); } }
-        .panel-heading { margin: 0 0 7px; font-size: 20px; }
-        .panel-copy { margin: 0 0 26px; color: var(--muted); font-size: 14px; }
+        @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .panel-heading { margin: 0 0 6px; font-size: 20px; font-weight: 800; color: #0f172a; }
+        .panel-copy { margin: 0 0 24px; color: var(--muted); font-size: 13.5px; }
         .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .field { display: flex; flex-direction: column; }
-        .field input, .field select { width: 100%; padding: 16px; border: 1px solid #dedfe3; border-radius: 11px; color: #444; background: #fff; outline: none; font-size: 14px; }
-        .field input:focus, .field select:focus { border-color: #ff7779; box-shadow: 0 0 0 3px #ef4d4f12; }
+        .field input, .field select { width: 100%; padding: 14px 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; color: #1e293b; background: #fff; outline: none; font-size: 13.5px; transition: all .2s; }
+        .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(239, 77, 79, 0.12); }
+        
         .timing-panel { display: grid; gap: 18px; }
-        .timing-box { padding: 22px; border: 1px solid #dedfe3; border-radius: 14px; background: #fff; }
-        .timing-box h2 { margin: 0 0 22px; font-size: 15px; font-weight: 700; }
+        .timing-box { padding: 22px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: #fff; }
+        .timing-box h2 { margin: 0 0 20px; font-size: 15px; font-weight: 800; color: #0f172a; }
         .timing-box .fields { gap: 18px; }
         .timing-box .field-label { margin-bottom: 8px; font-size: 12px; }
-        .timing-box .field input { padding: 11px 14px; border-radius: 14px; font-size: 13px; }
+        .timing-box .field input { padding: 11px 14px; border-radius: 10px; font-size: 13px; }
         .break-heading { display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px; }
-        .break-heading span { font-size: 12px; font-weight: 600; }
-        .icon-button { display: grid; place-items: center; width: 29px; height: 29px; padding: 0; border: 1px solid #d8d9dd; border-radius: 8px; color: #555; background: #fff; cursor: pointer; font-size: 18px; }
-        .icon-button:hover { color: var(--accent); border-color: #f2a2a3; background: #fffafa; }
+        .break-heading span { font-size: 13px; font-weight: 700; color: #334155; }
+        .icon-button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1.5px solid #cbd5e1; border-radius: 9px; color: #475569; background: #fff; cursor: pointer; font-size: 18px; font-weight: 700; transition: all .2s; }
+        .icon-button:hover { color: var(--accent); border-color: var(--accent); background: #fffafa; }
         .break-list { display: grid; gap: 12px; }
-        .break-row { display: grid; grid-template-columns: 1fr 1fr 30px; align-items: end; gap: 18px; }
-        .delete-break { margin-bottom: 5px; border: 0; background: transparent; cursor: pointer; font-size: 17px; }
-        .days-box { padding: 24px; border: 1px solid #dedfe3; border-radius: 14px; background: #fff; }
-        .days-box > h2 { margin: 0 0 20px; font-size: 15px; }
-        .day-entry { padding-bottom: 18px; border-bottom: 1px solid #dedfe3; }
-        .day-entry + .day-entry { padding-top: 18px; }
-        .day-title { display: flex; align-items: center; gap: 9px; margin-bottom: 17px; font-size: 13px; font-weight: 600; }
-        .day-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 7px; color: var(--accent); background: #fff0f0; }
-        .remove-day { margin-left: auto; border: 0; color: #777; background: transparent; cursor: pointer; font-size: 17px; }
+        .break-row { display: grid; grid-template-columns: 1fr 1fr 34px; align-items: end; gap: 16px; }
+        .delete-break { margin-bottom: 4px; border: 0; background: transparent; cursor: pointer; font-size: 0; color: #94a3b8; transition: color .2s; }
+        .delete-break::after { content: '\00d7'; font-size: 22px; }
+        .delete-break:hover { color: #ef4444; }
+
+        .days-box { padding: 24px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: #fff; }
+        .days-box > h2 { margin: 0 0 20px; font-size: 15px; font-weight: 800; color: #0f172a; }
+        .day-entry { padding: 18px; border: 1.5px solid #e2e8f0; border-radius: 14px; background: #fafbfc; margin-bottom: 16px; }
+        .day-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: #0f172a; }
+        .day-number { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; color: var(--accent); background: #fee2e2; font-size: 12px; font-weight: 800; }
+        .remove-day { margin-left: auto; border: 0; color: #94a3b8; background: transparent; cursor: pointer; font-size: 18px; transition: color .2s; }
+        .remove-day:hover { color: #ef4444; }
         .day-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
         .day-fields .field-label { margin-bottom: 8px; font-size: 12px; }
-        .day-fields input { padding: 11px 13px; }
-        .venue-options { display: flex; gap: 8px; margin-top: 12px; }
-        .venue-chip { position: relative; display: flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #d9dade; border-radius: 8px; cursor: pointer; font-size: 11px; }
-        .venue-chip input { position: absolute; opacity: 0; }
-        .chip-check { width: 15px; height: 15px; border: 1px solid #d4d5d9; border-radius: 4px; background: #fff; }
+        .day-fields input { padding: 11px 14px; border-radius: 10px; font-size: 13px; background: #fff; }
+        .venue-options { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+        .venue-chip { position: relative; display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; background: #fff; transition: all .2s; }
+        .venue-chip input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .chip-check { width: 16px; height: 16px; border: 1.5px solid #cbd5e1; border-radius: 4px; background: #fff; }
+        .venue-chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
         .venue-chip:has(input:checked) .chip-check { display: grid; place-items: center; color: #fff; border-color: var(--accent); background: var(--accent); }
-        .venue-chip:has(input:checked) .chip-check::after { content: '✓'; font-size: 10px; font-weight: 700; }
-        .add-day { margin: 15px 0; padding: 8px 12px; border: 1px solid #d4d5d9; border-radius: 8px; background: #fff; cursor: pointer; font-size: 12px; }
-        .custom-breaks { display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #dedfe3; font-size: 11px; }
+        .venue-chip:has(input:checked) .chip-check::after { content: '✓'; font-size: 11px; font-weight: 800; }
+        .venue-picker { display: none; width: 100%; min-height: 90px; margin-top: 12px; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 10px; background: #fff; font-size: 12.5px; }
+        .venue-picker.visible { display: block; }
+        .add-day { margin: 10px 0 20px; padding: 10px 16px; border: 1.5px dashed #cbd5e1; border-radius: 12px; background: #fff; cursor: pointer; font-size: 13px; font-weight: 700; color: #334155; transition: all .2s; width: 100%; text-align: center; }
+        .add-day:hover { border-color: var(--accent); color: var(--accent); background: #fffafa; }
+        .custom-breaks { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; font-weight: 700; }
         .day-breaks { display: grid; gap: 10px; margin-top: 12px; }
         .day-breaks:empty { display: none; }
-        .duration-box { padding: 24px; border: 1px solid #dedfe3; border-radius: 14px; background: #fff; }
-        .duration-box > h2 { margin: 0 0 15px; font-size: 15px; }
-        .duration-help { margin-bottom: 16px; padding: 13px 15px; border: 1px solid #d9dade; border-radius: 10px; color: #555; font-size: 11px; line-height: 1.55; }
-        .rule-list { display: grid; gap: 10px; margin-top: 9px; }
-        .rule-row { display: grid; grid-template-columns: 150px minmax(220px, 1fr) 120px auto; align-items: end; gap: 13px; padding: 14px; border: 1px solid #d9dade; border-radius: 10px; }
-        .rule-row .field-label { margin-bottom: 7px; font-size: 11px; }
-        .rule-row select, .rule-row input { padding: 10px 12px; border-radius: 14px; font-size: 12px; }
-        .rule-actions { display: flex; align-items: center; gap: 8px; height: 39px; }
-        .rule-action { border: 0; color: #777; background: transparent; cursor: pointer; font-size: 16px; }
-        .rule-action:disabled { opacity: .3; cursor: default; }
-        .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .summary div { padding: 18px; border-radius: 11px; background: #f7f7f8; font-size: 13px; }
-        .summary strong { display: block; margin-bottom: 6px; font-size: 14px; }
-        .actions { display: flex; justify-content: space-between; align-items: center; padding: 30px 14px 0; }
-        .back, .next { border: 0; cursor: pointer; font-size: 14px; font-weight: 600; }
-        .back { color: #3d3d42; background: transparent; }
+
+        .duration-box { padding: 24px; border: 1.5px solid #e2e8f0; border-radius: 16px; background: #fff; }
+        .duration-box > h2 { margin: 0 0 14px; font-size: 15px; font-weight: 800; color: #0f172a; }
+        .duration-help { margin-bottom: 16px; padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 12px; color: #475569; background: #f8fafc; font-size: 12px; line-height: 1.55; }
+        .rule-list { display: grid; gap: 12px; margin-top: 14px; }
+        .rule-row { display: grid; grid-template-columns: 140px minmax(180px, 1fr) minmax(140px, .8fr) 110px auto; align-items: end; gap: 14px; padding: 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fafbfc; }
+        .rule-row .field-label { margin-bottom: 6px; font-size: 11px; }
+        .rule-row input { padding: 10px 12px; border-radius: 10px; font-size: 12.5px; background: #fff; }
+        .rule-actions { display: flex; align-items: center; gap: 8px; height: 38px; }
+        .rule-action { border: 0; color: #94a3b8; background: transparent; cursor: pointer; font-size: 18px; transition: color .2s; }
+        .rule-action:hover { color: #ef4444; }
+
+        /* Report & Preview */
+        .ai-report { display: grid; gap: 20px; }
+        .report-status { padding: 18px 20px; border: 1px solid #bbf7d0; border-radius: 14px; color: #15803d; background: #f0fdf4; }
+        .report-status strong { display: block; margin-bottom: 4px; font-size: 15px; font-weight: 800; }
+        .report-status span { font-size: 12.5px; line-height: 1.45; }
+        .report-status.error-note { border-color: #fca5a5; color: #b91c1c; background: #fef2f2; }
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .report-item { padding: 16px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+        .report-item strong { display: block; margin-bottom: 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .report-item span { font-size: 14px; font-weight: 700; color: #0f172a; }
+        .preview-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-top: 8px; }
+        .preview-toolbar .field { min-width: 180px; flex: 1; }
+        .preview-toolbar .field select { padding: 11px 14px; border-radius: 10px; font-size: 13px; }
+        .preview-table-wrap { max-height: 480px; overflow: auto; border: 1.5px solid #e2e8f0; border-radius: 14px; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        .preview-table th, .preview-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; text-align: left; white-space: nowrap; }
+        .preview-table th { position: sticky; top: 0; color: #475569; background: #f8fafc; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1.5px solid #e2e8f0; }
+        .preview-table tr:hover td { background: #f8fafc; }
+        .preview-empty { padding: 40px; color: var(--muted); text-align: center; font-size: 13px; }
+        .download { padding: 11px 18px; border: 1.5px solid var(--accent); border-radius: 10px; color: var(--accent); background: #fff; cursor: pointer; font-weight: 700; font-size: 13px; transition: all .2s; }
+        .download:hover { color: #fff; background: var(--accent); }
+        .btn-save-db { padding: 11px 20px; border: 0; border-radius: 10px; color: #fff; background: #059669; cursor: pointer; font-weight: 700; font-size: 13px; transition: all .2s; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25); }
+        .btn-save-db:hover { background: #047857; }
+        .notice { display: none; margin-top: 16px; padding: 14px 18px; border-radius: 12px; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; font-size: 13.5px; text-align: center; font-weight: 600; }
+
+        /* Actions Footer */
+        .actions { display: flex; justify-content: space-between; align-items: center; padding: 28px 8px 0; }
+        .back, .next { border: 0; cursor: pointer; font-size: 14px; font-weight: 700; transition: all .2s; }
+        .back { color: #475569; background: transparent; padding: 12px 18px; border-radius: 10px; }
+        .back:hover { background: #f1f5f9; }
         .back:disabled { visibility: hidden; }
-        .next { padding: 13px 21px; border-radius: 10px; color: #fff; background: var(--accent); box-shadow: 0 2px 5px #ef4d4f30; }
-        .next:hover { background: #df4143; }
-        .notice { display: none; margin-top: 18px; padding: 15px; border-radius: 11px; color: #267343; background: #ebfff2; font-size: 14px; text-align: center; }
-        .ai-report { display: grid; gap: 18px; }
-        .report-status { padding: 18px; border: 1px solid #bfe6cb; border-radius: 12px; color: #246b3a; background: #f1fff5; }
-        .report-status strong { display: block; margin-bottom: 5px; font-size: 15px; }
-        .report-status span { font-size: 12px; }
-        .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .report-item { padding: 16px; border: 1px solid #dedfe3; border-radius: 11px; }
-        .report-item strong { display: block; margin-bottom: 6px; font-size: 11px; color: var(--muted); }
-        .report-item span { font-size: 14px; font-weight: 600; }
+        .next { padding: 13px 26px; border-radius: 12px; color: #fff; background: var(--accent); box-shadow: 0 3px 10px rgba(239, 77, 79, 0.3); }
+        .next:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .next:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
         @media (max-width: 650px) {
-            .page { width: min(100% - 22px, 580px); padding-top: 24px; }
-            .title { font-size: 19px; }
-            .steps { margin: 32px auto 46px; overflow-x: auto; justify-content: flex-start; padding-bottom: 8px; }
-            .step-dot { width: 31px; height: 31px; font-size: 11px; }
+            .page { width: calc(100% - 20px); padding-top: 20px; }
+            .title { font-size: 18px; }
+            .steps { margin: 20px auto 30px; overflow-x: auto; justify-content: flex-start; padding-bottom: 8px; }
+            .step-dot { width: 32px; height: 32px; font-size: 11px; }
             .connector { width: 22px; margin-top: 15px; }
-            .step { width: 54px; }
-            .option-grid, .fields, .summary { grid-template-columns: 1fr; }
-            .break-row { grid-template-columns: 1fr 1fr 26px; gap: 9px; }
+            .step { width: 56px; }
+            .option-grid, .fields, .type-options { grid-template-columns: 1fr; }
+            .break-row { grid-template-columns: 1fr 1fr 28px; gap: 8px; }
             .day-fields { grid-template-columns: 1fr; }
             .rule-row { grid-template-columns: 1fr; }
             .rule-actions { height: auto; justify-content: flex-end; }
-            .report-grid { grid-template-columns: 1fr; }
-            .wizard-card { padding: 19px; }
-            .choice { min-height: 88px; padding: 19px 17px; }
+            .wizard-card { padding: 20px; }
+            .choice { min-height: 80px; padding: 16px; }
         }
     </style>
 </head>
@@ -130,12 +213,17 @@
     <main class="page">
         <header class="title">
             <span class="title-icon" aria-hidden="true">▣</span>
-            <span>Auto Schedule</span><span class="beta">BETA</span>
+            <span>Auto Schedule</span><span class="beta">LIVE DB</span>
         </header>
+
+        <div class="db-status-bar">
+            <span id="dbStatusPill" class="db-pill loading" role="status" aria-live="polite"><span class="db-dot"></span>Connecting to Firestore DB...</span>
+        </div>
 
         <nav class="steps" aria-label="Schedule creation steps" id="steps"></nav>
 
         <section class="wizard-card">
+            <!-- STEP 0: SCOPE & PROGRAMME TYPE -->
             <div class="step-panel active" data-panel="0">
                 <div class="option-grid">
                     <fieldset><legend>Existing schedule</legend>
@@ -145,9 +233,28 @@
                         <label class="choice"><input type="radio" name="programmes" value="all" checked><span class="radio"></span><span><span class="choice-title">All programmes</span><span class="choice-copy">Use every programme matching the selected schedule scope.</span></span></label>
                     </fieldset>
                     <label class="choice"><input type="radio" name="existing" value="include"><span class="radio"></span><span><span class="choice-title">Include existing schedules</span><span class="choice-copy">Allow the proposal to move and update existing slots.</span></span></label>
-                    <label class="choice"><input type="radio" name="programmes" value="selected"><span class="radio"></span><span><span class="choice-title">Selected programmes only</span><span class="choice-copy">Choose the exact programmes for this proposal.</span></span></label>
+                    <label class="choice"><input type="radio" name="programmes" value="selected"><span class="radio"></span><span><span class="choice-title">Selected programme type</span><span class="choice-copy">Filter programmes and allocate to saved stages in DB.</span></span></label>
                 </div>
+
+                <fieldset class="programme-types" id="programmeTypes" aria-hidden="true">
+                    <div class="programme-types-title">
+                        <span>Select programme type</span>
+                        <span style="font-size: 11.5px; color: var(--muted); font-weight: 500;">Direct from Database</span>
+                    </div>
+                    <div class="type-options" id="typeOptions">
+                        <div class="loading-note" style="grid-column: 1 / -1;">Loading saved venue types from database...</div>
+                    </div>
+                    <div class="saved-stages-box" id="savedStagesBox" style="display: none;">
+                        <div class="saved-stages-title">
+                            <span id="savedStagesHeader">Saved Stages in Database</span>
+                            <span id="savedStagesCount" class="saved-stages-title-badge">0 stages</span>
+                        </div>
+                        <div class="saved-stages-chips" id="savedStagesChips"></div>
+                    </div>
+                </fieldset>
             </div>
+
+            <!-- STEP 1: DEFAULT TIMING & BREAKS -->
             <div class="step-panel" data-panel="1">
                 <div class="timing-panel">
                     <section class="timing-box" aria-labelledby="defaultTimingTitle">
@@ -170,254 +277,89 @@
                     </section>
                 </div>
             </div>
+
+            <!-- STEP 2: SCHEDULE DAYS & VENUE ALLOCATION -->
             <div class="step-panel" data-panel="2">
                 <section class="days-box" aria-labelledby="scheduleDaysTitle">
-                    <h2 id="scheduleDaysTitle">Schedule days</h2>
+                    <h2 id="scheduleDaysTitle">Schedule days & saved stages allocation</h2>
                     <div id="dayList"></div>
                     <button class="add-day" id="addDayBtn" type="button">＋ &nbsp; Add schedule day</button>
                     <div class="custom-breaks"><span>Custom breaks</span><button class="icon-button" id="addCustomBreakBtn" type="button" aria-label="Add custom break">+</button></div>
                     <div class="day-breaks" id="customBreakList"></div>
                 </section>
             </div>
+
+            <!-- STEP 3: DURATION RULES -->
             <div class="step-panel" data-panel="3">
                 <section class="duration-box" aria-labelledby="durationRulesTitle">
                     <h2 id="durationRulesTitle">Duration rules</h2>
-                    <div class="duration-help">Use this if some programmes need a different time than the default duration.<br>Select a category, collection, programme type, or specific programme and set its minutes.<br>Example: group programmes 60 minutes, speech programmes 10 minutes.</div>
-                    <button class="add-day" id="addRuleBtn" type="button">＋ &nbsp; Add rule</button>
+                    <div class="duration-help">Add only programmes that need a custom duration. Enter or search a programme code from the database to automatically fetch its name and category. Default timing will be used for all other programmes.</div>
+                    <button class="add-day" id="addRuleBtn" type="button">＋ &nbsp; Add duration rule</button>
                     <div class="rule-list" id="ruleList"></div>
                 </section>
             </div>
-            <div class="step-panel" data-panel="4"><h2 class="panel-heading">Choose venues</h2><p class="panel-copy">Select which venue group the automatic scheduler may use.</p><div class="option-grid"><label class="choice"><input type="radio" name="venues" checked><span class="radio"></span><span><span class="choice-title">All available venues</span><span class="choice-copy">Let Auto Schedule make the best use of every active venue.</span></span></label><label class="choice"><input type="radio" name="venues"><span class="radio"></span><span><span class="choice-title">Select venues</span><span class="choice-copy">Limit this proposal to a custom venue list.</span></span></label></div></div>
-            <div class="step-panel" data-panel="5">
+
+            <!-- STEP 4: PREVIEW & EXPORT -->
+            <div class="step-panel" data-panel="4">
                 <div class="ai-report">
-                    <div><h2 class="panel-heading">AI schedule report</h2><p class="panel-copy">Your configuration is complete. Review the report, then generate and download the schedule.</p></div>
-                    <div class="report-status"><strong>✓ Ready to generate</strong><span>All required scheduling information has been provided.</span></div>
+                    <div>
+                        <h2 class="panel-heading">Schedule preview</h2>
+                        <p class="panel-copy">Review the auto-generated timetable across your saved stages, filter it, save it to Firestore, or export it as CSV.</p>
+                    </div>
+                    <div class="report-status" id="reportStatus" role="status" aria-live="polite"><strong>✓ Ready to generate</strong><span>Complete the steps to generate a schedule.</span></div>
                     <div class="report-grid">
                         <div class="report-item"><strong>Scope</strong><span id="summaryScope">Unscheduled programmes</span></div>
                         <div class="report-item"><strong>Programme set</strong><span id="summaryPrograms">All programmes</span></div>
-                        <div class="report-item"><strong>Default timing</strong><span id="summaryDates">45 min, 5 min gap</span></div>
+                        <div class="report-item"><strong>Timing</strong><span id="summaryDates">45 min, 5 min gap</span></div>
                         <div class="report-item"><strong>Schedule days</strong><span id="summaryDays">1 day</span></div>
-                        <div class="report-item"><strong>Duration rules</strong><span id="summaryRules">1 rule</span></div>
-                        <div class="report-item"><strong>Venues</strong><span id="summaryVenues">All available venues</span></div>
+                        <div class="report-item"><strong>Duration rules</strong><span id="summaryRules">0 rules</span></div>
                     </div>
-                    <div class="notice" id="notice">Schedule created. Your Excel download has started.</div>
+                    <div class="preview-toolbar">
+                        <label class="field"><span class="field-label">Category</span><select id="previewCategory"><option value="">All categories</option></select></label>
+                        <label class="field"><span class="field-label">Stage / Venue</span><select id="previewVenue"><option value="">All venues</option></select></label>
+                        <button class="btn-save-db" id="btnSaveDb" type="button">Save to Database</button>
+                        <button class="download" id="downloadBtn" type="button">Download CSV</button>
+                    </div>
+                    <div class="preview-table-wrap">
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Code</th>
+                                    <th>Programme</th>
+                                    <th>Category</th>
+                                    <th>Stage / Venue</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewBody">
+                                <tr><td colspan="8" class="preview-empty">Click Next / Generate to create schedule.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="notice" id="notice" role="status" aria-live="polite"></div>
                 </div>
             </div>
         </section>
 
-        <div class="actions"><button class="back" id="backBtn" type="button">‹ &nbsp; Schedule</button><button class="next" id="nextBtn" type="button">Next &nbsp;›</button></div>
+        <div class="actions">
+            <button class="back" id="backBtn" type="button">‹ &nbsp; Schedule</button>
+            <button class="next" id="nextBtn" type="button">Next &nbsp;›</button>
+        </div>
     </main>
+    <script src="auto-schedule.js?v=20260922-2"></script>
     <script>
-        const labels = ['Scope', 'Timing', 'Days', 'Durations', 'Venues', 'AI'];
-        const stepsEl = document.getElementById('steps');
-        let current = 0;
-        labels.forEach((label, index) => {
-            const wrap = document.createElement('div'); wrap.className = 'step-wrap';
-            const button = document.createElement('button'); button.type = 'button'; button.className = 'step'; button.dataset.step = index;
-            button.innerHTML = `<span class="step-dot">${index + 1}</span><span class="step-label">${label}</span>`;
-            button.addEventListener('click', () => { if (index <= current) showStep(index); });
-            wrap.appendChild(button);
-            if (index < labels.length - 1) { const line = document.createElement('span'); line.className = 'connector'; wrap.appendChild(line); }
-            stepsEl.appendChild(wrap);
-        });
-        function showStep(index) {
-            current = Math.max(0, Math.min(labels.length - 1, index));
-            document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i === current));
-            document.querySelectorAll('.step').forEach((s, i) => { s.classList.toggle('active', i === current); s.classList.toggle('done', i < current); });
-            document.getElementById('backBtn').disabled = current === 0;
-            document.getElementById('backBtn').innerHTML = current === 0 ? '‹ &nbsp; Schedule' : '‹ &nbsp; Back';
-            document.getElementById('nextBtn').innerHTML = current === labels.length - 1 ? 'Generate &nbsp;✦' : 'Next &nbsp;›';
-            if (current === 5) updateSummary();
-        }
-        function updateSummary() {
-            const existing = document.querySelector('input[name="existing"]:checked').value;
-            const programmes = document.querySelector('input[name="programmes"]:checked').value;
-            const venue = document.querySelector('input[name="venues"]:checked').closest('.choice').querySelector('.choice-title').textContent;
-            document.getElementById('summaryScope').textContent = existing === 'unscheduled' ? 'Unscheduled programmes' : 'Include existing schedules';
-            document.getElementById('summaryPrograms').textContent = programmes === 'all' ? 'All programmes' : 'Selected programmes only';
-            document.getElementById('summaryDates').textContent = `${document.getElementById('defaultDuration').value || 0} min programmes, ${document.getElementById('programmeGap').value || 0} min gaps`;
-            const totalDays = dayList.children.length;
-            const totalRules = ruleList.children.length;
-            document.getElementById('summaryDays').textContent = `${totalDays} ${totalDays === 1 ? 'day' : 'days'}`;
-            document.getElementById('summaryRules').textContent = `${totalRules} ${totalRules === 1 ? 'rule' : 'rules'}`;
-            document.getElementById('summaryVenues').textContent = venue;
-        }
-        const breakList = document.getElementById('breakList');
-        document.getElementById('addBreakBtn').addEventListener('click', () => {
-            const row = document.createElement('div');
-            row.className = 'break-row';
-            row.innerHTML = '<label class="field"><span class="field-label">From</span><input type="time" value="13:00"></label><label class="field"><span class="field-label">To</span><input type="time" value="14:00"></label><button class="delete-break" type="button" aria-label="Delete break">⌫</button>';
-            breakList.appendChild(row);
-        });
-        breakList.addEventListener('click', event => {
-            const button = event.target.closest('.delete-break');
-            if (button) button.closest('.break-row').remove();
-        });
-        const dayList = document.getElementById('dayList');
-        let dayCount = 0;
-        function addScheduleDay() {
-            dayCount += 1;
-            const entry = document.createElement('div');
-            entry.className = 'day-entry';
-            entry.innerHTML = `
-                <div class="day-title"><span class="day-number"></span><span class="day-name"></span><button class="remove-day" type="button" aria-label="Delete day">&#128465;</button></div>
-                <div class="day-fields">
-                    <label class="field"><span class="field-label">Date</span><input type="date" value="2026-09-16"></label>
-                    <label class="field"><span class="field-label">Start</span><input type="time" value="07:00"></label>
-                    <label class="field"><span class="field-label">End</span><input type="time" value="21:00"></label>
-                </div>
-                <div class="venue-options">
-                    <label class="venue-chip"><input type="radio" name="day-venue-${dayCount}" value="all" checked><span class="chip-check"></span>All venues</label>
-                    <label class="venue-chip"><input type="radio" name="day-venue-${dayCount}" value="selected"><span class="chip-check"></span>Select venues</label>
-                </div>`;
-            dayList.appendChild(entry);
-            renumberDays();
-        }
-        function renumberDays() {
-            dayList.querySelectorAll('.day-entry').forEach((entry, index) => {
-                entry.querySelector('.day-number').textContent = index + 1;
-                entry.querySelector('.day-name').textContent = `Day ${index + 1}`;
-            });
-        }
-        document.getElementById('addDayBtn').addEventListener('click', addScheduleDay);
-        dayList.addEventListener('click', event => {
-            const button = event.target.closest('.remove-day');
-            if (button && dayList.children.length > 1) {
-                button.closest('.day-entry').remove();
-                renumberDays();
-            }
-        });
-        const customBreakList = document.getElementById('customBreakList');
-        document.getElementById('addCustomBreakBtn').addEventListener('click', () => {
-            const row = document.createElement('div');
-            row.className = 'break-row';
-            row.innerHTML = '<label class="field"><span class="field-label">From</span><input type="time" value="13:00"></label><label class="field"><span class="field-label">To</span><input type="time" value="14:00"></label><button class="delete-break" type="button" aria-label="Delete break">⌫</button>';
-            customBreakList.appendChild(row);
-        });
-        customBreakList.addEventListener('click', event => {
-            const button = event.target.closest('.delete-break');
-            if (button) button.closest('.break-row').remove();
-        });
-        addScheduleDay();
-        const ruleList = document.getElementById('ruleList');
-        let ruleCount = 0;
-        const targetsByType = {
-            'Programme': ['Speech', 'Debate', 'Quiz', 'Essay Writing', 'Drawing', 'Group Song'],
-            'Category': ['Stage', 'Off Stage', 'Individual', 'Group'],
-            'Collection': ['Morning Events', 'Afternoon Events', 'Final Events'],
-            'Programme type': ['Speech programme', 'Performance', 'Written event', 'Team event']
-        };
-        const targetLabels = { 'Programme': 'programmes', 'Category': 'categories', 'Collection': 'collections', 'Programme type': 'programme types' };
-        function updateTargetSearch(row) {
-            const type = row.querySelector('.rule-type').value;
-            const input = row.querySelector('.target-search');
-            const dataList = row.querySelector('datalist');
-            input.value = '';
-            input.placeholder = `Search and select ${targetLabels[type]}`;
-            dataList.innerHTML = targetsByType[type].map(target => `<option value="${target}"></option>`).join('');
-        }
-        function addDurationRule() {
-            ruleCount += 1;
-            const row = document.createElement('div');
-            row.className = 'rule-row';
-            row.innerHTML = `
-                <label class="field"><span class="field-label">Type</span><select class="rule-type"><option>Programme</option><option>Category</option><option>Collection</option><option>Programme type</option></select></label>
-                <label class="field"><span class="field-label">Targets</span><input class="target-search" type="search" list="rule-targets-${ruleCount}" autocomplete="off"><datalist id="rule-targets-${ruleCount}"></datalist></label>
-                <label class="field"><span class="field-label">Duration</span><input type="number" value="45" min="1" aria-label="Duration in minutes"></label>
-                <div class="rule-actions"><button class="rule-action move-up" type="button" aria-label="Move rule up">↑</button><button class="rule-action move-down" type="button" aria-label="Move rule down">↓</button><button class="rule-action delete-rule" type="button" aria-label="Delete rule">&#128465;</button></div>`;
-            ruleList.appendChild(row);
-            updateTargetSearch(row);
-            updateRuleButtons();
-        }
-        function updateRuleButtons() {
-            const rows = [...ruleList.children];
-            rows.forEach((row, index) => {
-                row.querySelector('.move-up').disabled = index === 0;
-                row.querySelector('.move-down').disabled = index === rows.length - 1;
-            });
-        }
-        document.getElementById('addRuleBtn').addEventListener('click', addDurationRule);
-        ruleList.addEventListener('change', event => {
-            if (event.target.matches('.rule-type')) updateTargetSearch(event.target.closest('.rule-row'));
-        });
-        ruleList.addEventListener('click', event => {
-            const row = event.target.closest('.rule-row');
-            if (!row) return;
-            if (event.target.closest('.delete-rule')) row.remove();
-            if (event.target.closest('.move-up') && row.previousElementSibling) ruleList.insertBefore(row, row.previousElementSibling);
-            if (event.target.closest('.move-down') && row.nextElementSibling) ruleList.insertBefore(row.nextElementSibling, row);
-            updateRuleButtons();
-        });
-        addDurationRule();
-        function timeToMinutes(value) {
-            const [hours, minutes] = value.split(':').map(Number);
-            return (hours * 60) + minutes;
-        }
-        function displayTime(totalMinutes) {
-            const hours = Math.floor(totalMinutes / 60) % 24;
-            const minutes = totalMinutes % 60;
-            const suffix = hours >= 12 ? 'PM' : 'AM';
-            return `${String(hours % 12 || 12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${suffix}`;
-        }
-        function escapeCell(value) {
-            return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-        function createExcelSchedule() {
-            const duration = Math.max(1, Number(document.getElementById('defaultDuration').value) || 45);
-            const gap = Math.max(0, Number(document.getElementById('programmeGap').value) || 0);
-            const rules = [...ruleList.querySelectorAll('.rule-row')].map(row => ({
-                name: row.querySelector('.target-search').value.trim(),
-                duration: Math.max(1, Number(row.querySelector('input[type="number"]').value) || duration)
-            })).filter(rule => rule.name);
-            const breakRows = [...breakList.querySelectorAll('.break-row'), ...customBreakList.querySelectorAll('.break-row')];
-            const breaks = breakRows.map(row => {
-                const times = row.querySelectorAll('input[type="time"]');
-                return [timeToMinutes(times[0].value), timeToMinutes(times[1].value)];
-            });
-            const schedule = [];
-            [...dayList.querySelectorAll('.day-entry')].forEach((day, dayIndex) => {
-                const inputs = day.querySelectorAll('.day-fields input');
-                const date = inputs[0].value;
-                let cursor = timeToMinutes(inputs[1].value);
-                const end = timeToMinutes(inputs[2].value);
-                const venueChoice = day.querySelector('.venue-chip input:checked').value === 'all' ? 'All venues' : 'Selected venues';
-                let programmeIndex = 0;
-                while (cursor + duration <= end && programmeIndex < 500) {
-                    const activeRule = rules.length ? rules[programmeIndex % rules.length] : null;
-                    const programmeDuration = activeRule ? activeRule.duration : duration;
-                    const overlappingBreak = breaks.find(item => cursor < item[1] && cursor + programmeDuration > item[0]);
-                    if (overlappingBreak) { cursor = overlappingBreak[1]; continue; }
-                    if (cursor + programmeDuration > end) break;
-                    schedule.push([dayIndex + 1, date, displayTime(cursor), displayTime(cursor + programmeDuration), activeRule ? activeRule.name : `Programme ${programmeIndex + 1}`, venueChoice, programmeDuration]);
-                    cursor += programmeDuration + gap;
-                    programmeIndex += 1;
+        window.addEventListener('load', function () {
+            if (!document.querySelector('#steps .step')) {
+                var status = document.getElementById('dbStatusPill');
+                if (status) {
+                    status.className = 'db-pill error';
+                    status.textContent = 'Page controls failed to load. Refresh the page or check auto-schedule.js.';
                 }
-            });
-            const headers = ['Day', 'Date', 'Start', 'End', 'Programme', 'Venue', 'Duration (minutes)'];
-            const tableRows = [headers, ...schedule].map(row => {
-                return '\x3Ctr>' + row.map(cell => '\x3Ctd>' + escapeCell(cell) + '\x3C/td>').join('') + '\x3C/tr>';
-            }).join('');
-            const workbook = '\x3C!DOCTYPE html>\x3Chtml>\x3Chead>\x3Cmeta charset="UTF-8">\x3C/head>\x3Cbody>\x3Ctable border="1">' + tableRows + '\x3C/table>\x3C/body>\x3C/html>';
-            const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'auto-schedule-' + new Date().toISOString().slice(0, 10) + '.xls';
-            document.body.appendChild(link);
-            link.click();
-            URL.revokeObjectURL(link.href);
-            link.remove();
-        }
-        document.getElementById('backBtn').addEventListener('click', () => showStep(current - 1));
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            if (current < labels.length - 1) showStep(current + 1);
-            else {
-                createExcelSchedule();
-                const notice = document.getElementById('notice');
-                notice.style.display = 'block';
-                document.getElementById('nextBtn').textContent = 'Download again';
             }
         });
-        showStep(0);
     </script>
 </body>
 </html>

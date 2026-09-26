@@ -10,7 +10,7 @@
     <link rel="icon" href="logo-512.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo-192.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
@@ -206,7 +206,7 @@
                                 placeholder="Search programs..."
                                 class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/30 focus:border-[#FFB33F] transition-all">
                         </div>
-                        <button onclick="downloadProgExcel()"
+                        <button onclick="openProgramExportModal()"
                             class="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
                             <i class="fi fi-rr-file-export text-xs"></i>
                             <span class="hidden md:inline">Export</span>
@@ -718,6 +718,27 @@
         </button>
     </div>
 
+    <!-- Filtered Excel Export Modal -->
+    <div id="program-export-modal" class="hidden fixed inset-0 z-[110] items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4" onclick="if(event.target === this) closeProgramExportModal()">
+        <div class="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
+            <div class="flex items-start justify-between gap-4">
+                <div><h3 class="text-lg font-bold text-gray-900">Export filtered programs</h3><p id="program-export-summary" class="mt-1 text-[13px] leading-5 text-gray-500"></p></div>
+                <button type="button" onclick="closeProgramExportModal()" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100" aria-label="Close"><i class="fi fi-rr-cross-small"></i></button>
+            </div>
+            <div class="mt-5 grid gap-3">
+                <button type="button" onclick="exportFilteredProgramData()" class="flex w-full items-center gap-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-left hover:border-blue-300 hover:bg-blue-50">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white"><i class="fi fi-rr-file-spreadsheet"></i></span>
+                    <span><span class="block text-sm font-bold text-gray-900">Only Program Data</span><span class="mt-0.5 block text-xs text-gray-500">Code, name, category, type, program type and remarks</span></span>
+                </button>
+                <button id="export-judgesheets-button" type="button" onclick="exportFilteredJudgeSheets()" class="flex w-full items-center gap-4 rounded-xl border border-amber-100 bg-amber-50/60 p-4 text-left hover:border-amber-300 hover:bg-amber-50 disabled:cursor-wait disabled:opacity-60">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FFB33F] text-gray-900"><i class="fi fi-rr-document-signed"></i></span>
+                    <span><span class="block text-sm font-bold text-gray-900">Judge Sheets</span><span class="mt-0.5 block text-xs text-gray-500">Matching programs with code letter, participant name and team</span></span>
+                </button>
+            </div>
+            <button type="button" onclick="closeProgramExportModal()" class="mt-4 w-full rounded-lg px-4 py-2 text-[13px] font-semibold text-gray-500 hover:bg-gray-50">Cancel</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
@@ -732,6 +753,29 @@
 
         let sectionOrderMap = {};
 
+        function openProgramExportModal() {
+            const data = getFilteredProgData();
+            if (!data.length) return typeof showToast === 'function' && showToast("No programs match the selected filters");
+            const labels = ['filter-section', 'filter-program-type', 'sort-venue-type'].map(id => document.getElementById(id)?.selectedOptions[0]?.text || 'All');
+            document.getElementById('program-export-summary').textContent = `${data.length} program${data.length === 1 ? '' : 's'} · ${labels.join(' · ')}`;
+            const modal = document.getElementById('program-export-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+
+        function closeProgramExportModal() {
+            const modal = document.getElementById('program-export-modal');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        }
+
+        function getExcelSafeFilterName(prefix) {
+            const suffix = ['filter-section', 'filter-program-type', 'sort-venue-type']
+                .map(id => document.getElementById(id)?.value || 'All').filter(v => v !== 'All')
+                .join('_').replace(/[^a-z0-9_-]+/gi, '_');
+            return `${prefix}${suffix ? '_' + suffix : ''}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        }
+
+        function exportFilteredProgramData() { downloadProgExcel(false); closeProgramExportModal(); }
+
         function downloadProgExcel(onlySelected = false) {
             let data = programsData;
             if (onlySelected) {
@@ -742,21 +786,14 @@
 
             if (data.length === 0) return typeof showToast === 'function' && showToast("❌ No programs to export");
 
-            const headers = ["ID", "Code", "Name", "Section", "Type", "Status", "Max Participants", "Topic Reg", "Grading", "Scoring", "Time Limit", "Skill Required", "Concept Note"];
+            const headers = ["Program Code", "Program Name", "Category", "Type", "Program Type", "Remarks"];
             const rows = data.map(p => [
-                p.id,
                 p.code || '',
                 p.name || '',
                 p.section || '',
+                getProgramTypeCategory(p),
                 p.type || 'Individual',
-                p.status !== false ? 'Active' : 'Inactive',
-                p.maxParticipants || 1,
-                p.topicRegistration ? 'Yes' : 'No',
-                p.enableGrading ? 'Yes' : 'No',
-                p.enableScoring ? 'Yes' : 'No',
-                p.timeLimit || '',
-                p.skillRequired || '',
-                p.conceptNote || ''
+                p.remarks || p.conceptNote || ''
             ]);
 
             if (typeof XLSX === 'undefined') {
@@ -773,9 +810,130 @@
             }));
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Programs');
-            XLSX.writeFile(workbook, `Programs_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(workbook, getExcelSafeFilterName('Program_Data'));
 
             typeof showToast === 'function' && showToast("✅ Excel file downloaded!");
+        }
+
+        function getExportCodeLetter(index) {
+            let value = index + 1, result = '';
+            while (value > 0) { value--; result = String.fromCharCode(65 + (value % 26)) + result; value = Math.floor(value / 26); }
+            return result;
+        }
+
+        async function exportFilteredJudgeSheets() {
+            const programs = getFilteredProgData();
+            if (!programs.length) return typeof showToast === 'function' && showToast("No programs match the selected filters");
+            if (typeof XLSX === 'undefined' || typeof db === 'undefined') return typeof showToast === 'function' && showToast("Excel exporter or database is not ready");
+            const button = document.getElementById('export-judgesheets-button');
+            button.disabled = true;
+            try {
+                const candidateSnap = await db.collection('candidates').get();
+                const candidates = candidateSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const byId = new Map(candidates.map(c => [String(c.id), c]));
+                const byChest = new Map(candidates.map(c => [String(c.chestNo || '').trim(), c]));
+                const registrationSets = await Promise.all(programs.map(p => db.collection('registrations').where('programId', '==', p.id).get()));
+                const rows = [];
+                const programBlocks = [];
+
+                programs.forEach((program, programIndex) => {
+                    if (programIndex) rows.push([], []);
+                    const titleRow = rows.length;
+                    rows.push([`JUDGE SHEET — ${program.name || 'PROGRAM'}`, '', '']);
+                    const metaStart = rows.length;
+                    rows.push(['Program Name', program.name || '']);
+                    rows.push(['Program Code', program.code || '']);
+                    rows.push(['Category', program.section || '']);
+                    rows.push(['Type', getProgramTypeCategory(program)]);
+                    rows.push(['Program Type', program.type || 'Individual']);
+                    rows.push([]);
+                    const tableHeader = rows.length;
+                    rows.push(['Code Letter', 'Name', 'Team']);
+                    const participantStart = rows.length;
+                    const participants = [];
+                    registrationSets[programIndex].docs.forEach(doc => {
+                        const reg = doc.data();
+                        const refs = Array.isArray(reg.chestNumbers) && reg.chestNumbers.length ? reg.chestNumbers : [reg.candidateId || reg.chestNo].filter(Boolean);
+                        if (!refs.length && (reg.candidateName || reg.name)) participants.push({ name: reg.candidateName || reg.name, team: reg.team || '' });
+                        refs.forEach(ref => {
+                            const candidate = byId.get(String(ref)) || byChest.get(String(ref).trim());
+                            participants.push({ name: candidate?.name || reg.candidateName || reg.name || `Chest #${ref}`, team: candidate?.team || reg.team || '' });
+                        });
+                    });
+                    participants.sort((a, b) => String(a.team).localeCompare(String(b.team)) || String(a.name).localeCompare(String(b.name)));
+                    participants.forEach((participant, index) => rows.push([getExportCodeLetter(index), participant.name, participant.team]));
+                    if (!participants.length) rows.push(['', 'No registered participants', '']);
+                    programBlocks.push({ titleRow, metaStart, tableHeader, participantStart, participantEnd: rows.length - 1 });
+                });
+
+                const worksheet = XLSX.utils.aoa_to_sheet(rows);
+                worksheet['!cols'] = [{ wch: 20 }, { wch: 42 }, { wch: 28 }];
+                worksheet['!rows'] = rows.map(() => ({ hpt: 22 }));
+                worksheet['!merges'] = [];
+
+                const border = {
+                    top: { style: 'thin', color: { rgb: 'B8C4D6' } },
+                    bottom: { style: 'thin', color: { rgb: 'B8C4D6' } },
+                    left: { style: 'thin', color: { rgb: 'B8C4D6' } },
+                    right: { style: 'thin', color: { rgb: 'B8C4D6' } }
+                };
+                const styleCell = (row, col, style) => {
+                    const address = XLSX.utils.encode_cell({ r: row, c: col });
+                    if (!worksheet[address]) worksheet[address] = { t: 's', v: '' };
+                    worksheet[address].s = style;
+                };
+
+                programBlocks.forEach(block => {
+                    worksheet['!merges'].push({ s: { r: block.titleRow, c: 0 }, e: { r: block.titleRow, c: 2 } });
+                    worksheet['!rows'][block.titleRow] = { hpt: 30 };
+                    styleCell(block.titleRow, 0, {
+                        font: { bold: true, sz: 15, color: { rgb: 'FFFFFF' } },
+                        fill: { patternType: 'solid', fgColor: { rgb: '1F4E78' } },
+                        alignment: { horizontal: 'center', vertical: 'center' }, border
+                    });
+
+                    for (let row = block.metaStart; row < block.metaStart + 5; row++) {
+                        worksheet['!merges'].push({ s: { r: row, c: 1 }, e: { r: row, c: 2 } });
+                        styleCell(row, 0, {
+                            font: { bold: true, color: { rgb: 'FFFFFF' } },
+                            fill: { patternType: 'solid', fgColor: { rgb: '4472C4' } },
+                            alignment: { vertical: 'center' }, border
+                        });
+                        styleCell(row, 1, {
+                            font: { bold: true, color: { rgb: '1F2937' } },
+                            fill: { patternType: 'solid', fgColor: { rgb: 'D9EAF7' } },
+                            alignment: { vertical: 'center' }, border
+                        });
+                    }
+
+                    for (let col = 0; col < 3; col++) styleCell(block.tableHeader, col, {
+                        font: { bold: true, color: { rgb: 'FFFFFF' } },
+                        fill: { patternType: 'solid', fgColor: { rgb: 'D97706' } },
+                        alignment: { horizontal: col === 0 ? 'center' : 'left', vertical: 'center' }, border
+                    });
+                    worksheet['!rows'][block.tableHeader] = { hpt: 26 };
+
+                    for (let row = block.participantStart; row <= block.participantEnd; row++) {
+                        const fillColor = (row - block.participantStart) % 2 === 0 ? 'FFF7E6' : 'FFFFFF';
+                        for (let col = 0; col < 3; col++) styleCell(row, col, {
+                            font: { color: { rgb: '1F2937' } },
+                            fill: { patternType: 'solid', fgColor: { rgb: fillColor } },
+                            alignment: { horizontal: col === 0 ? 'center' : 'left', vertical: 'center' }, border
+                        });
+                    }
+                });
+                worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
+                worksheet['!pageSetup'] = { orientation: 'portrait', fitToWidth: 1, fitToHeight: 0 };
+                worksheet['!margins'] = { left: 0.35, right: 0.35, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Judge Sheets');
+                XLSX.writeFile(workbook, getExcelSafeFilterName('Judge_Sheets'));
+                closeProgramExportModal();
+                typeof showToast === 'function' && showToast("Judge sheets downloaded successfully");
+            } catch (error) {
+                console.error('Judge sheet export failed:', error);
+                typeof showToast === 'function' && showToast("Judge sheet export failed: " + error.message);
+            } finally { button.disabled = false; }
         }
 
         // Section fetching for dropdown

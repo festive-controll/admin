@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mā Warā' | Art Fest '26 Website Launch</title>
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="public/asset/5Rect.png">
+  <link rel="icon" type="image/x-icon" href="public/favicon.ico?v=2">
   <script src="fest-favicon.js"></script>
 
   <!-- SEO Meta -->
@@ -70,6 +70,20 @@
       user-select: none;
     }
 
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+      margin: 0;
+    }
+
+    :fullscreen body,
+    :-webkit-full-screen body {
+      width: 100vw;
+      height: 100vh;
+      background: #060911;
+    }
+
     /* Minimalist Dark Luxury Glass Card */
     .glass-luxury-card {
       background: rgba(13, 19, 33, 0.78);
@@ -112,7 +126,7 @@
 
   <!-- Opening Flash Transition Curtain -->
   <div id="warp-overlay" class="fixed inset-0 bg-[#060911] z-50 flex flex-col items-center justify-center">
-    <img src="public/asset/logo-logo.png" alt="Opening Logo" class="max-h-24 w-auto object-contain mb-4 logo-white animate-pulse">
+    <img src="public/favicon.ico?v=2" alt="Mā Warā' icon" class="w-28 h-28 object-contain mb-4 animate-pulse">
     <div class="text-white font-bold text-xl tracking-widest uppercase">OPENING FESTIVAL PORTAL...</div>
   </div>
 
@@ -120,7 +134,7 @@
   <header class="fixed top-0 left-0 w-full z-30 px-6 py-5 flex items-center justify-between pointer-events-auto">
     <!-- Left Emblem -->
     <div class="flex items-center gap-3 group cursor-pointer" onclick="triggerParticleBurst()">
-      <img src="public/asset/5Rect.png" alt="5Rect Emblem" class="w-8 h-8 object-contain group-hover:scale-105 transition-transform">
+      <img src="public/favicon.ico?v=2" alt="Mā Warā' icon" class="w-8 h-8 object-contain group-hover:scale-105 transition-transform">
       <div>
         <span class="text-xs font-bold tracking-wider text-white group-hover:text-amber-400 transition-colors block leading-none">Mā Warā'</span>
         <span class="text-[9px] text-teal-400 font-mono tracking-widest uppercase">SFADC ARTFEST '26</span>
@@ -154,9 +168,9 @@
       <div class="absolute -top-20 -left-20 w-48 h-48 bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-20 -right-20 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <!-- PURE WHITE LOGO -->
+      <!-- FESTIVAL ICON -->
       <div class="relative mb-4 flex items-center justify-center group cursor-pointer" onclick="triggerParticleBurst()">
-        <img src="public/asset/logo-logo.png" alt="Mā Warā' Logo" class="max-h-28 sm:max-h-32 w-auto object-contain logo-white group-hover:scale-105 transition-transform duration-300">
+        <img src="public/favicon.ico?v=2" alt="Mā Warā' icon" class="w-28 h-28 sm:w-32 sm:h-32 object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_24px_rgba(23,99,95,0.45)]">
       </div>
 
       <!-- Badges -->
@@ -214,7 +228,7 @@
       <!-- Glowing Portal Ring -->
       <div class="relative w-32 h-32 mb-6 flex items-center justify-center">
         <img src="public/asset/logoR.png" alt="Ring" class="absolute inset-0 w-full h-full object-contain animate-spin-slow drop-shadow-[0_0_35px_rgba(192,145,43,0.8)]">
-        <img src="public/asset/5Rect.png" alt="Logo" class="w-12 h-12 object-contain animate-pulse">
+        <img src="public/favicon.ico?v=2" alt="Mā Warā' icon" class="w-12 h-12 object-contain animate-pulse">
       </div>
 
       <!-- Reveal Title -->
@@ -409,6 +423,16 @@
       if (isOpeningCompleted) return;
       isOpeningCompleted = true;
       isLaunching = true;
+
+      // Browsers only permit fullscreen when requested from a user action.
+      const page = document.documentElement;
+      const requestFullscreen = page.requestFullscreen || page.webkitRequestFullscreen;
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && requestFullscreen) {
+        try {
+          const result = requestFullscreen.call(page);
+          if (result && typeof result.catch === 'function') result.catch(() => {});
+        } catch (e) {}
+      }
 
       const heroCard = document.getElementById('hero-card');
       const portalRevealCard = document.getElementById('portal-reveal-card');
