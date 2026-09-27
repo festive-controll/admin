@@ -100,6 +100,16 @@
             return result.chestNo || result.chestNumber || (result.isGroupResult ? 'Group' : '-');
         }
 
+        function publishPdfGrade(result) {
+            return result.gradeLabel || result.grade || '-';
+        }
+
+        function publishPdfDisplayText(value) {
+            return String(value == null ? '' : value)
+                .replace(/[\u02BB\u02BC\u2018\u2019]/g, "'")
+                .replace(/[\u201C\u201D]/g, '"');
+        }
+
         function renderPublishPdfPreview() {
             var preview = document.getElementById('publish-preview');
             if (!publishPdfPrograms.length) {
@@ -114,15 +124,17 @@
                     return '<tr class="border-t border-gray-100">' +
                         '<td class="px-6 py-4 font-bold text-[#134E8E]">' + publishPdfEscape(publishPdfPosition(result) || '-') + '</td>' +
                         '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfChest(result)) + '</td>' +
-                        '<td class="px-6 py-4 font-medium">' + publishPdfEscape(publishPdfName(result)) + '</td></tr>';
+                        '<td class="px-6 py-4 font-medium">' + publishPdfEscape(publishPdfName(result)) + '</td>' +
+                        '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfGrade(result)) + '</td>' +
+                        '<td class="px-6 py-4 font-medium">' + publishPdfEscape(result.team || '-') + '</td></tr>';
                 }).join('');
                 return '<article class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">' +
                     '<div class="px-6 sm:px-8 py-6 bg-[#134E8E] text-white">' +
                     '<div class="text-xs uppercase tracking-[0.22em] text-blue-200 font-bold mb-2">Official Result</div>' +
                     '<h2 class="text-xl font-extrabold">' + publishPdfEscape(program.name || 'Program') + ' - (' + publishPdfEscape(category) + ')</h2></div>' +
                     '<div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">' +
-                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th></tr></thead>' +
-                    '<tbody>' + (rows || '<tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No positioned winners found.</td></tr>') + '</tbody></table></div></article>';
+                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Grade</th><th class="px-6 py-3">Team</th></tr></thead>' +
+                    '<tbody>' + (rows || '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No positioned winners found.</td></tr>') + '</tbody></table></div></article>';
             }).join('');
             document.getElementById('save-pdf-button').disabled = publishPdfPrograms.length === 0;
         }
@@ -201,7 +213,7 @@
             programs = programs || publishPdfPrograms;
             savedResults = savedResults || publishPdfResults;
             function ascii(value) {
-                return String(value == null ? '' : value)
+                return publishPdfDisplayText(value)
                     .replace(/[ʿʾ]/g, "'").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
                     .normalize('NFKD').replace(/[^\x20-\x7E]/g, '?')
                     .replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
@@ -231,14 +243,15 @@
                     stream += '0.82 0.84 0.88 RG 45 ' + (top + 12) + ' m 550 ' + (top + 12) + ' l S\n';
                     stream += '0.075 0.306 0.557 rg\n';
                     stream += textLine((program.name || 'Program') + ' - (' + category + ')', 45, top, 12, true);
-                    stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, top - 20, 8, true) + textLine('CHEST NO.', 125, top - 20, 8, true) + textLine('NAME', 210, top - 20, 8, true) + textLine('TEAM', 430, top - 20, 8, true);
+                    stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, top - 20, 8, true) + textLine('CHEST NO.', 120, top - 20, 8, true) + textLine('NAME', 195, top - 20, 8, true) + textLine('GRADE', 405, top - 20, 8, true) + textLine('TEAM', 465, top - 20, 8, true);
                     var y = top - 39;
                     if (!results.length) stream += textLine('No positioned winners found.', 45, y, 9, false);
                     results.slice(0, 4).forEach(function (result) {
                         stream += '0.075 0.306 0.557 rg\n' + textLine(publishPdfPosition(result) || '-', 45, y, 9, true);
-                        stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfChest(result), 125, y, 9, true);
-                        stream += textLine(String(publishPdfName(result)).slice(0, 34), 210, y, 9, false);
-                        stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 18), 430, y, 9, false);
+                        stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfChest(result), 120, y, 9, true);
+                        stream += textLine(String(publishPdfName(result)).slice(0, 30), 195, y, 9, false);
+                        stream += textLine(publishPdfGrade(result), 405, y, 9, true);
+                        stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 14), 465, y, 9, false);
                         y -= 18;
                     });
                 });
@@ -307,6 +320,7 @@
             savedResults = savedResults || publishPdfResults;
             try {
                 await publishPdfLoadJsPdf();
+                if (document.fonts && document.fonts.ready) await document.fonts.ready;
                 var jsPDF = window.jspdf.jsPDF;
                 var pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
                 var pageWidth = 1240, pageHeight = 1754;
@@ -327,6 +341,12 @@
                     if (!isFirst) pdf.addPage();
                     pdf.addImage(canvas.toDataURL('image/jpeg', 0.94), 'JPEG', 0, 0, 595.28, 841.89, undefined, 'FAST');
                 }
+                function fitCanvasText(value, maxWidth) {
+                    var text = publishPdfDisplayText(value);
+                    if (context.measureText(text).width <= maxWidth) return text;
+                    while (text.length && context.measureText(text + '\u2026').width > maxWidth) text = text.slice(0, -1);
+                    return text + '\u2026';
+                }
 
                 for (var start = 0; start < programs.length; start += 5) {
                     beginPage();
@@ -337,19 +357,19 @@
                         context.strokeStyle = '#d8dee8'; context.lineWidth = 2;
                         context.beginPath(); context.moveTo(80, top); context.lineTo(1160, top); context.stroke();
                         context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
-                        var titleLines = publishPdfWrapCanvasText(context, (program.name || 'Program') + ' - (' + category + ')', 1080);
-                        context.fillText(titleLines[0], 80, top + 40);
+                        context.fillText(fitCanvasText((program.name || 'Program') + ' - (' + category + ')', 1080), 80, top + 40);
                         context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
-                        context.fillText('POSITION', 80, top + 82); context.fillText('CHEST NO.', 245, top + 82);
-                        context.fillText('NAME', 430, top + 82); context.fillText('TEAM', 910, top + 82);
+                        context.fillText('POSITION', 80, top + 82); context.fillText('CHEST NO.', 225, top + 82);
+                        context.fillText('NAME', 390, top + 82); context.fillText('GRADE', 790, top + 82); context.fillText('TEAM', 900, top + 82);
                         var y = top + 122;
                         results.slice(0, 4).forEach(function (result) {
                             context.fillStyle = '#134E8E'; context.font = '700 19px Inter, Arial, sans-serif';
                             context.fillText(publishPdfPosition(result) || '-', 80, y);
-                            context.fillStyle = '#222222'; context.fillText(String(publishPdfChest(result)), 245, y);
+                            context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfChest(result), 135), 225, y);
                             context.font = '500 19px Inter, Arial, sans-serif';
-                            context.fillText(String(publishPdfName(result)), 430, y);
-                            context.fillText(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')), 910, y);
+                            context.fillText(fitCanvasText(publishPdfName(result), 365), 390, y);
+                            context.font = '700 19px Inter, Arial, sans-serif'; context.fillText(fitCanvasText(publishPdfGrade(result), 85), 790, y);
+                            context.font = '500 19px Inter, Arial, sans-serif'; context.fillText(fitCanvasText(result.team || (result.isGroupResult ? publishPdfName(result) : '-'), 250), 900, y);
                             y += 38;
                         });
                         if (!results.length) {
@@ -396,7 +416,7 @@
             return new Date(value);
         }
 
-        async function calculatePublishedGrandTotals() {
+        async function calculatePublishedGrandTotals(programs, results) {
             var data = await Promise.all([
                 db.collection('teams').get(),
                 db.collection('programs').where('resultsPublished', '==', true).get(),
@@ -408,9 +428,10 @@
                 var team = doc.data();
                 if (team.isActive !== false && team.name) totals[team.name] = 0;
             });
-            var publishedIds = new Set(data[1].docs.map(function (doc) { return doc.id; }));
-            data[2].docs.forEach(function (doc) {
-                var result = doc.data();
+            var scopedPrograms = Array.isArray(programs) && programs.length ? programs : data[1].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+            var publishedIds = new Set(scopedPrograms.map(function (program) { return program.id; }).filter(Boolean));
+            var scopedResults = Array.isArray(results) ? results : data[2].docs.map(function (doc) { return doc.data(); });
+            scopedResults.forEach(function (result) {
                 if (publishedIds.has(result.programId) && result.team) {
                     if (!Object.prototype.hasOwnProperty.call(totals, result.team)) totals[result.team] = 0;
                     totals[result.team] += Number(result.totalPoints || result.points || 0);
@@ -435,10 +456,10 @@
             });
         }
 
-        async function publishPdfResolveGrandTotals(item) {
+        async function publishPdfResolveGrandTotals(item, results) {
             var totals = publishPdfNormalizeGrandTotals(item && item.grandTotals);
-            if (!totals.length || totals.some(function (team) { return !team.name; })) {
-                totals = publishPdfNormalizeGrandTotals(await calculatePublishedGrandTotals());
+            if (!item || item.totalBasis !== 'published-results-snapshot-v2' || !totals.length || totals.some(function (team) { return !team.name; })) {
+                totals = publishPdfNormalizeGrandTotals(await calculatePublishedGrandTotals(item && item.programs, results || (item && item.results)));
             }
             return totals.sort(function (a, b) { return b.points - a.points || a.name.localeCompare(b.name); });
         }
@@ -485,13 +506,14 @@
             var originalText = button ? button.textContent : '';
             if (button) { button.disabled = true; button.textContent = 'Preparing...'; }
             try {
+                var completeResults = await getCompleteSavedResults(item);
                 var totals = [];
-                try { totals = await publishPdfResolveGrandTotals(item); }
+                try { totals = await publishPdfResolveGrandTotals(item, completeResults); }
                 catch (totalsError) {
                     totals = publishPdfNormalizeGrandTotals(item.grandTotals);
                     console.error('Could not calculate PDF totals:', totalsError);
                 }
-                await publishPdfDownloadNative(item.publicationDate, item.programs || [], item.results || [], totals);
+                await publishPdfDownloadNative(item.publicationDate, item.programs || [], completeResults, totals);
             } catch (error) {
                 console.error('Could not download saved PDF:', error);
                 publishPdfDownloadFallback(item.publicationDate, item.programs || [], item.results || [], item.grandTotals || []);
@@ -524,13 +546,13 @@
         async function exportSavedPublishedExcel(index) {
             var item = publishedPdfHistory[index];
             if (!item) return;
+            var completeResults = await getCompleteSavedResults(item);
             var totals = [];
-            try { totals = await publishPdfResolveGrandTotals(item); }
+            try { totals = await publishPdfResolveGrandTotals(item, completeResults); }
             catch (totalsError) {
                 totals = publishPdfNormalizeGrandTotals(item.grandTotals);
                 console.error('Could not calculate Excel totals:', totalsError);
             }
-            var completeResults = await getCompleteSavedResults(item);
             var rows = [['Program', 'Code', 'Category', 'Result Type', 'Position', 'Chest No.', 'Name', 'Team', 'Marks']];
             (item.programs || []).forEach(function (program) {
                 var results = completeResults.filter(function (result) { return result.programId === program.id; });
@@ -601,15 +623,18 @@
                     return {
                         programId: result.programId || '', positionLabel: result.positionLabel || '', position: result.position || '',
                         chestNo: result.chestNo || result.chestNumber || '', candidateName: result.candidateName || '',
-                        name: result.name || '', team: result.team || '', totalPoints: Number(result.totalPoints || result.points || 0),
+                        name: result.name || '', team: result.team || '', gradeLabel: result.gradeLabel || result.grade || '',
+                        grade: result.grade || result.gradeLabel || '', gradePoints: Number(result.gradePoints || 0),
+                        totalPoints: Number(result.totalPoints || result.points || 0),
                         isGroupResult: result.isGroupResult === true, isGeneralResult: result.isGeneralResult === true
                     };
                 });
-                var grandTotals = await calculatePublishedGrandTotals();
+                var grandTotals = await calculatePublishedGrandTotals(savedPrograms, savedResults);
                 var historyRef = db.collection('publishedResultPdfs').doc();
                 var historyItem = {
                     publicationDate: dateValue, savedAt: savedAt, programCount: savedPrograms.length,
-                    programs: savedPrograms, results: savedResults, grandTotals: grandTotals
+                    programs: savedPrograms, results: savedResults, grandTotals: grandTotals,
+                    totalBasis: 'published-results-snapshot-v2'
                 };
                 batch.set(historyRef, historyItem);
                 await batch.commit();
