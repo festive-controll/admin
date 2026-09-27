@@ -1,0 +1,37 @@
+AZ1,Āliya,Power Pull
+AZ2,Āliya,Cross Pushup
+AZ4,Āliya,Push Up
+AZ5,Āliya,Long Jump
+AZ13,Āliya,Basketball Free Throw
+AZ14,Āliya,Side Sit-Up
+AZ15,Āliya,Thengukayattam
+AZ16,Āliya,Solo-War
+AZ17,Āliya,Plank
+AZ18,Āliya,Pot Breaking
+AZ20,Āliya,Rope Skipping
+AZ22,Āliya,1 vs 1
+BZ11,Bidāya,Sack Race
+KZ4,Kulliya,Chatti Panth
+KZ6,Kulliya,Mutti Four (Junior)
+THZ5,Thānawiyya,Long Jump
+THZ7,Thānawiyya,Chess
+THZ8,Thānawiyya,Cross Pushup
+THZ15,Thānawiyya,Three-Legged Race
+THZ17,Thānawiyya,Thengukayattam
+THZ18,Thānawiyya,Side Sit-Up
+THZ19,Thānawiyya,Plank
+THZ20,Thānawiyya,Push Up
+THZ21,Thānawiyya,Blind Walk
+THZ22,Thānawiyya,Pot Breaking
+THZ23,Thānawiyya,1 vs 1
+TZ2,Thāniya,Chess
+TZ11,Thāniya,Basketball Free Throw
+TZ14,Thāniya,1 vs 1
+TZ16,Thāniya,Mirror Target
+TZ20,Thāniya,Chain Race
+TZ22,Thāniya,Power Pull
+TZ23,Thāniya,Three Legged Race
+UZ4,Ūlā,Chess
+UZ11,Ūlā,Sack Race
+UZ17,Ūlā,1 vs 1 (Football)
+UZ20,Ūlā,Rope Skipping

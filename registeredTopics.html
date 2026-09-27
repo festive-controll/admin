@@ -154,12 +154,13 @@
                             <th class="py-4 px-5">Team &amp; Candidate</th>
                             <th class="py-4 px-5">Registered Topic Details</th>
                             <th class="py-4 px-5 text-center">Status</th>
+                            <th class="py-4 px-5">Time</th>
                             <th class="py-4 px-5 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="topics-tbody" class="divide-y divide-gray-100 text-[13px]">
                         <tr>
-                            <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                            <td colspan="6" class="py-16 text-center text-gray-400 font-medium">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     <div class="w-8 h-8 border-2 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
                                     <span>Loading registered topics...</span>
@@ -183,11 +184,12 @@
 
             if (!db && typeof firebase !== 'undefined') {
                 var firebaseConfig = {
+                    apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
                     authDomain: "festie-s1u2h3.firebaseapp.com",
                     projectId: "festie-s1u2h3",
                     storageBucket: "festie-s1u2h3.firebasestorage.app",
-                    messagingSenderId: "305105260195",
-                    appId: "1:305105260195:web:53177651a556fb404771c9"
+                    messagingSenderId: "794049194885",
+                    appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
                 };
                 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
@@ -438,7 +440,12 @@
                                     topicName: tData.name || 'Untitled Topic',
                                     topicAuthor: tData.author || '',
                                     topicContent: tData.content || '',
-                                    status: tData.status || r.topicStatus || 'Pending'
+                                    status: tData.status || r.topicStatus || 'Pending',
+                                    uploadedAt: tData.uploadedAt || r.uploadedAt || r.createdAt,
+                                    approvedAt: tData.approvedAt || r.approvedAt,
+                                    rejectedAt: tData.rejectedAt || r.rejectedAt,
+                                    reEnteredAt: tData.reEnteredAt || r.reEnteredAt,
+                                    updatedAt: r.updatedAt
                                 });
                             }
                         });
@@ -478,7 +485,12 @@
                             topicName: r.topicName || 'Untitled Topic',
                             topicAuthor: r.topicAuthor || '',
                             topicContent: r.topicContent || '',
-                            status: r.topicStatus || 'Pending'
+                            status: r.topicStatus || 'Pending',
+                            uploadedAt: r.uploadedAt || r.createdAt,
+                            approvedAt: r.approvedAt,
+                            rejectedAt: r.rejectedAt,
+                            reEnteredAt: r.reEnteredAt,
+                            updatedAt: r.updatedAt
                         });
                     }
                 });
@@ -595,6 +607,19 @@
                     const status = item.status || 'Pending';
                     const isApproved = status.toLowerCase() === 'approved' || status.toLowerCase() === 'accepted';
                     const isRejected = status.toLowerCase() === 'rejected';
+
+                    const statusFallbackTime = item.updatedAt;
+                    const timeRows = [
+                        ['Uploaded', item.uploadedAt, 'text-blue-600'],
+                        ['Approved', item.approvedAt || (isApproved ? statusFallbackTime : null), 'text-green-600'],
+                        ['Rejected', item.rejectedAt || (isRejected ? statusFallbackTime : null), 'text-red-600'],
+                        ['Re-entered', item.reEnteredAt, 'text-violet-600']
+                    ].filter(row => row[1]);
+                    const timeHtml = timeRows.length ? timeRows.map(([label, value, color]) => `
+                        <div class="leading-tight mb-1 last:mb-0">
+                            <span class="text-[10px] font-bold ${color}">${label}</span>
+                            <div class="text-[11px] text-gray-600 whitespace-nowrap">${formatDateTime(value)}</div>
+                        </div>`).join('') : '<span class="text-xs text-gray-400">—</span>';
                     
                     let badgeHtml = '';
                     if (isApproved) {
@@ -636,6 +661,9 @@
                         <td class="py-4 px-5 align-top text-center">
                             ${badgeHtml}
                         </td>
+                        <td class="py-4 px-5 align-top">
+                            ${timeHtml}
+                        </td>
                         <td class="py-4 px-5 align-top text-right whitespace-nowrap">
                             <div class="flex items-center justify-end gap-1.5">
                                 ${!isApproved ? `
@@ -667,7 +695,7 @@
                 if (tbody) {
                     tbody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="py-16 text-center text-gray-400 font-medium">
+                        <td colspan="6" class="py-16 text-center text-gray-400 font-medium">
                             <div class="flex flex-col items-center justify-center gap-2">
                                 <i class="fi fi-rr-document-signed text-4xl text-gray-300"></i>
                                 <span>${message}</span>
@@ -677,17 +705,36 @@
                 }
             }
 
+            function formatDateTime(value) {
+                if (!value) return '—';
+                let date;
+                if (typeof value.toDate === 'function') date = value.toDate();
+                else if (value.seconds != null) date = new Date(value.seconds * 1000);
+                else date = new Date(value);
+                if (Number.isNaN(date.getTime())) return '—';
+                return date.toLocaleString('en-IN', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                });
+            }
+
             window.updateTopicStatus = function(regId, chestNo, isMultiTopic, newStatus) {
                 if (!db) return showToast("Database error", "error");
                 
                 let updateObj = {};
+                const timestampField = newStatus === 'Approved' ? 'approvedAt' :
+                    (newStatus === 'Rejected' ? 'rejectedAt' : 'reEnteredAt');
+                const actionTime = firebase.firestore.FieldValue.serverTimestamp();
                 if (isMultiTopic && chestNo) {
                     updateObj[`topics.${chestNo}.status`] = newStatus;
+                    updateObj[`topics.${chestNo}.${timestampField}`] = actionTime;
                     updateObj.topicStatus = newStatus; // update parent status for compatibility
-                    updateObj.updatedAt = new Date();
+                    updateObj[timestampField] = actionTime;
+                    updateObj.updatedAt = actionTime;
                 } else {
                     updateObj.topicStatus = newStatus;
-                    updateObj.updatedAt = new Date();
+                    updateObj[timestampField] = actionTime;
+                    updateObj.updatedAt = actionTime;
                 }
 
                 db.collection('registrations').doc(regId).update(updateObj).then(() => {
