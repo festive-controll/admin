@@ -106,7 +106,7 @@
 
         function publishPdfDisplayText(value) {
             return String(value == null ? '' : value)
-                .replace(/[\u02BB\u02BC\u2018\u2019]/g, "'")
+                .replace(/[\u02B9-\u02BF\u2018\u2019]/g, "'")
                 .replace(/[\u201C\u201D]/g, '"');
         }
 
@@ -123,9 +123,9 @@
                 var rows = programResults.map(function (result) {
                     return '<tr class="border-t border-gray-100">' +
                         '<td class="px-6 py-4 font-bold text-[#134E8E]">' + publishPdfEscape(publishPdfPosition(result) || '-') + '</td>' +
+                        '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfGrade(result)) + '</td>' +
                         '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfChest(result)) + '</td>' +
                         '<td class="px-6 py-4 font-medium">' + publishPdfEscape(publishPdfName(result)) + '</td>' +
-                        '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfGrade(result)) + '</td>' +
                         '<td class="px-6 py-4 font-medium">' + publishPdfEscape(result.team || '-') + '</td></tr>';
                 }).join('');
                 return '<article class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">' +
@@ -133,7 +133,7 @@
                     '<div class="text-xs uppercase tracking-[0.22em] text-blue-200 font-bold mb-2">Official Result</div>' +
                     '<h2 class="text-xl font-extrabold">' + publishPdfEscape(program.name || 'Program') + ' - (' + publishPdfEscape(category) + ')</h2></div>' +
                     '<div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">' +
-                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Grade</th><th class="px-6 py-3">Team</th></tr></thead>' +
+                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Grade</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Team</th></tr></thead>' +
                     '<tbody>' + (rows || '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No positioned winners found.</td></tr>') + '</tbody></table></div></article>';
             }).join('');
             document.getElementById('save-pdf-button').disabled = publishPdfPrograms.length === 0;
@@ -215,7 +215,7 @@
             function ascii(value) {
                 return publishPdfDisplayText(value)
                     .replace(/[ʿʾ]/g, "'").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
-                    .normalize('NFKD').replace(/[^\x20-\x7E]/g, '?')
+                    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7E]/g, '')
                     .replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
             }
             function textLine(text, x, y, size, bold) {
@@ -243,14 +243,14 @@
                     stream += '0.82 0.84 0.88 RG 45 ' + (top + 12) + ' m 550 ' + (top + 12) + ' l S\n';
                     stream += '0.075 0.306 0.557 rg\n';
                     stream += textLine((program.name || 'Program') + ' - (' + category + ')', 45, top, 12, true);
-                    stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, top - 20, 8, true) + textLine('CHEST NO.', 120, top - 20, 8, true) + textLine('NAME', 195, top - 20, 8, true) + textLine('GRADE', 405, top - 20, 8, true) + textLine('TEAM', 465, top - 20, 8, true);
+                    stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, top - 20, 8, true) + textLine('GRADE', 115, top - 20, 8, true) + textLine('CHEST NO.', 170, top - 20, 8, true) + textLine('NAME', 245, top - 20, 8, true) + textLine('TEAM', 465, top - 20, 8, true);
                     var y = top - 39;
                     if (!results.length) stream += textLine('No positioned winners found.', 45, y, 9, false);
                     results.slice(0, 4).forEach(function (result) {
                         stream += '0.075 0.306 0.557 rg\n' + textLine(publishPdfPosition(result) || '-', 45, y, 9, true);
-                        stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfChest(result), 120, y, 9, true);
-                        stream += textLine(String(publishPdfName(result)).slice(0, 30), 195, y, 9, false);
-                        stream += textLine(publishPdfGrade(result), 405, y, 9, true);
+                        stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfGrade(result), 115, y, 9, true);
+                        stream += textLine(publishPdfChest(result), 170, y, 9, true);
+                        stream += textLine(String(publishPdfName(result)).slice(0, 30), 245, y, 9, false);
                         stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 14), 465, y, 9, false);
                         y -= 18;
                     });
@@ -359,16 +359,16 @@
                         context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
                         context.fillText(fitCanvasText((program.name || 'Program') + ' - (' + category + ')', 1080), 80, top + 40);
                         context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
-                        context.fillText('POSITION', 80, top + 82); context.fillText('CHEST NO.', 225, top + 82);
-                        context.fillText('NAME', 390, top + 82); context.fillText('GRADE', 790, top + 82); context.fillText('TEAM', 900, top + 82);
+                        context.fillText('POSITION', 80, top + 82); context.fillText('GRADE', 225, top + 82);
+                        context.fillText('CHEST NO.', 335, top + 82); context.fillText('NAME', 500, top + 82); context.fillText('TEAM', 900, top + 82);
                         var y = top + 122;
                         results.slice(0, 4).forEach(function (result) {
                             context.fillStyle = '#134E8E'; context.font = '700 19px Inter, Arial, sans-serif';
                             context.fillText(publishPdfPosition(result) || '-', 80, y);
-                            context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfChest(result), 135), 225, y);
+                            context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfGrade(result), 85), 225, y);
+                            context.fillText(fitCanvasText(publishPdfChest(result), 135), 335, y);
                             context.font = '500 19px Inter, Arial, sans-serif';
-                            context.fillText(fitCanvasText(publishPdfName(result), 365), 390, y);
-                            context.font = '700 19px Inter, Arial, sans-serif'; context.fillText(fitCanvasText(publishPdfGrade(result), 85), 790, y);
+                            context.fillText(fitCanvasText(publishPdfName(result), 365), 500, y);
                             context.font = '500 19px Inter, Arial, sans-serif'; context.fillText(fitCanvasText(result.team || (result.isGroupResult ? publishPdfName(result) : '-'), 250), 900, y);
                             y += 38;
                         });
