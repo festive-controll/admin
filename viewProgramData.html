@@ -1381,6 +1381,59 @@
             return letter;
         };
 
+        window.normalizeTeamRegistrations = function(registrations) {
+            const merged = new Map();
+            (registrations || []).forEach(reg => {
+                const team = String(reg.team || 'Unknown Team').trim();
+                const setNumber = parseInt(reg.setNumber, 10) || 1;
+                const key = `${team.toLocaleLowerCase()}__set_${setNumber}`;
+                if (!merged.has(key)) merged.set(key, { ...reg, team, setNumber, chestNumbers: [], candidateNames: [] });
+                const entry = merged.get(key);
+                const chests = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                const names = Array.isArray(reg.candidateNames) ? reg.candidateNames : [reg.candidateName || reg.name].filter(Boolean);
+                entry.chestNumbers = [...new Set(entry.chestNumbers.concat(chests).map(value => String(value).trim()).filter(Boolean))];
+                entry.candidateNames = [...new Map(entry.candidateNames.concat(names).map(value => {
+                    const text = String(value).trim();
+                    return [text.toLocaleLowerCase(), text];
+                }).filter(([keyValue]) => keyValue)).values()];
+                entry.memberCount = Math.max(parseInt(entry.memberCount, 10) || 0, entry.chestNumbers.length);
+            });
+            return [...merged.values()];
+        };
+
+        window.getJudgeSheetOrderedTeams = function(registrations) {
+            const ordered = window.normalizeTeamRegistrations(registrations);
+            const programId = localStorage.getItem('viewProgramId') || '';
+            const candOrder = localStorage.getItem('jsmCandOrder_' + programId)
+                || window.currentProgram?.candOrder
+                || 'auto-mixed';
+            const chestValue = entry => String(entry.chestNumbers?.[0] || '');
+            const chestCompare = (a, b) => {
+                const aChest = chestValue(a), bChest = chestValue(b);
+                const aNumber = parseInt(aChest.replace(/\D/g, ''), 10) || 0;
+                const bNumber = parseInt(bChest.replace(/\D/g, ''), 10) || 0;
+                return aNumber !== bNumber ? aNumber - bNumber : aChest.localeCompare(bChest);
+            };
+            if (candOrder === 'chest-asc') return ordered.sort(chestCompare);
+            if (candOrder === 'chest-desc') return ordered.sort((a, b) => -chestCompare(a, b));
+
+            ordered.sort(chestCompare);
+            let hash = 0;
+            for (let i = 0; i < programId.length; i++) hash = (Math.imul(31, hash) + programId.charCodeAt(i)) | 0;
+            let seed = hash >>> 0;
+            const seededRand = () => {
+                seed = (seed + 0x6D2B79F5) | 0;
+                let value = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+                value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+                return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+            };
+            for (let i = ordered.length - 1; i > 0; i--) {
+                const j = Math.floor(seededRand() * (i + 1));
+                [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+            }
+            return ordered;
+        };
+
         window.getJudgeSheetOrderedCandidates = function(candidates) {
             const ordered = [...(candidates || [])];
             const programId = localStorage.getItem('viewProgramId') || '';
@@ -1440,10 +1493,14 @@
                 // --- GROUP / GENERAL MODE: One card per team ---
                 let teamsList = [];
                 if (window.programRegistrations && window.programRegistrations.length > 0) {
-                    teamsList = window.programRegistrations.map(reg => ({
+                    const resultRegistrations = isGeneral
+                        ? window.getJudgeSheetOrderedTeams(window.programRegistrations)
+                        : window.normalizeTeamRegistrations(window.programRegistrations);
+                    teamsList = resultRegistrations.map((reg, index) => ({
                         teamName: reg.team || 'Unknown Team',
                         memberCount: reg.memberCount || (reg.chestNumbers ? reg.chestNumbers.length : 0),
-                        setNumber: parseInt(reg.setNumber, 10) || 1
+                        setNumber: parseInt(reg.setNumber, 10) || 1,
+                        codeLetter: window.getCandidateCodeLetter(index)
                     }));
                 } else if (isGeneral && window.allTeamsData && window.allTeamsData.length > 0) {
                     teamsList = window.allTeamsData.map(t => ({
@@ -1451,6 +1508,9 @@
                         memberCount: 0
                     }));
                 }
+                if (isGeneral) teamsList.forEach((item, index) => {
+                    if (!item.codeLetter) item.codeLetter = window.getCandidateCodeLetter(index);
+                });
 
                 if(teamsList.length === 0) {
                     list.innerHTML = `<div class="text-center py-10"><i class="fi fi-rr-box text-3xl text-gray-300"></i><p class="text-[13px] font-medium text-gray-500 mt-2">${isGeneral ? 'No teams available.' : 'No team registrations yet.'}</p></div>`;
@@ -1461,6 +1521,7 @@
                     const teamName = item.teamName;
                     const memberCount = item.memberCount;
                     const setNumber = item.setNumber || 1;
+                    const codeLetter = item.codeLetter || '';
                     const entryKey = `${teamName}__set_${setNumber}`;
                     const existingResult = (window.programResultsData || []).find(r =>
                         r.team === teamName && (parseInt(r.setNumber, 10) || 1) === setNumber && (r.isGroupResult || r.isGeneralResult)
@@ -1469,11 +1530,11 @@
                     const teamColor = teamObj ? teamObj.color : '#134E8E';
                     html += `
                     <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm group-result-card hover:border-blue-200 transition-colors" 
-                        data-team="${teamName}" data-set-number="${setNumber}" data-entry-key="${entryKey}" data-membercount="${memberCount}">
+                        data-team="${teamName}" data-code-letter="${codeLetter}" data-set-number="${setNumber}" data-entry-key="${entryKey}" data-membercount="${memberCount}">
                         <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-xs shrink-0" style="background:${teamColor}">${teamName.substring(0,2).toUpperCase()}</div>
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-sm shrink-0" style="background:${teamColor}">${isGeneral ? codeLetter : teamName.substring(0,2).toUpperCase()}</div>
                             <div class="flex-1 truncate">
-                                <h4 class="text-[14px] font-bold text-gray-900 truncate">${teamName} <span class="ml-1 text-[10px] text-blue-600">SET ${setNumber}</span></h4>
+                                <h4 class="text-[14px] font-bold text-gray-900 truncate">${isGeneral ? `CODE ${codeLetter} <span class="mx-1 text-gray-300">&bull;</span> ${teamName}` : teamName} ${!isGeneral ? `<span class="ml-1 text-[10px] text-blue-600">SET ${setNumber}</span>` : ''}</h4>
                                 <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1.5">
                                     <i class="fi fi-rr-${isGeneral ? 'trophy' : 'users'} text-[10px]"></i>
                                     ${isGeneral ? '<span class="font-bold text-blue-600">General Program</span> • Team Entry' : `<span class="font-bold text-blue-600">${memberCount}</span> Members Participating`}
@@ -1640,6 +1701,7 @@
 
                     cards.forEach(card => {
                         const teamName = card.getAttribute('data-team');
+                        const codeLetter = card.getAttribute('data-code-letter') || '';
                         const setNumber = parseInt(card.getAttribute('data-set-number'), 10) || 1;
                         const memberCount = parseInt(card.getAttribute('data-membercount')) || 0;
                         const gSel = card.querySelector('.group-grade-select');
@@ -1665,8 +1727,9 @@
                                 team: teamName,
                                 setNumber,
                                 setLabel: `Set ${setNumber}`,
+                                codeLetter: isGeneral ? codeLetter : '',
                                 memberCount,
-                                name: teamName, // team name as display name
+                                name: isGeneral ? `Code ${codeLetter}` : teamName,
                                 gradeLabel: gLbl,
                                 gradePoints: gPts,
                                 positionLabel: pLbl,
@@ -2047,8 +2110,10 @@
                     resolvedDateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
                 }
 
-                // Determine group program mode
-                let isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya';
+                // General programs are judged as team entries too: one code letter
+                // per team/set, with any registered participant names kept together.
+                const isGeneral = (prog.type || '').toLowerCase() === 'general';
+                let isGroup = (prog.type || '').toLowerCase() === 'group' || (prog.section || '').toLowerCase() === 'kulliya' || isGeneral;
                 
                 const overrideSelect = document.getElementById('jsmProgFormatOverride');
                 if (overrideSelect && overrideSelect.value !== 'auto') {
@@ -2067,24 +2132,32 @@
                     const s = doc.data();
                     if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
                     if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
-                    if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
-                    if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                    // Match only the original registration slot. Mapping replacement
+                    // identities can apply the same overlay to an unrelated slot.
                 });
 
-                // Group by team and find candidates
+                // Group by team/set and find candidates. A few older registration
+                // flows could leave duplicate documents, so merge them here before
+                // producing judge-sheet rows.
                 let teamGroups = {};
                 if (regs.length > 0) {
                     regs.forEach(reg => {
                         const tName = reg.team || (reg.chestNo ? 'Solo Participant' : 'Individual');
-                        if(!teamGroups[tName]) teamGroups[tName] = [];
+                        const setNumber = parseInt(reg.setNumber, 10) || 1;
+                        const groupKey = isGroup ? `${tName}__set_${setNumber}` : tName;
+                        if(!teamGroups[groupKey]) teamGroups[groupKey] = isGroup
+                            ? { team: tName, setNumber, candidates: [] }
+                            : [];
+                        const groupCandidates = isGroup ? teamGroups[groupKey].candidates : teamGroups[groupKey];
                         const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
                         
                         if (chestsList.length > 0) {
-                            chestsList.forEach(chest => {
+                            chestsList.forEach((chest, chestIndex) => {
                                 const cand = allCands.find(c => String(c.chestNo).trim() === String(chest).trim() || String(c.id) === String(chest));
                                 let cId = cand ? cand.id : chest;
                                 let cChest = chest;
-                                let cName = cand ? cand.name : (reg.candidateName || reg.name || `Chest #${chest}`);
+                                const uploadedName = Array.isArray(reg.candidateNames) ? reg.candidateNames[chestIndex] : '';
+                                let cName = cand ? cand.name : (uploadedName || reg.candidateName || reg.name || `Chest #${chest}`);
                                 let origSortChest = chest;
 
                                 const sub = subsMap[String(cId)] || subsMap[String(cChest)];
@@ -2099,16 +2172,16 @@
                                     }
                                 }
 
-                                teamGroups[tName].push({
+                                groupCandidates.push({
                                     chestNo: cChest,
                                     origChestNo: origSortChest,
                                     name: cName,
                                     team: tName
                                 });
                             });
-                        } else if (reg.candidateName || reg.name) {
+                        } else if (reg.candidateName || reg.name || (Array.isArray(reg.candidateNames) && reg.candidateNames.length)) {
                             let cChest = reg.chestNo || '---';
-                            let cName = reg.candidateName || reg.name || 'Participant';
+                            let cName = reg.candidateName || reg.name || reg.candidateNames.join(', ');
                             let cId = reg.candidateId || '';
                             let origSortChest = cChest;
 
@@ -2124,7 +2197,7 @@
                                 }
                             }
 
-                            teamGroups[tName].push({
+                            groupCandidates.push({
                                 chestNo: cChest,
                                 origChestNo: origSortChest,
                                 name: cName,
@@ -2138,22 +2211,36 @@
                 let finalCands = [];
                 if (isGroup) {
                     // Group Program Mode: Each team registration is 1 entry with comma-separated names
-                    for(let t in teamGroups) {
-                        if (teamGroups[t].length > 0) {
-                            const chestNos = teamGroups[t].map(c => c.chestNo).filter(b => b && b !== '---').join(', ');
-                            const names = teamGroups[t].map(c => c.name).filter(Boolean).join(', ');
-                            const origChestNos = teamGroups[t].map(c => c.origChestNo || c.chestNo).filter(b => b && b !== '---').join(', ');
-                            finalCands.push({
-                                chestNo: chestNos || '---',
-                                origChestNo: origChestNos || chestNos || '---',
-                                name: names || 'Group Members',
-                                team: t
-                            });
-                        }
+                    for(let key in teamGroups) {
+                        const group = teamGroups[key];
+                        const uniqueValues = values => [...new Map(values.filter(Boolean).map(value => {
+                            const text = String(value).trim();
+                            return [text.toLocaleLowerCase(), text];
+                        })).values()];
+                        const uniqueCandidates = [...new Map(group.candidates.map(candidate => {
+                            const identity = String(candidate.chestNo && candidate.chestNo !== '---'
+                                ? candidate.chestNo
+                                : candidate.name || '').trim().toLocaleLowerCase();
+                            return [identity, candidate];
+                        })).values()];
+                        const chestNos = uniqueValues(uniqueCandidates.map(c => c.chestNo).filter(b => b !== '---'));
+                        const names = uniqueValues(uniqueCandidates.flatMap(c => String(c.name || '').split(',')).map(name => name.trim()));
+                        const origChestNos = uniqueValues(uniqueCandidates.map(c => c.origChestNo || c.chestNo).filter(b => b !== '---'));
+                        const showSet = (parseInt(prog.groupSetsCount, 10) || 1) > 1 || group.setNumber > 1;
+                        finalCands.push({
+                            chestNo: chestNos.join(', '),
+                            displayChestNo: isGeneral
+                                ? (showSet ? `${group.team} - SET ${group.setNumber}` : group.team)
+                                : chestNos.join(', '),
+                            origChestNo: origChestNos.join(', ') || chestNos.join(', '),
+                            name: names.join(', ') || (isGeneral ? '' : 'Group Members'),
+                            team: isGeneral ? '' : (showSet ? `${group.team} - SET ${group.setNumber}` : group.team),
+                            setNumber: group.setNumber
+                        });
                     }
                 } else {
-                    for(let t in teamGroups) {
-                        teamGroups[t].forEach(c => finalCands.push(c));
+                    for(let key in teamGroups) {
+                        teamGroups[key].forEach(c => finalCands.push(c));
                     }
                 }
 
@@ -2283,7 +2370,7 @@
                     const rowBg = i % 2 === 1 ? '#fbfcfd' : '#ffffff';
                     tbHtml += `<tr style="background-color: ${rowBg};">`;
                     if(cfg.cols.codeLetter) tbHtml += `<td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center; font-weight: 700; color: #253347; font-size: 10px;">${getCodeLetter(i)}</td>`;
-                    if(cfg.cols.chestNo) tbHtml += `<td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center; font-weight: 700; color: #253347; font-size: 10px;">${c.chestNo || ''}</td>`;
+                    if(cfg.cols.chestNo) tbHtml += `<td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center; font-weight: 700; color: #253347; font-size: 10px; text-transform: uppercase;">${c.displayChestNo ?? c.chestNo ?? ''}</td>`;
                     if(cfg.cols.candidate !== false) tbHtml += `<td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; font-weight: 800; color: #253347; font-size: 10px; text-transform: uppercase; line-height: 1.3;">${c.name || ''}</td>`;
                     if(cfg.cols.team !== false) tbHtml += `<td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; font-weight: 700; font-size: 10px; color: #6d7785; text-transform: uppercase;">${c.team || ''}</td>`;
                     if(cfg.cols.grade) tbHtml += `<td style="height: 39px; padding: 0 9px; border-right: 1px solid #dde3ea; border-bottom: 1px solid #dde3ea; text-align: center;"></td>`;
@@ -3582,11 +3669,16 @@
                 window.viewProgramCandidatesData = allCandidates;
 
                 db.collection('registrations').where('programId', '==', programId).onSnapshot(regSnap => {
-                    const regs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const rawRegs = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     const regContainer = document.getElementById('registrations-list-container');
                     const registrationProgram = window.currentProgram || {};
                     const isUnlimitedProgram = !!registrationProgram.isUnlimited || registrationProgram.maxParticipants === 'unlimited';
                     const isGeneralProgram = String(registrationProgram.type || '').toLowerCase() === 'general';
+                    const isGroupProgram = String(registrationProgram.type || '').toLowerCase() === 'group' ||
+                        String(registrationProgram.section || '').toLowerCase() === 'kulliya';
+                    const regs = (isGeneralProgram || isGroupProgram)
+                        ? window.normalizeTeamRegistrations(rawRegs)
+                        : rawRegs;
                     const isUnlimProg = isUnlimitedProgram && !isGeneralProgram;
                     const addRegBtn = document.getElementById('btn-add-registration');
 
@@ -3627,17 +3719,18 @@
                             const registrationSetNumber = parseInt(reg.setNumber, 10) || 1;
 
                             if (chestsList.length > 0) {
-                                chestsList.forEach(chest => {
-                                    const cand = allCandidates.find(c => c.chestNo === chest && c.team === reg.team);
-                                    const cName = cand ? cand.name : 'Unknown Candidate';
+                                chestsList.forEach((chest, chestIndex) => {
+                                    const cand = allCandidates.find(c => String(c.chestNo).trim() === String(chest).trim() && c.team === reg.team);
+                                    const cName = cand ? cand.name : (reg.candidateNames?.[chestIndex] || 'Unknown Candidate');
 
                                     teamCands += `
-                                      <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 px-2 transition-colors rounded-lg">
+                                      <div class="registration-candidate-row flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 px-2 transition-colors rounded-lg"
+                                           data-original-candidate-id="${cand ? cand.id : ''}" data-original-chest="${chest}">
                                           <div class="flex items-center gap-3 overflow-hidden pr-2">
-                                              <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center shrink-0 border border-blue-100/50 text-[13px] uppercase">${cName.charAt(0)}</div>
-                                              <span class="text-[14px] font-medium text-gray-800 truncate">${cName}</span>
+                                              <div class="registration-candidate-avatar w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center shrink-0 border border-blue-100/50 text-[13px] uppercase">${cName.charAt(0)}</div>
+                                              <span class="registration-candidate-name text-[14px] font-medium text-gray-800 truncate">${cName}</span>
                                           </div>
-                                          <span class="text-[12px] font-mono-custom font-bold text-gray-600 bg-gray-100 border border-gray-200 px-2 py-1 rounded shadow-sm shrink-0">${isTeamManager ? 'PARTICIPANT' : 'CHEST: ' + chest}</span>
+                                          <span class="registration-candidate-chest text-[12px] font-mono-custom font-bold text-gray-600 bg-gray-100 border border-gray-200 px-2 py-1 rounded shadow-sm shrink-0">${isTeamManager ? 'PARTICIPANT' : 'CHEST: ' + chest}</span>
                                       </div>
                                   `;
                                 });
@@ -3667,13 +3760,15 @@
                             const chestsList = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
                             if (chestsList.length > 0) {
                                 chestsList.forEach(chest => {
-                                    const cand = allCandidates.find(c => c.chestNo === chest && c.team === reg.team);
+                                    const cand = allCandidates.find(c => String(c.chestNo).trim() === String(chest).trim() && c.team === reg.team);
                                     if(cand) {
                                         window.programCandidates.push({
                                             id: cand.id,
                                             name: cand.name,
                                             chestNo: chest,
-                                            team: reg.team || ''
+                                            team: reg.team || '',
+                                            originalCandidateId: cand.id,
+                                            originalChestNo: chest
                                         });
                                     }
                                 });
@@ -3687,7 +3782,8 @@
                     }
 
                     // --- Render Live Substitutions ---
-                    db.collection('substitutions').where('programId', '==', programId).onSnapshot(subSnap => {
+                    if (typeof window.vpRegistrationSubsUnsub === 'function') window.vpRegistrationSubsUnsub();
+                    window.vpRegistrationSubsUnsub = db.collection('substitutions').where('programId', '==', programId).onSnapshot(subSnap => {
                         const subsList = document.getElementById('vp-substitutions-list');
                         const subsCount = document.getElementById('vp-subs-count');
                         if (subsCount) subsCount.innerText = subSnap.size + ' Requests';
@@ -3698,6 +3794,45 @@
                             const tA = (a.createdAt && a.createdAt.seconds) ? a.createdAt.seconds : 0;
                             const tB = (b.createdAt && b.createdAt.seconds) ? b.createdAt.seconds : 0;
                             return tB - tA;
+                        });
+
+                        // Show the replacement in the original registration row. The
+                        // stored registration and its row position remain unchanged.
+                        document.querySelectorAll('#registrations-list-container .registration-candidate-row').forEach(row => {
+                            const originalId = String(row.dataset.originalCandidateId || '');
+                            const originalChest = String(row.dataset.originalChest || '');
+                            const sub = allSubs.find(item =>
+                                (item.origCandidateId && String(item.origCandidateId) === originalId) ||
+                                (item.origChestNo && String(item.origChestNo) === originalChest)
+                            );
+                            const nameEl = row.querySelector('.registration-candidate-name');
+                            const avatarEl = row.querySelector('.registration-candidate-avatar');
+                            const chestEl = row.querySelector('.registration-candidate-chest');
+                            if (!sub) return;
+
+                            const displayName = sub.type === 'cancel'
+                                ? `${sub.origCandidateName || nameEl?.textContent || 'Candidate'} (CANCELLED)`
+                                : (sub.subCandidateName || nameEl?.textContent || 'Replacement Candidate');
+                            const displayChest = sub.type === 'cancel'
+                                ? (sub.origChestNo || originalChest)
+                                : (sub.subChestNo || originalChest);
+                            if (nameEl) nameEl.textContent = displayName;
+                            if (avatarEl) avatarEl.textContent = displayName.charAt(0);
+                            if (chestEl && !isTeamManager) chestEl.textContent = 'CHEST: ' + displayChest;
+                            row.classList.toggle('opacity-60', sub.type === 'cancel');
+                        });
+
+                        // Keep the result-entry sidebar consistent with this overlay.
+                        (window.programCandidates || []).forEach(candidate => {
+                            const sub = allSubs.find(item =>
+                                String(item.origCandidateId || '') === String(candidate.originalCandidateId || candidate.id || '') ||
+                                String(item.origChestNo || '') === String(candidate.originalChestNo || candidate.chestNo || '')
+                            );
+                            if (sub && sub.type === 'substitute') {
+                                candidate.id = sub.subCandidateId || candidate.id;
+                                candidate.name = sub.subCandidateName || candidate.name;
+                                candidate.chestNo = sub.subChestNo || candidate.chestNo;
+                            }
                         });
 
                         if (allSubs.length === 0) {

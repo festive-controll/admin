@@ -1024,8 +1024,7 @@
                     const s = d.data();
                     if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
                     if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
-                    if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
-                    if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                    // Match only the original slot so its code-letter position stays fixed.
                 });
 
                 const progType = (prog.type || '').toLowerCase();
@@ -1235,7 +1234,7 @@
                             const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
                             const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                             if (numA !== numB) return numA - numB;
-                            return String(a.origChestNo || a.chestNo || '').localeCompare(String(a.origChestNo || a.chestNo || ''));
+                            return String(a.origChestNo || a.chestNo || '').localeCompare(String(b.origChestNo || b.chestNo || ''));
                         });
                     }
 

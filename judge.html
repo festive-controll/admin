@@ -298,8 +298,7 @@
                     const s = doc.data();
                     if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
                     if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
-                    if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
-                    if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                    // Substitutions replace the original slot in-place.
                 });
 
                 let teamGroups = {};
@@ -436,7 +435,7 @@
                         const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
                         const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
                         if (numA !== numB) return numA - numB;
-                        return String(a.chestNo || '').localeCompare(String(a.chestNo || ''));
+                        return String(a.origChestNo || a.chestNo || '').localeCompare(String(b.origChestNo || b.chestNo || ''));
                     });
                 }
 

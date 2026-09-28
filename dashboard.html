@@ -1025,12 +1025,11 @@
         };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, merge: true });
         window.db = db;
 
-        // Keep cached dashboard data available during connection loss and prevent
-        // Firestore's WebChannel from continuously retrying while the browser is offline.
-        db.enablePersistence({ synchronizeTabs: true }).catch(function (error) {
+        // Let Firestore select its normal transport. Forcing long-polling while also
+        // sharing a persistent cache between tabs can create duplicate watch targets.
+        db.enablePersistence().catch(function (error) {
             if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
                 console.warn('Firestore offline cache could not be enabled:', error);
             }
@@ -1056,7 +1055,7 @@
                 const orig = proto.onSnapshot;
                 proto.onSnapshot = function (...args) {
                     const unsub = orig.apply(this, args);
-                    if (window._moduleUnsubscribers && typeof unsub === 'function') {
+                    if (window._captureModuleListeners && window._moduleUnsubscribers && typeof unsub === 'function') {
                         window._moduleUnsubscribers.push(unsub);
                     }
                     return unsub;
@@ -1714,18 +1713,23 @@
                     });
 
                     // Execute collected inline scripts
-                    scriptTexts.forEach(code => {
-                        if (!code || !code.trim()) return;
-                        // Skip tailwind config setup block (already set up by dashboard)
-                        if (code.includes('tailwind.config =')) return;
-                        // Convert const/let to var to avoid redeclaration SyntaxErrors when switching modules/programs
-                        code = code.replace(/(^|[\n;{])\s*(const|let)\s+/g, '$1var ');
-                        try {
+                    window._captureModuleListeners = true;
+                    try {
+                        scriptTexts.forEach(code => {
+                            if (!code || !code.trim()) return;
+                            // Skip tailwind config setup block (already set up by dashboard)
+                            if (code.includes('tailwind.config =')) return;
+                            // Convert const/let to var to avoid redeclaration SyntaxErrors when switching modules/programs
+                            code = code.replace(/(^|[\n;{])\s*(const|let)\s+/g, '$1var ');
                             const newScript = document.createElement('script');
                             newScript.appendChild(document.createTextNode(code));
                             container.appendChild(newScript);
-                        } catch (e) { console.error('Module script error:', e); }
-                    });
+                        });
+                    } catch (e) {
+                        console.error('Module script error:', e);
+                    } finally {
+                        window._captureModuleListeners = false;
+                    }
 
                     loader.classList.add('hidden');
 

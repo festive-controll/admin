@@ -598,7 +598,21 @@
                             teamMap[id] = team;
                         });
                     }
+                    // Older/imported registrations often store only chest numbers.
+                    // Resolve those to candidate IDs so they can also be substituted.
+                    const registeredChests = Array.isArray(r.chestNumbers)
+                        ? r.chestNumbers
+                        : (r.chestNo ? [r.chestNo] : []);
+                    registeredChests.forEach(chest => {
+                        const candidate = candidatesData.find(c => String(c.chestNo).trim() === String(chest).trim());
+                        if (candidate && !registeredCands.includes(candidate.id)) {
+                            registeredCands.push(candidate.id);
+                            teamMap[candidate.id] = team;
+                        }
+                    });
                 });
+
+                registeredCands = [...new Set(registeredCands.map(String))];
 
                 if(registeredCands.length === 0) {
                     origSelect.innerHTML = '<option value="">(No registered candidates in this program)</option>';
