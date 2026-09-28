@@ -1253,10 +1253,15 @@
                                 </div>
                             </div>
                             <div class="flex-1 bg-gray-100/50 p-6 sm:p-10 overflow-auto flex justify-center">
+                                <style>
+                                    #jsb-preview-canvas, #jsb-preview-canvas * { color: #000 !important; border-color: #000 !important; background-color: #fff !important; background-image: none !important; }
+                                    #jsb-preview-canvas [data-mono-fill="black"], #jsb-preview-canvas [data-mono-fill="black"] * { color: #fff !important; background-color: #000 !important; }
+                                    #jsb-preview-logo { filter: grayscale(1) contrast(2); }
+                                </style>
                                 <div id="jsb-preview-canvas"
                                     class="bg-white shadow-lg w-full max-w-[800px] min-h-[500px] p-6 sm:p-7 shrink-0 transition-all font-['Satoshi',sans-serif] text-[#253347] border border-[#d9dee4] rounded-[18px] relative">
                                     <!-- Dynamic Preview Content -->
-                                    <div class="h-1.5 w-full rounded-full mb-4 bg-gradient-to-r from-[#155995] via-[#7f1d3f] via-50% to-[#f7b733]"></div>
+                                    <div data-mono-fill="black" class="h-1.5 w-full rounded-full mb-4 bg-black"></div>
                                     <div class="flex justify-between items-center gap-4">
                                         <div class="flex items-center gap-3">
                                             <div class="w-11 h-11 border border-[#d4dbe3] rounded-xl bg-white grid place-items-center shrink-0 p-1">
@@ -1268,7 +1273,7 @@
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-3 shrink-0">
-                                            <div class="bg-[#0f4b80] text-white rounded-lg px-3.5 py-2 text-[10px] font-extrabold tracking-wider uppercase font-['Cobe','Satoshi',sans-serif]">
+                                            <div data-mono-fill="black" class="bg-black text-white rounded-lg px-3.5 py-2 text-[10px] font-extrabold tracking-wider uppercase font-['Cobe','Satoshi',sans-serif]">
                                                 JUDGE 1 OF 1
                                             </div>
                                             <div class="w-20 h-20 border-2 border-[#0f4b80] rounded-lg p-1 bg-white shrink-0 grid place-items-center">
@@ -1285,7 +1290,7 @@
 
                                     <div class="rounded-xl overflow-hidden border border-[#155995] bg-white">
                                         <table class="w-full border-collapse text-left text-[10px] table-fixed">
-                                            <thead class="bg-[#155995] text-white uppercase font-['Cobe','Satoshi',sans-serif]" id="jsb-preview-thead">
+                                            <thead data-mono-fill="black" class="bg-black text-white uppercase font-['Cobe','Satoshi',sans-serif]" id="jsb-preview-thead">
                                                 <!-- Dynamic via JS -->
                                             </thead>
                                             <tbody id="jsb-preview-tbody" class="bg-white">
@@ -6028,7 +6033,7 @@
             if (document.getElementById('jsb-preview-info-container')) document.getElementById('jsb-preview-info-container').innerHTML = infoHtml;
 
             // Re-render Preview Table Header
-            let thHtml = '<tr class="bg-[#155995] text-white text-[9px] font-extrabold uppercase tracking-wider font-[\'Cobe\',\'Satoshi\',sans-serif]">';
+            let thHtml = '<tr data-mono-fill="black" class="bg-black text-white text-[9px] font-extrabold uppercase tracking-wider font-[\'Cobe\',\'Satoshi\',sans-serif]">';
             if (document.getElementById('jsb-c-code')?.checked) thHtml += '<th class="p-2.5 border-r border-[#1c6ab0] w-12 text-center">CODE</th>';
             if (document.getElementById('jsb-c-chest')?.checked) thHtml += '<th class="p-2.5 border-r border-[#1c6ab0] w-14 text-center">CHEST</th>';
             if (document.getElementById('jsb-c-cand')?.checked) thHtml += '<th class="p-2.5 border-r border-[#1c6ab0] text-left">CANDIDATE / PARTICIPANTS</th>';

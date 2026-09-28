@@ -76,7 +76,14 @@
                 <p class="text-[12px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">View live festival rankings and
                     results</p>
             </div>
-            <div class="flex items-center ml-4">
+            <div class="flex items-center gap-3 ml-4">
+                <button id="program-type-toggle" type="button" data-program-type="ARTS"
+                    onclick="window.toggleProgramType()"
+                    aria-label="Showing Arts results; click for Sports"
+                    class="min-w-[92px] bg-[#17635F] border border-[#17635F] text-white rounded-full px-4 py-2.5 text-[13px] font-bold transition-all shadow-sm hover:brightness-110 flex items-center justify-center gap-2">
+                    <i id="program-type-icon" class="fi fi-rr-palette"></i>
+                    <span id="program-type-label">Arts</span>
+                </button>
                 <div class="relative group">
                     <select id="section-filter" onchange="window.handleSectionFilter(this.value)"
                         class="appearance-none bg-white border border-gray-200 rounded-full pl-5 pr-10 py-2.5 text-[13px] font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 transition-all cursor-pointer shadow-sm">
@@ -196,7 +203,7 @@
     <script>
             (function () {
                 let allPrograms = [], allResults = [], allTeams = [], allSections = [], allNegMarks = [];
-                let currentFilter = 'All', searchQuery = '', viewMode = 'table', currentPage = 1, pageLimit = 15;
+                let currentFilter = 'All', activeProgramType = 'ARTS', searchQuery = '', viewMode = 'table', currentPage = 1, pageLimit = 15;
                 let teamPointsMap = {}, rankedTeams = [];
 
                 const dbRef = window.db;
@@ -271,6 +278,30 @@
 
                     return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
                 }
+
+                // Resolve both current and legacy program records into Arts or Sports.
+                function resolveProgramVenueType(program) {
+                    const rawVenueType = [program.venueTypeName, program.venueType, program.venue_type]
+                        .find(value => typeof value === 'string' && value.trim());
+                    const normalized = String(rawVenueType || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+
+                    if (normalized.includes('sport')) return 'sports';
+                    if (normalized.includes('nonstage')) return 'non-stage';
+                    if (normalized === 'stage' || normalized.endsWith('stage')) return 'stage';
+
+                    const code = String(program.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    if (/^[A-Z]*Y\d+/.test(code)) return 'stage';
+                    if (/^[A-Z]*X\d+/.test(code)) return 'non-stage';
+                    if (String(program.section || '').toLowerCase().includes('sport')) return 'sports';
+                    return null;
+                }
+
+                function matchesActiveProgramType(program) {
+                    const venueType = resolveProgramVenueType(program);
+                    return activeProgramType === 'SPORTS'
+                        ? venueType === 'sports'
+                        : venueType === 'stage' || venueType === 'non-stage';
+                }
                 
                 allResultListeners.push(dbRef.collection('programs').onSnapshot(s => { 
                     allPrograms = s.docs.map(d => ({ id: d.id, ...d.data() })); 
@@ -293,7 +324,7 @@
                     teamPointsMap = {}; allTeams.forEach(t => teamPointsMap[t.name] = { points: 0, color: t.color || '#CBD5E1' });
                     
                     // Add Program Results
-                    const pubIds = new Set(allPrograms.filter(p => p.resultsPublished && (currentFilter === 'All' || p.section === currentFilter)).map(p => p.id));
+                    const pubIds = new Set(allPrograms.filter(p => p.resultsPublished && matchesActiveProgramType(p) && (currentFilter === 'All' || p.section === currentFilter)).map(p => p.id));
                     allResults.forEach(r => { if (pubIds.has(r.programId) && teamPointsMap[r.team]) teamPointsMap[r.team].points += (r.totalPoints || 0); });
                     
                     // Subtract Negative Marks
@@ -340,9 +371,18 @@
 
                 function renderDataView() {
                     const s = searchQuery.toLowerCase().trim();
-                    const filtered = allPrograms.filter(p => p.resultsPublished && (currentFilter === 'All' || p.section === currentFilter) && (p.name.toLowerCase().includes(s) || (p.code && p.code.toLowerCase().includes(s))));
+                    const filtered = allPrograms.filter(p => p.resultsPublished && matchesActiveProgramType(p) && (currentFilter === 'All' || p.section === currentFilter) && (p.name.toLowerCase().includes(s) || (p.code && p.code.toLowerCase().includes(s))));
 
-                    if (filtered.length === 0) { document.getElementById('results-list').innerHTML = ''; document.getElementById('results-cards-list').innerHTML = ''; document.getElementById('empty-state').classList.remove('hidden'); return; }
+                    if (filtered.length === 0) {
+                        document.getElementById('results-list').innerHTML = '';
+                        document.getElementById('results-cards-list').innerHTML = '';
+                        document.getElementById('results-count').innerText = 'Showing 0 total standings';
+                        document.getElementById('page-info').innerText = 'Page 1 of 1';
+                        document.getElementById('prev-btn').disabled = true;
+                        document.getElementById('next-btn').disabled = true;
+                        document.getElementById('empty-state').classList.remove('hidden');
+                        return;
+                    }
                     document.getElementById('empty-state').classList.add('hidden');
 
                     const total = filtered.length, pages = Math.ceil(total / pageLimit) || 1;
@@ -448,6 +488,22 @@
                 // Handlers
                 window.handleSectionFilter = (v) => { currentFilter = v; currentPage = 1; updateData(); };
                 window.handleSearch = (v) => { searchQuery = v; currentPage = 1; renderDataView(); };
+                window.toggleProgramType = () => {
+                    activeProgramType = activeProgramType === 'ARTS' ? 'SPORTS' : 'ARTS';
+                    currentPage = 1;
+
+                    const isSports = activeProgramType === 'SPORTS';
+                    const button = document.getElementById('program-type-toggle');
+                    document.getElementById('program-type-label').textContent = isSports ? 'Sports' : 'Arts';
+                    document.getElementById('program-type-icon').className = isSports ? 'fi fi-rr-football' : 'fi fi-rr-palette';
+                    button.dataset.programType = activeProgramType;
+                    button.setAttribute('aria-label', `Showing ${isSports ? 'Sports' : 'Arts'} results; click for ${isSports ? 'Arts' : 'Sports'}`);
+                    button.classList.toggle('bg-[#17635F]', !isSports);
+                    button.classList.toggle('border-[#17635F]', !isSports);
+                    button.classList.toggle('bg-[#92205D]', isSports);
+                    button.classList.toggle('border-[#92205D]', isSports);
+                    updateData();
+                };
                 window.switchViewMode = (m) => {
                     viewMode = m; const isT = m === 'table';
                     document.getElementById('view-table').classList.toggle('hidden', !isT); document.getElementById('view-cards').classList.toggle('hidden', isT);

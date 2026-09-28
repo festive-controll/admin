@@ -291,7 +291,9 @@
                     if (!program.id) return;
                     batch.update(db.collection('programs').doc(program.id), {
                         resultPublishedDate: firebase.firestore.FieldValue.delete(),
-                        resultPdfSavedAt: firebase.firestore.FieldValue.delete()
+                        resultPdfSavedAt: firebase.firestore.FieldValue.delete(),
+                        websitePublished: false,
+                        websitePublishedAt: firebase.firestore.FieldValue.delete()
                     });
                 });
                 await batch.commit();
@@ -318,7 +320,11 @@
 
         async function togglePublish(progId, shouldPublish) {
             try {
-                const publishUpdate = { resultsPublished: shouldPublish };
+                const publishUpdate = {
+                    resultsPublished: shouldPublish,
+                    websitePublished: false,
+                    websitePublishedAt: firebase.firestore.FieldValue.delete()
+                };
                 if (shouldPublish) {
                     // A newly published result is not "Printed" until saved from pblish.html.
                     publishUpdate.resultPdfSavedAt = null;

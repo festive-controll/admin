@@ -47,7 +47,7 @@
         <section class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h2 class="text-base font-bold text-gray-900">Saved PDF History</h2>
-                <p class="text-xs text-gray-500 mt-0.5">Download a saved PDF, or delete it to return its results to the unsaved list.</p>
+                <p class="text-xs text-gray-500 mt-0.5">Saved results stay private until you publish them to the websites.</p>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
@@ -477,6 +477,9 @@
                     '<td class="px-6 py-4 font-semibold text-gray-800">' + publishPdfEscape(savedAt.toLocaleDateString('en-GB')) + '</td>' +
                     '<td class="px-6 py-4 text-gray-600">' + publishPdfEscape(savedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) + '</td>' +
                     '<td class="px-6 py-4"><div class="flex items-center justify-end gap-2">' +
+                    (item.websitePublished === true
+                        ? '<button type="button" onclick="setSavedResultWebsiteVisibility(' + index + ', false, this)" class="px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-xs font-bold hover:bg-amber-100 disabled:opacity-50" title="Hide these results from public websites">Unpublish</button>'
+                        : '<button type="button" onclick="setSavedResultWebsiteVisibility(' + index + ', true, this)" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50" title="Show these results on public websites">Publish</button>') +
                     '<button type="button" onclick="downloadSavedPublishedPdf(' + index + ', this)" class="px-3 py-2 rounded-lg bg-[#134E8E] text-white text-xs font-bold hover:bg-[#0e3d70] disabled:opacity-50 disabled:cursor-not-allowed">Download PDF</button>' +
                     '<button type="button" onclick="exportSavedPublishedExcel(' + index + ')" class="px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-bold hover:bg-green-100" title="Export Excel">Export Excel</button>' +
                     '<button type="button" onclick="deleteSavedPublishedPdf(' + index + ', this)" class="w-9 h-9 inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed" title="Delete PDF and restore results" aria-label="Delete PDF and restore results">' +
@@ -519,6 +522,44 @@
                 publishPdfDownloadFallback(item.publicationDate, item.programs || [], item.results || [], item.grandTotals || []);
             } finally {
                 if (button) { button.disabled = false; button.textContent = originalText; }
+            }
+        }
+
+        async function setSavedResultWebsiteVisibility(index, shouldPublish, button) {
+            var item = publishedPdfHistory[index];
+            if (!item || !item.id) return;
+            var programs = (item.programs || []).filter(function (program) { return program.id; });
+            if (!programs.length) {
+                alert('No programs were found in this saved result.');
+                return;
+            }
+            if (button) button.disabled = true;
+            try {
+                var batch = db.batch();
+                programs.forEach(function (program) {
+                    batch.update(db.collection('programs').doc(program.id), {
+                        websitePublished: shouldPublish,
+                        websitePublishedAt: shouldPublish
+                            ? firebase.firestore.FieldValue.serverTimestamp()
+                            : firebase.firestore.FieldValue.delete()
+                    });
+                });
+                batch.update(db.collection('publishedResultPdfs').doc(item.id), {
+                    websitePublished: shouldPublish,
+                    websitePublishedAt: shouldPublish
+                        ? firebase.firestore.FieldValue.serverTimestamp()
+                        : firebase.firestore.FieldValue.delete()
+                });
+                await batch.commit();
+                item.websitePublished = shouldPublish;
+                renderPublishedPdfHistory();
+                if (typeof showToast === 'function') {
+                    showToast(shouldPublish ? 'Results published to the websites.' : 'Results removed from the websites.');
+                }
+            } catch (error) {
+                console.error('Could not update website result visibility:', error);
+                alert(error.message || 'Could not update website visibility.');
+                if (button) button.disabled = false;
             }
         }
 
@@ -588,7 +629,9 @@
                     if (!program.id) return;
                     batch.update(db.collection('programs').doc(program.id), {
                         resultPublishedDate: firebase.firestore.FieldValue.delete(),
-                        resultPdfSavedAt: firebase.firestore.FieldValue.delete()
+                        resultPdfSavedAt: firebase.firestore.FieldValue.delete(),
+                        websitePublished: false,
+                        websitePublishedAt: firebase.firestore.FieldValue.delete()
                     });
                 });
                 await batch.commit();
@@ -613,7 +656,9 @@
                 publishPdfPrograms.forEach(function (program) {
                     batch.update(db.collection('programs').doc(program.id), {
                         resultPublishedDate: dateValue,
-                        resultPdfSavedAt: savedAt
+                        resultPdfSavedAt: savedAt,
+                        websitePublished: false,
+                        websitePublishedAt: firebase.firestore.FieldValue.delete()
                     });
                 });
                 var savedPrograms = publishPdfPrograms.map(function (program) {
@@ -634,7 +679,7 @@
                 var historyItem = {
                     publicationDate: dateValue, savedAt: savedAt, programCount: savedPrograms.length,
                     programs: savedPrograms, results: savedResults, grandTotals: grandTotals,
-                    totalBasis: 'published-results-snapshot-v2'
+                    totalBasis: 'published-results-snapshot-v2', websitePublished: false
                 };
                 batch.set(historyRef, historyItem);
                 await batch.commit();

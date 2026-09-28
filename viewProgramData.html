@@ -2257,7 +2257,7 @@
                 }
 
                 // Build Table header with official brand color #155995
-                let thHtml = '<tr style="background: #155995; color: #ffffff; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: .4px; font-family: \'Cobe\', \'Satoshi\', sans-serif;">';
+                let thHtml = '<tr data-mono-fill="black" style="background: #000000; color: #ffffff; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: .4px; font-family: \'Cobe\', \'Satoshi\', sans-serif;">';
                 if(cfg.cols.codeLetter) thHtml += '<th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 52px;">CODE</th>';
                 if(cfg.cols.chestNo) thHtml += '<th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 72px;">CHEST</th>';
                 if(cfg.cols.candidate !== false) thHtml += '<th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: left;">CANDIDATE / PARTICIPANTS</th>';
@@ -2386,15 +2386,18 @@
                 // Helper to create HTML for a single judge sheet (Official Design Template)
                 const createSingleSheetHtml = (judgeIndex) => {
                     return `
-                    <div id="pdfSingleSheet_${judgeIndex}" style="padding: 24px 28px 18px; background: #ffffff; width: 794px; min-height: 1123px; font-family: 'Satoshi', Arial, Helvetica, sans-serif; color: #253347; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #d9dee4; border-radius: 18px; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,.06);">
+                    <div id="pdfSingleSheet_${judgeIndex}" class="monochrome-sheet" style="padding: 24px 28px 18px; background: #ffffff; width: 794px; min-height: 1123px; font-family: 'Satoshi', Arial, Helvetica, sans-serif; color: #000000; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #000000; border-radius: 18px; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,.06);">
                         <style>
                             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
                             @import url('https://fonts.cdnfonts.com/css/satoshi');
                             @import url('https://fonts.cdnfonts.com/css/cobe');
+                            .monochrome-sheet, .monochrome-sheet * { color: #000 !important; border-color: #000 !important; background-color: #fff !important; background-image: none !important; }
+                            .monochrome-sheet [data-mono-fill="black"], .monochrome-sheet [data-mono-fill="black"] * { color: #fff !important; background-color: #000 !important; }
+                            .monochrome-sheet img:not([alt="QR"]) { filter: grayscale(1) contrast(2); }
                         </style>
                         <div>
                             <!-- Top Accent Gradient Bar -->
-                            <div style="height: 5px; border-radius: 999px; margin-bottom: 16px; background: linear-gradient(90deg, #155995 0%, #7f1d3f 24%, #d8232a 50%, #f05a19 76%, #f7b733 100%);"></div>
+                            <div data-mono-fill="black" style="height: 5px; border-radius: 999px; margin-bottom: 16px; background: #000000;"></div>
                             
                             <!-- Header with Brand Logo/Icon & Title -->
                             <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
@@ -2413,7 +2416,7 @@
                                 </div>
 
                                 <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-                                    <div style="background: #0f4b80; color: #ffffff; border-radius: 8px; padding: 10px 14px; font-size: 10px; font-weight: 800; letter-spacing: .8px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase; white-space: nowrap;">
+                                    <div data-mono-fill="black" style="background: #000000; color: #ffffff; border-radius: 8px; padding: 10px 14px; font-size: 10px; font-weight: 800; letter-spacing: .8px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase; white-space: nowrap;">
                                         JUDGE ${judgeIndex} OF ${judgeCount}
                                     </div>
                                     <div style="width: 80px; height: 80px; border: 1.5px solid #0f4b80; border-radius: 8px; padding: 4px; background: #ffffff; flex-shrink: 0; display: grid; place-items: center;">

@@ -55,6 +55,24 @@
             page-break-after: always;
         }
 
+        .monochrome-sheet,
+        .monochrome-sheet * {
+            color: #000000 !important;
+            border-color: #000000 !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
+        }
+
+        .monochrome-sheet [data-mono-fill="black"],
+        .monochrome-sheet [data-mono-fill="black"] * {
+            color: #ffffff !important;
+            background-color: #000000 !important;
+        }
+
+        .monochrome-sheet img:not([alt="QR"]) {
+            filter: grayscale(1) contrast(2);
+        }
+
         .font-cobe {
             font-family: 'Cobe', 'Satoshi', sans-serif;
         }
@@ -532,7 +550,7 @@
 
             const qrUrl = await generateQrDataUrl(resultScanUrl);
 
-            let thHtml = `<tr style="background: #155995; color: #ffffff; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: .4px; font-family: 'Cobe', 'Satoshi', sans-serif;">
+            let thHtml = `<tr data-mono-fill="black" style="background: #000000; color: #ffffff; text-transform: uppercase; font-size: 9px; font-weight: 800; letter-spacing: .4px; font-family: 'Cobe', 'Satoshi', sans-serif;">
                 <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 52px;">CODE</th>
                 <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: center; width: 72px;">CHEST</th>
                 <th style="padding: 11px 9px; border-right: 1px solid #1c6ab0; text-align: left;">CANDIDATE / PARTICIPANTS</th>
@@ -567,10 +585,10 @@
             let fullHtml = '';
             for (let j = 1; j <= currentJudgeCount; j++) {
                 fullHtml += `
-                <div id="pdfSingleSheet_${j}" class="sheet-page">
+                <div id="pdfSingleSheet_${j}" class="sheet-page monochrome-sheet">
                     <div>
                         <!-- Accent Line -->
-                        <div style="height: 5px; border-radius: 999px; margin-bottom: 16px; background: linear-gradient(90deg, #155995 0%, #7f1d3f 24%, #d8232a 50%, #f05a19 76%, #f7b733 100%);"></div>
+                        <div data-mono-fill="black" style="height: 5px; border-radius: 999px; margin-bottom: 16px; background: #000000;"></div>
 
                         <!-- Header -->
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
@@ -589,7 +607,7 @@
                             </div>
 
                             <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-                                <div style="background: #0f4b80; color: #ffffff; border-radius: 8px; padding: 10px 14px; font-size: 10px; font-weight: 800; letter-spacing: .8px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase; white-space: nowrap;">
+                                <div data-mono-fill="black" style="background: #000000; color: #ffffff; border-radius: 8px; padding: 10px 14px; font-size: 10px; font-weight: 800; letter-spacing: .8px; font-family: 'Cobe', 'Satoshi', sans-serif; text-transform: uppercase; white-space: nowrap;">
                                     JUDGE ${j} OF ${currentJudgeCount}
                                 </div>
                                 <div style="width: 80px; height: 80px; border: 1.5px solid #0f4b80; border-radius: 8px; padding: 4px; background: #ffffff; flex-shrink: 0; display: grid; place-items: center;">
