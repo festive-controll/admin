@@ -449,12 +449,13 @@
             const sub = substitutionsData.find(s => s.id === subId);
             if (!sub) return;
 
-            if (!confirm(`Are you sure you want to delete this substitution for "${sub.origCandidateName}"? This will revert the candidate registration.`)) {
+            if (!confirm(`Are you sure you want to delete this substitution for "${sub.origCandidateName}"? The original registration will remain unchanged.`)) {
                 return;
             }
 
             try {
-                // 1. Find registration document for this program and team
+                // Older substitution records changed the registration itself. Revert only
+                // those legacy records; new substitutions leave the original data untouched.
                 const snap = await db.collection('registrations')
                     .where('programId', '==', sub.programId)
                     .where('team', '==', sub.team || "")
@@ -462,7 +463,7 @@
 
                 const batch = db.batch();
 
-                if (!snap.empty) {
+                if (!snap.empty && sub.registrationMutated !== false) {
                     const regDoc = snap.docs[0];
                     const regRef = regDoc.ref;
                     const regData = regDoc.data();
@@ -510,13 +511,13 @@
                     batch.update(regRef, regUpdatePayload);
                 }
 
-                // 2. Delete substitution document
+                // Delete only the substitution overlay. The registration remains original.
                 const subRef = db.collection('substitutions').doc(subId);
                 batch.delete(subRef);
 
                 await batch.commit();
 
-                typeof showToast === 'function' ? showToast("✅ Substitution deleted & registration reverted!") : alert("Substitution deleted successfully!");
+                typeof showToast === 'function' ? showToast("✅ Substitution deleted. Original registration preserved!") : alert("Substitution deleted successfully!");
             } catch (err) {
                 console.error(err);
                 typeof showToast === 'function' ? showToast("âŒ Delete Error: " + err.message) : alert("Error: " + err.message);
@@ -697,7 +698,9 @@
                 if (!oCand) throw new Error("Original candidate not found in database.");
                 if (subType === 'substitute' && !sCand) throw new Error("Substitute candidate not found in database.");
 
-                // 1. We must find the `registrations` document for this program and TEAM.
+                // Confirm that the original candidate is still registered. Substitutions are
+                // stored as an overlay and must never rewrite candidate/chest data, because
+                // that data is the source of the participant's stable code letter.
                 const snap = await db.collection('registrations')
                     .where('programId', '==', pid)
                     .where('team', '==', oCand.team || "")
@@ -707,54 +710,9 @@
                     throw new Error("Registration document not found for this candidate's team!");
                 }
                 
-                const regDoc = snap.docs[0];
-                const regRef = regDoc.ref;
-                const regData = regDoc.data();
-
-                // 2. Perform DB array mutations (In-place replacement to preserve original slot index)
-                let updatedCandIds = Array.isArray(regData.candidateIds) ? [...regData.candidateIds] : [];
-                let updatedChestNos = Array.isArray(regData.chestNumbers) ? [...regData.chestNumbers] : [];
-
-                const idxId = updatedCandIds.findIndex(id => String(id) === String(origId));
-                const idxChest = updatedChestNos.findIndex(c => String(c) === String(oCand.chestNo));
-
-                if (subType === 'substitute' && sCand) {
-                    if (idxId > -1) {
-                        updatedCandIds[idxId] = sCand.id;
-                    } else {
-                        updatedCandIds.push(sCand.id);
-                    }
-                    if (idxChest > -1) {
-                        updatedChestNos[idxChest] = sCand.chestNo;
-                    } else if (sCand.chestNo) {
-                        updatedChestNos.push(sCand.chestNo);
-                    }
-                } else {
-                    if (idxId > -1) updatedCandIds.splice(idxId, 1);
-                    if (idxChest > -1) updatedChestNos.splice(idxChest, 1);
-                }
-
-                let regUpdatePayload = {
-                    candidateIds: updatedCandIds,
-                    chestNumbers: updatedChestNos,
-                    participantCount: updatedCandIds.length
-                };
-
-                if (regData.chestNo && String(regData.chestNo) === String(oCand.chestNo)) {
-                    regUpdatePayload.chestNo = (subType === 'substitute' && sCand) ? sCand.chestNo : '';
-                }
-                if (regData.candidateId && String(regData.candidateId) === String(origId)) {
-                    regUpdatePayload.candidateId = (subType === 'substitute' && sCand) ? sCand.id : '';
-                }
-                if (regData.candidateName && String(regData.candidateName) === String(oCand.name)) {
-                    regUpdatePayload.candidateName = (subType === 'substitute' && sCand) ? sCand.name : '';
-                }
-
-                // Use transaction or batch
                 const batch = db.batch();
-                batch.update(regRef, regUpdatePayload);
 
-                // 3. Create Audit Trail
+                // Create the substitution overlay/audit trail.
                 const subRef = db.collection('substitutions').doc();
                 const subPayload = {
                     programId: pid,
@@ -769,6 +727,7 @@
                     subChestNo: sCand ? sCand.chestNo : null,
                     reason: reason,
                     team: oCand.team || "",
+                    registrationMutated: false,
                 };
 
                 if (typeof firebase !== 'undefined' && firebase.firestore) {
@@ -781,7 +740,7 @@
                 await batch.commit();
 
                 // Success
-                typeof showToast === 'function' && showToast("✅ Substitution Saved & Applied!");
+                typeof showToast === 'function' && showToast("✅ Substitution saved. Original code letter preserved!");
                 closeSubSidebar();
             } catch (err) {
                 console.error(err);

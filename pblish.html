@@ -232,42 +232,62 @@
             }
 
             var pageStreams = [];
-            for (var start = 0; start < programs.length; start += 5) {
-                var programsOnPage = programs.slice(start, start + 5);
-                var stream = '0.075 0.306 0.557 rg\n' + textLine('OFFICIAL PUBLISHED RESULTS', 45, 810, 15, true);
+            var stream = '';
+            var y = 0;
+            function beginFallbackPage() {
+                stream = '0.075 0.306 0.557 rg\n' + textLine('OFFICIAL PUBLISHED RESULTS', 45, 810, 15, true);
                 stream += '0.3 0.3 0.3 rg\n' + textLine('Published: ' + new Date(dateValue + 'T00:00:00').toLocaleDateString('en-GB'), 430, 810, 9, false);
-                programsOnPage.forEach(function (program, programIndex) {
-                    var category = program.category || program.section || 'General';
-                    var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
-                    var top = 780 - (programIndex * 148);
-                    stream += '0.82 0.84 0.88 RG 45 ' + (top + 12) + ' m 550 ' + (top + 12) + ' l S\n';
-                    stream += '0.075 0.306 0.557 rg\n';
-                    stream += textLine((program.name || 'Program') + ' - (' + category + ')', 45, top, 12, true);
-                    stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, top - 20, 8, true) + textLine('GRADE', 115, top - 20, 8, true) + textLine('CHEST NO.', 170, top - 20, 8, true) + textLine('NAME', 245, top - 20, 8, true) + textLine('TEAM', 465, top - 20, 8, true);
-                    var y = top - 39;
-                    if (!results.length) stream += textLine('No positioned winners found.', 45, y, 9, false);
-                    results.slice(0, 4).forEach(function (result) {
-                        stream += '0.075 0.306 0.557 rg\n' + textLine(publishPdfPosition(result) || '-', 45, y, 9, true);
-                        stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfGrade(result), 115, y, 9, true);
-                        stream += textLine(publishPdfChest(result), 170, y, 9, true);
-                        stream += textLine(String(publishPdfName(result)).slice(0, 30), 245, y, 9, false);
-                        stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 14), 465, y, 9, false);
-                        y -= 18;
-                    });
-                });
-                pageStreams.push(stream);
+                y = 770;
             }
+            function finishFallbackPage() {
+                if (stream) pageStreams.push(stream);
+                stream = '';
+            }
+            function drawFallbackProgramHeader(program, continued) {
+                var category = program.category || program.section || 'General';
+                stream += '0.82 0.84 0.88 RG 45 ' + (y + 12) + ' m 550 ' + (y + 12) + ' l S\n';
+                stream += '0.075 0.306 0.557 rg\n';
+                stream += textLine((program.name || 'Program') + ' - (' + category + ')' + (continued ? ' - Continued' : ''), 45, y, 12, true);
+                stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, y - 20, 8, true) + textLine('GRADE', 115, y - 20, 8, true) + textLine('CHEST NO.', 170, y - 20, 8, true) + textLine('NAME', 245, y - 20, 8, true) + textLine('TEAM', 465, y - 20, 8, true);
+                y -= 39;
+            }
+            beginFallbackPage();
+            programs.forEach(function (program) {
+                var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
+                if (y < 100) { finishFallbackPage(); beginFallbackPage(); }
+                drawFallbackProgramHeader(program, false);
+                if (!results.length) {
+                    stream += textLine('No positioned winners found.', 45, y, 9, false);
+                    y -= 30;
+                }
+                results.forEach(function (result) {
+                    if (y < 55) {
+                        finishFallbackPage(); beginFallbackPage(); drawFallbackProgramHeader(program, true);
+                    }
+                    stream += '0.075 0.306 0.557 rg\n' + textLine(publishPdfPosition(result) || '-', 45, y, 9, true);
+                    stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfGrade(result), 115, y, 9, true);
+                    stream += textLine(publishPdfChest(result), 170, y, 9, true);
+                    stream += textLine(String(publishPdfName(result)).slice(0, 30), 245, y, 9, false);
+                    stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 14), 465, y, 9, false);
+                    y -= 18;
+                });
+                y -= 18;
+            });
+            finishFallbackPage();
 
             grandTotals = grandTotals || [];
             if (grandTotals.length) {
-                var totalStream = '0.075 0.306 0.557 rg\n' + textLine('GRAND TOTAL', 45, 800, 18, true);
-                totalStream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 55, 755, 10, true) + textLine('TEAM NAME', 180, 755, 10, true) + textLine('SCORE', 455, 755, 10, true);
-                grandTotals.slice(0, 4).forEach(function (team, index) {
-                    var y = 715 - (index * 55);
-                    totalStream += '0.075 0.306 0.557 rg\n' + textLine((index + 1) + ({ 0: 'st', 1: 'nd', 2: 'rd' }[index] || 'th'), 55, y, 14, true);
-                    totalStream += '0.12 0.12 0.12 rg\n' + textLine(team.name || '-', 180, y, 14, true) + textLine(String(team.points || 0), 455, y, 14, true);
-                });
-                pageStreams.push(totalStream);
+                for (var totalStart = 0; totalStart < grandTotals.length; totalStart += 10) {
+                    var totalStream = '0.075 0.306 0.557 rg\n' + textLine('GRAND TOTAL - STAGE + NON-STAGE' + (totalStart ? ' - Continued' : ''), 45, 800, 18, true);
+                    totalStream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 55, 755, 10, true) + textLine('TEAM NAME', 180, 755, 10, true) + textLine('SCORE', 455, 755, 10, true);
+                    grandTotals.slice(totalStart, totalStart + 10).forEach(function (team, pageIndex) {
+                        var index = totalStart + pageIndex;
+                        var y = 715 - (pageIndex * 55);
+                        totalStream += '0.075 0.306 0.557 rg\n' + textLine((index + 1) + ({ 0: 'st', 1: 'nd', 2: 'rd' }[index] || 'th'), 55, y, 14, true);
+                        totalStream += '0.12 0.12 0.12 rg\n' + textLine(team.name || '-', 180, y, 14, true) + textLine(String(team.points || 0), 455, y, 14, true);
+                    });
+                    pageStreams.push(totalStream);
+                }
             }
 
             var objects = [];
@@ -348,59 +368,83 @@
                     return text + '\u2026';
                 }
 
-                for (var start = 0; start < programs.length; start += 5) {
-                    beginPage();
-                    programs.slice(start, start + 5).forEach(function (program, programIndex) {
-                        var top = 145 + (programIndex * 310);
-                        var category = program.category || program.section || 'General';
-                        var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
-                        context.strokeStyle = '#d8dee8'; context.lineWidth = 2;
-                        context.beginPath(); context.moveTo(80, top); context.lineTo(1160, top); context.stroke();
-                        context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
-                        context.fillText(fitCanvasText((program.name || 'Program') + ' - (' + category + ')', 1080), 80, top + 40);
-                        context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
-                        context.fillText('POSITION', 80, top + 82); context.fillText('GRADE', 225, top + 82);
-                        context.fillText('CHEST NO.', 335, top + 82); context.fillText('NAME', 500, top + 82); context.fillText('TEAM', 900, top + 82);
-                        var y = top + 122;
-                        results.slice(0, 4).forEach(function (result) {
-                            context.fillStyle = '#134E8E'; context.font = '700 19px Inter, Arial, sans-serif';
-                            context.fillText(publishPdfPosition(result) || '-', 80, y);
-                            context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfGrade(result), 85), 225, y);
-                            context.fillText(fitCanvasText(publishPdfChest(result), 135), 335, y);
-                            context.font = '500 19px Inter, Arial, sans-serif';
-                            context.fillText(fitCanvasText(publishPdfName(result), 365), 500, y);
-                            context.font = '500 19px Inter, Arial, sans-serif'; context.fillText(fitCanvasText(result.team || (result.isGroupResult ? publishPdfName(result) : '-'), 250), 900, y);
-                            y += 38;
-                        });
-                        if (!results.length) {
-                            context.fillStyle = '#777777'; context.font = '500 19px Inter, Arial, sans-serif';
-                            context.fillText('No positioned winners found.', 80, y);
-                        }
-                    });
-                    addCanvasPage(start === 0);
+                var canvasPageCount = 0;
+                var canvasY = 145;
+                var canvasHasContent = false;
+                function finishCanvasPage() {
+                    if (!canvasHasContent) return;
+                    addCanvasPage(canvasPageCount === 0);
+                    canvasPageCount++;
+                    canvasHasContent = false;
                 }
+                function startCanvasPage() {
+                    beginPage();
+                    canvasY = 145;
+                }
+                function drawCanvasProgramHeader(program, continued) {
+                    var category = program.category || program.section || 'General';
+                    context.strokeStyle = '#d8dee8'; context.lineWidth = 2;
+                    context.beginPath(); context.moveTo(80, canvasY); context.lineTo(1160, canvasY); context.stroke();
+                    context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
+                    context.fillText(fitCanvasText((program.name || 'Program') + ' - (' + category + ')' + (continued ? ' - Continued' : ''), 1080), 80, canvasY + 40);
+                    context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
+                    context.fillText('POSITION', 80, canvasY + 82); context.fillText('GRADE', 225, canvasY + 82);
+                    context.fillText('CHEST NO.', 335, canvasY + 82); context.fillText('NAME', 500, canvasY + 82); context.fillText('TEAM', 900, canvasY + 82);
+                    canvasY += 122;
+                    canvasHasContent = true;
+                }
+                startCanvasPage();
+                programs.forEach(function (program) {
+                    var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
+                    if (canvasY > 1510) { finishCanvasPage(); startCanvasPage(); }
+                    drawCanvasProgramHeader(program, false);
+                    if (!results.length) {
+                        context.fillStyle = '#777777'; context.font = '500 19px Inter, Arial, sans-serif';
+                        context.fillText('No positioned winners found.', 80, canvasY);
+                        canvasY += 58;
+                    }
+                    results.forEach(function (result) {
+                        if (canvasY > 1650) {
+                            finishCanvasPage(); startCanvasPage(); drawCanvasProgramHeader(program, true);
+                        }
+                        context.fillStyle = '#134E8E'; context.font = '700 19px Inter, Arial, sans-serif';
+                        context.fillText(publishPdfPosition(result) || '-', 80, canvasY);
+                        context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfGrade(result), 85), 225, canvasY);
+                        context.fillText(fitCanvasText(publishPdfChest(result), 135), 335, canvasY);
+                        context.font = '500 19px Inter, Arial, sans-serif';
+                        context.fillText(fitCanvasText(publishPdfName(result), 365), 500, canvasY);
+                        context.fillText(fitCanvasText(result.team || (result.isGroupResult ? publishPdfName(result) : '-'), 250), 900, canvasY);
+                        canvasY += 38;
+                    });
+                    canvasY += 28;
+                });
+                finishCanvasPage();
 
                 grandTotals = grandTotals || [];
                 if (grandTotals.length) {
-                    beginPage();
-                    context.fillStyle = '#134E8E'; context.font = '800 38px Inter, Arial, sans-serif';
-                    context.fillText('GRAND TOTAL', 80, 180);
-                    context.fillStyle = '#667085'; context.font = '600 18px Inter, Arial, sans-serif';
-                    context.fillText('FINAL TEAM STANDINGS', 80, 220);
-                    context.fillStyle = '#667085'; context.font = '700 17px Inter, Arial, sans-serif';
-                    context.fillText('POSITION', 115, 270); context.fillText('TEAM NAME', 290, 270);
-                    context.textAlign = 'right'; context.fillText('SCORE', 1115, 270); context.textAlign = 'left';
-                    grandTotals.slice(0, 4).forEach(function (team, index) {
-                        var y = 300 + (index * 170);
-                        context.fillStyle = index === 0 ? '#FFB33F' : '#134E8E';
-                        context.fillRect(80, y - 55, 1080, 120);
-                        context.fillStyle = '#ffffff'; context.font = '800 30px Inter, Arial, sans-serif';
-                        context.fillText((index + 1) + ({ 0: 'st', 1: 'nd', 2: 'rd' }[index] || 'th'), 115, y + 18);
-                        context.font = '700 30px Inter, Arial, sans-serif'; context.fillText(String(team.name || '-'), 290, y + 18);
-                        context.textAlign = 'right'; context.font = '800 34px Inter, Arial, sans-serif';
-                        context.fillText(String(team.points || 0) + ' Marks', 1115, y + 18); context.textAlign = 'left';
-                    });
-                    addCanvasPage(programs.length === 0);
+                    for (var totalStart = 0; totalStart < grandTotals.length; totalStart += 10) {
+                        beginPage();
+                        context.fillStyle = '#134E8E'; context.font = '800 38px Inter, Arial, sans-serif';
+                        context.fillText('GRAND TOTAL - STAGE + NON-STAGE' + (totalStart ? ' - Continued' : ''), 80, 180);
+                        context.fillStyle = '#667085'; context.font = '600 18px Inter, Arial, sans-serif';
+                        context.fillText('FINAL TEAM STANDINGS', 80, 220);
+                        context.fillStyle = '#667085'; context.font = '700 17px Inter, Arial, sans-serif';
+                        context.fillText('POSITION', 115, 270); context.fillText('TEAM NAME', 290, 270);
+                        context.textAlign = 'right'; context.fillText('SCORE', 1115, 270); context.textAlign = 'left';
+                        grandTotals.slice(totalStart, totalStart + 10).forEach(function (team, pageIndex) {
+                            var index = totalStart + pageIndex;
+                            var y = 300 + (pageIndex * 120);
+                            context.fillStyle = index === 0 ? '#FFB33F' : '#134E8E';
+                            context.fillRect(80, y - 55, 1080, 100);
+                            context.fillStyle = '#ffffff'; context.font = '800 30px Inter, Arial, sans-serif';
+                            context.fillText((index + 1) + ({ 0: 'st', 1: 'nd', 2: 'rd' }[index] || 'th'), 115, y + 8);
+                            context.font = '700 30px Inter, Arial, sans-serif'; context.fillText(String(team.name || '-'), 290, y + 8);
+                            context.textAlign = 'right'; context.font = '800 34px Inter, Arial, sans-serif';
+                            context.fillText(String(team.points || 0) + ' Marks', 1115, y + 8); context.textAlign = 'left';
+                        });
+                        addCanvasPage(canvasPageCount === 0);
+                        canvasPageCount++;
+                    }
                 }
                 pdf.save('all-published-results-' + dateValue + '.pdf');
             } catch (error) {
@@ -416,7 +460,20 @@
             return new Date(value);
         }
 
-        async function calculatePublishedGrandTotals(programs, results) {
+        function publishPdfProgramVenueType(program) {
+            var raw = [program && program.venueTypeName, program && program.venueType, program && program.venue_type, program && program.progSet]
+                .find(function (value) { return typeof value === 'string' && value.trim(); });
+            var normalized = String(raw || '').toLowerCase().replace(/[\s_-]+/g, '');
+            if (normalized.indexOf('nonstage') !== -1) return 'non-stage';
+            if (normalized === 'stage' || normalized.endsWith('stage')) return 'stage';
+            if (normalized.indexOf('sport') !== -1) return 'sports';
+            var code = String((program && program.code) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (/^[A-Z]*Y\d+/.test(code)) return 'stage';
+            if (/^[A-Z]*X\d+/.test(code)) return 'non-stage';
+            return 'other';
+        }
+
+        async function calculatePublishedGrandTotals(programs, results, useAllPublishedArts) {
             var data = await Promise.all([
                 db.collection('teams').get(),
                 db.collection('programs').where('resultsPublished', '==', true).get(),
@@ -428,9 +485,17 @@
                 var team = doc.data();
                 if (team.isActive !== false && team.name) totals[team.name] = 0;
             });
-            var scopedPrograms = Array.isArray(programs) && programs.length ? programs : data[1].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+            var allPublishedPrograms = data[1].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+            var scopedPrograms = useAllPublishedArts
+                ? allPublishedPrograms.filter(function (program) {
+                    var type = publishPdfProgramVenueType(program);
+                    return type === 'stage' || type === 'non-stage';
+                })
+                : (Array.isArray(programs) && programs.length ? programs : allPublishedPrograms);
             var publishedIds = new Set(scopedPrograms.map(function (program) { return program.id; }).filter(Boolean));
-            var scopedResults = Array.isArray(results) ? results : data[2].docs.map(function (doc) { return doc.data(); });
+            var scopedResults = useAllPublishedArts
+                ? data[2].docs.map(function (doc) { return doc.data(); })
+                : (Array.isArray(results) ? results : data[2].docs.map(function (doc) { return doc.data(); }));
             scopedResults.forEach(function (result) {
                 if (publishedIds.has(result.programId) && result.team) {
                     if (!Object.prototype.hasOwnProperty.call(totals, result.team)) totals[result.team] = 0;
@@ -458,7 +523,8 @@
 
         async function publishPdfResolveGrandTotals(item, results) {
             var totals = publishPdfNormalizeGrandTotals(item && item.grandTotals);
-            if (!item || item.totalBasis !== 'published-results-snapshot-v2' || !totals.length || totals.some(function (team) { return !team.name; })) {
+            var hasSavedTotalBasis = item && (item.totalBasis === 'published-results-snapshot-v2' || item.totalBasis === 'published-arts-cumulative-v3');
+            if (!hasSavedTotalBasis || !totals.length || totals.some(function (team) { return !team.name; })) {
                 totals = publishPdfNormalizeGrandTotals(await calculatePublishedGrandTotals(item && item.programs, results || (item && item.results)));
             }
             return totals.sort(function (a, b) { return b.points - a.points || a.name.localeCompare(b.name); });
@@ -605,7 +671,7 @@
                 });
             });
             rows.push([]); rows.push(['Grand Total']); rows.push(['Position', 'Team Name', 'Score']);
-            totals.slice(0, 4).forEach(function (team, rank) { rows.push([(rank + 1), team.name || '', team.points || 0]); });
+            totals.forEach(function (team, rank) { rows.push([(rank + 1), team.name || '', team.points || 0]); });
             var table = '<table>' + rows.map(function (row) { return '<tr>' + row.map(function (cell) { return '<td>' + publishPdfXmlEscape(cell) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
             var blob = new Blob([String.fromCharCode(0xFEFF), table], { type: 'application/vnd.ms-excel;charset=utf-8' });
             var url = URL.createObjectURL(blob), link = document.createElement('a');
@@ -675,12 +741,14 @@
                         isGroupResult: result.isGroupResult === true, isGeneralResult: result.isGeneralResult === true
                     };
                 });
-                var grandTotals = await calculatePublishedGrandTotals(savedPrograms, savedResults);
+                // The newest PDF shows the cumulative Arts standings. Publishing another
+                // Stage or Non-Stage program therefore updates its Grand Total page.
+                var grandTotals = await calculatePublishedGrandTotals(savedPrograms, savedResults, true);
                 var historyRef = db.collection('publishedResultPdfs').doc();
                 var historyItem = {
                     publicationDate: dateValue, savedAt: savedAt, programCount: savedPrograms.length,
                     programs: savedPrograms, results: savedResults, grandTotals: grandTotals,
-                    totalBasis: 'published-results-snapshot-v2', websitePublished: false
+                    totalBasis: 'published-arts-cumulative-v3', websitePublished: false
                 };
                 batch.set(historyRef, historyItem);
                 await batch.commit();
