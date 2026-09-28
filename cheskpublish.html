@@ -86,7 +86,7 @@
             <div class="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-3">
                     <span class="w-9 h-9 rounded-lg bg-green-50 text-green-600 flex items-center justify-center"><i class="fi fi-rr-check-circle"></i></span>
-                    <div><p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Published results</p><p id="published-count-label" class="text-[12px] text-gray-500 mt-0.5">All programs</p></div>
+                    <div><p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Ready for printing</p><p id="published-count-label" class="text-[12px] text-gray-500 mt-0.5">Admin only</p></div>
                 </div>
                 <span id="published-count" class="text-2xl font-bold text-green-600">0</span>
             </div>
@@ -234,7 +234,7 @@
                 const isPublished = prog.resultsPublished === true;
                 
                 const statusBadge = isPublished 
-                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-50 text-green-700 border border-green-100"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Published</span>`
+                    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-50 text-green-700 border border-green-100"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Ready to Print</span>`
                     : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-orange-50 text-orange-700 border border-orange-100"><span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Unpublished</span>`;
                 
                 const isPrinted = isPublished && !!prog.resultPdfSavedAt;
@@ -333,7 +333,7 @@
                 await db.collection('programs').doc(progId).update(publishUpdate);
 
                 Toastify({
-                    text: shouldPublish ? "Results published." : "Results unpublished.",
+                    text: shouldPublish ? "Sent to the admin printing page. Not public yet." : "Removed from the admin printing page.",
                     duration: 3000,
                     gravity: "top",
                     position: "right",

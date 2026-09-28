@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8f9fc; }
@@ -123,6 +124,11 @@
                         </select>
                         <i class="fi fi-rr-angle-small-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
                     </div>
+                    <button id="exportPdfButton" type="button" onclick="exportSelectedProgramPdf()" disabled
+                        title="Select a program to export"
+                        class="px-4 py-2.5 bg-brand-blue hover:bg-blue-800 text-white disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-xl text-[13px] font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm">
+                        <i class="fi fi-rr-file-pdf"></i> Export PDF
+                    </button>
                     <div class="relative sm:w-44">
                         <i class="fi fi-rr-layers absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
                         <select id="sectionFilter" onchange="onSectionFilterChange(this.value)"
@@ -193,6 +199,7 @@
                 };
                 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
+                db.enablePersistence({ synchronizeTabs: true }).catch(function () {});
             }
 
             let allRegistrations = [];
@@ -202,6 +209,7 @@
             let currentProgramFilter = 'ALL';
             let currentSectionFilter = 'ALL';
             let searchQuery = '';
+            let visibleTopicItems = [];
 
             function showToast(msg, type = 'success') {
                 if (typeof Toastify === 'function') {
@@ -301,6 +309,11 @@
 
             window.onProgramFilterChange = function(value) {
                 currentProgramFilter = value || 'ALL';
+                const exportButton = document.getElementById('exportPdfButton');
+                if (exportButton) {
+                    exportButton.disabled = currentProgramFilter === 'ALL';
+                    exportButton.title = exportButton.disabled ? 'Select a program to export' : 'Export selected program as PDF';
+                }
                 populateProgramAndSectionFilters();
                 renderUI();
             };
@@ -593,6 +606,7 @@
                 }
 
                 topicItems.sort((a, b) => compareProgramCodes(a.prog?.code, b.prog?.code));
+                visibleTopicItems = topicItems.slice();
 
                 if (topicItems.length === 0) {
                     renderEmptyState("No topic registrations found");
@@ -689,6 +703,93 @@
                     </tr>`;
                 }).join('');
             }
+
+            function escapeExportHtml(value) {
+                return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+                })[char]);
+            }
+
+            function safeFileName(value) {
+                return String(value || 'program').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '-');
+            }
+
+            window.exportSelectedProgramPdf = async function() {
+                if (currentProgramFilter === 'ALL') {
+                    showToast('Please select a program before exporting.', 'warning');
+                    return;
+                }
+                if (!visibleTopicItems.length) {
+                    showToast('No topic data matches the current filters.', 'warning');
+                    return;
+                }
+                const useBrowserPdfFallback = typeof html2pdf !== 'function';
+
+                const button = document.getElementById('exportPdfButton');
+                const originalHtml = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Exporting...';
+
+                const program = visibleTopicItems[0].prog || {};
+                const generatedAt = new Date().toLocaleString('en-IN', {
+                    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+                });
+                const statusLabel = currentStatusFilter === 'ALL' ? 'All statuses' : currentStatusFilter;
+                const rows = visibleTopicItems.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${escapeExportHtml(item.team)}</strong><br>${escapeExportHtml(item.candidateName)}<br><span>${escapeExportHtml(item.chestDisplay)}</span></td>
+                        <td><strong>${escapeExportHtml(item.topicName)}</strong>${item.topicAuthor ? `<br><span>By: ${escapeExportHtml(item.topicAuthor)}</span>` : ''}${item.topicContent ? `<br>${escapeExportHtml(item.topicContent)}` : ''}</td>
+                        <td>${escapeExportHtml(item.status || 'Pending')}</td>
+                    </tr>`).join('');
+
+                const report = document.createElement('div');
+                report.style.cssText = 'position:absolute;left:-12000px;top:0;width:1050px;padding:34px;background:white;color:#111827;font-family:Inter,Arial,sans-serif;';
+                report.innerHTML = `
+                    <style>
+                        .pdf-title{font-size:24px;font-weight:800;margin:0 0 4px}.pdf-sub{font-size:13px;color:#4b5563;margin:0 0 18px}.pdf-meta{display:flex;gap:24px;padding:10px 12px;background:#f3f6fa;border:1px solid #dbe3ec;border-radius:8px;margin-bottom:16px;font-size:12px}.pdf-table{width:100%;border-collapse:collapse;font-size:11px}.pdf-table th{background:#134e8e;color:white;text-align:left;padding:9px 8px}.pdf-table td{border:1px solid #d9dee7;padding:8px;vertical-align:top;line-height:1.45}.pdf-table tr{break-inside:avoid;page-break-inside:avoid}.pdf-table span{color:#64748b;font-size:10px}
+                    </style>
+                    <h1 class="pdf-title">Registered Topics</h1>
+                    <p class="pdf-sub"><strong>${escapeExportHtml(program.code || '')}${program.code ? ' - ' : ''}${escapeExportHtml(program.name || 'Selected Program')}</strong>${program.section ? ` &nbsp;|&nbsp; ${escapeExportHtml(program.section)}` : ''}</p>
+                    <div class="pdf-meta"><span><strong>Records:</strong> ${visibleTopicItems.length}</span><span><strong>Filter:</strong> ${escapeExportHtml(statusLabel)}</span><span><strong>Generated:</strong> ${escapeExportHtml(generatedAt)}</span></div>
+                    <table class="pdf-table"><thead><tr><th style="width:5%">#</th><th style="width:27%">Team &amp; Candidate</th><th style="width:53%">Topic Details</th><th style="width:15%">Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+                document.body.appendChild(report);
+
+                try {
+                    if (useBrowserPdfFallback) {
+                        const printWindow = window.open('', '_blank', 'width=1200,height=800');
+                        if (!printWindow) throw new Error('Allow pop-ups to open the PDF print window.');
+                        printWindow.document.title = String(program.code || program.name || 'Registered Topics') + ' - Registered Topics';
+                        const printStyle = printWindow.document.createElement('style');
+                        printStyle.textContent = '@page{size:A4 landscape;margin:8mm}body{margin:0;background:#fff}body>div{position:static!important;left:auto!important;top:auto!important;width:auto!important;padding:0!important}button{display:none!important}';
+                        printWindow.document.head.appendChild(printStyle);
+                        const printableReport = printWindow.document.importNode(report, true);
+                        printWindow.document.body.replaceChildren(printableReport);
+                        printWindow.focus();
+                        setTimeout(function () {
+                            printWindow.print();
+                        }, 250);
+                        showToast('PDF library is offline. Choose “Save as PDF” in the print window.', 'warning');
+                    } else {
+                        await html2pdf().set({
+                            margin: [8, 8, 8, 8],
+                            filename: `${safeFileName(program.code || program.name)}-registered-topics.pdf`,
+                            image: { type: 'jpeg', quality: 0.96 },
+                            html2canvas: { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                            pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' }
+                        }).from(report).save();
+                        showToast('PDF exported successfully.');
+                    }
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    showToast('Failed to export PDF: ' + error.message, 'error');
+                } finally {
+                    report.remove();
+                    button.disabled = currentProgramFilter === 'ALL';
+                    button.innerHTML = originalHtml;
+                }
+            };
 
             function renderEmptyState(message) {
                 const tbody = document.getElementById('topics-tbody');

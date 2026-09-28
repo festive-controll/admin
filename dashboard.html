@@ -357,7 +357,7 @@
                                 class="flex items-center gap-3 px-4 py-2 rounded-lg text-[13px] text-gray-500 hover:text-brand-blue hover:bg-blue-50/50 font-medium transition-all group/item">
                                 <div
                                     class="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover/item:bg-brand-blue transition-colors">
-                                </div> Published Data
+                                </div> Print &amp; Public Publish
                             </a>
                         </div>
                     </div>
@@ -1028,6 +1028,24 @@
         db.settings({ experimentalForceLongPolling: true, merge: true });
         window.db = db;
 
+        // Keep cached dashboard data available during connection loss and prevent
+        // Firestore's WebChannel from continuously retrying while the browser is offline.
+        db.enablePersistence({ synchronizeTabs: true }).catch(function (error) {
+            if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
+                console.warn('Firestore offline cache could not be enabled:', error);
+            }
+        });
+        function syncFirestoreNetworkState() {
+            if (navigator.onLine) {
+                db.enableNetwork().catch(function () {});
+            } else {
+                db.disableNetwork().catch(function () {});
+            }
+        }
+        window.addEventListener('online', syncFirestoreNetworkState);
+        window.addEventListener('offline', syncFirestoreNetworkState);
+        syncFirestoreNetworkState();
+
         // Global Firestore Listener Tracker to prevent memory leaks & lagging when changing tabs
         window._moduleUnsubscribers = window._moduleUnsubscribers || [];
         (function patchFirestoreOnSnapshot() {
@@ -1054,7 +1072,9 @@
         (async function autoLogDashboardAccess() {
             try {
                 let clientIp = '127.0.0.1';
-                const ipRes = await fetch('https://api.ipify.org?format=json').catch(() => null);
+                const ipRes = navigator.onLine
+                    ? await fetch('https://api.ipify.org?format=json').catch(() => null)
+                    : null;
                 if (ipRes && ipRes.ok) {
                     const ipData = await ipRes.json();
                     clientIp = ipData.ip || clientIp;
@@ -1107,6 +1127,7 @@
         // ── Real-Time Active System Heartbeat Ping ─────────────────────
         (function initActiveSystemHeartbeat() {
             async function sendHeartbeat() {
+                if (!navigator.onLine) return;
                 try {
                     let clientIp = '127.0.0.1';
                     const ipRes = await fetch('https://api.ipify.org?format=json').catch(() => null);

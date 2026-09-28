@@ -15,7 +15,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
                 <button type="button" onclick="publishPdfBack()" class="text-xs font-semibold text-[#134E8E] mb-2 hover:underline">← Back to Publish Results</button>
-                <h1 class="text-2xl font-bold">Published Result PDF</h1>
+                <h1 class="text-2xl font-bold">Admin Result Printing</h1>
                 <p class="text-sm text-gray-500 mt-1">Confirm the date, then save and download the result.</p>
             </div>
             <div class="flex items-end gap-3 w-full sm:w-auto">
@@ -24,7 +24,7 @@
                     <input id="publication-date" type="date" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/40">
                 </div>
                 <div class="shrink-0">
-                    <span class="block text-xs font-semibold text-gray-600 mb-1.5">Published</span>
+                    <span class="block text-xs font-semibold text-gray-600 mb-1.5">Ready to print</span>
                     <div class="h-[42px] min-w-[92px] px-4 flex items-center justify-center bg-green-50 border border-green-200 rounded-lg">
                         <span id="published-program-count" class="text-lg font-extrabold text-green-700">0</span>
                         <span class="ml-1.5 text-xs font-semibold text-green-700">Programs</span>
@@ -538,6 +538,7 @@
                 var batch = db.batch();
                 programs.forEach(function (program) {
                     batch.update(db.collection('programs').doc(program.id), {
+                        resultsPublished: true,
                         websitePublished: shouldPublish,
                         websitePublishedAt: shouldPublish
                             ? firebase.firestore.FieldValue.serverTimestamp()
