@@ -342,6 +342,9 @@
 
                         const sub = subsMap[String(cId)] || subsMap[String(cChest)];
                         if (sub) {
+                            // The displayed participant may change, but ordering must keep
+                            // using the original registration slot/code letter.
+                            if (sub.origChestNo) origSortChest = sub.origChestNo;
                             if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
                                 const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
                                 cChest = sub.subChestNo || cChest;
@@ -432,8 +435,8 @@
                     }
                 } else {
                     activeCands.sort((a, b) => {
-                        const numA = parseInt(String(a.chestNo).replace(/\D/g, '')) || 0;
-                        const numB = parseInt(String(b.chestNo).replace(/\D/g, '')) || 0;
+                        const numA = parseInt(String(a.origChestNo || a.chestNo).replace(/\D/g, '')) || 0;
+                        const numB = parseInt(String(b.origChestNo || b.chestNo).replace(/\D/g, '')) || 0;
                         if (numA !== numB) return numA - numB;
                         return String(a.origChestNo || a.chestNo || '').localeCompare(String(b.origChestNo || b.chestNo || ''));
                     });
