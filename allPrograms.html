@@ -832,11 +832,42 @@
                 const candidates = candidateSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const byId = new Map(candidates.map(c => [String(c.id), c]));
                 const byChest = new Map(candidates.map(c => [String(c.chestNo || '').trim(), c]));
-                const registrationSets = await Promise.all(programs.map(p => db.collection('registrations').where('programId', '==', p.id).get()));
+                const [registrationSets, substitutionSets] = await Promise.all([
+                    Promise.all(programs.map(p => db.collection('registrations').where('programId', '==', p.id).get())),
+                    Promise.all(programs.map(p => db.collection('substitutions').where('programId', '==', p.id).get()))
+                ]);
                 const rows = [];
                 const programBlocks = [];
 
                 programs.forEach((program, programIndex) => {
+                    const substitutionsByOriginal = new Map();
+                    substitutionSets[programIndex].docs.forEach(doc => {
+                        const sub = doc.data();
+                        if (sub.origCandidateId) substitutionsByOriginal.set(String(sub.origCandidateId), sub);
+                        if (sub.origChestNo) substitutionsByOriginal.set(String(sub.origChestNo).trim(), sub);
+                        // Legacy substitutions changed the registration itself, so its
+                        // replacement identity is the only key still present there.
+                        if (sub.registrationMutated !== false) {
+                            if (sub.subCandidateId) substitutionsByOriginal.set(String(sub.subCandidateId), sub);
+                            if (sub.subChestNo) substitutionsByOriginal.set(String(sub.subChestNo).trim(), sub);
+                        }
+                    });
+
+                    const applySubstitution = (participant, ref) => {
+                        const sub = substitutionsByOriginal.get(String(participant.id || ref || ''))
+                            || substitutionsByOriginal.get(String(participant.chestNo || ref || '').trim());
+                        const originalName = sub?.origCandidateName || participant.name;
+                        if (sub?.type === 'substitute') {
+                            participant.name = sub.subCandidateName || participant.name;
+                            participant.chestNo = sub.subChestNo || participant.chestNo;
+                        } else if (sub?.type === 'cancel') {
+                            participant.name += ' (CANCELLED)';
+                        }
+                        // Sorting by the original registration keeps its code-letter slot.
+                        participant.originalName = originalName;
+                        return participant;
+                    };
+
                     if (programIndex) rows.push([], []);
                     const titleRow = rows.length;
                     rows.push([`JUDGE SHEET — ${program.name || 'PROGRAM'}`, '', '']);
@@ -854,13 +885,25 @@
                     registrationSets[programIndex].docs.forEach(doc => {
                         const reg = doc.data();
                         const refs = Array.isArray(reg.chestNumbers) && reg.chestNumbers.length ? reg.chestNumbers : [reg.candidateId || reg.chestNo].filter(Boolean);
-                        if (!refs.length && (reg.candidateName || reg.name)) participants.push({ name: reg.candidateName || reg.name, team: reg.team || '' });
+                        if (!refs.length && (reg.candidateName || reg.name)) {
+                            participants.push(applySubstitution({
+                                id: reg.candidateId || '',
+                                chestNo: reg.chestNo || '',
+                                name: reg.candidateName || reg.name,
+                                team: reg.team || ''
+                            }, reg.candidateId || reg.chestNo));
+                        }
                         refs.forEach(ref => {
                             const candidate = byId.get(String(ref)) || byChest.get(String(ref).trim());
-                            participants.push({ name: candidate?.name || reg.candidateName || reg.name || `Chest #${ref}`, team: candidate?.team || reg.team || '' });
+                            participants.push(applySubstitution({
+                                id: candidate?.id || reg.candidateId || '',
+                                chestNo: candidate?.chestNo || reg.chestNo || ref,
+                                name: candidate?.name || reg.candidateName || reg.name || `Chest #${ref}`,
+                                team: candidate?.team || reg.team || ''
+                            }, ref));
                         });
                     });
-                    participants.sort((a, b) => String(a.team).localeCompare(String(b.team)) || String(a.name).localeCompare(String(b.name)));
+                    participants.sort((a, b) => String(a.team).localeCompare(String(b.team)) || String(a.originalName).localeCompare(String(b.originalName)));
                     participants.forEach((participant, index) => rows.push([getExportCodeLetter(index), participant.name, participant.team]));
                     if (!participants.length) rows.push(['', 'No registered participants', '']);
                     programBlocks.push({ titleRow, metaStart, tableHeader, participantStart, participantEnd: rows.length - 1 });
