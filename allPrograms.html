@@ -1384,6 +1384,20 @@
             editingProgId = null;
         }
 
+        // A group registration stores all of its students in one chestNumbers
+        // array. When that program becomes Individual, keep enough participant
+        // slots for every member of the former group so those students are
+        // rendered in separate inputs instead of only showing the first one.
+        function getIndividualSlotCountAfterTypeChange(program, nextType, fallback) {
+            const wasGroup = String(program?.type || '').toLowerCase() === 'group';
+            const becomesIndividual = String(nextType || '').toLowerCase() === 'individual';
+            if (!wasGroup || !becomesIndividual) return fallback;
+
+            const sets = Math.max(1, parseInt(program.groupSetsCount, 10) || 1);
+            const participantsPerSet = Math.max(1, parseInt(program.groupParticipantsPerSet, 10) || 1);
+            return sets * participantsPerSet;
+        }
+
         function saveProgram() {
             const code = document.getElementById('progCode').value.trim().toUpperCase();
             const name = document.getElementById('progName').value.trim();
@@ -1430,6 +1444,15 @@
                 skillRequired: document.getElementById('progSkill').value || '',
                 updatedAt: new Date()
             };
+
+            if (editingProgId) {
+                const previousProgram = programsData.find(program => program.id === editingProgId);
+                payload.maxParticipants = getIndividualSlotCountAfterTypeChange(
+                    previousProgram,
+                    payload.type,
+                    payload.maxParticipants
+                );
+            }
 
             if (editingProgId) {
                 db.collection('programs').doc(editingProgId).update(payload).then(() => {
@@ -1483,7 +1506,15 @@
                 return typeof showToast === 'function' ? showToast("âŒ Code, Name and Section are required") : alert("Required fields missing");
             }
 
+            const previousProgram = programsData.find(program => program.id === quickEditingProgId);
             const payload = { code, name, section, type, updatedAt: new Date() };
+            const convertedSlotCount = getIndividualSlotCountAfterTypeChange(previousProgram, type, null);
+            if (convertedSlotCount !== null) {
+                payload.maxParticipants = convertedSlotCount;
+                payload.isUnlimited = false;
+                payload.groupSetsCount = null;
+                payload.groupParticipantsPerSet = null;
+            }
 
             db.collection('programs').doc(quickEditingProgId).update(payload).then(() => {
                 typeof showToast === 'function' && showToast("✅ Quick Edit saved!");
