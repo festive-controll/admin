@@ -757,19 +757,40 @@
 
                 try {
                     if (useBrowserPdfFallback) {
-                        const printWindow = window.open('', '_blank', 'width=1200,height=800');
-                        if (!printWindow) throw new Error('Allow pop-ups to open the PDF print window.');
-                        printWindow.document.title = String(program.code || program.name || 'Registered Topics') + ' - Registered Topics';
-                        const printStyle = printWindow.document.createElement('style');
-                        printStyle.textContent = '@page{size:A4 landscape;margin:8mm}body{margin:0;background:#fff}body>div{position:static!important;left:auto!important;top:auto!important;width:auto!important;padding:0!important}button{display:none!important}';
-                        printWindow.document.head.appendChild(printStyle);
-                        const printableReport = printWindow.document.importNode(report, true);
-                        printWindow.document.body.replaceChildren(printableReport);
-                        printWindow.focus();
-                        setTimeout(function () {
-                            printWindow.print();
-                        }, 250);
-                        showToast('PDF library is offline. Choose “Save as PDF” in the print window.', 'warning');
+                        const printFrame = document.createElement('iframe');
+                        printFrame.setAttribute('title', 'Registered topics PDF print frame');
+                        printFrame.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;';
+                        document.body.appendChild(printFrame);
+
+                        const printDocument = printFrame.contentDocument;
+                        const printWindow = printFrame.contentWindow;
+                        if (!printDocument || !printWindow) {
+                            printFrame.remove();
+                            throw new Error('Unable to prepare the PDF print view.');
+                        }
+
+                        printDocument.open();
+                        printDocument.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title></title><style>@page{size:A4 landscape;margin:8mm}body{margin:0;background:#fff}body>div{position:static!important;left:auto!important;top:auto!important;width:auto!important;padding:0!important}button{display:none!important}</style></head><body></body></html>');
+                        printDocument.close();
+                        printDocument.title = String(program.code || program.name || 'Registered Topics') + ' - Registered Topics';
+                        printDocument.body.appendChild(printDocument.importNode(report, true));
+
+                        await new Promise(resolve => {
+                            let finished = false;
+                            const cleanup = function () {
+                                if (finished) return;
+                                finished = true;
+                                printFrame.remove();
+                                resolve();
+                            };
+                            printWindow.addEventListener('afterprint', cleanup, { once: true });
+                            setTimeout(function () {
+                                printWindow.focus();
+                                printWindow.print();
+                                setTimeout(cleanup, 1000);
+                            }, 100);
+                        });
+                        showToast('PDF library is offline. Choose “Save as PDF” in the print dialog.', 'warning');
                     } else {
                         await html2pdf().set({
                             margin: [8, 8, 8, 8],
