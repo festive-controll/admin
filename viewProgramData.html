@@ -1386,9 +1386,48 @@
             return letter;
         };
 
+        window.expandGroupRegistrationsByConfiguredSets = function(registrations, program) {
+            const source = registrations || [];
+            const isGroup = String(program?.type || '').toLowerCase() === 'group';
+            const participantsPerSet = Math.max(1, parseInt(program?.groupParticipantsPerSet, 10) || 1);
+            const setCount = Math.max(1, parseInt(program?.groupSetsCount, 10) || 1);
+            if (!isGroup) return source;
+
+            return source.flatMap(reg => {
+                const chests = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                // New registrations already carry their set number. Only expand
+                // legacy combined registrations saved before sets were separate.
+                if (reg.setNumber) return (parseInt(reg.setNumber, 10) || 1) <= setCount ? [reg] : [];
+                if (chests.length <= participantsPerSet) return [reg];
+
+                const candidateIds = Array.isArray(reg.candidateIds) ? reg.candidateIds : [];
+                const candidateNames = Array.isArray(reg.candidateNames) ? reg.candidateNames : [];
+                const judgeOrder = Array.isArray(reg.judgeOrderChestNumbers) ? reg.judgeOrderChestNumbers : [];
+                const expanded = [];
+                const configuredCapacity = setCount * participantsPerSet;
+                for (let offset = 0; offset < Math.min(chests.length, configuredCapacity); offset += participantsPerSet) {
+                    const setNumber = Math.floor(offset / participantsPerSet) + 1;
+                    const setChests = chests.slice(offset, offset + participantsPerSet);
+                    expanded.push({
+                        ...reg,
+                        setNumber,
+                        setLabel: `Set ${setNumber}`,
+                        chestNumbers: setChests,
+                        candidateIds: candidateIds.slice(offset, offset + participantsPerSet),
+                        candidateNames: candidateNames.slice(offset, offset + participantsPerSet),
+                        judgeOrderChestNumbers: judgeOrder.length
+                            ? judgeOrder.slice(offset, offset + participantsPerSet)
+                            : setChests,
+                        memberCount: setChests.length
+                    });
+                }
+                return expanded;
+            });
+        };
+
         window.normalizeTeamRegistrations = function(registrations) {
             const merged = new Map();
-            (registrations || []).forEach(reg => {
+            window.expandGroupRegistrationsByConfiguredSets(registrations, window.currentProgram || {}).forEach(reg => {
                 const team = String(reg.team || 'Unknown Team').trim();
                 const setNumber = parseInt(reg.setNumber, 10) || 1;
                 const key = `${team.toLocaleLowerCase()}__set_${setNumber}`;
@@ -2177,7 +2216,10 @@
                 const candSnap = await db.collection('candidates').get();
                 const allCands = candSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 const regSnap = await db.collection('registrations').where('programId', '==', pId).get();
-                const regs = regSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                const regs = window.expandGroupRegistrationsByConfiguredSets(
+                    regSnap.docs.map(doc => ({id: doc.id, ...doc.data()})),
+                    prog
+                );
 
                 const subSnap = await db.collection('substitutions').where('programId', '==', pId).get();
                 const subsMap = {};

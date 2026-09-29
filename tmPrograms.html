@@ -227,8 +227,11 @@
             container.innerHTML = filtered.map(p => {
                 const isUnlimited = !!p.isUnlimited || p.maxParticipants === 'unlimited';
                 const isGroup = !isUnlimited && (p.type || '').toLowerCase().includes('group');
-                const reg = window.tmRegistrationsList.find(r => r.programId === p.id);
-                const prefilledChests = reg ? (reg.chestNumbers || []) : [];
+                const programRegs = window.tmRegistrationsList
+                    .filter(r => r.programId === p.id)
+                    .sort((a, b) => (parseInt(a.setNumber, 10) || 1) - (parseInt(b.setNumber, 10) || 1));
+                const reg = programRegs[0];
+                const prefilledChests = programRegs.flatMap(savedReg => savedReg.chestNumbers || []);
                 const maxP = p.maxParticipants || 1;
                 const minP = p.minParticipants || 1;
 
@@ -452,7 +455,10 @@
             }
 
             const btn = document.getElementById('btn-save-' + progId);
-            const existing = window.tmRegistrationsList.find(r => r.programId === progId);
+            const existingRegistrations = window.tmRegistrationsList
+                .filter(r => r.programId === progId)
+                .sort((a, b) => (parseInt(a.setNumber, 10) || 1) - (parseInt(b.setNumber, 10) || 1));
+            const existing = existingRegistrations[0];
 
             if (!valid) return typeof showToast === 'function' && showToast("âŒ Contains invalid chest numbers. Must belong to your team & section.");
 
@@ -462,8 +468,8 @@
                 const groupSets = prog.groupSetsCount || 1;
                 const groupParts = prog.groupParticipantsPerSet || 1;
                 const expectedTotal = groupSets * groupParts;
-                if (memberCount !== expectedTotal) {
-                    return typeof showToast === 'function' && showToast(`âŒ Member count must be exactly ${expectedTotal} (${groupSets} Set${groupSets > 1 ? 's' : ''} of ${groupParts}).`);
+                if (memberCount !== expectedTotal || filledCount !== expectedTotal) {
+                    return typeof showToast === 'function' && showToast(`âŒ Enter exactly ${expectedTotal} students (${groupSets} Set${groupSets > 1 ? 's' : ''} of ${groupParts}).`);
                 }
             }
 
@@ -503,7 +509,53 @@
 
 
             btn.innerHTML = '<div class="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>'; btn.disabled = true;
-            if (existing) db.collection('registrations').doc(existing.id).update(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Updated!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; });
+            if (isGroup) {
+                const groupSets = Math.max(1, parseInt(prog.groupSetsCount, 10) || 1);
+                const groupParts = Math.max(1, parseInt(prog.groupParticipantsPerSet, 10) || 1);
+                const batch = db.batch();
+
+                for (let setIndex = 0; setIndex < groupSets; setIndex++) {
+                    const setNumber = setIndex + 1;
+                    const setChests = chestNumbers.slice(setIndex * groupParts, (setIndex + 1) * groupParts);
+                    const setCandidateIds = candidateIds.slice(setIndex * groupParts, (setIndex + 1) * groupParts);
+                    // A legacy group registration without setNumber represents Set 1.
+                    const savedSet = existingRegistrations.find(registration =>
+                        (parseInt(registration.setNumber, 10) || 1) === setNumber
+                    );
+                    const setRef = savedSet
+                        ? db.collection('registrations').doc(savedSet.id)
+                        : db.collection('registrations').doc();
+                    const setPayload = {
+                        ...payload,
+                        setNumber,
+                        setLabel: `Set ${setNumber}`,
+                        chestNumbers: setChests,
+                        candidateIds: setCandidateIds,
+                        memberCount: setChests.length
+                    };
+                    if (!savedSet) setPayload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    batch.set(setRef, setPayload, { merge: true });
+                }
+
+                // Remove registrations for sets that no longer exist after the
+                // administrator reduces Count of Sets.
+                existingRegistrations.forEach(registration => {
+                    const savedSetNumber = parseInt(registration.setNumber, 10) || 1;
+                    if (savedSetNumber > groupSets) {
+                        batch.delete(db.collection('registrations').doc(registration.id));
+                    }
+                });
+
+                batch.commit().then(() => {
+                    typeof showToast === 'function' && showToast(`✅ ${groupSets} set registration${groupSets === 1 ? '' : 's'} saved!`);
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration';
+                    btn.disabled = false;
+                }).catch(err => {
+                    typeof showToast === 'function' && showToast("❌ Error: " + err.message);
+                    btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Save Registration';
+                    btn.disabled = false;
+                });
+            } else if (existing) db.collection('registrations').doc(existing.id).update(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Updated!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; });
             else { payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); db.collection('registrations').add(payload).then(() => { typeof showToast === 'function' && showToast("✅ Registration Successful!"); btn.innerHTML = '<i class="fi fi-rr-disk text-xs"></i> Update Registration'; btn.disabled = false; }); }
         };
     </script>
