@@ -1392,11 +1392,13 @@
                 const team = String(reg.team || 'Unknown Team').trim();
                 const setNumber = parseInt(reg.setNumber, 10) || 1;
                 const key = `${team.toLocaleLowerCase()}__set_${setNumber}`;
-                if (!merged.has(key)) merged.set(key, { ...reg, team, setNumber, chestNumbers: [], candidateNames: [] });
+                if (!merged.has(key)) merged.set(key, { ...reg, team, setNumber, chestNumbers: [], judgeOrderChestNumbers: [], candidateNames: [] });
                 const entry = merged.get(key);
                 const chests = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                const orderChests = Array.isArray(reg.judgeOrderChestNumbers) ? reg.judgeOrderChestNumbers : chests;
                 const names = Array.isArray(reg.candidateNames) ? reg.candidateNames : [reg.candidateName || reg.name].filter(Boolean);
                 entry.chestNumbers = [...new Set(entry.chestNumbers.concat(chests).map(value => String(value).trim()).filter(Boolean))];
+                entry.judgeOrderChestNumbers = [...new Set(entry.judgeOrderChestNumbers.concat(orderChests).map(value => String(value).trim()).filter(Boolean))];
                 entry.candidateNames = [...new Map(entry.candidateNames.concat(names).map(value => {
                     const text = String(value).trim();
                     return [text.toLocaleLowerCase(), text];
@@ -1454,7 +1456,9 @@
             const candOrder = localStorage.getItem('jsmCandOrder_' + programId)
                 || window.currentProgram?.candOrder
                 || 'auto-mixed';
-            const chestValue = entry => String(entry.chestNumbers?.[0] || '');
+            // Legacy substitutions may already have replaced chestNumbers in the
+            // registration. Use the recovered original numbers for code ordering.
+            const chestValue = entry => String(entry.judgeOrderChestNumbers?.[0] || entry.chestNumbers?.[0] || '');
             const chestCompare = (a, b) => {
                 const aChest = chestValue(a), bChest = chestValue(b);
                 const aNumber = parseInt(aChest.replace(/\D/g, ''), 10) || 0;
@@ -1488,8 +1492,10 @@
                 || window.currentProgram?.candOrder
                 || 'auto-mixed';
             const chestCompare = (a, b, descending = false) => {
-                const aChest = String(a.chestNo || '');
-                const bChest = String(b.chestNo || '');
+                // A substitution changes the displayed chest/name, never the
+                // original judge-sheet slot (and therefore never its code letter).
+                const aChest = String(a.originalChestNo || a.chestNo || '');
+                const bChest = String(b.originalChestNo || b.chestNo || '');
                 const aNumber = parseInt(aChest.replace(/\D/g, ''), 10) || 0;
                 const bNumber = parseInt(bChest.replace(/\D/g, ''), 10) || 0;
                 const result = aNumber !== bNumber ? aNumber - bNumber : aChest.localeCompare(bChest);
@@ -3878,14 +3884,39 @@
                         (window.programCandidates || []).forEach(candidate => {
                             const sub = allSubs.find(item =>
                                 String(item.origCandidateId || '') === String(candidate.originalCandidateId || candidate.id || '') ||
-                                String(item.origChestNo || '') === String(candidate.originalChestNo || candidate.chestNo || '')
+                                String(item.origChestNo || '') === String(candidate.originalChestNo || candidate.chestNo || '') ||
+                                (item.registrationMutated !== false && (
+                                    String(item.subCandidateId || '') === String(candidate.id || '') ||
+                                    String(item.subChestNo || '') === String(candidate.chestNo || '')
+                                ))
                             );
                             if (sub && sub.type === 'substitute') {
+                                // Recover the original slot for substitutions created by
+                                // older versions that rewrote the registration document.
+                                candidate.originalCandidateId = sub.origCandidateId || candidate.originalCandidateId;
+                                candidate.originalChestNo = sub.origChestNo || candidate.originalChestNo;
                                 candidate.id = sub.subCandidateId || candidate.id;
                                 candidate.name = sub.subCandidateName || candidate.name;
                                 candidate.chestNo = sub.subChestNo || candidate.chestNo;
                             }
                         });
+
+                        // Recover original ordering for team/general registrations too.
+                        (window.programRegistrations || []).forEach(registration => {
+                            const currentChests = Array.isArray(registration.chestNumbers)
+                                ? registration.chestNumbers
+                                : (registration.chestNo ? [registration.chestNo] : []);
+                            registration.judgeOrderChestNumbers = currentChests.map(chest => {
+                                const legacySub = allSubs.find(item => item.registrationMutated !== false
+                                    && String(item.subChestNo || '') === String(chest));
+                                return legacySub?.origChestNo || chest;
+                            });
+                        });
+
+                        const openResultsSidebar = document.getElementById('resultsSidebar');
+                        if (openResultsSidebar && !openResultsSidebar.classList.contains('translate-x-full')) {
+                            if (window.renderCandidatesCards) window.renderCandidatesCards();
+                        }
 
                         if (allSubs.length === 0) {
                             if (subsList) subsList.innerHTML = `
