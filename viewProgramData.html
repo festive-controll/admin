@@ -1217,7 +1217,12 @@
                 for (const [team, teamChests] of groupedByTeam) {
                     const existing = await window.db.collection('registrations')
                         .where('programId', '==', programId).where('team', '==', team).get();
-                    const savedChests = existing.empty ? [] : (existing.docs[0].data().chestNumbers || []);
+                    const savedChests = existing.docs.flatMap(doc => {
+                        const data = doc.data();
+                        return Array.isArray(data.chestNumbers)
+                            ? data.chestNumbers
+                            : (data.chestNo ? [data.chestNo] : []);
+                    });
                     const combinedChests = [...new Set([...savedChests, ...teamChests].map(String))];
                     const payload = { programId, team, chestNumbers: combinedChests, memberCount: combinedChests.length, updatedAt: new Date() };
                     if (existing.empty) {
@@ -1399,6 +1404,48 @@
                 entry.memberCount = Math.max(parseInt(entry.memberCount, 10) || 0, entry.chestNumbers.length);
             });
             return [...merged.values()];
+        };
+
+        // Remove repeated individual candidates without sorting or changing the
+        // position of the first registration in which each candidate appears.
+        window.normalizeIndividualRegistrations = function(registrations) {
+            const seenChests = new Set();
+            const normalized = [];
+
+            (registrations || []).forEach(reg => {
+                const chests = Array.isArray(reg.chestNumbers)
+                    ? reg.chestNumbers
+                    : (reg.chestNo ? [reg.chestNo] : []);
+
+                // Keep legacy/placeholder registrations that do not identify a
+                // candidate; there is no safe identity with which to deduplicate.
+                if (chests.length === 0) {
+                    normalized.push(reg);
+                    return;
+                }
+
+                const names = Array.isArray(reg.candidateNames) ? reg.candidateNames : [];
+                const uniqueChests = [];
+                const uniqueNames = [];
+                chests.forEach((chest, index) => {
+                    const displayChest = String(chest).trim();
+                    const key = displayChest.toLocaleLowerCase();
+                    if (!key || seenChests.has(key)) return;
+                    seenChests.add(key);
+                    uniqueChests.push(displayChest);
+                    uniqueNames.push(names[index]);
+                });
+
+                if (uniqueChests.length === 0) return;
+                normalized.push({
+                    ...reg,
+                    chestNumbers: uniqueChests,
+                    candidateNames: uniqueNames,
+                    memberCount: uniqueChests.length
+                });
+            });
+
+            return normalized;
         };
 
         window.getJudgeSheetOrderedTeams = function(registrations) {
@@ -2132,8 +2179,13 @@
                     const s = doc.data();
                     if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
                     if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
-                    // Match only the original registration slot. Mapping replacement
-                    // identities can apply the same overlay to an unrelated slot.
+                    // Older substitutions rewrote the registration with the substitute.
+                    // Match that identity only for legacy records, then sort by the
+                    // saved original chest number to recover the original code position.
+                    if (s.registrationMutated !== false) {
+                        if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
+                        if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                    }
                 });
 
                 // Group by team/set and find candidates. A few older registration
@@ -3678,7 +3730,7 @@
                         String(registrationProgram.section || '').toLowerCase() === 'kulliya';
                     const regs = (isGeneralProgram || isGroupProgram)
                         ? window.normalizeTeamRegistrations(rawRegs)
-                        : rawRegs;
+                        : window.normalizeIndividualRegistrations(rawRegs);
                     const isUnlimProg = isUnlimitedProgram && !isGeneralProgram;
                     const addRegBtn = document.getElementById('btn-add-registration');
 
