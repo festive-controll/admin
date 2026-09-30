@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kauthukam '26 Login UI</title>
+    <title>Artfest '26 Login UI</title>
 
     <!-- Favicon / PWA Setup -->
     <link rel="icon" href="/logo-512.svg" type="image/svg+xml">
@@ -589,7 +589,7 @@
                 <div class="bg-white/20 rounded p-1 flex items-center justify-center overflow-hidden">
                     <img id="login-logo-desktop" src="logo-512.svg" class="w-6 h-6 object-contain" alt="Logo">
                 </div>
-                <span class="fest-name-display text-white font-bold text-lg tracking-wide">Kauthukam '26</span>
+                <span class="fest-name-display text-white font-bold text-lg tracking-wide">Artfest '26</span>
             </div>
 
             <!-- Features with Palette Colors & Flaticons -->
@@ -629,7 +629,7 @@
                     <div class="bg-white/20 rounded p-1 flex items-center justify-center overflow-hidden">
                         <img id="login-logo-mobile" src="logo-512.svg" class="w-6 h-6 object-contain" alt="Logo">
                     </div>
-                    <span class="fest-name-display text-white font-bold text-lg tracking-wide">Kauthukam '26</span>
+                    <span class="fest-name-display text-white font-bold text-lg tracking-wide">Artfest '26</span>
                 </div>
             </div>
 
@@ -1243,8 +1243,8 @@
             const fallbackLogin = () => {
                 if (user === 'admin' && pass === '81119') {
                     // Seed initial data to firestore so it isn't empty!
-                    firebase.firestore().collection('admin').doc('credentials').set({ username: 'admin', password: '81119', name: 'Kauthukam' }).catch(() => { });
-                    firebase.firestore().collection('config').doc('festData').set({ name: 'Kauthukam', isActive: true }).catch(() => { });
+                    firebase.firestore().collection('admin').doc('credentials').set({ username: 'admin', password: '81119', name: 'Artfest' }).catch(() => { });
+                    firebase.firestore().collection('config').doc('festData').set({ name: 'Artfest', isActive: true }).catch(() => { });
 
                     showToast('<b>✅</b> Successfully logged in!');
                     localStorage.setItem('isLoggedIn', 'true');
@@ -1272,8 +1272,8 @@
                 if ((user === validUser && pass === validPass) || (user === 'admin' && pass === '81119')) {
                     // Owner login credentials valid — do not immediately grant dashboard access
                     if (!doc.exists) {
-                        dbRef.set({ username: 'admin', password: '81119', name: 'Kauthukam' }).catch(() => { });
-                        firebase.firestore().collection('config').doc('festData').set({ name: 'Kauthukam', isActive: true }).catch(() => { });
+                        dbRef.set({ username: 'admin', password: '81119', name: 'Artfest' }).catch(() => { });
+                        firebase.firestore().collection('config').doc('festData').set({ name: 'Artfest', isActive: true }).catch(() => { });
                     }
                     const ownerName = doc.exists ? (doc.data().name || doc.data().username) : 'Suhail';
                     resetBtn();

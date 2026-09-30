@@ -1024,7 +1024,10 @@
                     const s = d.data();
                     if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
                     if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
-                    // Match only the original slot so its code-letter position stays fixed.
+                    if (s.registrationMutated !== false) {
+                        if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
+                        if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                    }
                 });
 
                 const progType = (prog.type || '').toLowerCase();
@@ -1139,6 +1142,7 @@
                             let origSortChest = chest;
 
                             const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                            if (sub?.type === 'cancel') return;
                             if (sub) {
                                 if (sub.origChestNo) origSortChest = sub.origChestNo;
                                 if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
@@ -1146,8 +1150,6 @@
                                     cChest = sub.subChestNo || cChest;
                                     cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
                                     cId = sub.subCandidateId || cId;
-                                } else if (sub.type === 'cancel') {
-                                    cName = cName + ' (CANCELLED)';
                                 }
                             }
 

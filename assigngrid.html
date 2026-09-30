@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Grade & Position</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        :root { --blue:#134e8e; --ink:#172033; --muted:#667085; --line:#e7eaf0; --bg:#f6f8fb; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:Inter,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+        button,select,input { font:inherit; }
+        .page { max-width:1180px; margin:auto; padding:34px 24px 110px; }
+        .top { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:25px; }
+        h1 { margin:0; font-size:27px; letter-spacing:-.7px; }
+        .subtitle { margin:8px 0 0; color:var(--muted); font-size:13px; line-height:1.55; }
+        .counter { padding:9px 13px; border:1px solid #dbe2ec; border-radius:99px; background:#fff; color:#475467; font-size:12px; font-weight:700; white-space:nowrap; }
+        .toolbar { display:flex; gap:12px; align-items:center; margin-bottom:15px; }
+        .search { position:relative; flex:1; }
+        .search i { position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#98a2b3; }
+        .search input { width:100%; height:44px; border:1px solid var(--line); border-radius:12px; background:#fff; padding:0 15px 0 42px; outline:none; }
+        .venue-filter { height:44px; min-width:180px; padding:0 38px 0 14px; border:1px solid var(--line); border-radius:12px; background:#fff; color:#344054; font-weight:600; outline:none; cursor:pointer; }
+        .search input:focus,.assign-select:focus,.venue-filter:focus { border-color:#7ea9d5; box-shadow:0 0 0 3px rgba(19,78,142,.09); }
+        .card { background:#fff; border:1px solid var(--line); border-radius:17px; overflow:hidden; box-shadow:0 5px 20px rgba(16,24,40,.035); }
+        .grid-head,.program-row { display:grid; grid-template-columns:minmax(260px,1.45fr) minmax(205px,1fr) minmax(205px,1fr); gap:20px; align-items:center; }
+        .grid-head { padding:12px 22px; background:#f9fafb; border-bottom:1px solid var(--line); color:#667085; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; }
+        .program-row { padding:16px 22px; border-bottom:1px solid #f0f2f5; transition:.18s; }
+        .program-row:last-child { border-bottom:0; }
+        .program-row.changed { background:#f7fbff; box-shadow:inset 3px 0 var(--blue); }
+        .program-name { font-size:14px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .program-meta { display:flex; align-items:center; gap:8px; margin-top:7px; color:#8a94a5; font-size:11px; font-weight:600; }
+        .code { color:var(--blue); background:#eef5fb; padding:3px 7px; border-radius:6px; font-family:monospace; font-weight:800; }
+        .type { text-transform:capitalize; }
+        .assign-select { width:100%; height:42px; padding:0 35px 0 12px; border:1px solid #dfe3e9; border-radius:10px; color:#344054; background:#fff; outline:none; cursor:pointer; }
+        .state { padding:64px 24px; text-align:center; color:#8a94a5; font-size:13px; }
+        .state i { display:block; font-size:27px; margin-bottom:12px; color:#b8c0cc; }
+        .savebar { position:fixed; z-index:10; bottom:0; left:0; right:0; padding:14px 24px; background:rgba(255,255,255,.92); backdrop-filter:blur(12px); border-top:1px solid var(--line); }
+        .savebar-inner { max-width:1132px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+        #changeText { color:#667085; font-size:12px; font-weight:600; }
+        .finish { border:0; border-radius:11px; padding:12px 24px; background:var(--blue); color:#fff; font-weight:800; cursor:pointer; box-shadow:0 6px 15px rgba(19,78,142,.22); min-width:135px; }
+        .finish:disabled { opacity:.48; cursor:not-allowed; box-shadow:none; }
+        .toast { position:fixed; z-index:30; left:50%; bottom:82px; transform:translate(-50%,20px); padding:11px 16px; border-radius:10px; color:#fff; background:#172033; font-size:13px; font-weight:700; opacity:0; pointer-events:none; transition:.22s; box-shadow:0 8px 24px rgba(0,0,0,.16); }
+        .toast.show { opacity:1; transform:translate(-50%,0); }
+        .toast.error { background:#b42318; }
+        @media(max-width:760px) {
+            .page { padding:24px 14px 105px; } .top { display:block; } .counter { display:inline-block; margin-top:14px; }
+            .toolbar { align-items:stretch; flex-direction:column; } .venue-filter { width:100%; }
+            .grid-head { display:none; } .program-row { grid-template-columns:1fr; gap:12px; padding:18px; }
+            .program-row label { display:block; margin-bottom:6px; color:#667085; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+        }
+        @media(min-width:761px) { .program-row label { display:none; } }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <header class="top">
+            <div>
+                <h1>Assign Grade & Position</h1>
+                <p class="subtitle">Assign templates to Group and General programs. Saving also refreshes matching points in existing result entries.</p>
+            </div>
+            <span class="counter" id="programCount">Loading programs…</span>
+        </header>
+
+        <div class="toolbar">
+            <div class="search"><i class="fi fi-rr-search"></i><input id="searchInput" type="search" placeholder="Search program name or code" autocomplete="off"></div>
+            <select id="venueFilter" class="venue-filter" aria-label="Filter by venue type">
+                <option value="All">All venues</option>
+                <option value="Stage">Stage</option>
+                <option value="Non-Stage">Non-Stage</option>
+                <option value="Sports">Sports</option>
+            </select>
+        </div>
+
+        <section class="card">
+            <div class="grid-head"><span>Program</span><span>Position template</span><span>Grade template</span></div>
+            <div id="programList"><div class="state"><i class="fi fi-rr-spinner"></i>Loading assignments…</div></div>
+        </section>
+    </main>
+
+    <footer class="savebar">
+        <div class="savebar-inner"><span id="changeText">No unsaved changes</span><button class="finish" id="finishButton" type="button" disabled>Finish</button></div>
+    </footer>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+    (() => {
+        'use strict';
+        const firebaseConfig = {
+            apiKey: 'AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o',
+            authDomain: 'festie-s1u2h3.firebaseapp.com',
+            projectId: 'festie-s1u2h3',
+            storageBucket: 'festie-s1u2h3.firebasestorage.app',
+            messagingSenderId: '794049194885',
+            appId: '1:794049194885:web:8f75f0df4c15cde15eb2ec'
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = window.db || firebase.firestore();
+        window.db = db;
+
+        const list = document.getElementById('programList');
+        const finishButton = document.getElementById('finishButton');
+        const changeText = document.getElementById('changeText');
+        const programCount = document.getElementById('programCount');
+        const changed = new Map();
+        let programs = [], positionTemplates = [], gradeTemplates = [];
+
+        const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+        const normalize = value => String(value || '').replace(/\s*\([^)]*pts?\)\s*$/i, '').trim().toLowerCase();
+        const templateRef = (program, kind) => program[kind + 'TemplateId'] || program[kind + 'Template'] || '';
+        const resolveTemplateId = (templates, value) => {
+            const wanted = String(value || '').trim().toLowerCase();
+            const match = templates.find(t => t.id.toLowerCase() === wanted || String(t.name || '').trim().toLowerCase() === wanted);
+            return match ? match.id : '';
+        };
+        function getVenueCategory(program) {
+            const code = String(program.code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const codeMatch = code.match(/^([A-Z]+)(\d+)/);
+            if (codeMatch) {
+                const prefix = codeMatch[1];
+                const series = prefix.length > 1 ? prefix.slice(1) : prefix;
+                if (series.startsWith('Y')) return 'Stage';
+                if (series.startsWith('X')) return 'Non-Stage';
+            }
+            const venue = [program.venueTypeName, program.venueType, program.venue_type, program.progSet]
+                .filter(value => typeof value === 'string').join(' ').toLowerCase();
+            const section = String(program.section || '').toLowerCase();
+            if (venue.includes('sport') || section.includes('sport')) return 'Sports';
+            if (/non[\s_-]*stage/.test(venue)) return 'Non-Stage';
+            if (venue.includes('stage')) return 'Stage';
+            return 'Other';
+        }
+
+        function toast(message, error = false) {
+            const el = document.getElementById('toast');
+            el.textContent = message; el.className = 'toast show' + (error ? ' error' : '');
+            clearTimeout(toast.timer); toast.timer = setTimeout(() => el.className = 'toast', 3000);
+        }
+        function options(templates, selected, placeholder) {
+            return `<option value="">${placeholder}</option>` + templates.map(t => `<option value="${escapeHtml(t.id)}" ${t.id === selected ? 'selected' : ''}>${escapeHtml(t.name || 'Unnamed template')}</option>`).join('');
+        }
+        function updateFooter() {
+            const count = changed.size;
+            changeText.textContent = count ? `${count} program${count === 1 ? '' : 's'} changed` : 'No unsaved changes';
+            finishButton.disabled = !count;
+        }
+        function render() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const venue = document.getElementById('venueFilter').value;
+            const venuePrograms = programs.filter(p => venue === 'All' || getVenueCategory(p) === venue);
+            const visible = venuePrograms.filter(p => !query || String(p.name || '').toLowerCase().includes(query) || String(p.code || '').toLowerCase().includes(query));
+            programCount.textContent = `${venuePrograms.length} ${venue === 'All' ? 'Group / General' : venue} program${venuePrograms.length === 1 ? '' : 's'}`;
+            if (!visible.length) {
+                list.innerHTML = `<div class="state"><i class="fi fi-rr-search"></i>${programs.length ? 'No matching programs found.' : 'No Group or General programs found.'}</div>`;
+                return;
+            }
+            list.innerHTML = visible.map(p => {
+                const pending = changed.get(p.id);
+                const positionId = pending ? pending.positionId : resolveTemplateId(positionTemplates, templateRef(p, 'position'));
+                const gradeId = pending ? pending.gradeId : resolveTemplateId(gradeTemplates, templateRef(p, 'grade'));
+                return `<div class="program-row ${pending ? 'changed' : ''}" data-id="${escapeHtml(p.id)}">
+                    <div><div class="program-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name || 'Unnamed program')}</div><div class="program-meta"><span class="code">${escapeHtml(p.code || 'NO CODE')}</span><span class="type">${escapeHtml(p.type)}</span>${p.section ? `<span>• ${escapeHtml(p.section)}</span>` : ''}</div></div>
+                    <div><label>Position template</label><select class="assign-select position-select">${options(positionTemplates, positionId, 'Not assigned')}</select></div>
+                    <div><label>Grade template</label><select class="assign-select grade-select">${options(gradeTemplates, gradeId, 'Not assigned')}</select></div>
+                </div>`;
+            }).join('');
+        }
+        function recordChange(row) {
+            const id = row.dataset.id;
+            const program = programs.find(p => p.id === id);
+            const value = { positionId: row.querySelector('.position-select').value, gradeId: row.querySelector('.grade-select').value };
+            const originalPosition = resolveTemplateId(positionTemplates, templateRef(program, 'position'));
+            const originalGrade = resolveTemplateId(gradeTemplates, templateRef(program, 'grade'));
+            if (value.positionId === originalPosition && value.gradeId === originalGrade) changed.delete(id); else changed.set(id, value);
+            row.classList.toggle('changed', changed.has(id)); updateFooter();
+        }
+
+        list.addEventListener('change', event => { if (event.target.matches('.assign-select')) recordChange(event.target.closest('.program-row')); });
+        document.getElementById('searchInput').addEventListener('input', render);
+        document.getElementById('venueFilter').addEventListener('change', render);
+
+        function valueMap(template) {
+            return new Map((template?.values || template?.positions || template?.items || []).map(item => {
+                const label = String(item.label || item.position || item.name || '').trim();
+                return [normalize(label), { label, points:Number(item.points ?? item.value ?? 0) }];
+            }).filter(([key]) => key));
+        }
+        async function buildResultUpdates(programId, assignment) {
+            const snap = await db.collection('programResults').where('programId', '==', programId).get();
+            const posMap = valueMap(positionTemplates.find(t => t.id === assignment.positionId));
+            const gradeMap = valueMap(gradeTemplates.find(t => t.id === assignment.gradeId));
+            const updates = [];
+            snap.forEach(doc => {
+                const result = doc.data() || {}, data = {};
+                const pos = posMap.get(normalize(result.positionLabel));
+                const grade = gradeMap.get(normalize(result.gradeLabel || result.grade));
+                if (pos) { data.positionLabel = pos.label; data.positionPoints = pos.points; }
+                if (grade) { data.gradeLabel = grade.label; data.gradePoints = grade.points; }
+                if (pos || grade) data.totalPoints = Number(pos ? pos.points : result.positionPoints || 0) + Number(grade ? grade.points : result.gradePoints || 0);
+                if (Object.keys(data).length) updates.push({ ref:doc.ref, data });
+            });
+            return updates;
+        }
+        async function commitWrites(writes) {
+            for (let start = 0; start < writes.length; start += 450) {
+                const batch = db.batch();
+                writes.slice(start, start + 450).forEach(write => batch.update(write.ref, write.data));
+                await batch.commit();
+            }
+        }
+        finishButton.addEventListener('click', async () => {
+            if (!changed.size) return;
+            finishButton.disabled = true; finishButton.textContent = 'Saving…';
+            try {
+                const writes = [];
+                for (const [id, assignment] of changed) {
+                    writes.push({ ref:db.collection('programs').doc(id), data:{
+                        positionTemplateId: assignment.positionId || null,
+                        positionTemplate: firebase.firestore.FieldValue.delete(),
+                        enableScoring: Boolean(assignment.positionId),
+                        gradeTemplateId: assignment.gradeId || null,
+                        gradeTemplate: firebase.firestore.FieldValue.delete(),
+                        enableGrading: Boolean(assignment.gradeId),
+                        resultsPublished: false,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }});
+                    const resultWrites = await buildResultUpdates(id, assignment);
+                    resultWrites.forEach(write => { write.data.updatedAt = firebase.firestore.FieldValue.serverTimestamp(); writes.push(write); });
+                }
+                await commitWrites(writes);
+                for (const [id, assignment] of changed) {
+                    const program = programs.find(p => p.id === id);
+                    program.positionTemplateId = assignment.positionId || null; program.gradeTemplateId = assignment.gradeId || null;
+                    delete program.positionTemplate; delete program.gradeTemplate;
+                }
+                const saved = changed.size; changed.clear(); updateFooter(); render();
+                toast(`${saved} program${saved === 1 ? '' : 's'} updated successfully.`);
+            } catch (error) {
+                console.error('Unable to save template assignments:', error);
+                toast('Could not save changes: ' + error.message, true); updateFooter();
+            } finally { finishButton.textContent = 'Finish'; finishButton.disabled = !changed.size; }
+        });
+
+        async function load() {
+            try {
+                const [programSnap, positionSnap, gradeSnap] = await Promise.all([
+                    db.collection('programs').get(), db.collection('positionTemplates').get(), db.collection('gradeTemplates').get()
+                ]);
+                programs = programSnap.docs.map(doc => ({id:doc.id, ...doc.data()})).filter(p => ['group','general'].includes(String(p.type || '').trim().toLowerCase())).sort((a,b) => String(a.name || '').localeCompare(String(b.name || '')));
+                positionTemplates = positionSnap.docs.map(doc => ({id:doc.id, ...doc.data()})).sort((a,b) => String(a.name || '').localeCompare(String(b.name || '')));
+                gradeTemplates = gradeSnap.docs.map(doc => ({id:doc.id, ...doc.data()})).sort((a,b) => String(a.name || '').localeCompare(String(b.name || '')));
+                render();
+            } catch (error) {
+                console.error('Unable to load assignment grid:', error);
+                list.innerHTML = `<div class="state"><i class="fi fi-rr-triangle-warning"></i>Could not load data. ${escapeHtml(error.message)}</div>`;
+                programCount.textContent = 'Load failed'; toast('Could not load assignment data.', true);
+            }
+        }
+        load();
+    })();
+    </script>
+</body>
+</html>

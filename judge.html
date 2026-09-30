@@ -298,7 +298,10 @@
                     const s = doc.data();
                     if (s.origCandidateId) subsMap[String(s.origCandidateId)] = s;
                     if (s.origChestNo) subsMap[String(s.origChestNo)] = s;
-                    // Substitutions replace the original slot in-place.
+                    if (s.registrationMutated !== false) {
+                        if (s.subCandidateId) subsMap[String(s.subCandidateId)] = s;
+                        if (s.subChestNo) subsMap[String(s.subChestNo)] = s;
+                    }
                 });
 
                 let teamGroups = {};
@@ -316,14 +319,13 @@
                             let origSortChest = chest;
 
                             const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                            if (sub?.type === 'cancel') return;
                             if (sub) {
                                 if (sub.origChestNo) origSortChest = sub.origChestNo;
                                 if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
                                     const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
                                     cChest = sub.subChestNo || cChest;
                                     cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
-                                } else if (sub.type === 'cancel') {
-                                    cName = cName + ' (CANCELLED)';
                                 }
                             }
 
@@ -341,6 +343,7 @@
                         let origSortChest = cChest;
 
                         const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                        if (sub?.type === 'cancel') return;
                         if (sub) {
                             // The displayed participant may change, but ordering must keep
                             // using the original registration slot/code letter.
@@ -349,8 +352,6 @@
                                 const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
                                 cChest = sub.subChestNo || cChest;
                                 cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
-                            } else if (sub.type === 'cancel') {
-                                cName = cName + ' (CANCELLED)';
                             }
                         }
 

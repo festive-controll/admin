@@ -861,7 +861,7 @@
                             participant.name = sub.subCandidateName || participant.name;
                             participant.chestNo = sub.subChestNo || participant.chestNo;
                         } else if (sub?.type === 'cancel') {
-                            participant.name += ' (CANCELLED)';
+                            return null;
                         }
                         // Sorting by the original registration keeps its code-letter slot.
                         participant.originalName = originalName;
@@ -886,21 +886,23 @@
                         const reg = doc.data();
                         const refs = Array.isArray(reg.chestNumbers) && reg.chestNumbers.length ? reg.chestNumbers : [reg.candidateId || reg.chestNo].filter(Boolean);
                         if (!refs.length && (reg.candidateName || reg.name)) {
-                            participants.push(applySubstitution({
+                            const participant = applySubstitution({
                                 id: reg.candidateId || '',
                                 chestNo: reg.chestNo || '',
                                 name: reg.candidateName || reg.name,
                                 team: reg.team || ''
-                            }, reg.candidateId || reg.chestNo));
+                            }, reg.candidateId || reg.chestNo);
+                            if (participant) participants.push(participant);
                         }
                         refs.forEach(ref => {
                             const candidate = byId.get(String(ref)) || byChest.get(String(ref).trim());
-                            participants.push(applySubstitution({
+                            const participant = applySubstitution({
                                 id: candidate?.id || reg.candidateId || '',
                                 chestNo: candidate?.chestNo || reg.chestNo || ref,
                                 name: candidate?.name || reg.candidateName || reg.name || `Chest #${ref}`,
                                 team: candidate?.team || reg.team || ''
-                            }, ref));
+                            }, ref);
+                            if (participant) participants.push(participant);
                         });
                     });
                     participants.sort((a, b) => String(a.team).localeCompare(String(b.team)) || String(a.originalName).localeCompare(String(b.originalName)));

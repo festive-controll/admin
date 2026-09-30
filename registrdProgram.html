@@ -139,6 +139,7 @@
         var allPrograms = [];
         var allRegistrations = [];
         var allCandidates = [];
+        var allSubstitutions = [];
         var isRegInitialized = false;
         var regRenderDebounceTimer = null;
 
@@ -179,6 +180,19 @@
                 allRegistrations = regSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 queueRenderProgramsAndRegs();
             }, err => console.error("Registrations error:", err));
+
+            if (window.regSubsUnsub) window.regSubsUnsub();
+            window.regSubsUnsub = db.collection('substitutions').onSnapshot(subSnap => {
+                allSubstitutions = subSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+                queueRenderProgramsAndRegs();
+            }, err => console.error("Substitutions error:", err));
+        }
+
+        function isCancelledRegistrationCandidate(programId, candidate, chest) {
+            return allSubstitutions.some(sub => sub.programId === programId && sub.type === 'cancel' && (
+                (sub.origCandidateId && candidate && String(sub.origCandidateId) === String(candidate.id)) ||
+                (sub.origChestNo && String(sub.origChestNo).trim() === String(chest || '').trim())
+            ));
         }
 
         function compareProgramCodes(codeARaw, codeBRaw) {
@@ -234,7 +248,13 @@
                 // Find registrations for this program
                 const regs = allRegistrations.filter(r => r.programId === prog.id);
                 const totalRegs = regs.length; // number of teams registered
-                const candidateCount = regs.reduce((sum, r) => sum + (r.chestNumbers ? r.chestNumbers.length : 0), 0);
+                const candidateCount = regs.reduce((sum, r) => {
+                    const chests = Array.isArray(r.chestNumbers) ? r.chestNumbers : (r.chestNo ? [r.chestNo] : []);
+                    return sum + chests.filter(chest => {
+                        const candidate = allCandidates.find(c => String(c.chestNo).trim() === String(chest).trim() && c.team === r.team);
+                        return !isCancelledRegistrationCandidate(prog.id, candidate, chest);
+                    }).length;
+                }, 0);
 
                 // Calculate colors/badges based on type/section
                 const typeBadge = prog.type === 'Group' ? 'bg-[#3182ce] text-white' : 'bg-white border-gray-200 text-gray-700 font-bold shadow-sm';
@@ -249,6 +269,7 @@
                         if (reg.chestNumbers && reg.chestNumbers.length > 0) {
                             reg.chestNumbers.forEach(chest => {
                                 const cand = allCandidates.find(c => c.chestNo === chest && c.team === reg.team);
+                                if (isCancelledRegistrationCandidate(prog.id, cand, chest)) return;
                                 const cName = cand ? cand.name : 'Unknown Candidate';
                                 teamCands += `
                                     <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">

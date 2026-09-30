@@ -2261,14 +2261,13 @@
                                 let origSortChest = chest;
 
                                 const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                                if (sub?.type === 'cancel') return;
                                 if (sub) {
                                     if (sub.origChestNo) origSortChest = sub.origChestNo;
                                     if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
                                         const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
                                         cChest = sub.subChestNo || cChest;
                                         cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
-                                    } else if (sub.type === 'cancel') {
-                                        cName = cName + ' (CANCELLED)';
                                     }
                                 }
 
@@ -2286,14 +2285,13 @@
                             let origSortChest = cChest;
 
                             const sub = subsMap[String(cId)] || subsMap[String(cChest)];
+                            if (sub?.type === 'cancel') return;
                             if (sub) {
                                 if (sub.origChestNo) origSortChest = sub.origChestNo;
                                 if (sub.type === 'substitute' && (sub.subCandidateId || sub.subChestNo)) {
                                     const sCand = allCands.find(c => String(c.id) === String(sub.subCandidateId) || String(c.chestNo).trim() === String(sub.subChestNo).trim());
                                     cChest = sub.subChestNo || cChest;
                                     cName = sCand ? sCand.name : (sub.subCandidateName || `Chest #${sub.subChestNo}`);
-                                } else if (sub.type === 'cancel') {
-                                    cName = cName + ' (CANCELLED)';
                                 }
                             }
 
@@ -3910,19 +3908,25 @@
                             const chestEl = row.querySelector('.registration-candidate-chest');
                             if (!sub) return;
 
-                            const displayName = sub.type === 'cancel'
-                                ? `${sub.origCandidateName || nameEl?.textContent || 'Candidate'} (CANCELLED)`
-                                : (sub.subCandidateName || nameEl?.textContent || 'Replacement Candidate');
-                            const displayChest = sub.type === 'cancel'
-                                ? (sub.origChestNo || originalChest)
-                                : (sub.subChestNo || originalChest);
+                            if (sub.type === 'cancel') {
+                                row.remove();
+                                return;
+                            }
+
+                            const displayName = sub.subCandidateName || nameEl?.textContent || 'Replacement Candidate';
+                            const displayChest = sub.subChestNo || originalChest;
                             if (nameEl) nameEl.textContent = displayName;
                             if (avatarEl) avatarEl.textContent = displayName.charAt(0);
                             if (chestEl && !isTeamManager) chestEl.textContent = 'CHEST: ' + displayChest;
-                            row.classList.toggle('opacity-60', sub.type === 'cancel');
                         });
 
                         // Keep the result-entry sidebar consistent with this overlay.
+                        window.programCandidates = (window.programCandidates || []).filter(candidate => !allSubs.some(item =>
+                            item.type === 'cancel' && (
+                                String(item.origCandidateId || '') === String(candidate.originalCandidateId || candidate.id || '') ||
+                                String(item.origChestNo || '') === String(candidate.originalChestNo || candidate.chestNo || '')
+                            )
+                        ));
                         (window.programCandidates || []).forEach(candidate => {
                             const sub = allSubs.find(item =>
                                 String(item.origCandidateId || '') === String(candidate.originalCandidateId || candidate.id || '') ||
@@ -3942,6 +3946,10 @@
                                 candidate.chestNo = sub.subChestNo || candidate.chestNo;
                             }
                         });
+
+                        const visibleRegistrationCount = document.querySelectorAll('#registrations-list-container .registration-candidate-row').length;
+                        const totalRegsEl = document.getElementById('vp-total-regs');
+                        if (totalRegsEl) totalRegsEl.innerText = visibleRegistrationCount;
 
                         // Recover original ordering for team/general registrations too.
                         (window.programRegistrations || []).forEach(registration => {

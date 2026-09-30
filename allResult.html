@@ -320,12 +320,30 @@
                     calculatePoints(); renderRankings(); renderDataView();
                 }
 
+                function resultPoints(result) {
+                    if (!result) return 0;
+                    const explicit = [result.totalPoints, result.points, result.score]
+                        .find(value => value !== undefined && value !== null && value !== '' && Number.isFinite(Number(value)));
+                    if (explicit !== undefined) return Number(explicit);
+                    return (Number(result.gradePoints) || 0) + (Number(result.positionPoints) || 0);
+                }
+
+                function ordinal(position) {
+                    const value = Number(position);
+                    if (!Number.isInteger(value) || value <= 0) return '';
+                    const mod100 = value % 100;
+                    const suffix = mod100 >= 11 && mod100 <= 13
+                        ? 'th'
+                        : ({ 1: 'st', 2: 'nd', 3: 'rd' }[value % 10] || 'th');
+                    return `${value}${suffix}`;
+                }
+
                 function calculatePoints() {
                     teamPointsMap = {}; allTeams.forEach(t => teamPointsMap[t.name] = { points: 0, color: t.color || '#CBD5E1' });
                     
                     // Add Program Results
                     const pubIds = new Set(allPrograms.filter(p => p.resultsPublished && matchesActiveProgramType(p) && (currentFilter === 'All' || p.section === currentFilter)).map(p => p.id));
-                    allResults.forEach(r => { if (pubIds.has(r.programId) && teamPointsMap[r.team]) teamPointsMap[r.team].points += (r.totalPoints || 0); });
+                    allResults.forEach(r => { if (pubIds.has(r.programId) && teamPointsMap[r.team]) teamPointsMap[r.team].points += resultPoints(r); });
                     
                     // Subtract Negative Marks
                     allNegMarks.forEach(neg => {
@@ -335,7 +353,7 @@
                             // Standard: Deduct the 'marks' amount from each team associated with the candidates.
                             const uniqueTeams = [...new Set(neg.teams)];
                             uniqueTeams.forEach(tName => {
-                                if (teamPointsMap[tName]) teamPointsMap[tName].points -= (neg.marks || 0);
+                                if (teamPointsMap[tName]) teamPointsMap[tName].points -= (Number(neg.marks) || 0);
                             });
                         }
                     });
@@ -415,7 +433,7 @@
                         </div>
                         <div class="col-span-6 grid grid-flow-col auto-cols-auto gap-4 items-center">`;
                         rankedTeams.forEach(t => {
-                            const pts = progResults.filter(r => r.team === t.name).reduce((sum, r) => sum + (r.totalPoints || 0), 0);
+                            const pts = progResults.filter(r => r.team === t.name).reduce((sum, r) => sum + resultPoints(r), 0);
                             rowHtml += `<div class="text-[13px] font-bold text-center ${pts > 0 ? 'text-gray-900 border-b-2 border-brand-gold/20 pb-0.5' : 'text-gray-100'}">${pts > 0 ? pts : '-'}</div>`;
                         });
                         rowHtml += `
@@ -437,11 +455,10 @@
                         let items = '';
                         res.forEach(r => {
                             const pos = parseInt(r.position);
-                            const grade = r.grade || '';
+                            const grade = String(r.gradeLabel || r.grade || '').replace(/grade/i, '').trim();
                             const team = allTeams.find(t => t.name === r.team) || { color: '#CBD5E1' };
                             
-                            let posSuffix = pos === 1 ? 'st' : pos === 2 ? 'nd' : pos === 3 ? 'rd' : 'th';
-                            let posLabel = pos ? (pos + posSuffix) : '';
+                            let posLabel = ordinal(pos);
                             let combinedStatus = [posLabel, grade].filter(Boolean).join(' ');
 
                             let posClass = pos === 1 ? 'bg-amber-100 text-amber-700 border-amber-200' : 
@@ -462,7 +479,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <span class="text-[12px] font-black text-brand-blue">${r.totalPoints || r.points || 0}</span>
+                                <span class="text-[12px] font-black text-brand-blue">${resultPoints(r)}</span>
                             </div>`;
                         });
                         html += `
