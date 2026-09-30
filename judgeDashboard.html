@@ -1464,6 +1464,30 @@
             evalProgramId = null;
         }
 
+        function syncEGradeTeamPenalty(batch, resultDocId, teamName, gradeLabel, gradePoints) {
+            const penaltyRef = db.collection('negativeMarks').doc(`e_grade_${resultDocId}`);
+            const isEGrade = /^e(?:\s|\(|$)/i.test(String(gradeLabel || '').trim());
+            if (!isEGrade || !teamName) {
+                batch.delete(penaltyRef);
+                return false;
+            }
+            batch.set(penaltyRef, {
+                candidateIds: [],
+                candidateNames: [],
+                teams: [teamName],
+                teamName,
+                recipientType: 'team',
+                purpose: 'Carelessness',
+                marks: Math.max(1, Math.abs(Number(gradePoints) || 0)),
+                source: 'E Grade',
+                resultId: resultDocId,
+                programId: evalProgramId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'Active'
+            }, { merge: true });
+            return true;
+        }
+
         async function saveJudgeResults() {
             if (!evalProgramId) return;
             const btn = document.getElementById('btn-save-results');
@@ -1499,6 +1523,7 @@
 
                         const docId = `${evalProgramId}_group_${teamName.replace(/\s/g,'_')}`;
                         const docRef = db.collection('programResults').doc(docId);
+                        const isEGrade = syncEGradeTeamPenalty(batch, docId, teamName, gLbl, gPts);
 
                         if (posMarks === null && gradeMarks === null && !gLbl && !pLbl) {
                             batch.delete(docRef);
@@ -1513,10 +1538,10 @@
                                 posMarks: posMarks,
                                 gradeMarks: gradeMarks,
                                 gradeLabel: gLbl,
-                                gradePoints: gPts,
+                                gradePoints: isEGrade ? 0 : gPts,
                                 positionLabel: pLbl,
                                 positionPoints: pPts,
-                                totalPoints: totalPts,
+                                totalPoints: isEGrade ? pPts : totalPts,
                                 updatedAt: new Date(),
                                 evaluatedBy: judgeId
                             }, {merge: true});
@@ -1544,6 +1569,7 @@
 
                         const docId = `${evalProgramId}_${cId}`;
                         const docRef = db.collection('programResults').doc(docId);
+                        const isEGrade = syncEGradeTeamPenalty(batch, docId, team, gLbl, gPts);
 
                         if (posMarks === null && gradeMarks === null && !gLbl && !pLbl) {
                             batch.delete(docRef);
@@ -1559,10 +1585,10 @@
                                 posMarks: posMarks,
                                 gradeMarks: gradeMarks,
                                 gradeLabel: gLbl,
-                                gradePoints: gPts,
+                                gradePoints: isEGrade ? 0 : gPts,
                                 positionLabel: pLbl,
                                 positionPoints: pPts,
-                                totalPoints: totalPts,
+                                totalPoints: isEGrade ? pPts : totalPts,
                                 updatedAt: new Date(),
                                 evaluatedBy: judgeId
                             }, {merge: true});

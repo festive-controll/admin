@@ -828,6 +828,25 @@
         </div>
     </div>
 
+    <!-- Confirm an intentionally empty program result -->
+    <div id="emptyResultModal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="emptyResultModalTitle">
+        <div class="w-full max-w-md rounded-3xl border border-gray-100 bg-white p-6 shadow-2xl">
+            <div class="flex items-start gap-4">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-100 bg-amber-50 text-amber-600">
+                    <i class="fi fi-rr-triangle-warning text-lg"></i>
+                </div>
+                <div>
+                    <h3 id="emptyResultModalTitle" class="text-base font-bold text-gray-900">No result data entered</h3>
+                    <p class="mt-1 text-[13px] leading-5 text-gray-500">No position or grade has been selected. Do you want to leave the form open or enter this program as having no result?</p>
+                </div>
+            </div>
+            <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button id="emptyResultCancelBtn" type="button" class="rounded-xl px-5 py-2.5 text-[13px] font-bold text-gray-600 transition-colors hover:bg-gray-100">Don't submit</button>
+                <button id="emptyResultConfirmBtn" type="button" class="rounded-xl bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-blue-700">No result — enter as program result</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Judge Sheet Export Modal -->
     <div id="judgesheetModalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 transform transition-transform duration-300 scale-95 overflow-hidden" id="judgesheetModalContent">
@@ -1768,6 +1787,37 @@
             if(ptsEl) ptsEl.innerText = (gPts + pPts).toString();
         };
 
+        window.confirmEmptyProgramResult = function() {
+            const modal = document.getElementById('emptyResultModal');
+            const cancelBtn = document.getElementById('emptyResultCancelBtn');
+            const confirmBtn = document.getElementById('emptyResultConfirmBtn');
+            if (!modal || !cancelBtn || !confirmBtn) return Promise.resolve(false);
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            cancelBtn.focus();
+
+            return new Promise(resolve => {
+                const finish = confirmed => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    cancelBtn.removeEventListener('click', cancel);
+                    confirmBtn.removeEventListener('click', confirm);
+                    modal.removeEventListener('click', backdrop);
+                    document.removeEventListener('keydown', keyboard);
+                    resolve(confirmed);
+                };
+                const cancel = () => finish(false);
+                const confirm = () => finish(true);
+                const backdrop = event => { if (event.target === modal) cancel(); };
+                const keyboard = event => { if (event.key === 'Escape') cancel(); };
+                cancelBtn.addEventListener('click', cancel);
+                confirmBtn.addEventListener('click', confirm);
+                modal.addEventListener('click', backdrop);
+                document.addEventListener('keydown', keyboard);
+            });
+        };
+
         window.saveAllResults = async function() {
             const db = window.db;
             const programId = localStorage.getItem('viewProgramId');
@@ -1778,6 +1828,19 @@
             const isGeneral = progType === 'general';
             const isGroup = progType === 'group' || progSection === 'kulliya' || isGeneral;
 
+            const resultCards = document.querySelectorAll(isGroup ? '.group-result-card' : '.candidate-result-card');
+            if (resultCards.length === 0) {
+                vpToast(isGroup ? 'No team registrations to save.' : 'No candidates to save.', '#EF4444');
+                return;
+            }
+            const hasEnteredResult = Array.from(resultCards).some(card => {
+                const grade = card.querySelector(isGroup ? '.group-grade-select' : '.cand-grade-select');
+                const position = card.querySelector(isGroup ? '.group-pos-select' : '.cand-pos-select');
+                return (grade && grade.value && grade.value !== '0|_') ||
+                    (position && position.value && position.value !== '0|_');
+            });
+            if (!hasEnteredResult && !(await window.confirmEmptyProgramResult())) return;
+
             const btn = document.getElementById('btn-save-result');
             btn.disabled = true;
             btn.innerHTML = '<i class="fi fi-rr-spinner animate-spin"></i> Saving...';
@@ -1785,6 +1848,23 @@
             try {
                 const batch = db.batch();
                 let addedCount = 0;
+
+                const syncEGradeTeamPenalty = (resultDocId, teamName, gradeLabel, gradePoints) => {
+                    const penaltyRef = db.collection('negativeMarks').doc(`e_grade_${resultDocId}`);
+                    const isEGrade = /^e(?:\s|\(|$)/i.test(String(gradeLabel || '').trim());
+                    if (!isEGrade || !teamName) {
+                        batch.delete(penaltyRef);
+                        return false;
+                    }
+                    batch.set(penaltyRef, {
+                        candidateIds: [], candidateNames: [], teams: [teamName], teamName,
+                        recipientType: 'team', purpose: 'Carelessness',
+                        marks: Math.max(1, Math.abs(Number(gradePoints) || 0)),
+                        source: 'E Grade', resultId: resultDocId, programId,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'Active'
+                    }, { merge: true });
+                    return true;
+                };
 
                 if (isGroup || isGeneral) {
                     // --- GROUP / GENERAL MODE: Save one result per team ---
@@ -1808,6 +1888,7 @@
                         const baseDocId = `${programId}_group_${teamName.replace(/\s/g,'_')}`;
                         const docId = setNumber > 1 ? `${baseDocId}_set_${setNumber}` : baseDocId;
                         const docRef = db.collection('programResults').doc(docId);
+                        const isEGrade = syncEGradeTeamPenalty(docId, teamName, gLbl, gPts);
 
                         if(gPts === 0 && pPts === 0 && !gLbl && !pLbl) {
                             batch.delete(docRef);
@@ -1823,10 +1904,10 @@
                                 memberCount,
                                 name: isGeneral ? `Code ${codeLetter}` : teamName,
                                 gradeLabel: gLbl,
-                                gradePoints: gPts,
+                                gradePoints: isEGrade ? 0 : gPts,
                                 positionLabel: pLbl,
                                 positionPoints: pPts,
-                                totalPoints: (gPts + pPts),
+                                totalPoints: (isEGrade ? 0 : gPts) + pPts,
                                 updatedAt: new Date()
                             }, {merge: true});
                             addedCount++;
@@ -1852,15 +1933,16 @@
 
                         const docId = `${programId}_${cId}`;
                         const docRef = db.collection('programResults').doc(docId);
+                        const isEGrade = syncEGradeTeamPenalty(docId, team, gLbl, gPts);
 
                         if(gPts === 0 && pPts === 0 && !gLbl && !pLbl) {
                             batch.delete(docRef);
                         } else {
                             batch.set(docRef, {
                                 programId, candidateId: cId, chestNo, name, team,
-                                gradeLabel: gLbl, gradePoints: gPts,
+                                gradeLabel: gLbl, gradePoints: isEGrade ? 0 : gPts,
                                 positionLabel: pLbl, positionPoints: pPts,
-                                totalPoints: (gPts + pPts),
+                                totalPoints: (isEGrade ? 0 : gPts) + pPts,
                                 createdAt: new Date(),
                                 updatedAt: new Date()
                             }, {merge: true});
@@ -1870,8 +1952,12 @@
                 }
                 
                 await batch.commit();
-                await db.collection('programs').doc(programId).update({ resultsPublished: false });
-                vpToast(`✅ ${addedCount > 0 ? 'Results updated successfully!' : 'Cleared empty results.'}`, '#10B981');
+                await db.collection('programs').doc(programId).update({
+                    resultsPublished: false,
+                    resultEntered: true,
+                    noResult: addedCount === 0
+                });
+                vpToast(addedCount > 0 ? 'Results updated successfully!' : 'Program entered with no result.', '#10B981');
                 closeResultsSidebar();
             } catch(err) {
                 console.error(err);

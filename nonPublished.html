@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results Not Entered</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="logo-512.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="tailwind.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8f9fc; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { scrollbar-width: none; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+            authDomain: "festie-s1u2h3.firebaseapp.com",
+            projectId: "festie-s1u2h3",
+            storageBucket: "festie-s1u2h3.firebasestorage.app",
+            messagingSenderId: "794049194885",
+            appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        var db = window.db || firebase.firestore();
+        window.db = db;
+    </script>
+    <script type="module" src="/device-tracker.js"></script>
+</head>
+<body class="min-h-screen bg-brand-bg p-4 sm:p-6 md:p-8">
+    <main class="mx-auto w-full max-w-full">
+        <header class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-xl font-semibold leading-tight text-gray-900 sm:text-[22px]">Results Not Entered</h1>
+                <p class="mt-1 text-[12px] text-gray-500 sm:text-[13px]">Programs waiting for result entry</p>
+            </div>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div class="relative sm:w-44">
+                    <select id="category-filter" class="w-full cursor-pointer appearance-none rounded-full border border-gray-200 bg-white py-2 pl-3 pr-9 text-[13px] font-medium text-gray-700 outline-none transition focus:ring-2 focus:ring-[#FFB33F]/30">
+                        <option value="stage">Stage</option>
+                        <option value="non-stage">Non-stage</option>
+                        <option value="sports">Sports</option>
+                    </select>
+                    <i class="fi fi-rr-angle-small-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <button id="export-pdf" type="button" disabled class="inline-flex items-center justify-center gap-2 rounded-full bg-[#134E8E] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40">
+                    <i class="fi fi-rr-file-pdf"></i> Export PDF <span id="export-count"></span>
+                </button>
+                <div class="relative w-full sm:w-64">
+                    <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400"></i>
+                    <input id="search-input" type="search" placeholder="Search programs..." class="w-full rounded-full border border-gray-200 bg-white py-2 pl-8 pr-4 text-[13px] outline-none transition focus:ring-2 focus:ring-[#FFB33F]/30">
+                </div>
+            </div>
+        </header>
+
+        <section class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3" aria-live="polite">
+            <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,.05)] sm:col-span-2">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600"><i class="fi fi-rr-hourglass-end"></i></span>
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Results not entered</p>
+                        <p id="count-label" class="mt-0.5 text-[12px] text-gray-500">All programs</p>
+                    </div>
+                </div>
+                <span id="missing-count" class="text-2xl font-bold text-amber-600">0</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-[0_2px_10px_-4px_rgba(0,0,0,.05)]">
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Total in category</p>
+                    <p class="mt-0.5 text-[12px] text-gray-500">Including completed</p>
+                </div>
+                <span id="total-count" class="text-2xl font-bold text-gray-900">0</span>
+            </div>
+        </section>
+
+        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_2px_10px_-4px_rgba(0,0,0,.05)]">
+            <div class="no-scrollbar w-full overflow-x-auto">
+                <div style="min-width: 720px;">
+                    <div class="grid grid-cols-12 items-center gap-4 border-b border-gray-100 bg-[#FAFAFA] px-6 py-3">
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700">Program Code</div>
+                        <div class="col-span-4 text-[13px] font-medium text-gray-700">Program Name</div>
+                        <div class="col-span-3 text-[13px] font-medium text-gray-700">Section</div>
+                        <div class="col-span-2 text-[13px] font-medium text-gray-700">Type</div>
+                        <div class="col-span-1 text-right text-[13px] font-medium text-gray-700">Action</div>
+                    </div>
+                    <div id="table-body" class="divide-y divide-gray-50">
+                        <div class="py-12 text-center text-sm text-gray-400">Loading programs...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (function () {
+            var programs = [];
+            var results = [];
+            var programsLoaded = false;
+            var resultsLoaded = false;
+            var tableBody = document.getElementById('table-body');
+            var categoryFilter = document.getElementById('category-filter');
+            var searchInput = document.getElementById('search-input');
+            var exportButton = document.getElementById('export-pdf');
+            var visiblePrograms = [];
+
+            function escapeHtml(value) {
+                return String(value == null ? '' : value).replace(/[&<>'"]/g, function (character) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character];
+                });
+            }
+
+            function programType(program) {
+                var rawType = [program.venueTypeName, program.venueType, program.venue_type, program.category]
+                    .find(function (value) { return typeof value === 'string' && value.trim(); });
+                var normalized = String(rawType || '').toLowerCase().replace(/[\s_-]+/g, '');
+                if (normalized.indexOf('sport') !== -1) return 'sports';
+                if (normalized.indexOf('nonstage') !== -1) return 'non-stage';
+                if (normalized === 'stage' || normalized.endsWith('stage')) return 'stage';
+
+                var code = String(program.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (/^[A-Z]*X\d+/.test(code)) return 'non-stage';
+                if (/^[A-Z]*Y\d+/.test(code)) return 'stage';
+                if (String(program.section || '').toLowerCase().indexOf('sport') !== -1) return 'sports';
+                return '';
+            }
+
+            function typeLabel(type) {
+                if (type === 'non-stage') return 'Non-stage';
+                if (type === 'sports') return 'Sports';
+                if (type === 'stage') return 'Stage';
+                return 'Uncategorised';
+            }
+
+            function render() {
+                if (!programsLoaded || !resultsLoaded) return;
+                var selectedType = categoryFilter.value;
+                var query = searchInput.value.toLowerCase().trim();
+                var resultProgramIds = new Set(results.map(function (result) { return result.programId; }).filter(Boolean));
+                var categoryPrograms = selectedType === 'all'
+                    ? programs.slice()
+                    : programs.filter(function (program) { return programType(program) === selectedType; });
+                var missingPrograms = categoryPrograms.filter(function (program) { return !resultProgramIds.has(program.id); });
+
+                document.getElementById('missing-count').textContent = missingPrograms.length;
+                document.getElementById('total-count').textContent = categoryPrograms.length;
+                document.getElementById('count-label').textContent = categoryFilter.options[categoryFilter.selectedIndex].text;
+
+                if (query) {
+                    missingPrograms = missingPrograms.filter(function (program) {
+                        return [program.name, program.code, program.section].some(function (value) {
+                            return String(value || '').toLowerCase().indexOf(query) !== -1;
+                        });
+                    });
+                }
+                missingPrograms.sort(function (a, b) {
+                    return String(a.code || '').localeCompare(String(b.code || ''), undefined, { numeric: true });
+                });
+                visiblePrograms = missingPrograms;
+                updateExportButton();
+
+                if (!missingPrograms.length) {
+                    tableBody.innerHTML = '<div class="py-16 text-center"><i class="fi fi-rr-check-circle mb-3 block text-4xl text-green-400"></i><p class="text-[13px] font-medium text-gray-500">No programs are waiting for result entry.</p></div>';
+                    return;
+                }
+
+                tableBody.innerHTML = missingPrograms.map(function (program) {
+                    var type = programType(program);
+                    return '<div class="grid grid-cols-12 items-center gap-4 px-6 py-3 transition-colors hover:bg-gray-50/60">' +
+                        '<div class="col-span-2 text-[13px] font-semibold uppercase tracking-wider text-gray-700">' + escapeHtml(program.code || '-') + '</div>' +
+                        '<div class="col-span-4 truncate pr-4 text-[13px] font-medium text-gray-900" title="' + escapeHtml(program.name || '') + '">' + escapeHtml(program.name || '-') + '</div>' +
+                        '<div class="col-span-3 text-[13px] text-gray-600">' + escapeHtml(program.section || '-') + '</div>' +
+                        '<div class="col-span-2"><span class="inline-flex rounded-md border border-amber-100 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">' + escapeHtml(typeLabel(type)) + '</span></div>' +
+                        '<div class="col-span-1 text-right"><button type="button" data-delete-program="' + escapeHtml(program.id) + '" data-program-label="' + escapeHtml((program.code || '') + ' - ' + (program.name || '')) + '" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50" title="Delete program" aria-label="Delete ' + escapeHtml(program.name || 'program') + '"><i class="fi fi-rr-trash"></i></button></div>' +
+                    '</div>';
+                }).join('');
+            }
+
+            categoryFilter.addEventListener('change', render);
+            searchInput.addEventListener('input', render);
+            exportButton.addEventListener('click', exportFilteredPdf);
+
+            function updateExportButton() {
+                exportButton.disabled = visiblePrograms.length === 0;
+                document.getElementById('export-count').textContent = visiblePrograms.length ? '(' + visiblePrograms.length + ')' : '';
+            }
+
+            function exportFilteredPdf() {
+                var selectedPrograms = visiblePrograms.slice();
+                if (!selectedPrograms.length) return;
+                exportButton.disabled = true;
+                try {
+                    function pdfText(value) {
+                        return String(value == null ? '' : value)
+                            .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+                            .replace(/[^\x20-\x7E]/g, '')
+                            .replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+                    }
+                    function textLine(value, x, y, size, bold) {
+                        return 'BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x + ' ' + y + ' Td (' + pdfText(value) + ') Tj ET\n';
+                    }
+                    function newPage() {
+                        var stream = '0.075 0.306 0.557 rg\n';
+                        stream += textLine('PROGRAMS WITH RESULTS NOT ENTERED', 40, 800, 16, true);
+                        stream += '0.4 0.4 0.4 rg\n';
+                        stream += textLine('Category: ' + categoryFilter.options[categoryFilter.selectedIndex].text, 40, 779, 9, false);
+                        stream += textLine('PROGRAM CODE', 40, 748, 8, true);
+                        stream += textLine('PROGRAM NAME', 135, 748, 8, true);
+                        stream += textLine('SECTION', 365, 748, 8, true);
+                        stream += textLine('TYPE', 475, 748, 8, true);
+                        stream += '0.82 0.84 0.88 RG 40 738 m 555 738 l S\n';
+                        return stream;
+                    }
+
+                    selectedPrograms.sort(function (a, b) { return String(a.code || '').localeCompare(String(b.code || ''), undefined, { numeric: true }); });
+                    var pageStreams = [];
+                    var stream = newPage();
+                    var y = 715;
+                    selectedPrograms.forEach(function (program) {
+                        if (y < 45) {
+                            pageStreams.push(stream);
+                            stream = newPage();
+                            y = 715;
+                        }
+                        stream += '0.12 0.12 0.12 rg\n';
+                        stream += textLine(String(program.code || '-').slice(0, 16), 40, y, 9, true);
+                        stream += textLine(String(program.name || '-').slice(0, 40), 135, y, 9, false);
+                        stream += textLine(String(program.section || '-').slice(0, 18), 365, y, 9, false);
+                        stream += textLine(typeLabel(programType(program)), 475, y, 9, false);
+                        stream += '0.92 0.93 0.95 RG 40 ' + (y - 9) + ' m 555 ' + (y - 9) + ' l S\n';
+                        y -= 22;
+                    });
+                    pageStreams.push(stream);
+
+                    var objects = [];
+                    objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+                    objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+                    objects[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+                    var pageRefs = [];
+                    var nextObject = 5;
+                    pageStreams.forEach(function (pageStream) {
+                        var pageObject = nextObject++;
+                        var contentObject = nextObject++;
+                        pageRefs.push(pageObject + ' 0 R');
+                        objects[pageObject] = '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + contentObject + ' 0 R >>';
+                        objects[contentObject] = '<< /Length ' + pageStream.length + ' >>\nstream\n' + pageStream + 'endstream';
+                    });
+                    objects[2] = '<< /Type /Pages /Kids [' + pageRefs.join(' ') + '] /Count ' + pageRefs.length + ' >>';
+
+                    var pdf = '%PDF-1.4\n';
+                    var offsets = [0];
+                    for (var i = 1; i < objects.length; i++) {
+                        offsets[i] = pdf.length;
+                        pdf += i + ' 0 obj\n' + objects[i] + '\nendobj\n';
+                    }
+                    var xref = pdf.length;
+                    pdf += 'xref\n0 ' + objects.length + '\n0000000000 65535 f \n';
+                    for (var j = 1; j < objects.length; j++) pdf += String(offsets[j]).padStart(10, '0') + ' 00000 n \n';
+                    pdf += 'trailer\n<< /Size ' + objects.length + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+
+                    var url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }));
+                    var link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'results-not-entered-' + categoryFilter.value + '.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+                } catch (error) {
+                    console.error('Could not export PDF:', error);
+                    alert('Could not export the PDF. Please try again.');
+                } finally {
+                    updateExportButton();
+                }
+            }
+
+            tableBody.addEventListener('click', async function (event) {
+                var button = event.target.closest('[data-delete-program]');
+                if (!button || button.disabled) return;
+
+                var programId = button.getAttribute('data-delete-program');
+                var programLabel = button.getAttribute('data-program-label') || 'this program';
+                if (!programId || !confirm('Delete ' + programLabel + '?\n\nThis will permanently remove the program from the database.')) return;
+
+                button.disabled = true;
+                try {
+                    await db.collection('programs').doc(programId).delete();
+                } catch (error) {
+                    console.error('Could not delete program:', error);
+                    button.disabled = false;
+                    alert('Could not delete the program. Please try again.');
+                }
+            });
+
+            if (typeof db === 'undefined') {
+                tableBody.innerHTML = '<div class="py-12 text-center text-sm font-medium text-red-500">Database connection error. Open this page from the admin dashboard.</div>';
+                return;
+            }
+
+            if (typeof window.nonPublishedUnsub === 'function') window.nonPublishedUnsub();
+            var unsubscribers = [
+                db.collection('programs').onSnapshot(function (snapshot) {
+                    programs = snapshot.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+                    programsLoaded = true;
+                    render();
+                }, showLoadError),
+                db.collection('programResults').onSnapshot(function (snapshot) {
+                    results = snapshot.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); });
+                    resultsLoaded = true;
+                    render();
+                }, showLoadError)
+            ];
+
+            function showLoadError(error) {
+                console.error('Could not load result status:', error);
+                tableBody.innerHTML = '<div class="py-12 text-center text-sm font-medium text-red-500">Could not load programs. Please try again.</div>';
+            }
+
+            window.nonPublishedUnsub = function () {
+                unsubscribers.forEach(function (unsubscribe) { unsubscribe(); });
+            };
+        }());
+    </script>
+</body>
+</html>

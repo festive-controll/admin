@@ -322,10 +322,12 @@
 
                 function resultPoints(result) {
                     if (!result) return 0;
-                    const explicit = [result.totalPoints, result.points, result.score]
-                        .find(value => value !== undefined && value !== null && value !== '' && Number.isFinite(Number(value)));
-                    if (explicit !== undefined) return Number(explicit);
-                    return (Number(result.gradePoints) || 0) + (Number(result.positionPoints) || 0);
+                    const validNumber = value => value !== undefined && value !== null && value !== '' && Number.isFinite(Number(value));
+                    if (validNumber(result.gradePoints) || validNumber(result.positionPoints)) {
+                        return (Number(result.gradePoints) || 0) + (Number(result.positionPoints) || 0);
+                    }
+                    if (validNumber(result.totalPoints)) return Number(result.totalPoints);
+                    return validNumber(result.points) ? Number(result.points) : 0;
                 }
 
                 function ordinal(position) {

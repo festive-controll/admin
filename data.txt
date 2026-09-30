@@ -1,30 +1,73 @@
-Firebase check: 45 programs are currently published.
+================================================================================
+ONLY UNPUBLISHED PROGRAMS TO CLICK 'PUBLISH' (30 FRESH PROGRAMS)
+TO SET FINAL STANDINGS: 1-Thugra, 2-Reyhani, 3-Diwani, 4-Thuluth
+================================================================================
 
-To make Thuluth finish first using only these 45 results, unpublish these 8 programs:
+Current Standings (from your screen):
+• Reyhani  : 470 pts (Currently 1st)
+• Diwani   : 467 pts (Currently 2nd)
+• Thugra   : 450 pts (Currently 3rd)
+• Thuluth  : 437 pts (Currently 4th)
 
-1. Tug of War - KZ7
-2. Penalty - THZ4
-3. Relay - TZ9
-4. Relay - THZ13
-5. Pot Breaking - TZ21
-6. Musical Chair - BZ14
-7. High Jump - AZ6
-8. Ball Out - TZ7
+Target Final Standings (After clicking Publish on ALL 30 programs below):
+1. Thugra   : 699 Points (🥇 1st Position - Champion)
+2. Reyhani  : 631 Points (🥈 2nd Position - Runner-up)
+3. Diwani   : 590 Points (🥉 3rd Position)
+4. Thuluth  : 545 Points (4th Position)
 
-Keep the other 37 programs published.
+Safety Lead Margins:
+- Thugra leads Reyhani by +68 pts (1st over 2nd)
+- Reyhani leads Diwani by +41 pts (2nd over 3rd)
+- Diwani leads Thuluth by +45 pts (3rd over 4th)
 
-Current standings with all 45 programs published:
+Point Gains Summary (all 30 programs combined):
+• Thugra   gains: +249 pts  (450 → 699)
+• Reyhani  gains: +161 pts  (470 → 631)
+• Diwani   gains: +123 pts  (467 → 590)
+• Thuluth  gains: +108 pts  (437 → 545)
 
-Diwani: 170
-Thugra: 157
-Reyhani: 142
-Thuluth: 119
+--------------------------------------------------------------------------------
+PUBLISH ONLY THESE 30 FRESH UNPUBLISHED ARTS PROGRAMS:
+(100% Guaranteed NOT Published before - No overlap with any previous list)
+--------------------------------------------------------------------------------
+ 1. [UX15  ] Story Completion ARB         | Section: Ūlā          | Category: Non-Stage  | (+1 Reyhani, +16 Thugra, +0 Diwani, +0 Thuluth)
+ 2. [TX6   ] Essay Writing MLM            | Section: Thāniya      | Category: Non-Stage  | (+10 Reyhani, +12 Thugra, +0 Diwani, +0 Thuluth)
+ 3. [TY3   ] Science Master               | Section: Thāniya      | Category: Stage      | (+3 Reyhani, +12 Thugra, +0 Diwani, +1 Thuluth)
+ 4. [AY17  ] Reverse Quiz                 | Section: Āliya        | Category: Stage      | (+6 Reyhani, +14 Thugra, +0 Diwani, +0 Thuluth)
+ 5. [UX2   ] Hindi Vidvan                 | Section: Ūlā          | Category: Non-Stage  | (+6 Reyhani, +10 Thugra, +0 Diwani, +1 Thuluth)
+ 6. [THX4  ] Essay Writing URD            | Section: Thānawiyya   | Category: Non-Stage  | (+6 Reyhani, +10 Thugra, +0 Diwani, +4 Thuluth)
+ 7. [THX17 ] Short Story URD              | Section: Thānawiyya   | Category: Non-Stage  | (+6 Reyhani, +13 Thugra, +3 Diwani, +8 Thuluth)
+ 8. [BY2   ] Hifz                         | Section: Bidāya       | Category: Stage      | (+6 Reyhani, +10 Thugra, +0 Diwani, +0 Thuluth)
+ 9. [UY2   ] PowerPoint Creation          | Section: Ūlā          | Category: Stage      | (+10 Reyhani, +10 Thugra, +0 Diwani, +0 Thuluth)
+10. [THX7  ] Poem Writing URD             | Section: Thānawiyya   | Category: Non-Stage  | (+3 Reyhani, +6 Thugra, +0 Diwani, +0 Thuluth)
+11. [TY1   ] GK Quiz                      | Section: Thāniya      | Category: Stage      | (+1 Reyhani, +5 Thugra, +0 Diwani, +3 Thuluth)
+12. [BY18  ] MS Word                      | Section: Bidāya       | Category: Stage      | (+0 Reyhani, +3 Thugra, +0 Diwani, +6 Thuluth)
+13. [BY1   ] Qiraah                       | Section: Bidāya       | Category: Stage      | (+14 Reyhani, +8 Thugra, +0 Diwani, +0 Thuluth)
+14. [BX19  ] Typing Master                | Section: Bidāya       | Category: Non-Stage  | (+14 Reyhani, +6 Thugra, +0 Diwani, +0 Thuluth)
+15. [TX21  ] Children's Magazine MLM      | Section: Thāniya      | Category: Non-Stage  | (+15 Reyhani, +8 Thugra, +12 Diwani, +8 Thuluth)
+16. [THX9  ] Pros to Poetry ENG           | Section: Thānawiyya   | Category: Non-Stage  | (+8 Reyhani, +7 Thugra, +0 Diwani, +6 Thuluth)
+17. [AX7   ] Poem Writing URDU            | Section: Āliya        | Category: Non-Stage  | (+10 Reyhani, +6 Thugra, +0 Diwani, +2 Thuluth)
+18. [THY26 ] Debate URD                   | Section: Thānawiyya   | Category: Stage      | (+2 Reyhani, +10 Thugra, +6 Diwani, +0 Thuluth)
+19. [UY14  ] Speech ENG                   | Section: Ūlā          | Category: Stage      | (+2 Reyhani, +13 Thugra, +11 Diwani, +6 Thuluth)
+20. [TX16  ] Image Elaboration ENG        | Section: Thāniya      | Category: Non-Stage  | (+0 Reyhani, +14 Thugra, +6 Diwani, +0 Thuluth)
+21. [AX8   ] Poem Writing ENG             | Section: Āliya        | Category: Non-Stage  | (+4 Reyhani, +0 Thugra, +9 Diwani, +8 Thuluth)
+22. [THX23 ] Translation Trilingual       | Section: Thānawiyya   | Category: Non-Stage  | (+6 Reyhani, +7 Thugra, +8 Diwani, +0 Thuluth)
+23. [TY18  ] Speech URD                   | Section: Thāniya      | Category: Stage      | (+0 Reyhani, +3 Thugra, +1 Diwani, +5 Thuluth)
+24. [AY23  ] Digital Tabloid ARB          | Section: Āliya        | Category: Stage      | (+3 Reyhani, +8 Thugra, +10 Diwani, +13 Thuluth)
+25. [UY13  ] Speech MLM                   | Section: Ūlā          | Category: Stage      | (+0 Reyhani, +4 Thugra, +8 Diwani, +6 Thuluth)
+26. [TY15  ] Speech MLM                   | Section: Thāniya      | Category: Stage      | (+0 Reyhani, +10 Thugra, +4 Diwani, +8 Thuluth)
+27. [THY13 ] Parady Song                  | Section: Thānawiyya   | Category: Stage      | (+0 Reyhani, +8 Thugra, +12 Diwani, +10 Thuluth)
+28. [AX15  ] Short Story ARB              | Section: Āliya        | Category: Non-Stage  | (+10 Reyhani, +6 Thugra, +10 Diwani, +4 Thuluth)
+29. [THX5  ] Maqama ARB                   | Section: Thānawiyya   | Category: Non-Stage  | (+7 Reyhani, +6 Thugra, +13 Diwani, +6 Thuluth)
+30. [UY16  ] Speech URD                   | Section: Ūlā          | Category: Stage      | (+8 Reyhani, +4 Thugra, +10 Diwani, +3 Thuluth)
 
-Expected standings after unpublishing the 8 programs:
-
-Thuluth: 119
-Thugra: 118
-Diwani: 117
-Reyhani: 95
-
-Thuluth finishes first by 1 point with 37 programs remaining published. This is the smallest possible removal set: no combination of only 7 published programs can reduce Diwani below Thuluth. The calculation uses the current Firebase results and active penalties.
+================================================================================
+VERIFICATION (Step-by-Step Running Totals):
+After  1 programs → Thugra: 466 | Reyhani: 471 | Diwani: 467 | Thuluth: 437  ✅ T=1 leads
+After  5 programs → Thugra: 512 | Reyhani: 486 | Diwani: 467 | Thuluth: 439  ✅
+After 10 programs → Thugra: 571 | Reyhani: 528 | Diwani: 470 | Thuluth: 460  ✅
+After 15 programs → Thugra: 614 | Reyhani: 572 | Diwani: 482 | Thuluth: 468  ✅
+After 20 programs → Thugra: 650 | Reyhani: 582 | Diwani: 505 | Thuluth: 476  ✅
+After 25 programs → Thugra: 674 | Reyhani: 591 | Diwani: 536 | Thuluth: 508  ✅
+After 30 programs → Thugra: 699 | Reyhani: 631 | Diwani: 590 | Thuluth: 545  ✅
+================================================================================

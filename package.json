@@ -1,6 +1,7 @@
 {
   "name": "fest-management",
   "private": true,
+  "type": "module",
   "scripts": {
     "build:css": "tailwindcss -i ./styles/tailwind.css -o ./tailwind.css --minify && tailwindcss -i ./styles/tailwind.css -o ./public/tailwind.css --minify"
   },

@@ -399,7 +399,12 @@
                     actualSection = candMap[res.candidateId].section || '';
                 }
 
-                var pts = parseFloat(res.totalPoints || res.points || res.score || 0);
+                var hasTotal = res.totalPoints !== undefined && res.totalPoints !== null && res.totalPoints !== '';
+                var hasComponents = (res.gradePoints !== undefined && res.gradePoints !== null && res.gradePoints !== '') ||
+                    (res.positionPoints !== undefined && res.positionPoints !== null && res.positionPoints !== '');
+                var pts = hasComponents ? (Number(res.gradePoints) || 0) + (Number(res.positionPoints) || 0)
+                    : hasTotal ? Number(res.totalPoints)
+                    : (Number(res.points) || 0);
 
                 if (teamName && stats[teamName] && pts > 0) {
                     if (sectionFilter === 'All Sections' || actualSection === sectionFilter) {

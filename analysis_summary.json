@@ -1,0 +1,1904 @@
+{
+  "currentScores": {
+    "Thuluth": 591,
+    "Reyhani": 499,
+    "Diwani": 576,
+    "Thugra": 424
+  },
+  "allPublishedScores": {
+    "Thuluth": 1360,
+    "Reyhani": 1159,
+    "Diwani": 1498,
+    "Thugra": 1078
+  },
+  "activeTeams": [
+    "Thuluth",
+    "Reyhani",
+    "Diwani",
+    "Thugra"
+  ],
+  "penaltyMap": {
+    "Thuluth": 0,
+    "Reyhani": 5,
+    "Diwani": 0,
+    "Thugra": 0
+  },
+  "publishedCount": 122,
+  "unpublishedPrograms": [
+    {
+      "id": "0lKvqQQV37tT6qviAbOF",
+      "code": "THX5",
+      "name": "Maqama ARB",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 7,
+        "Diwani": 13,
+        "Thugra": 6
+      },
+      "resultsCount": 7
+    },
+    {
+      "id": "1ptQsUowGNFY3FFhs34a",
+      "code": "UY22",
+      "name": "Word Fight ENG",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 9,
+        "Reyhani": 0,
+        "Diwani": 16,
+        "Thugra": 11
+      },
+      "resultsCount": 6
+    },
+    {
+      "id": "3KcvFXPK7qB3ubMjaD1t",
+      "code": "UY13",
+      "name": "Speech MLM",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 0,
+        "Diwani": 8,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "3s5X3ejAeukhibNb0ZKK",
+      "code": "BY17",
+      "name": "Word Fight ENG",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 18,
+        "Reyhani": 15,
+        "Diwani": 0,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "58Xgpus95d79QhNeuFyM",
+      "code": "AX8",
+      "name": "Poem Writing ENG",
+      "section": "Āliya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 4,
+        "Diwani": 9,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "5FSWYuFc1y72Fnx2SCYk",
+      "code": "TY19",
+      "name": "History Talk ENG",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 8,
+        "Thugra": 1
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "5YD1iEZoFLYyMnF5z0Je",
+      "code": "THY3",
+      "name": "Mashup",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 3,
+        "Diwani": 13,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "6Jmj6rUMr3SLRicXtoEq",
+      "code": "BY1",
+      "name": "Qirāʾah",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 14,
+        "Diwani": 0,
+        "Thugra": 8
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "6MFW7HDY8SaLSN9lFsov",
+      "code": "TY18",
+      "name": "Speech URD",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 5,
+        "Reyhani": 0,
+        "Diwani": 1,
+        "Thugra": 3
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "6mviOJ3jV8eufXOLOjOG",
+      "code": "THY11",
+      "name": "Face to Face ARB",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 13,
+        "Reyhani": 8,
+        "Diwani": 15,
+        "Thugra": 10
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "6uNL3QUSEh01J14qIUpY",
+      "code": "THZ11",
+      "name": "Shot Put",
+      "section": "Thānawiyya",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 3,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "7BgHMRRsKrzLu3IAeIoQ",
+      "code": "UY8",
+      "name": "Song ARB",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 8,
+        "Diwani": 16,
+        "Thugra": 14
+      },
+      "resultsCount": 8
+    },
+    {
+      "id": "7Q9flLBK2UH6WUuiEY8L",
+      "code": "THY9",
+      "name": "Tadrīs MLM",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 6,
+        "Thugra": 1
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "8f7SJAmO0PFRFRYFAgAQ",
+      "code": "TY17",
+      "name": "Speech ARB",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 9,
+        "Diwani": 12,
+        "Thugra": 4
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "8pejjMa0JsTSTrdmjAxT",
+      "code": "UY23",
+      "name": "Mulāfaẓah ARB",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 22,
+        "Reyhani": 24,
+        "Diwani": 7,
+        "Thugra": 0
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "9k68cJAopd1KyzJmzIrY",
+      "code": "AX15",
+      "name": "Short Story ARB",
+      "section": "Āliya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 4,
+        "Reyhani": 10,
+        "Diwani": 10,
+        "Thugra": 6
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "BBqtsog1RDPLUHKJeI0U",
+      "code": "THY1",
+      "name": "Ḥifẓ & Qirāʾah",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 5,
+        "Reyhani": 9,
+        "Diwani": 3,
+        "Thugra": -2
+      },
+      "resultsCount": 8
+    },
+    {
+      "id": "BHTAxJGVk1pVXZWyByUN",
+      "code": "BY5",
+      "name": "Song MLM",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 4,
+        "Thugra": 10
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "D7fHDxXC8ZzCGSr0Zl7F",
+      "code": "BY6",
+      "name": "Song ARB",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 5,
+        "Reyhani": 1,
+        "Diwani": 3,
+        "Thugra": 3
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "D94aiaLfkvxOVAmfhdPY",
+      "code": "UY17",
+      "name": "Njan Malayali",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 4,
+        "Diwani": 12,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "DVg5zp5F6RlS4k1VssFS",
+      "code": "BX8",
+      "name": "Short Story MLM",
+      "section": "Bidāya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 8,
+        "Diwani": 1,
+        "Thugra": 3
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "FJjICfrFzeQfS8SPcFKI",
+      "code": "TX21",
+      "name": "Children's Magazine MLM",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 15,
+        "Diwani": 12,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "G7ouIw8AcYjEOYTD4Esz",
+      "code": "AY4",
+      "name": "Khuṭbah",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 1
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "GWmq0momgI1ym0AKF6VQ",
+      "code": "TY9",
+      "name": "Song ENG",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 7,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "HeNI8pUCzoZy5v8RRBYJ",
+      "code": "TY13",
+      "name": "Padhyaparanam",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "HhHf4xdsIGQqVpIbgUWW",
+      "code": "AX12",
+      "name": "Caricature",
+      "section": "Āliya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 14,
+        "Reyhani": 0,
+        "Diwani": 9,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "IbJBxOTjAk0BNvw1emyM",
+      "code": "UY24",
+      "name": "Mulāfaẓah URD",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 9,
+        "Reyhani": 3,
+        "Diwani": 10,
+        "Thugra": 11
+      },
+      "resultsCount": 6
+    },
+    {
+      "id": "J0FONsaIEtzoQRGlHG8B",
+      "code": "UX16",
+      "name": "Story Completion URD",
+      "section": "Ūlā",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 4,
+        "Diwani": 18,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "KR16jNSrfa3PgwvtbBG3",
+      "code": "BY10",
+      "name": "Speech MLM",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 18,
+        "Reyhani": 6,
+        "Diwani": 3,
+        "Thugra": 3
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "KYaAlrXNkWVDugcUEn37",
+      "code": "UY18",
+      "name": "Story Narration ENG",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": -1,
+        "Reyhani": 2,
+        "Diwani": 22,
+        "Thugra": 0
+      },
+      "resultsCount": 6
+    },
+    {
+      "id": "LQOfHQrXglE5nHZFcVgm",
+      "code": "KY2",
+      "name": "Samā'",
+      "section": "Kulliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 22,
+        "Reyhani": 20,
+        "Diwani": 25,
+        "Thugra": 22
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "LXjl1zYQQv9GT9kRZkOv",
+      "code": "TX6",
+      "name": "Essay Writing MLM",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 0,
+        "Thugra": 12
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "LmyV5k96bdn4a3I0ZFga",
+      "code": "THY26",
+      "name": "Debate URD",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 2,
+        "Diwani": 6,
+        "Thugra": 10
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "MgJyi9sxRvMy0t350uDG",
+      "code": "UY14",
+      "name": "Speech ENG",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 2,
+        "Diwani": 11,
+        "Thugra": 13
+      },
+      "resultsCount": 7
+    },
+    {
+      "id": "MrESaEPsd4O3dmIuHoMt",
+      "code": "UY20",
+      "name": "Geo Giant",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 10,
+        "Diwani": 15,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "NNMBQmA42H0YjZ6n0aPE",
+      "code": "UY16",
+      "name": "Speech URD",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 8,
+        "Diwani": 10,
+        "Thugra": 4
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "NqldKPTCbKXqLEnOsfc3",
+      "code": "THY5",
+      "name": "Speech & Song URD",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 13,
+        "Reyhani": 7,
+        "Diwani": 7,
+        "Thugra": 5
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "Nu6rci5WLjTSZrD1AB5c",
+      "code": "UX15",
+      "name": "Story Completion ARB",
+      "section": "Ūlā",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 1,
+        "Diwani": 0,
+        "Thugra": 16
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "O6WbgECVgN1pBLPtCUoI",
+      "code": "TY14",
+      "name": "Speech & Song MLM",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 7,
+        "Diwani": 5,
+        "Thugra": 0
+      },
+      "resultsCount": 2
+    },
+    {
+      "id": "Obf5ZlEp4Gmc1hm3GqlF",
+      "code": "TY3",
+      "name": "Science Master",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 3,
+        "Diwani": 0,
+        "Thugra": 12
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "P4Xoe2M4NZ1FX8mmwmtm",
+      "code": "BX19",
+      "name": "Typing Master",
+      "section": "Bidāya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 14,
+        "Diwani": 0,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "P9Hfm3PK0xfIADd2TB4L",
+      "code": "TX5",
+      "name": "Essay Writing URD",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 6,
+        "Diwani": 10,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "PThdmfyM87V1nRUcAKq3",
+      "code": "BZ10",
+      "name": "Sweet Picking",
+      "section": "Bidāya",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 0,
+        "Diwani": 8,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "QWUeKIsw2nFa1FKzMDjD",
+      "code": "THY20",
+      "name": "GK Talent",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 17,
+        "Diwani": 20,
+        "Thugra": 7
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "QoK3xm7RvFuDKlxrs3yP",
+      "code": "TX17",
+      "name": "Cartoon",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 14,
+        "Diwani": 0,
+        "Thugra": 3
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "RLPIvfh2YIx3VcdMRstF",
+      "code": "THZ3",
+      "name": "Solo War",
+      "section": "Thānawiyya",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 9,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "SfdRjqU9aAzgKdbPEsPr",
+      "code": "AZ12",
+      "name": "Three-Legged Race",
+      "section": "Āliya",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 12
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "TVg0NVuJL7ULZdTJAayE",
+      "code": "TY12",
+      "name": "Group Song",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 12,
+        "Reyhani": 12,
+        "Diwani": 15,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "Tzrk8AXYk7xJkk5pRO2R",
+      "code": "AY14",
+      "name": "Mock Interview ENG",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 10,
+        "Diwani": 6,
+        "Thugra": 4
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "UOnX2kVjZRUUeYo58Tek",
+      "code": "THZ4",
+      "name": "Penalty",
+      "section": "Thānawiyya",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 7,
+        "Thugra": 5
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "Ufk6ujMOYdaEoI0Z4bXw",
+      "code": "THX2",
+      "name": "Essay Writing ENG",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 8,
+        "Diwani": 1,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "VPQOItkhRCts4fqDX0ru",
+      "code": "THX17",
+      "name": "Short Story URD",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 6,
+        "Diwani": 3,
+        "Thugra": 13
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "VVoj9YeRsOL5vuyDn0iN",
+      "code": "BY8",
+      "name": "Group Song",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 0,
+        "Diwani": 13,
+        "Thugra": 5
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "VyFdBTpVCahzBtg0lUg5",
+      "code": "THY17",
+      "name": "Science Master",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 15,
+        "Reyhani": 10,
+        "Diwani": 12,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "W3EMPZIgJFDGgemA37ku",
+      "code": "AY19",
+      "name": "Varsity Talent",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 0,
+        "Diwani": 12,
+        "Thugra": 3
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "WJOfF6aUfvTqFEdFUkBV",
+      "code": "AX7",
+      "name": "Poem Writing URDU",
+      "section": "Āliya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 2,
+        "Reyhani": 10,
+        "Diwani": 0,
+        "Thugra": 6
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "WgmZuJKSrrHvfXF36Lvu",
+      "code": "AY23",
+      "name": "Digital Tabloid ARB",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 13,
+        "Reyhani": 3,
+        "Diwani": 10,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "XIwMbfp9p8QeoGGhnLGr",
+      "code": "AY9",
+      "name": "Kaviyaraṅg",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 11,
+        "Reyhani": 0,
+        "Diwani": 0,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "XTj87czrTAwU2pcTLuL6",
+      "code": "TY2",
+      "name": "Math Talent",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 22,
+        "Reyhani": 8,
+        "Diwani": 8,
+        "Thugra": 17
+      },
+      "resultsCount": 6
+    },
+    {
+      "id": "XYlhhP2Aj5UTo68VP9St",
+      "code": "UZ9",
+      "name": "Water Filling",
+      "section": "Ūlā",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 0,
+        "Diwani": 5,
+        "Thugra": 7
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "XaQFHusUQPfEbnzFd5kR",
+      "code": "TY4",
+      "name": "Excel Master",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 3,
+        "Diwani": 10,
+        "Thugra": 12
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "Y3vidmgBQaccDCY7sR6E",
+      "code": "THY4",
+      "name": "Nashīd ARB",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 3,
+        "Diwani": 16,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "Y8THQfR9A7pFIazMyuDq",
+      "code": "AY10",
+      "name": "Logical Reasoning",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 4,
+        "Reyhani": 8,
+        "Diwani": 0,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "Y8UyE4k7SG93p1qUblr6",
+      "code": "BY11",
+      "name": "Speech ENG",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 0,
+        "Diwani": 6,
+        "Thugra": 0
+      },
+      "resultsCount": 2
+    },
+    {
+      "id": "YDWIdoVSF8bCeOBSuqTi",
+      "code": "TY16",
+      "name": "Speech ENG",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 14,
+        "Diwani": 0,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "acUewMm1kkIdfZ4eQDSd",
+      "code": "TX19",
+      "name": "Instant Newspaper MLM",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 12,
+        "Reyhani": 3,
+        "Diwani": 8,
+        "Thugra": 15
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "bIktc2VAgJBUG78zjsuS",
+      "code": "BX20",
+      "name": "Dictionary Making ARB",
+      "section": "Bidāya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 6,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "cI71cgJJfpUvbtBQneaj",
+      "code": "TX16",
+      "name": "Image Elaboration ENG",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 6,
+        "Thugra": 14
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "dTc3Y9ndpA1xcflnj8oS",
+      "code": "AY17",
+      "name": "Reverse Quiz",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 6,
+        "Diwani": 0,
+        "Thugra": 14
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "dnyxTThIrwh0TMFNZk0D",
+      "code": "TY15",
+      "name": "Speech MLM",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 4,
+        "Thugra": 10
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "dyEGW1AcI6jabQoMnvEl",
+      "code": "TX18",
+      "name": "Dictionary Making Hindi",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 4,
+        "Diwani": 0,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "eHSZLF8r5utbcxHc4A4j",
+      "code": "UY9",
+      "name": "Song URD",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 3,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "fxLbYZ8PEIOw75fmMbGW",
+      "code": "BX13",
+      "name": "Vocabulary",
+      "section": "Bidāya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 0,
+        "Diwani": 8,
+        "Thugra": 3
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "fylhjDIMAWEny7UR5Xnt",
+      "code": "TY1",
+      "name": "GK Quiz",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 1,
+        "Diwani": 0,
+        "Thugra": 5
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "gBofh0zSw6eHOqtFXgdj",
+      "code": "UY1",
+      "name": "GK Quiz",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 1,
+        "Diwani": 12,
+        "Thugra": 3
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "gFt14b05n5ie5AThXacz",
+      "code": "AY1",
+      "name": "Documentary Narration ARB",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 6,
+        "Diwani": 16,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "h8QaJLQqrnwWO7Jy1HaE",
+      "code": "TY21",
+      "name": "Grammar Quiz",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 7,
+        "Reyhani": 0,
+        "Diwani": 8,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "hQt3GIh53HlOHtK0Iaqc",
+      "code": "UY6",
+      "name": "Song MLM",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 10,
+        "Diwani": 0,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "hoyKnMgsIL0eV2zbXuX7",
+      "code": "THY14",
+      "name": "Elocution",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 14,
+        "Diwani": 13,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "hz4JU4rbCmWSVX1MXKjt",
+      "code": "TY7",
+      "name": "Waʿẓ",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 4,
+        "Diwani": 10,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "iHhEjNzQ7BD2JOrN4x0D",
+      "code": "THX4",
+      "name": "Essay Writing URD",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 4,
+        "Reyhani": 6,
+        "Diwani": 0,
+        "Thugra": 10
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "kBjt0BpoqJRisd14MnM8",
+      "code": "BY2",
+      "name": "Ḥifẓ",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 6,
+        "Diwani": 0,
+        "Thugra": 10
+      },
+      "resultsCount": 2
+    },
+    {
+      "id": "kQ5ivsf2TQzsqD7q4CZv",
+      "code": "AY18",
+      "name": "Qurʾān Talent",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 6,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "kQ8kye3K4tTlGRm9M4AU",
+      "code": "UY2",
+      "name": "PowerPoint Creation",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 0,
+        "Thugra": 10
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "khzd0dlpmkBfetMHgrTy",
+      "code": "THX9",
+      "name": "Pros to Poetry ENG",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 8,
+        "Diwani": 0,
+        "Thugra": 7
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "lGf6UHhGGjkTT6LYqfvd",
+      "code": "UY5",
+      "name": "Waʿẓ",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 0,
+        "Diwani": 3,
+        "Thugra": 11
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "m09pVUwPmViQNO0Vb7jr",
+      "code": "THX8",
+      "name": "Pros to Poetry MLM",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 1
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "m6249Ftrec1Z4DHq9Iqa",
+      "code": "THY24",
+      "name": "Documentary Narration ENG",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 11,
+        "Reyhani": 0,
+        "Diwani": 0,
+        "Thugra": 3
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "m8hDytaLuv53c4jJpS60",
+      "code": "UY15",
+      "name": "Speech ARB",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "mbR7gbBUzlfohSRXN55c",
+      "code": "THX16",
+      "name": "Short Story ARB",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 14,
+        "Reyhani": 0,
+        "Diwani": 6,
+        "Thugra": 2
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "mckBqgVQBOkIIjqmVUpb",
+      "code": "UY11",
+      "name": "Padhyaparanam",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 8,
+        "Diwani": 8,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "nT4XW68CyKqANW6TwqFp",
+      "code": "THY7",
+      "name": "Speech ARB",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 4,
+        "Reyhani": 14,
+        "Diwani": 6,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "nXKBvNEMebAktMprw0eJ",
+      "code": "THY16",
+      "name": "Math Talent",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 23,
+        "Reyhani": 11,
+        "Diwani": 15,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "nYtliPcUHK2lZ9PKaRl0",
+      "code": "TY11",
+      "name": "Song URD",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 6,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "nZDzjnikG7xjx5K8R3nk",
+      "code": "BY14",
+      "name": "Conversation MLM",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 13,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 5
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "oQdf5XUqJtaBxW1gMuPC",
+      "code": "THX18",
+      "name": "Feature ENG",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 0,
+        "Diwani": 6,
+        "Thugra": 1
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "odHLiiTxklBrZeJkDWgA",
+      "code": "AY6",
+      "name": "Lecturing ENG",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 4,
+        "Reyhani": 12,
+        "Diwani": 6,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "oqPOXyWG9qBfqhk2zvqz",
+      "code": "THX27",
+      "name": "Digital Typography MLM",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 14,
+        "Reyhani": 8,
+        "Diwani": 3,
+        "Thugra": 0
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "p53iqrurf5wOABIKbPNZ",
+      "code": "THX20",
+      "name": "Ta'lim Al-Sunnah MLM",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 4,
+        "Diwani": 4,
+        "Thugra": 6
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "pA4pIUknRfeoT2Jr3e45",
+      "code": "THX14",
+      "name": "Short Story MLM",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 3,
+        "Diwani": 5,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "pcgUIS2LCMrka62qxQze",
+      "code": "AY11",
+      "name": "Junction Speech MLM",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 0,
+        "Diwani": 6,
+        "Thugra": 4
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "pe5LN6PlL7Mrki7VmWog",
+      "code": "BY18",
+      "name": "MS Word",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 0,
+        "Diwani": 0,
+        "Thugra": 3
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "pzIUuquP44wohFqx0VgZ",
+      "code": "TY25",
+      "name": "Motivational Talk MLM",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 8,
+        "Reyhani": 6,
+        "Diwani": 0,
+        "Thugra": 1
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "qWuFsuE89I8oLDgZUNyW",
+      "code": "KY3",
+      "name": "Debate ENG",
+      "section": "Kulliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 22,
+        "Reyhani": 25,
+        "Diwani": 20,
+        "Thugra": 10
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "rBzSThW0LRnchEYyjt5R",
+      "code": "THY15",
+      "name": "Alfiyyah Contest",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 13,
+        "Reyhani": 3,
+        "Diwani": 5,
+        "Thugra": 14
+      },
+      "resultsCount": 6
+    },
+    {
+      "id": "rMAm2xs6a70VmIUT5kjH",
+      "code": "THX10",
+      "name": "Mr Critic MLM",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 13,
+        "Diwani": 6,
+        "Thugra": 4
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "rmce6pB3wpdDj8HU6jZK",
+      "code": "BY13",
+      "name": "Kadhakadham",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 0,
+        "Diwani": 14,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "sPjkkVlJFj7xCQZXKdNU",
+      "code": "TZ12",
+      "name": "Solo-War",
+      "section": "Thāniya",
+      "category": "sports",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 5,
+        "Reyhani": 4,
+        "Diwani": 0,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "sbq8E0QCG8L4qY5ntVZg",
+      "code": "THX23",
+      "name": "Translation Trilingual",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 6,
+        "Diwani": 8,
+        "Thugra": 7
+      },
+      "resultsCount": 4
+    },
+    {
+      "id": "skNwykG0JieVtsJv3EpC",
+      "code": "AY15",
+      "name": "News Writing & Reading ARB",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 6,
+        "Reyhani": 7,
+        "Diwani": 16,
+        "Thugra": 9
+      },
+      "resultsCount": 9
+    },
+    {
+      "id": "sruO3lbdl2pA63DmC7dJ",
+      "code": "THY8",
+      "name": "Speech URD",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 9,
+        "Reyhani": 8,
+        "Diwani": 10,
+        "Thugra": 5
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "svb7A2o8fqFGMRyLKGFV",
+      "code": "TY23",
+      "name": "Debate ENG",
+      "section": "Thāniya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 0,
+        "Diwani": 10,
+        "Thugra": 10
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "twB3zFDU1xiB6Att8yCG",
+      "code": "THX7",
+      "name": "Poem Writing URD",
+      "section": "Thānawiyya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 3,
+        "Diwani": 0,
+        "Thugra": 6
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "uv9VNETsiTLLmIrM2K5g",
+      "code": "UX14",
+      "name": "Story Completion ENG",
+      "section": "Ūlā",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 9,
+        "Reyhani": 0,
+        "Diwani": 11,
+        "Thugra": 4
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "vO6IwkI7pLOh63rVbSmD",
+      "code": "AX6",
+      "name": "Poem Writing ARB",
+      "section": "Āliya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 0,
+        "Diwani": 9,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "wUttPrWZmWwJmoeQNvp1",
+      "code": "UY12",
+      "name": "Speech & Song MLM",
+      "section": "Ūlā",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 10,
+        "Diwani": 13,
+        "Thugra": 8
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "x9Z3AfKYKbYtUqPYlQRy",
+      "code": "THY10",
+      "name": "Inspiring Talk",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 19,
+        "Reyhani": -2,
+        "Diwani": 2,
+        "Thugra": 8
+      },
+      "resultsCount": 8
+    },
+    {
+      "id": "xg50x5KpjXzELi8pyQ6M",
+      "code": "UX2",
+      "name": "Hindi Vidvan",
+      "section": "Ūlā",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 1,
+        "Reyhani": 6,
+        "Diwani": 0,
+        "Thugra": 10
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "xgNr3TBYkJr8yIn2Pzsq",
+      "code": "AY12",
+      "name": "Political Satire MLM",
+      "section": "Āliya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 18,
+        "Reyhani": 10,
+        "Diwani": 11,
+        "Thugra": 4
+      },
+      "resultsCount": 6
+    },
+    {
+      "id": "yY5SD9Zm79auPiQIKhlD",
+      "code": "TX9",
+      "name": "Poem Writing ARB",
+      "section": "Thāniya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 1,
+        "Diwani": 11,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "z6GgeNCDviACcoMFPaxk",
+      "code": "BY4",
+      "name": "Waʿẓ",
+      "section": "Bidāya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 6,
+        "Diwani": 6,
+        "Thugra": 0
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "zLCtTYn2bAiiWdfdZ7t2",
+      "code": "THY19",
+      "name": "Tech Tangle",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 0,
+        "Reyhani": 4,
+        "Diwani": 14,
+        "Thugra": 6
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "zZEH5AfGvyTi6Mn3BMaX",
+      "code": "AX20",
+      "name": "Screenplay Writing",
+      "section": "Āliya",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 13,
+        "Reyhani": 0,
+        "Diwani": 11,
+        "Thugra": 6
+      },
+      "resultsCount": 5
+    },
+    {
+      "id": "zfIJcv0OqA4ObKvyp6pe",
+      "code": "UX1",
+      "name": "Vocabulary",
+      "section": "Ūlā",
+      "category": "non-stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 3,
+        "Reyhani": 1,
+        "Diwani": 5,
+        "Thugra": 0
+      },
+      "resultsCount": 3
+    },
+    {
+      "id": "zjsn5dRuPghLhK56LrKi",
+      "code": "THY13",
+      "name": "Parady Song",
+      "section": "Thānawiyya",
+      "category": "stage",
+      "isPublished": false,
+      "teamPts": {
+        "Thuluth": 10,
+        "Reyhani": 0,
+        "Diwani": 12,
+        "Thugra": 8
+      },
+      "resultsCount": 4
+    }
+  ]
+}

@@ -345,7 +345,12 @@
                 // Check section filter
                 if (sectionFilter !== 'All Sections' && stats[key].section !== sectionFilter) return;
 
-                var pts = parseFloat(res.totalPoints || res.points || 0);
+                var hasTotal = res.totalPoints !== undefined && res.totalPoints !== null && res.totalPoints !== '';
+                var hasComponents = (res.gradePoints !== undefined && res.gradePoints !== null && res.gradePoints !== '') ||
+                    (res.positionPoints !== undefined && res.positionPoints !== null && res.positionPoints !== '');
+                var pts = hasComponents ? (Number(res.gradePoints) || 0) + (Number(res.positionPoints) || 0)
+                    : hasTotal ? Number(res.totalPoints)
+                    : (Number(res.points) || 0);
                 stats[key].pts += pts;
                 if (res.programId) stats[key].progs.add(res.programId);
             });

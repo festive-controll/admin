@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Data Extractor</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <h1>Data Extraction</h1>
+  <div id="status">Connecting...</div>
+  <pre id="output"></pre>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o",
+      authDomain: "festie-s1u2h3.firebaseapp.com",
+      projectId: "festie-s1u2h3",
+      storageBucket: "festie-s1u2h3.firebasestorage.app",
+      messagingSenderId: "794049194885",
+      appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function extractAll() {
+      try {
+        document.getElementById('status').innerText = 'Fetching collections...';
+        
+        async function fetchCollection(col) {
+          const snap = await db.collection(col).get();
+          return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
+        const [teams, programs, results, penalties, sections] = await Promise.all([
+          fetchCollection('teams'),
+          fetchCollection('programs'),
+          fetchCollection('programResults'),
+          fetchCollection('negativeMarks'),
+          fetchCollection('sections')
+        ]);
+
+        window.extractedData = {
+          teams,
+          programs,
+          results,
+          penalties,
+          sections
+        };
+
+        document.getElementById('status').innerText = 'DONE';
+        document.getElementById('output').innerText = JSON.stringify({
+          teamsCount: teams.length,
+          programsCount: programs.length,
+          resultsCount: results.length,
+          penaltiesCount: penalties.length,
+          sectionsCount: sections.length
+        }, null, 2);
+      } catch (err) {
+        document.getElementById('status').innerText = 'ERROR: ' + err.message;
+        console.error(err);
+      }
+    }
+
+    extractAll();
+  </script>
+</body>
+</html>

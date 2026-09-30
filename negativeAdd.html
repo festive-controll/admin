@@ -168,6 +168,7 @@
                         <option value="Rule Violation">Rule Violation</option>
                         <option value="Uniform/ID Mismatch">Uniform/ID Mismatch</option>
                         <option value="Late Arrival">Late Arrival</option>
+                        <option value="Carelessness">Carelessness</option>
                         <option value="Other">Other</option>
                     </select>
                     <i class="fi fi-rr-angle-small-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
@@ -251,6 +252,70 @@
                 renderList();
             });
 
+            // Reconcile E grades that were entered before automatic team penalties
+            // were introduced. Deterministic document IDs keep this idempotent.
+            async function migrateExistingEGradePenalties() {
+                try {
+                    const [resultsSnap, candidatesSnap, penaltiesSnap] = await Promise.all([
+                        db.collection('programResults').get(),
+                        db.collection('candidates').get(),
+                        db.collection('negativeMarks').get()
+                    ]);
+                    const existingPenaltyIds = new Set(penaltiesSnap.docs.map(doc => doc.id));
+                    const candidateTeams = new Map(candidatesSnap.docs.map(doc => {
+                        const data = doc.data();
+                        return [doc.id, data.team || data.teamName || ''];
+                    }));
+                    const operations = [];
+
+                    resultsSnap.docs.forEach(doc => {
+                        const result = doc.data();
+                        if (!/^e(?:\s|\(|$)/i.test(String(result.gradeLabel || result.grade || '').trim())) return;
+
+                        const teamName = result.team || result.teamName || candidateTeams.get(result.candidateId) || '';
+                        if (!teamName) return;
+
+                        const originalGradePoints = Number(result.gradePoints);
+                        const penaltyMarks = Math.max(1, Math.abs(Number.isFinite(originalGradePoints) ? originalGradePoints : 0));
+                        const penaltyRef = db.collection('negativeMarks').doc(`e_grade_${doc.id}`);
+                        if (!existingPenaltyIds.has(penaltyRef.id)) {
+                            operations.push(batch => batch.set(penaltyRef, {
+                                candidateIds: [],
+                                candidateNames: [],
+                                teams: [teamName],
+                                teamName,
+                                recipientType: 'team',
+                                purpose: 'Carelessness',
+                                marks: penaltyMarks,
+                                source: 'E Grade',
+                                resultId: doc.id,
+                                programId: result.programId || '',
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                status: 'Active'
+                            }));
+                        }
+
+                        if (originalGradePoints < 0 || Number(result.totalPoints) < Number(result.positionPoints || 0)) {
+                            operations.push(batch => batch.update(doc.ref, {
+                                gradePoints: 0,
+                                totalPoints: Number(result.positionPoints) || 0,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            }));
+                        }
+                    });
+
+                    for (let offset = 0; offset < operations.length; offset += 400) {
+                        const batch = db.batch();
+                        operations.slice(offset, offset + 400).forEach(apply => apply(batch));
+                        await batch.commit();
+                    }
+                } catch (error) {
+                    console.error('Unable to reconcile existing E-grade penalties:', error);
+                }
+            }
+
+            migrateExistingEGradePenalties();
+
             // UI Rendering
             function renderCandidateOptions() {
                 const search = document.getElementById('cand-search-input').value.toLowerCase();
@@ -276,7 +341,10 @@
             function renderList() {
                 const s = currentSearch.toLowerCase().trim();
                 const filtered = negMarks.filter(n => {
-                    const candMatch = n.candidateNames.some(name => name.toLowerCase().includes(s));
+                    const recipients = Array.isArray(n.candidateNames) && n.candidateNames.length
+                        ? n.candidateNames
+                        : (Array.isArray(n.teams) ? n.teams : [n.teamName].filter(Boolean));
+                    const candMatch = recipients.some(name => String(name).toLowerCase().includes(s));
                     const purposeMatch = n.purpose.toLowerCase().includes(s);
                     return candMatch || purposeMatch;
                 });
@@ -295,7 +363,9 @@
                 let html = '';
                 paginated.forEach((n, idx) => {
                     const date = n.timestamp?.toDate() ? n.timestamp.toDate().toLocaleDateString() : 'Just now';
-                    const candSummary = n.candidateNames.join(', ');
+                    const candSummary = (Array.isArray(n.candidateNames) && n.candidateNames.length
+                        ? n.candidateNames
+                        : (Array.isArray(n.teams) ? n.teams : [n.teamName].filter(Boolean))).join(', ');
                     const isRemoved = n.status === 'Removed';
                     
                     html += `

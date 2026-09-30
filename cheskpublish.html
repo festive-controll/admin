@@ -154,7 +154,7 @@
             const programsWithResultIds = new Set(allResults.map(r => r.programId).filter(Boolean));
             
             // Filter programs
-            programsWithResults = allPrograms.filter(p => programsWithResultIds.has(p.id));
+            programsWithResults = allPrograms.filter(p => programsWithResultIds.has(p.id) || p.resultEntered === true);
             
             // Sort alphabetically by program name
             programsWithResults.sort((a, b) => (a.name || '').localeCompare(b.name || ''));

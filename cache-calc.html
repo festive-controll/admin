@@ -1,0 +1,88 @@
+<!doctype html><meta charset="utf-8"><pre id="out">Loading cached festival data...</pre>
+<script src="/tmp-firebase-app.js"></script>
+<script src="/tmp-firebase-firestore.js"></script>
+<script>
+(async () => {
+  const config = { apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o", authDomain: "festie-s1u2h3.firebaseapp.com", projectId: "festie-s1u2h3", appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec" };
+  firebase.initializeApp(config);
+  const db = firebase.firestore();
+  await db.enablePersistence().catch(() => {});
+  async function cached(name) {
+    const snap = await db.collection(name).get({ source: 'cache' });
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  const programs = await cached('programs');
+  const results = await cached('programResults');
+  const teams = await cached('teams');
+  const penalties = await cached('negativeMarks');
+  const names = ['Thugra', 'Reyhani', 'Diwani', 'Thuluth'];
+  function type(p) {
+    const raw = [p.venueTypeName, p.venueType, p.venue_type].find(v => typeof v === 'string' && v.trim());
+    const n = String(raw || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+    if (n.includes('sport')) return 'sports';
+    if (n.includes('nonstage')) return 'non-stage';
+    if (n === 'stage' || n.endsWith('stage')) return 'stage';
+    const c = String(p.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (/^[A-Z]*Y\d+/.test(c)) return 'stage';
+    if (/^[A-Z]*X\d+/.test(c)) return 'non-stage';
+    if (String(p.section || '').toLowerCase().includes('sport')) return 'sports';
+    return null;
+  }
+  function points(r) {
+    for (const k of ['totalPoints', 'points', 'score']) if (r[k] !== undefined && r[k] !== null && r[k] !== '' && Number.isFinite(Number(r[k]))) return Number(r[k]);
+    return (Number(r.gradePoints) || 0) + (Number(r.positionPoints) || 0);
+  }
+  const activeNames = teams.filter(t => t.isActive === true).map(t => t.name);
+  const actual = Object.fromEntries(names.map(n => [n, activeNames.find(x => String(x).toLowerCase() === n.toLowerCase()) || n]));
+  const byProgram = new Map();
+  for (const r of results) { if (!byProgram.has(r.programId)) byProgram.set(r.programId, []); byProgram.get(r.programId).push(r); }
+  const arts = programs.filter(p => ['stage', 'non-stage'].includes(type(p)) && (byProgram.get(p.id) || []).length > 0);
+  const sports = programs.filter(p => p.resultsPublished === true && type(p) === 'sports');
+  for (const p of arts) {
+    p.pts = Object.fromEntries(names.map(n => [n, 0]));
+    for (const r of byProgram.get(p.id) || []) for (const n of names) if (r.team === actual[n]) p.pts[n] += points(r);
+  }
+  const penalty = Object.fromEntries(names.map(n => [n, 0]));
+  for (const p of penalties.filter(x => x.status === 'Active' && Array.isArray(x.teams))) for (const t of new Set(p.teams)) for (const n of names) if (t === actual[n]) penalty[n] += Number(p.marks) || 0;
+  const base = Object.fromEntries(names.map(n => [n, -penalty[n]]));
+  for (const p of arts) for (const n of names) base[n] += p.pts[n];
+  for (const p of arts) p.gain = [p.pts.Reyhani - p.pts.Thugra, p.pts.Diwani - p.pts.Reyhani, p.pts.Thuluth - p.pts.Reyhani];
+  arts.sort((a,b) => (b.gain[1] + b.gain[2] - Math.max(0,-b.gain[0])) - (a.gain[1] + a.gain[2] - Math.max(0,-a.gain[0])));
+  const initialDiff = [base.Thugra-base.Reyhani, base.Reyhani-base.Diwani, base.Reyhani-base.Thuluth];
+  let answer = null;
+  function search(k) {
+    const chosen=[];
+    function dfs(start,left,diff) {
+      if (left===0) return diff.every(x=>x>0) ? [...chosen] : null;
+      if (arts.length-start<left) return null;
+      for(let c=0;c<3;c++) {
+        const gains=arts.slice(start).map(p=>p.gain[c]).sort((a,b)=>b-a).slice(0,left).reduce((s,x)=>s+x,0);
+        if(diff[c]+gains<=0) return null;
+      }
+      for(let i=start;i<=arts.length-left;i++) {
+        chosen.push(i);
+        const hit=dfs(i+1,left-1,diff.map((x,c)=>x+arts[i].gain[c]));
+        if(hit) return hit;
+        chosen.pop();
+      }
+      return null;
+    }
+    return dfs(0,k,initialDiff);
+  }
+  for(let k=0;k<=arts.length;k++){ const hit=search(k); if(hit){ answer=hit; break; } }
+  if(!answer) {
+    document.getElementById('out').textContent=JSON.stringify({
+      error:'No arts-only subset can produce the requested strict ranking.',
+      counts:{eligibleArts:arts.length,publishedSports:sports.length}, artsBaseline:base,
+      penalties:penalty,
+      arts:arts.map(p=>({code:p.code,name:p.name,published:p.resultsPublished===true,points:p.pts}))
+    },null,2);
+    return;
+  }
+  const removed=new Set(answer);
+  const final={...base};
+  for(const i of removed) for(const n of names) final[n]-=arts[i].pts[n];
+  const data={cachedAt:new Date().toISOString(),counts:{publishedArts:arts.length,publishedSports:sports.length},artsBaseline:base,penalties:penalty,final,unpublishSports:sports.map(p=>({code:p.code,name:p.name})),unpublishArts:[...removed].map(i=>({code:arts[i].code,name:arts[i].name,points:arts[i].pts})),publishArts:arts.filter((_,i)=>!removed.has(i)).map(p=>({code:p.code,name:p.name}))};
+  document.getElementById('out').textContent=JSON.stringify(data,null,2);
+})().catch(e => document.getElementById('out').textContent='ERROR: '+e.stack);
+</script>
