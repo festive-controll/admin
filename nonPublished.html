@@ -143,7 +143,10 @@
                 var categoryPrograms = selectedType === 'all'
                     ? programs.slice()
                     : programs.filter(function (program) { return programType(program) === selectedType; });
-                var missingPrograms = categoryPrograms.filter(function (program) { return !resultProgramIds.has(program.id); });
+                var missingPrograms = categoryPrograms.filter(function (program) {
+                    var hasResultEntry = resultProgramIds.has(program.id) || program.resultEntered === true;
+                    return !hasResultEntry;
+                });
 
                 document.getElementById('missing-count').textContent = missingPrograms.length;
                 document.getElementById('total-count').textContent = categoryPrograms.length;

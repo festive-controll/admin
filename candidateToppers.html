@@ -66,7 +66,16 @@
             </div>
 
             <!-- Filter Controls -->
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div class="relative w-full sm:w-40">
+                    <select id="programCategory" onchange="handleProgramCategoryChange()"
+                        class="w-full pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
+                        <option value="arts" selected>Arts</option>
+                        <option value="sports">Sports</option>
+                    </select>
+                    <i class="fi fi-rr-palette absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" id="programCategoryIcon"></i>
+                    <i class="fi fi-rr-angle-small-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
                 <div class="relative w-full sm:w-48">
                     <select id="globalStatus"
                         class="w-full pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
@@ -155,13 +164,16 @@
 
                 <div class="p-4 border-b border-gray-100 flex items-center justify-between gap-4 bg-white">
                     <span class="text-[12px] font-bold text-gray-500 uppercase tracking-wide">Select Section</span>
-                    <div class="relative w-full max-w-xs">
+                    <div class="flex items-center gap-2 w-full max-w-sm">
+                    <div class="relative flex-1">
                         <select id="sectionSelector" onchange="handleSectionChange()"
                             class="w-full pl-10 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue appearance-none cursor-pointer transition-all">
                             <option value="" disabled selected>-- Choose Section --</option>
                         </select>
                         <i class="fi fi-rr-layout-fluid absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                         <i class="fi fi-rr-angle-small-down absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm"></i>
+                    </div>
+                    <div id="highestParticipation" class="hidden shrink-0 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-[11px] font-bold text-orange-700 whitespace-nowrap" title="Highest registered participation in this section"></div>
                     </div>
                 </div>
 
@@ -198,8 +210,8 @@
             db = firebase.firestore();
         }
 
-        var _data = { candidates: [], results: [], sections: [], programs: [], negativeMarks: [] };
-        var _dataLoaded = { candidates: false, results: false, sections: false, programs: false, negativeMarks: false };
+        var _data = { candidates: [], results: [], registrations: [], sections: [], programs: [], negativeMarks: [] };
+        var _dataLoaded = { candidates: false, results: false, registrations: false, sections: false, programs: false, negativeMarks: false };
         var _activeReady = false;
         var _autoApplied = false;
         var _currentSection = null;
@@ -219,6 +231,13 @@
             db.collection('programResults').onSnapshot(snap => {
                 _data.results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 _dataLoaded.results = true;
+                if (_activeReady) updateRankings();
+                checkAllLoaded();
+            });
+
+            db.collection('registrations').onSnapshot(snap => {
+                _data.registrations = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                _dataLoaded.registrations = true;
                 if (_activeReady) updateRankings();
                 checkAllLoaded();
             });
@@ -298,9 +317,35 @@
             }
         }
 
+        function handleProgramCategoryChange() {
+            var category = document.getElementById('programCategory').value;
+            var icon = document.getElementById('programCategoryIcon');
+            icon.className = category === 'sports'
+                ? 'fi fi-rr-football absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm'
+                : 'fi fi-rr-palette absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm';
+            updateRankings();
+        }
+
+        // Supports both the current venue fields and older code/section based records.
+        function resolveProgramCategory(program) {
+            if (!program) return null;
+            var rawVenueType = [program.venueTypeName, program.venueType, program.venue_type, program.progSet]
+                .find(value => typeof value === 'string' && value.trim());
+            var normalized = String(rawVenueType || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+
+            if (normalized.includes('sport')) return 'sports';
+            if (normalized.includes('nonstage') || normalized === 'stage' || normalized.endsWith('stage')) return 'arts';
+
+            var code = String(program.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (/^[A-Z]*[XY]\d+/.test(code)) return 'arts';
+            if (String(program.section || '').toLowerCase().includes('sport')) return 'sports';
+            return null;
+        }
+
         function updateRankings() {
             if (!_activeReady) return;
             var mode = document.getElementById('globalStatus').value;
+            var programCategory = document.getElementById('programCategory').value;
             var overallLimit = parseInt(document.getElementById('overallLimit').value) || 20;
             var sectionLimit = parseInt(document.getElementById('sectionLimit').value) || 20;
 
@@ -308,21 +353,80 @@
             var progMap = {};
             _data.programs.forEach(p => progMap[p.id] = p);
 
-            _currentOverallData = calculateToppers('All Sections', mode, overallLimit, progMap, publishedProgIds);
+            _currentOverallData = calculateToppers('All Sections', mode, programCategory, overallLimit, progMap, publishedProgIds);
             renderCandidateList('overall-toppers-list', _currentOverallData);
 
             if (_currentSection) {
-                _currentSectionData = calculateToppers(_currentSection, mode, sectionLimit, progMap, publishedProgIds);
+                _currentSectionData = calculateToppers(_currentSection, mode, programCategory, sectionLimit, progMap, publishedProgIds, true);
                 renderCandidateList('section-toppers-list', _currentSectionData);
+                updateHighestParticipation(_currentSection, programCategory, progMap, true);
             }
         }
 
-        function calculateToppers(sectionFilter, mode, limit, progMap, publishedProgIds) {
+        function isIndividualProgram(program) {
+            if (!program) return false;
+            var type = String(program.type || program.programType || program.eventType || '').trim().toLowerCase();
+            // Older records without a type were treated as Individual throughout the dashboard.
+            return !type || (!type.includes('group') && !type.includes('general'));
+        }
+
+        function buildParticipationCounts(sectionFilter, programCategory, progMap, individualOnly) {
+            var counts = {};
+            var candidatesById = {};
+            var candidatesByChest = {};
+
+            _data.candidates.forEach(c => {
+                if (sectionFilter !== 'All Sections' && c.section !== sectionFilter) return;
+                var key = String(c.id);
+                candidatesById[key] = c;
+                if (c.chestNo !== undefined && c.chestNo !== null) candidatesByChest[String(c.chestNo)] = c;
+                counts[key] = new Set();
+            });
+
+            _data.registrations.forEach(reg => {
+                var programId = reg.programId || reg.progId;
+                var program = progMap[programId];
+                if (!programId || resolveProgramCategory(program) !== programCategory) return;
+                if (individualOnly && !isIndividualProgram(program)) return;
+
+                var matched = new Set();
+                var candidateIds = Array.isArray(reg.candidateIds) ? reg.candidateIds : (reg.candidateId ? [reg.candidateId] : []);
+                candidateIds.forEach(id => {
+                    var cand = candidatesById[String(id)];
+                    if (cand) matched.add(String(cand.id));
+                });
+
+                var chestNumbers = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                chestNumbers.forEach(chest => {
+                    var cand = candidatesByChest[String(chest)];
+                    if (cand && (!reg.team || reg.team === cand.team || reg.team === cand.teamName)) matched.add(String(cand.id));
+                });
+
+                matched.forEach(key => counts[key].add(String(programId)));
+            });
+
+            return counts;
+        }
+
+        function updateHighestParticipation(sectionFilter, programCategory, progMap, individualOnly) {
+            var badge = document.getElementById('highestParticipation');
+            var counts = buildParticipationCounts(sectionFilter, programCategory, progMap, individualOnly);
+            var highest = Object.values(counts).reduce((max, set) => Math.max(max, set.size), 0);
+            var categoryLabel = programCategory === 'sports' ? 'Sports' : 'Arts';
+            badge.textContent = `${categoryLabel} Highest: ${highest}`;
+            badge.classList.remove('hidden');
+        }
+
+        function calculateToppers(sectionFilter, mode, programCategory, limit, progMap, publishedProgIds, individualOnly) {
             var stats = {};
+            var participationCounts = buildParticipationCounts(sectionFilter, programCategory, progMap, individualOnly);
 
             // Initialize from results to ensure we only track active participants
             _data.results.forEach(res => {
                 if (mode === 'published' && !publishedProgIds.has(res.programId)) return;
+                var program = progMap[res.programId];
+                if (resolveProgramCategory(program) !== programCategory) return;
+                if (individualOnly && !isIndividualProgram(program)) return;
 
                 var key = res.candidateId || res.chestNo || res.candidateName;
                 if (!key) return;
@@ -331,13 +435,14 @@
                     // Try to find full candidate info
                     var candInfo = _data.candidates.find(c => c.id === res.candidateId || c.chestNo === res.chestNo);
                     stats[key] = {
-                        id: res.candidateId || null,
+                        id: res.candidateId || (candInfo ? candInfo.id : null),
                         chestNo: res.chestNo || '--',
                         name: res.candidateName || (candInfo ? candInfo.name : 'Unknown'),
                         team: res.team || res.teamName || (candInfo ? candInfo.team : '--'),
                         section: (candInfo ? candInfo.section : (res.section || '--')),
                         pts: 0,
                         progs: new Set(),
+                        participationCount: 0,
                         imageUrl: candInfo ? candInfo.imageUrl : null
                     };
                 }
@@ -364,6 +469,17 @@
                 candIds.forEach(cId => {
                     if (stats[cId]) stats[cId].pts = Math.max(0, stats[cId].pts - penalty);
                 });
+            });
+
+            Object.values(stats).forEach(c => {
+                if (c.id && participationCounts[String(c.id)]) {
+                    c.participationCount = participationCounts[String(c.id)].size;
+                    return;
+                }
+                var matchingCandidate = _data.candidates.find(candidate => String(candidate.chestNo) === String(c.chestNo));
+                c.participationCount = matchingCandidate && participationCounts[String(matchingCandidate.id)]
+                    ? participationCounts[String(matchingCandidate.id)].size
+                    : 0;
             });
 
             return Object.values(stats)
@@ -413,7 +529,7 @@
                                 <span class="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">${c.team}</span>
                                 <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
                                 <span class="text-[11px] font-medium text-gray-500 flex items-center gap-1">
-                                    <i class="fi fi-rr-apps text-[10px] text-gray-400"></i> ${c.progs.size} Events
+                                    <i class="fi fi-rr-apps text-[10px] text-gray-400"></i> ${c.participationCount || 0} Participated
                                 </span>
                             </div>
                         </div>
@@ -431,17 +547,19 @@
 
         function exportData(type) {
             var dataToExport = type === 'overall' ? _currentOverallData : _currentSectionData;
+            var categoryName = document.getElementById('programCategory').value === 'sports' ? 'Sports' : 'Arts';
             var secName = _currentSection ? _currentSection.replace(/\s+/g, '_') : 'Section';
-            var fileName = type === 'overall' ? 'Top_Candidates.csv' : `Top_Candidates_${secName}.csv`;
+            var fileName = type === 'overall' ? `Top_Candidates_${categoryName}.csv` : `Top_Candidates_${categoryName}_${secName}.csv`;
 
             if (dataToExport.length === 0) {
                 return Toastify({ text: "âŒ No data to export", duration: 3000, gravity: "top", position: "center", style: { background: "#fff", color: "#ef4444" } }).showToast();
             }
 
-            var headers = ["Rank", "Chest No", "Name", "Team", "Section", "Total Points", "Programs"];
+            var headers = ["Rank", "Chest No", "Name", "Team", "Section", "Total Points", "Participation Count"];
             var rows = [headers.join(',')];
             dataToExport.forEach((c, i) => {
-                rows.push([i + 1, c.chestNo, `"${c.name}"`, `"${c.team}"`, `"${c.section}"`, c.pts, c.progs.size].join(','));
+                var row = [i + 1, c.chestNo, `"${c.name}"`, `"${c.team}"`, `"${c.section}"`, c.pts, c.participationCount || 0];
+                rows.push(row.join(','));
             });
 
             var blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -456,6 +574,7 @@
         window.exportData = exportData;
         window.updateRankings = updateRankings;
         window.handleSectionChange = handleSectionChange;
+        window.handleProgramCategoryChange = handleProgramCategoryChange;
 
         startRealtimeSync();
     })();

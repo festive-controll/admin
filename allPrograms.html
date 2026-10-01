@@ -1400,6 +1400,69 @@
             return sets * participantsPerSet;
         }
 
+        async function syncProgramResultTemplatePoints(programId, gradeTemplateId, positionTemplateId) {
+            const [resultsSnap, gradeDoc, positionDoc] = await Promise.all([
+                db.collection('programResults').where('programId', '==', programId).get(),
+                gradeTemplateId ? db.collection('gradeTemplates').doc(gradeTemplateId).get() : Promise.resolve(null),
+                positionTemplateId ? db.collection('positionTemplates').doc(positionTemplateId).get() : Promise.resolve(null)
+            ]);
+            const valueMap = (doc, type) => {
+                const data = doc && doc.exists ? doc.data() || {} : {};
+                const values = data.values || data[type === 'grade' ? 'grades' : 'positions'] || data.items || [];
+                return new Map(values.map(value => {
+                    const label = String(value.label || value[type] || value.name || '').trim();
+                    const key = label.replace(/\s*\([^)]*pts?\)\s*$/i, '').trim().toLowerCase();
+                    return [key, { label, points: Number(value.points ?? value.value ?? 0) }];
+                }).filter(([key]) => key));
+            };
+            const gradeMap = valueMap(gradeDoc, 'grade');
+            const positionMap = valueMap(positionDoc, 'position');
+            const gradeValues = gradeDoc && gradeDoc.exists
+                ? ((gradeDoc.data() || {}).values || (gradeDoc.data() || {}).grades || (gradeDoc.data() || {}).items || [])
+                : [];
+            const gradeFromMarks = marks => {
+                if (marks === undefined || marks === null || marks === '' || !Number.isFinite(Number(marks))) return null;
+                const numericMarks = Number(marks);
+                const percentage = numericMarks <= 10 ? numericMarks * 10 : numericMarks;
+                const value = gradeValues.find(item => {
+                    const numbers = String(item.percentage || item.range || '').match(/\d+(?:\.\d+)?/g);
+                    if (!numbers || !numbers.length) return false;
+                    return percentage >= Number(numbers[0]) &&
+                        percentage <= (numbers.length > 1 ? Number(numbers[1]) : Infinity);
+                });
+                return value ? {
+                    label: String(value.label || value.grade || value.name || '').trim(),
+                    points: Number(value.points ?? value.value ?? 0)
+                } : null;
+            };
+            const batch = db.batch();
+            let changes = 0;
+            resultsSnap.forEach(doc => {
+                const result = doc.data() || {};
+                const clean = value => String(value || '').replace(/\s*\([^)]*pts?\)\s*$/i, '').trim().toLowerCase();
+                const grade = gradeFromMarks(result.gradeMarks ?? result.marks) ||
+                    gradeMap.get(clean(result.gradeLabel || result.grade));
+                const position = positionMap.get(clean(result.positionLabel || result.position));
+                const update = {};
+                if (grade) {
+                    update.gradeLabel = grade.label;
+                    update.gradePoints = /^e(?:\s|\(|$)/i.test(grade.label) ? 0 : grade.points;
+                }
+                if (position) {
+                    update.positionLabel = position.label;
+                    update.positionPoints = position.points;
+                }
+                if (!grade && !position) return;
+                update.totalPoints = Number(grade ? update.gradePoints : result.gradePoints || 0) +
+                    Number(position ? update.positionPoints : result.positionPoints || 0);
+                update.updatedAt = new Date();
+                batch.update(doc.ref, update);
+                changes++;
+            });
+            if (changes) await batch.commit();
+            return changes;
+        }
+
         function saveProgram() {
             const code = document.getElementById('progCode').value.trim().toUpperCase();
             const name = document.getElementById('progName').value.trim();
@@ -1457,7 +1520,8 @@
             }
 
             if (editingProgId) {
-                db.collection('programs').doc(editingProgId).update(payload).then(() => {
+                db.collection('programs').doc(editingProgId).update(payload).then(async () => {
+                    await syncProgramResultTemplatePoints(editingProgId, payload.gradeTemplateId, payload.positionTemplateId);
                     typeof showToast === 'function' && showToast("✅ Program updated!");
                     closeFormView();
                 });

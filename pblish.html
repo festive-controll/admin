@@ -104,6 +104,21 @@
             return result.gradeLabel || result.grade || '-';
         }
 
+        function publishPdfPoints(result) {
+            var value = result.totalPoints;
+            if (value == null || value === '') value = result.points;
+            return value == null || value === '' ? '-' : String(value);
+        }
+
+        function publishPdfProgramResults(results, programId) {
+            return (Array.isArray(results) ? results : []).filter(function (result) {
+                return result.programId === programId;
+            }).sort(function (a, b) {
+                return publishPdfPositionNumber(a) - publishPdfPositionNumber(b) ||
+                    String(publishPdfChest(a)).localeCompare(String(publishPdfChest(b)), undefined, { numeric: true });
+            });
+        }
+
         function publishPdfDisplayText(value) {
             return String(value == null ? '' : value)
                 .replace(/[\u02B9-\u02BF\u2018\u2019]/g, "'")
@@ -119,22 +134,23 @@
             }
             preview.innerHTML = publishPdfPrograms.map(function (program) {
                 var category = program.category || program.section || 'General';
-                var programResults = publishPdfResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
+                var programResults = publishPdfProgramResults(publishPdfResults, program.id);
                 var rows = programResults.map(function (result) {
                     return '<tr class="border-t border-gray-100">' +
                         '<td class="px-6 py-4 font-bold text-[#134E8E]">' + publishPdfEscape(publishPdfPosition(result) || '-') + '</td>' +
                         '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfGrade(result)) + '</td>' +
                         '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfChest(result)) + '</td>' +
                         '<td class="px-6 py-4 font-medium">' + publishPdfEscape(publishPdfName(result)) + '</td>' +
-                        '<td class="px-6 py-4 font-medium">' + publishPdfEscape(result.team || '-') + '</td></tr>';
+                        '<td class="px-6 py-4 font-medium">' + publishPdfEscape(result.team || '-') + '</td>' +
+                        '<td class="px-6 py-4 font-semibold text-gray-700">' + publishPdfEscape(publishPdfPoints(result)) + '</td></tr>';
                 }).join('');
                 return '<article class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">' +
                     '<div class="px-6 sm:px-8 py-6 bg-[#134E8E] text-white">' +
                     '<div class="text-xs uppercase tracking-[0.22em] text-blue-200 font-bold mb-2">Official Result</div>' +
                     '<h2 class="text-xl font-extrabold">' + publishPdfEscape(program.name || 'Program') + ' - (' + publishPdfEscape(category) + ')</h2></div>' +
                     '<div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">' +
-                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Grade</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Team</th></tr></thead>' +
-                    '<tbody>' + (rows || '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No positioned winners found.</td></tr>') + '</tbody></table></div></article>';
+                    '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Grade</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Team</th><th class="px-6 py-3">Points</th></tr></thead>' +
+                    '<tbody>' + (rows || '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No results found.</td></tr>') + '</tbody></table></div></article>';
             }).join('');
             document.getElementById('save-pdf-button').disabled = publishPdfPrograms.length === 0;
         }
@@ -248,16 +264,16 @@
                 stream += '0.82 0.84 0.88 RG 45 ' + (y + 12) + ' m 550 ' + (y + 12) + ' l S\n';
                 stream += '0.075 0.306 0.557 rg\n';
                 stream += textLine((program.name || 'Program') + ' - (' + category + ')' + (continued ? ' - Continued' : ''), 45, y, 12, true);
-                stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, y - 20, 8, true) + textLine('GRADE', 115, y - 20, 8, true) + textLine('CHEST NO.', 170, y - 20, 8, true) + textLine('NAME', 245, y - 20, 8, true) + textLine('TEAM', 465, y - 20, 8, true);
+                stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, y - 20, 8, true) + textLine('GRADE', 115, y - 20, 8, true) + textLine('CHEST NO.', 170, y - 20, 8, true) + textLine('NAME', 245, y - 20, 8, true) + textLine('TEAM', 465, y - 20, 8, true) + textLine('POINTS', 535, y - 20, 8, true);
                 y -= 39;
             }
             beginFallbackPage();
             programs.forEach(function (program) {
-                var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
+                var results = publishPdfProgramResults(savedResults, program.id);
                 if (y < 100) { finishFallbackPage(); beginFallbackPage(); }
                 drawFallbackProgramHeader(program, false);
                 if (!results.length) {
-                    stream += textLine('No positioned winners found.', 45, y, 9, false);
+                    stream += textLine('No results found.', 45, y, 9, false);
                     y -= 30;
                 }
                 results.forEach(function (result) {
@@ -268,7 +284,8 @@
                     stream += '0.12 0.12 0.12 rg\n' + textLine(publishPdfGrade(result), 115, y, 9, true);
                     stream += textLine(publishPdfChest(result), 170, y, 9, true);
                     stream += textLine(String(publishPdfName(result)).slice(0, 30), 245, y, 9, false);
-                    stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 14), 465, y, 9, false);
+                    stream += textLine(String(result.team || (result.isGroupResult ? publishPdfName(result) : '-')).slice(0, 10), 465, y, 9, false);
+                    stream += textLine(publishPdfPoints(result), 535, y, 9, true);
                     y -= 18;
                 });
                 y -= 18;
@@ -388,19 +405,19 @@
                     context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
                     context.fillText(fitCanvasText((program.name || 'Program') + ' - (' + category + ')' + (continued ? ' - Continued' : ''), 1080), 80, canvasY + 40);
                     context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
-                    context.fillText('POSITION', 80, canvasY + 82); context.fillText('GRADE', 225, canvasY + 82);
-                    context.fillText('CHEST NO.', 335, canvasY + 82); context.fillText('NAME', 500, canvasY + 82); context.fillText('TEAM', 900, canvasY + 82);
+                    context.fillText('POSITION', 80, canvasY + 82); context.fillText('GRADE', 210, canvasY + 82);
+                    context.fillText('CHEST NO.', 315, canvasY + 82); context.fillText('NAME', 455, canvasY + 82); context.fillText('TEAM', 830, canvasY + 82); context.fillText('POINTS', 1080, canvasY + 82);
                     canvasY += 122;
                     canvasHasContent = true;
                 }
                 startCanvasPage();
                 programs.forEach(function (program) {
-                    var results = savedResults.filter(function (result) { return result.programId === program.id && publishPdfPosition(result); });
+                    var results = publishPdfProgramResults(savedResults, program.id);
                     if (canvasY > 1510) { finishCanvasPage(); startCanvasPage(); }
                     drawCanvasProgramHeader(program, false);
                     if (!results.length) {
                         context.fillStyle = '#777777'; context.font = '500 19px Inter, Arial, sans-serif';
-                        context.fillText('No positioned winners found.', 80, canvasY);
+                        context.fillText('No results found.', 80, canvasY);
                         canvasY += 58;
                     }
                     results.forEach(function (result) {
@@ -409,11 +426,13 @@
                         }
                         context.fillStyle = '#134E8E'; context.font = '700 19px Inter, Arial, sans-serif';
                         context.fillText(publishPdfPosition(result) || '-', 80, canvasY);
-                        context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfGrade(result), 85), 225, canvasY);
-                        context.fillText(fitCanvasText(publishPdfChest(result), 135), 335, canvasY);
+                        context.fillStyle = '#222222'; context.fillText(fitCanvasText(publishPdfGrade(result), 75), 210, canvasY);
+                        context.fillText(fitCanvasText(publishPdfChest(result), 110), 315, canvasY);
                         context.font = '500 19px Inter, Arial, sans-serif';
-                        context.fillText(fitCanvasText(publishPdfName(result), 365), 500, canvasY);
-                        context.fillText(fitCanvasText(result.team || (result.isGroupResult ? publishPdfName(result) : '-'), 250), 900, canvasY);
+                        context.fillText(fitCanvasText(publishPdfName(result), 340), 455, canvasY);
+                        context.fillText(fitCanvasText(result.team || (result.isGroupResult ? publishPdfName(result) : '-'), 215), 830, canvasY);
+                        context.font = '700 19px Inter, Arial, sans-serif';
+                        context.fillText(fitCanvasText(publishPdfPoints(result), 80), 1080, canvasY);
                         canvasY += 38;
                     });
                     canvasY += 28;
@@ -644,7 +663,19 @@
                 var snapshot = await db.collection('programResults').get();
                 var currentResults = snapshot.docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
                     .filter(function (result) { return programIds.has(result.programId); });
-                return currentResults.length ? currentResults : storedResults;
+                if (!currentResults.length) return storedResults;
+                // Keep snapshot-only rows as well. A partially edited/deleted live
+                // collection must not make an older saved PDF lose result data.
+                var merged = new Map();
+                function resultKey(result) {
+                    return [result.programId || '', result.chestNo || result.chestNumber || '', result.candidateName || result.name || '', result.team || '', result.isGroupResult === true ? 'group' : 'candidate'].join('|');
+                }
+                storedResults.forEach(function (result) { merged.set(resultKey(result), result); });
+                currentResults.forEach(function (result) {
+                    var key = resultKey(result);
+                    merged.set(key, Object.assign({}, merged.get(key) || {}, result));
+                });
+                return Array.from(merged.values());
             } catch (error) {
                 console.error('Could not load complete results for Excel:', error);
                 return storedResults;

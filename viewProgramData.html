@@ -3157,6 +3157,57 @@
                 return changedResults;
             }
 
+            async function syncResultPointsFromGradeTemplate(programId, templateRef) {
+                if (!programId || !templateRef) return 0;
+                const templatesSnap = await db.collection('gradeTemplates').get();
+                const wanted = String(templateRef).trim().toLowerCase();
+                const templateDoc = templatesSnap.docs.find(doc => doc.id.toLowerCase() === wanted ||
+                    String((doc.data() || {}).name || '').trim().toLowerCase() === wanted);
+                if (!templateDoc) return 0;
+                const template = templateDoc.data() || {};
+                const values = template.values || template.grades || template.items || [];
+                const pointsByLabel = new Map(values.map(value => {
+                    const label = String(value.label || value.grade || value.name || '').trim();
+                    return [label.replace(/\s*\([^)]*pts?\)\s*$/i, '').trim().toLowerCase(),
+                        { label, points: Number(value.points ?? value.value ?? 0) }];
+                }).filter(([label]) => label));
+                const gradeFromMarks = marks => {
+                    if (marks === undefined || marks === null || marks === '' || !Number.isFinite(Number(marks))) return null;
+                    const numericMarks = Number(marks);
+                    const percentage = numericMarks <= 10 ? numericMarks * 10 : numericMarks;
+                    return values.find(value => {
+                        const numbers = String(value.percentage || value.range || '').match(/\d+(?:\.\d+)?/g);
+                        if (!numbers || !numbers.length) return false;
+                        const minimum = Number(numbers[0]);
+                        const maximum = numbers.length > 1 ? Number(numbers[1]) : Infinity;
+                        return percentage >= minimum && percentage <= maximum;
+                    }) || null;
+                };
+                const resultsSnap = await db.collection('programResults').where('programId', '==', programId).get();
+                if (resultsSnap.empty) return 0;
+                const batch = db.batch();
+                let changedResults = 0;
+                resultsSnap.forEach(resultDoc => {
+                    const result = resultDoc.data() || {};
+                    const key = String(result.gradeLabel || result.grade || '')
+                        .replace(/\s*\([^)]*pts?\)\s*$/i, '').trim().toLowerCase();
+                    const marksGrade = gradeFromMarks(result.gradeMarks ?? result.marks);
+                    const grade = marksGrade ? {
+                        label: String(marksGrade.label || marksGrade.grade || marksGrade.name || '').trim(),
+                        points: Number(marksGrade.points ?? marksGrade.value ?? 0)
+                    } : pointsByLabel.get(key);
+                    if (!grade) return;
+                    const gradePoints = /^e(?:\s|\(|$)/i.test(grade.label) ? 0 : grade.points;
+                    const totalPoints = gradePoints + Number(result.positionPoints || 0);
+                    batch.update(resultDoc.ref, {
+                        gradeLabel: grade.label, gradePoints, totalPoints, updatedAt: new Date()
+                    });
+                    changedResults++;
+                });
+                if (changedResults) await batch.commit();
+                return changedResults;
+            }
+
             // Save Settings
             window.saveProgramSettings = async function () {
                 // Get db at call-time (dashboard sets window.db after login)
@@ -3209,6 +3260,9 @@
                 try {
                     await db.collection('programs').doc(programId).update(payload);
 
+                    if (payload.enableGrading && payload.gradeTemplateId) {
+                        await syncResultPointsFromGradeTemplate(programId, payload.gradeTemplateId);
+                    }
                     if (payload.enableScoring && payload.positionTemplateId) {
                         await syncResultPointsFromPositionTemplate(programId, payload.positionTemplateId);
                     }
