@@ -83,7 +83,7 @@
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-64">
                         <i class="fi fi-rr-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input type="text" id="search-neg" oninput="window.handleNegSearch(this.value)" placeholder="Search candidates or purpose..." 
+                        <input type="text" id="search-neg" oninput="window.handleNegSearch(this.value)" placeholder="Search candidates, teams or purpose..." 
                             class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-[13px] focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-all">
                     </div>
                 </div>
@@ -94,7 +94,7 @@
                 <div class="min-w-[1000px]">
                     <div class="grid grid-cols-12 gap-4 items-center py-3 px-6 border-b border-gray-100 bg-[#FAFAFA]">
                         <div class="col-span-1 text-[13px] font-medium text-gray-700 text-center">#</div>
-                        <div class="col-span-4 text-[13px] font-medium text-gray-700">Candidates</div>
+                        <div class="col-span-4 text-[13px] font-medium text-gray-700">Recipients</div>
                         <div class="col-span-3 text-[13px] font-medium text-gray-700">Purpose</div>
                         <div class="col-span-2 text-[13px] font-medium text-gray-700 text-center">Marks</div>
                         <div class="col-span-1 text-[13px] font-medium text-gray-700 text-center">Status</div>
@@ -136,9 +136,13 @@
         </div>
         
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
-            <!-- Candidate Multi-Select -->
+            <!-- Recipient Multi-Select -->
             <div>
-                <label class="block text-[13px] font-bold text-gray-700 mb-2">Select Candidates *</label>
+                <label class="block text-[13px] font-bold text-gray-700 mb-2">Apply Negative Marks To *</label>
+                <div class="grid grid-cols-2 gap-2 p-1 mb-3 bg-gray-100 rounded-xl">
+                    <button type="button" id="recipient-candidate-btn" onclick="window.setRecipientType('candidate')" class="px-3 py-2 rounded-lg bg-white text-brand-blue shadow-sm text-[12px] font-bold transition-all">Candidates</button>
+                    <button type="button" id="recipient-team-btn" onclick="window.setRecipientType('team')" class="px-3 py-2 rounded-lg text-gray-500 text-[12px] font-bold transition-all">Teams</button>
+                </div>
                 <div class="relative group">
                     <div id="multi-select-display" onclick="window.toggleCandidateDropdown(event)" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[13px] flex flex-wrap gap-2 min-h-[46px] cursor-pointer hover:border-brand-blue/30 transition-all">
                         <span class="text-gray-400">Choose candidates...</span>
@@ -233,8 +237,9 @@
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
         (function() {
-            let candidates = [], negMarks = [];
-            let selectedCandIds = new Set();
+            let candidates = [], teams = [], negMarks = [];
+            let selectedCandIds = new Set(), selectedTeamIds = new Set();
+            let recipientType = 'candidate';
             let currentSearch = '', currentType = 'All', currentPage = 1, perPage = 15;
             let activeNegId = null;
 
@@ -244,6 +249,11 @@
             // Fetch Data
             db.collection('candidates').onSnapshot(snap => {
                 candidates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderCandidateOptions();
+            });
+
+            db.collection('teams').onSnapshot(snap => {
+                teams = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(t => t.isActive !== false);
                 renderCandidateOptions();
             });
 
@@ -319,15 +329,20 @@
             // UI Rendering
             function renderCandidateOptions() {
                 const search = document.getElementById('cand-search-input').value.toLowerCase();
-                const filtered = candidates.filter(c => c.name.toLowerCase().includes(search) || (c.chestNo && c.chestNo.toLowerCase().includes(search)));
+                const source = recipientType === 'team' ? teams : candidates;
+                const selectedIds = recipientType === 'team' ? selectedTeamIds : selectedCandIds;
+                const filtered = source.filter(item => String(item.name || '').toLowerCase().includes(search) || (recipientType === 'candidate' && item.chestNo && item.chestNo.toLowerCase().includes(search)));
                 let html = '';
-                filtered.forEach(c => {
-                    const isSelected = selectedCandIds.has(c.id);
+                filtered.forEach(item => {
+                    const isSelected = selectedIds.has(item.id);
+                    const subtitle = recipientType === 'team'
+                        ? 'Team'
+                        : `${item.chestNo || 'No Chest'} • ${item.team || item.teamName || 'No Team'}`;
                     html += `
-                        <div onclick="window.toggleCandSelection('${c.id}', '${c.name}', event)" class="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div onclick="window.toggleCandSelection('${item.id}', event)" class="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors">
                             <div class="flex flex-col">
-                                <span class="text-[13px] font-bold text-gray-700">${c.name}</span>
-                                <span class="text-[10px] text-gray-400 uppercase tracking-widest">${c.chestNo || 'No Chest'} • ${c.team || 'No Team'}</span>
+                                <span class="text-[13px] font-bold text-gray-700">${item.name}</span>
+                                <span class="text-[10px] text-gray-400 uppercase tracking-widest">${subtitle}</span>
                             </div>
                             <div class="w-5 h-5 rounded-md border-2 ${isSelected ? 'bg-brand-blue border-brand-blue' : 'border-gray-200'} flex items-center justify-center transition-all">
                                 ${isSelected ? '<i class="fi fi-rr-check text-[10px] text-white"></i>' : ''}
@@ -335,7 +350,7 @@
                         </div>
                     `;
                 });
-                document.getElementById('cand-list-options').innerHTML = html || '<div class="p-6 text-center text-gray-300 text-[12px]">No candidates found</div>';
+                document.getElementById('cand-list-options').innerHTML = html || `<div class="p-6 text-center text-gray-300 text-[12px]">No ${recipientType === 'team' ? 'teams' : 'candidates'} found</div>`;
             }
 
             function renderList() {
@@ -408,6 +423,9 @@
                 document.getElementById('add-sidebar-overlay').classList.add('hidden');
                 document.getElementById('add-sidebar').classList.add('translate-x-full');
                 selectedCandIds.clear();
+                selectedTeamIds.clear();
+                recipientType = 'candidate';
+                updateRecipientTypeUI();
                 document.getElementById('multi-select-display').innerHTML = '<span class="text-gray-400">Choose candidates...</span>';
                 document.getElementById('neg-marks').value = '';
                 document.getElementById('neg-purpose').value = '';
@@ -428,10 +446,11 @@
                 }
             };
 
-            window.toggleCandSelection = (id, name, e) => {
+            window.toggleCandSelection = (id, e) => {
                 e.stopPropagation();
-                if(selectedCandIds.has(id)) selectedCandIds.delete(id);
-                else selectedCandIds.add(id);
+                const selectedIds = recipientType === 'team' ? selectedTeamIds : selectedCandIds;
+                if(selectedIds.has(id)) selectedIds.delete(id);
+                else selectedIds.add(id);
                 
                 renderCandidateOptions();
                 updateSelectionUI();
@@ -439,17 +458,35 @@
 
             function updateSelectionUI() {
                 const display = document.getElementById('multi-select-display');
-                if(selectedCandIds.size === 0) {
-                    display.innerHTML = '<span class="text-gray-400">Choose candidates...</span>';
+                const selectedIds = recipientType === 'team' ? selectedTeamIds : selectedCandIds;
+                const source = recipientType === 'team' ? teams : candidates;
+                if(selectedIds.size === 0) {
+                    display.innerHTML = `<span class="text-gray-400">Choose ${recipientType === 'team' ? 'teams' : 'candidates'}...</span>`;
                     return;
                 }
                 let tags = '';
-                selectedCandIds.forEach(id => {
-                    const c = candidates.find(can => can.id === id);
-                    if(c) tags += `<span class="px-2 py-1 bg-brand-blue text-white rounded-lg flex items-center gap-2 text-[11px] font-bold animation-in fade-in zoom-in duration-200 hover:bg-brand-blue/90" onclick="window.toggleCandSelection('${id}', '', event)">${c.name} <i class="fi fi-rr-cross-small"></i></span>`;
+                selectedIds.forEach(id => {
+                    const item = source.find(entry => entry.id === id);
+                    if(item) tags += `<span class="px-2 py-1 bg-brand-blue text-white rounded-lg flex items-center gap-2 text-[11px] font-bold animation-in fade-in zoom-in duration-200 hover:bg-brand-blue/90" onclick="window.toggleCandSelection('${id}', event)">${item.name} <i class="fi fi-rr-cross-small"></i></span>`;
                 });
                 display.innerHTML = tags;
             }
+
+            function updateRecipientTypeUI() {
+                const candidateBtn = document.getElementById('recipient-candidate-btn');
+                const teamBtn = document.getElementById('recipient-team-btn');
+                candidateBtn.className = `px-3 py-2 rounded-lg text-[12px] font-bold transition-all ${recipientType === 'candidate' ? 'bg-white text-brand-blue shadow-sm' : 'text-gray-500'}`;
+                teamBtn.className = `px-3 py-2 rounded-lg text-[12px] font-bold transition-all ${recipientType === 'team' ? 'bg-white text-brand-blue shadow-sm' : 'text-gray-500'}`;
+                document.getElementById('cand-search-input').value = '';
+                document.getElementById('cand-search-input').placeholder = recipientType === 'team' ? 'Search teams...' : 'Search by name or chest no...';
+                updateSelectionUI();
+                renderCandidateOptions();
+            }
+
+            window.setRecipientType = type => {
+                recipientType = type === 'team' ? 'team' : 'candidate';
+                updateRecipientTypeUI();
+            };
 
             window.filterCands = (val) => renderCandidateOptions();
 
@@ -457,7 +494,8 @@
                 const marks = document.getElementById('neg-marks').value;
                 const purpose = document.getElementById('neg-purpose').value;
                 
-                if(selectedCandIds.size === 0) return alert('Select at least one candidate');
+                const selectedIds = recipientType === 'team' ? selectedTeamIds : selectedCandIds;
+                if(selectedIds.size === 0) return alert(`Select at least one ${recipientType}`);
                 if(!purpose) return alert('Select a purpose');
                 if(!marks || marks <= 0) return alert('Enter valid marks to deduct');
 
@@ -465,20 +503,22 @@
                 btn.disabled = true; btn.innerText = 'Submitting...';
 
                 try {
-                    const names = [];
-                    const teamNames = [];
-                    selectedCandIds.forEach(id => {
-                        const c = candidates.find(can => can.id === id);
-                        if(c) {
-                            names.push(c.name);
-                            if(c.team) teamNames.push(c.team);
-                        }
-                    });
+                    const names = recipientType === 'candidate'
+                        ? Array.from(selectedCandIds).map(id => candidates.find(c => c.id === id)?.name).filter(Boolean)
+                        : [];
+                    const teamNames = recipientType === 'team'
+                        ? Array.from(selectedTeamIds).map(id => teams.find(t => t.id === id)?.name).filter(Boolean)
+                        : [...new Set(Array.from(selectedCandIds).map(id => {
+                            const candidate = candidates.find(c => c.id === id);
+                            return candidate?.team || candidate?.teamName;
+                        }).filter(Boolean))];
 
                     await db.collection('negativeMarks').add({
                         candidateIds: Array.from(selectedCandIds),
                         candidateNames: names,
+                        teamIds: recipientType === 'team' ? Array.from(selectedTeamIds) : [],
                         teams: teamNames,
+                        recipientType: recipientType,
                         purpose: purpose,
                         marks: parseInt(marks),
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
