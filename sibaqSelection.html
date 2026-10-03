@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sibaq Selection — Festival Dashboard</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        .sibaq-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .sibaq-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
+        .sibaq-radio { accent-color: #2563eb; width: 17px; height: 17px; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-gray-800">
+    <main id="sibaqAdminView" class="p-4 sm:p-6 lg:p-8 max-w-[1500px] mx-auto">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+            <div>
+                <div class="flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fi fi-rr-user-check"></i></span>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Sibaq Selection</h1>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Selections submitted by program judges</p>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="sibaqCopyFormLink()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-colors">
+                <i class="fi fi-rr-copy-alt"></i> Copy Form Link
+            </button>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-2xl px-5 py-4 mb-6 flex items-center justify-between gap-4">
+            <div>
+                <p class="text-sm font-semibold text-gray-800">Submitted selections</p>
+                <p id="sibaqSelectionCount" class="text-xs text-gray-500 mt-0.5">Loading selections...</p>
+            </div>
+            <button type="button" onclick="sibaqLoadSelections()" class="w-9 h-9 rounded-lg border border-gray-200 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Refresh"><i class="fi fi-rr-refresh"></i></button>
+        </div>
+
+        <div id="sibaqCards" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div class="col-span-full bg-white border border-gray-200 rounded-2xl py-16 text-center text-sm text-gray-400">Loading...</div>
+        </div>
+    </main>
+
+    <main id="sibaqFormView" class="hidden min-h-screen p-4 sm:p-7">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-7">
+                <span class="mx-auto w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200"><i class="fi fi-rr-user-check text-xl"></i></span>
+                <h1 class="text-2xl font-bold text-gray-900 mt-4">Sibaq Selection Form</h1>
+                <p class="text-sm text-gray-500 mt-1">Choose one or more participants from the selected program.</p>
+            </div>
+
+            <form id="sibaqForm" onsubmit="sibaqSubmitSelection(event)" class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="p-5 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-5 border-b border-gray-100">
+                    <label class="block">
+                        <span class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Judge name</span>
+                        <input id="sibaqJudgeName" type="text" required autocomplete="name" placeholder="Enter judge name" class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 text-sm">
+                    </label>
+                    <div class="relative">
+                        <span class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Program</span>
+                        <input id="sibaqProgramSearch" type="text" autocomplete="off" placeholder="Search and select a program" oninput="sibaqFilterPrograms()" onfocus="sibaqFilterPrograms()" class="w-full px-4 py-3 pr-10 rounded-xl border border-gray-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 text-sm">
+                        <input id="sibaqProgramId" type="hidden">
+                        <i class="fi fi-rr-search absolute right-4 top-[42px] text-gray-400"></i>
+                        <div id="sibaqProgramOptions" class="hidden absolute z-20 top-full left-0 right-0 mt-1 max-h-64 overflow-y-auto sibaq-scroll bg-white border border-gray-200 rounded-xl shadow-xl p-1"></div>
+                    </div>
+                </div>
+
+                <div class="p-5 sm:p-7">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-gray-900">Participants</h2>
+                            <p id="sibaqParticipantHint" class="text-xs text-gray-500 mt-0.5">Select a program to load participants.</p>
+                        </div>
+                    </div>
+                    <div class="border border-gray-200 rounded-xl overflow-x-auto sibaq-scroll">
+                        <table class="w-full min-w-[560px] text-left">
+                            <thead class="bg-gray-50 text-[11px] uppercase tracking-wider text-gray-500">
+                                <tr><th class="px-5 py-3 font-bold">Name</th><th class="px-5 py-3 font-bold">Class</th><th class="px-5 py-3 font-bold text-center">Select to Sibaq</th></tr>
+                            </thead>
+                            <tbody id="sibaqParticipantRows" class="divide-y divide-gray-100">
+                                <tr><td colspan="3" class="px-5 py-12 text-center text-sm text-gray-400">No program selected</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="px-5 sm:px-7 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
+                    <button id="sibaqSubmitBtn" type="submit" class="inline-flex items-center justify-center gap-2 min-w-32 px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-colors">
+                        <i class="fi fi-rr-check"></i><span>Submit</span>
+                    </button>
+                </div>
+            </form>
+            <div id="sibaqSuccess" class="hidden bg-white border border-green-200 rounded-2xl p-10 text-center shadow-sm">
+                <span class="mx-auto w-14 h-14 rounded-full bg-green-50 text-green-600 flex items-center justify-center"><i class="fi fi-rr-check text-2xl"></i></span>
+                <h2 class="text-xl font-bold text-gray-900 mt-4">Selection submitted</h2>
+                <p class="text-sm text-gray-500 mt-2">Thank you. Your Sibaq selection has been saved.</p>
+                <button type="button" onclick="sibaqResetForm()" class="mt-6 px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold hover:bg-gray-50">Submit another</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var sibaqPrograms = [];
+        var sibaqCandidates = [];
+        var sibaqRegistrations = [];
+        var sibaqCurrentParticipants = [];
+        var sibaqIsFormMode = new URLSearchParams(window.location.search).get('form') === '1';
+
+        function sibaqEnsureDb() {
+            if (window.db) return window.db;
+            var cfg = { apiKey: "AIzaSyCKA0k_9UgoJX_RBgEsIeNdiW2w0Okko1o", authDomain: "festie-s1u2h3.firebaseapp.com", projectId: "festie-s1u2h3", storageBucket: "festie-s1u2h3.appspot.com", messagingSenderId: "794049194885", appId: "1:794049194885:web:8f75f0df4c15cde15eb2ec" };
+            if (!firebase.apps.length) firebase.initializeApp(cfg);
+            window.db = firebase.firestore();
+            return window.db;
+        }
+
+        function sibaqToast(message, error) {
+            if (typeof Toastify !== 'undefined') Toastify({ text: message, duration: 3000, gravity: 'top', position: 'center', style: { background: error ? '#ef4444' : '#16a34a', borderRadius: '10px' } }).showToast();
+            else alert(message);
+        }
+
+        function sibaqEscape(value) {
+            return String(value == null ? '' : value).replace(/[&<>'"]/g, function(ch) { return ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'})[ch]; });
+        }
+
+        function sibaqCopyFormLink() {
+            var url = new URL('sibaqSelection.html?form=1', window.location.href).href;
+            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(function(){ sibaqToast('Form link copied'); }).catch(function(){ sibaqFallbackCopy(url); });
+            else sibaqFallbackCopy(url);
+        }
+
+        function sibaqFallbackCopy(value) {
+            var area = document.createElement('textarea'); area.value = value; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select();
+            try { document.execCommand('copy'); sibaqToast('Form link copied'); } catch (e) { prompt('Copy this form link:', value); }
+            area.remove();
+        }
+
+        async function sibaqLoadFormData() {
+            try {
+                var database = sibaqEnsureDb();
+                var result = await Promise.all([database.collection('programs').get(), database.collection('candidates').get(), database.collection('registrations').get()]);
+                sibaqPrograms = result[0].docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); }).sort(function(a,b){ return String(a.name || '').localeCompare(String(b.name || '')); });
+                sibaqCandidates = result[1].docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); });
+                sibaqRegistrations = result[2].docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); });
+            } catch (e) { console.error(e); sibaqToast('Could not load form data', true); }
+        }
+
+        function sibaqFilterPrograms() {
+            var input = document.getElementById('sibaqProgramSearch');
+            var box = document.getElementById('sibaqProgramOptions');
+            if (!input || !box) return;
+            document.getElementById('sibaqProgramId').value = '';
+            var query = input.value.trim().toLowerCase();
+            var matches = sibaqPrograms.filter(function(p){ return (String(p.name || '') + ' ' + String(p.code || '')).toLowerCase().includes(query); }).slice(0, 30);
+            box.innerHTML = matches.length ? matches.map(function(p){ return '<button type="button" onclick="sibaqChooseProgram(\'' + sibaqEscape(p.id) + '\')" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 transition-colors"><span class="block text-sm font-semibold text-gray-800">' + sibaqEscape(p.name || 'Untitled Program') + '</span><span class="text-[11px] text-gray-400">' + sibaqEscape(p.code || 'No code') + (p.section ? ' · ' + sibaqEscape(p.section) : '') + '</span></button>'; }).join('') : '<p class="px-3 py-5 text-center text-xs text-gray-400">No programs found</p>';
+            box.classList.remove('hidden');
+        }
+
+        function sibaqChooseProgram(id) {
+            var program = sibaqPrograms.find(function(p){ return p.id === id; });
+            if (!program) return;
+            document.getElementById('sibaqProgramId').value = id;
+            document.getElementById('sibaqProgramSearch').value = (program.code ? program.code + ' — ' : '') + (program.name || 'Untitled Program');
+            document.getElementById('sibaqProgramOptions').classList.add('hidden');
+            sibaqRenderParticipants(id);
+        }
+
+        function sibaqRenderParticipants(programId) {
+            var regs = sibaqRegistrations.filter(function(r){ return String(r.programId || r.progId || '') === String(programId); });
+            var found = {};
+            regs.forEach(function(reg){
+                var ids = Array.isArray(reg.candidateIds) ? reg.candidateIds : (reg.candidateId ? [reg.candidateId] : []);
+                ids.forEach(function(id){ var c = sibaqCandidates.find(function(x){ return String(x.id) === String(id); }); if (c) found[c.id] = c; });
+                var chests = Array.isArray(reg.chestNumbers) ? reg.chestNumbers : (reg.chestNo ? [reg.chestNo] : []);
+                chests.forEach(function(chest){ var c = sibaqCandidates.find(function(x){ return String(x.chestNo || '').trim() === String(chest).trim() && (!reg.team || x.team === reg.team); }); if (c) found[c.id] = c; });
+            });
+            sibaqCurrentParticipants = Object.keys(found).map(function(k){ return found[k]; }).sort(function(a,b){ return String(a.name || '').localeCompare(String(b.name || '')); });
+            var rows = document.getElementById('sibaqParticipantRows');
+            document.getElementById('sibaqParticipantHint').textContent = sibaqCurrentParticipants.length ? sibaqCurrentParticipants.length + ' registered participant' + (sibaqCurrentParticipants.length === 1 ? '' : 's') : 'No registered participants found for this program.';
+            rows.innerHTML = sibaqCurrentParticipants.length ? sibaqCurrentParticipants.map(function(c){ return '<tr class="hover:bg-gray-50"><td class="px-5 py-4"><p class="text-sm font-semibold text-gray-800">' + sibaqEscape(c.name || 'Unnamed') + '</p><p class="text-[11px] text-gray-400 mt-0.5">' + sibaqEscape(c.chestNo || '') + (c.team ? ' · ' + sibaqEscape(c.team) : '') + '</p></td><td class="px-5 py-4 text-sm text-gray-600">' + sibaqEscape(c.class || c.category || '—') + '</td><td class="px-5 py-4 text-center"><input class="sibaq-radio cursor-pointer" type="checkbox" name="sibaqCandidate" value="' + sibaqEscape(c.id) + '" aria-label="Select ' + sibaqEscape(c.name || 'participant') + '"></td></tr>'; }).join('') : '<tr><td colspan="3" class="px-5 py-12 text-center text-sm text-gray-400">No participants available</td></tr>';
+        }
+
+        async function sibaqSubmitSelection(event) {
+            event.preventDefault();
+            var judge = document.getElementById('sibaqJudgeName').value.trim();
+            var programId = document.getElementById('sibaqProgramId').value;
+            var selected = Array.from(document.querySelectorAll('input[name="sibaqCandidate"]:checked'));
+            if (!judge || !programId || !selected.length) return sibaqToast('Enter judge name, select a program and choose at least one participant', true);
+            var program = sibaqPrograms.find(function(p){ return p.id === programId; });
+            var candidates = selected.map(function(input){ return sibaqCurrentParticipants.find(function(c){ return c.id === input.value; }); }).filter(Boolean);
+            if (!program || !candidates.length) return sibaqToast('Please select valid participants', true);
+            var button = document.getElementById('sibaqSubmitBtn'); button.disabled = true; button.querySelector('span').textContent = 'Saving...';
+            try {
+                var chosen = candidates.map(function(candidate){ return { candidateId: candidate.id, candidateName: candidate.name || '', candidateClass: candidate.class || candidate.category || '', chestNo: candidate.chestNo || '', team: candidate.team || '' }; });
+                await sibaqEnsureDb().collection('sibaqSelections').add({ judgeName: judge, programId: program.id, programName: program.name || '', programCode: program.code || '', selectedCandidates: chosen, selectionCount: chosen.length, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                document.getElementById('sibaqForm').classList.add('hidden'); document.getElementById('sibaqSuccess').classList.remove('hidden');
+            } catch (e) { console.error(e); sibaqToast('Could not save the selection', true); }
+            finally { button.disabled = false; button.querySelector('span').textContent = 'Submit'; }
+        }
+
+        function sibaqResetForm() {
+            document.getElementById('sibaqForm').reset(); document.getElementById('sibaqProgramId').value = ''; sibaqCurrentParticipants = [];
+            document.getElementById('sibaqParticipantHint').textContent = 'Select a program to load participants.';
+            document.getElementById('sibaqParticipantRows').innerHTML = '<tr><td colspan="3" class="px-5 py-12 text-center text-sm text-gray-400">No program selected</td></tr>';
+            document.getElementById('sibaqSuccess').classList.add('hidden'); document.getElementById('sibaqForm').classList.remove('hidden');
+        }
+
+        async function sibaqDeleteSelection(id) {
+            if (!id || !confirm('Delete this Sibaq selection? This cannot be undone.')) return;
+            try {
+                await sibaqEnsureDb().collection('sibaqSelections').doc(id).delete();
+                sibaqToast('Selection deleted');
+                sibaqLoadSelections();
+            } catch (e) {
+                console.error(e);
+                sibaqToast('Could not delete the selection', true);
+            }
+        }
+
+        function sibaqLoadSelections() {
+            var cards = document.getElementById('sibaqCards'); if (!cards) return;
+            cards.innerHTML = '<div class="col-span-full bg-white border border-gray-200 rounded-2xl py-16 text-center text-sm text-gray-400">Loading...</div>';
+            sibaqEnsureDb().collection('sibaqSelections').get().then(function(snapshot){
+                var items = snapshot.docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); }).sort(function(a,b){ var at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0; var bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0; return bt-at; });
+                document.getElementById('sibaqSelectionCount').textContent = items.length + ' selection' + (items.length === 1 ? '' : 's');
+                cards.innerHTML = items.length ? items.map(function(item){
+                    var date = item.createdAt && item.createdAt.toDate ? item.createdAt.toDate().toLocaleString() : 'Just now';
+                    var chosen = Array.isArray(item.selectedCandidates) ? item.selectedCandidates : [{ candidateId: item.candidateId, candidateName: item.candidateName, candidateClass: item.candidateClass, chestNo: item.chestNo, team: item.team }];
+                    var chosenHtml = chosen.map(function(candidate){ return '<div class="py-3 first:pt-1 last:pb-1 border-b border-gray-200 last:border-0"><p class="text-sm font-bold text-gray-900">' + sibaqEscape(candidate.candidateName || 'Unnamed') + '</p><div class="flex flex-wrap gap-2 mt-1 text-[11px] text-gray-500"><span>Class: ' + sibaqEscape(candidate.candidateClass || '—') + '</span>' + (candidate.chestNo ? '<span>• Chest: ' + sibaqEscape(candidate.chestNo) + '</span>' : '') + (candidate.team ? '<span>• ' + sibaqEscape(candidate.team) + '</span>' : '') + '</div></div>'; }).join('');
+                    return '<article class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"><div class="flex items-start justify-between gap-3"><div><span class="inline-flex px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">' + sibaqEscape(item.programCode || 'Program') + '</span><h2 class="font-bold text-gray-900 mt-2">' + sibaqEscape(item.programName || 'Untitled Program') + '</h2></div><div class="flex items-center gap-2"><span class="shrink-0 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-bold">' + chosen.length + ' selected</span><button type="button" onclick="sibaqDeleteSelection(\'' + sibaqEscape(item.id) + '\')" title="Delete selection" aria-label="Delete selection" class="w-8 h-8 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fi fi-rr-trash"></i></button></div></div><div class="mt-5 p-4 rounded-xl bg-gray-50 border border-gray-100"><p class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-2">Selected participants</p>' + chosenHtml + '</div><div class="mt-4 flex items-center justify-between gap-3 text-xs"><span class="font-semibold text-gray-600"><i class="fi fi-rr-user mr-1 text-gray-400"></i>' + sibaqEscape(item.judgeName || 'Unknown judge') + '</span><span class="text-gray-400">' + sibaqEscape(date) + '</span></div></article>';
+                }).join('') : '<div class="col-span-full bg-white border border-dashed border-gray-300 rounded-2xl py-16 text-center"><i class="fi fi-rr-box-open text-3xl text-gray-300"></i><p class="text-sm font-semibold text-gray-500 mt-3">No Sibaq selections yet</p><p class="text-xs text-gray-400 mt-1">Copy the form link and share it with judges.</p></div>';
+            }).catch(function(e){ console.error(e); cards.innerHTML = '<div class="col-span-full bg-red-50 border border-red-100 rounded-2xl py-12 text-center text-sm text-red-500">Could not load selections.</div>'; });
+        }
+
+        function sibaqInit() {
+            var admin = document.getElementById('sibaqAdminView'); var form = document.getElementById('sibaqFormView'); if (!admin || !form) return;
+            if (sibaqIsFormMode) { admin.classList.add('hidden'); form.classList.remove('hidden'); sibaqLoadFormData(); }
+            else { admin.classList.remove('hidden'); form.classList.add('hidden'); sibaqLoadSelections(); }
+            document.addEventListener('click', function(e){ var box = document.getElementById('sibaqProgramOptions'); if (box && !e.target.closest('#sibaqProgramOptions') && !e.target.closest('#sibaqProgramSearch')) box.classList.add('hidden'); });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sibaqInit); else sibaqInit();
+    </script>
+</body>
+</html>

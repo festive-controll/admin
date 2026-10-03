@@ -33,6 +33,12 @@
             </div>
         </div>
 
+        <div class="flex gap-2 mb-6 border-b border-gray-200" role="tablist" aria-label="Result printing views">
+            <button id="published-results-tab" type="button" role="tab" aria-selected="true" onclick="switchPrintTab('published')" class="px-4 py-3 -mb-px border-b-2 border-[#134E8E] text-[#134E8E] text-sm font-bold">Published Results</button>
+            <button id="venue-based-tab" type="button" role="tab" aria-selected="false" onclick="switchPrintTab('venue')" class="px-4 py-3 -mb-px border-b-2 border-transparent text-gray-500 text-sm font-bold hover:text-[#134E8E]">Venue Based</button>
+        </div>
+
+        <div id="published-results-panel" role="tabpanel" aria-labelledby="published-results-tab">
         <section id="publish-preview" class="space-y-5">
             <div class="p-10 text-center text-sm text-gray-400">Loading published result…</div>
         </section>
@@ -43,6 +49,23 @@
                 Save &amp; Download PDF
             </button>
         </div>
+        </div>
+
+        <section id="venue-based-panel" role="tabpanel" aria-labelledby="venue-based-tab" class="hidden bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+            <h2 class="text-base font-bold text-gray-900">Venue Based Printing</h2>
+            <p class="text-xs text-gray-500 mt-1">Download every published program in the selected group, ordered by program code.</p>
+            <div class="mt-5 flex flex-col sm:flex-row sm:items-end gap-4">
+                <div class="w-full sm:w-64">
+                    <label for="venue-print-type" class="block text-xs font-semibold text-gray-600 mb-1.5">Program group</label>
+                    <select id="venue-print-type" class="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FFB33F]/40">
+                        <option value="arts">Arts</option>
+                        <option value="sports">Sports</option>
+                    </select>
+                </div>
+                <button id="venue-print-button" type="button" onclick="printVenueBasedResults()" class="px-5 py-3 rounded-xl bg-[#134E8E] text-white text-sm font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#0e3d70] transition-colors">Print &amp; Download PDF</button>
+            </div>
+            <p id="venue-print-status" class="mt-4 text-sm text-gray-500" aria-live="polite"></p>
+        </section>
 
         <section class="mt-8 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100">
@@ -68,6 +91,18 @@
         var publishedPdfHistory = [];
 
         document.getElementById('publication-date').value = new Date().toISOString().slice(0, 10);
+
+        function switchPrintTab(tabName) {
+            var venueSelected = tabName === 'venue';
+            document.getElementById('published-results-panel').classList.toggle('hidden', venueSelected);
+            document.getElementById('venue-based-panel').classList.toggle('hidden', !venueSelected);
+            var publishedTab = document.getElementById('published-results-tab');
+            var venueTab = document.getElementById('venue-based-tab');
+            publishedTab.setAttribute('aria-selected', String(!venueSelected));
+            venueTab.setAttribute('aria-selected', String(venueSelected));
+            publishedTab.className = 'px-4 py-3 -mb-px border-b-2 text-sm font-bold ' + (!venueSelected ? 'border-[#134E8E] text-[#134E8E]' : 'border-transparent text-gray-500 hover:text-[#134E8E]');
+            venueTab.className = 'px-4 py-3 -mb-px border-b-2 text-sm font-bold ' + (venueSelected ? 'border-[#134E8E] text-[#134E8E]' : 'border-transparent text-gray-500 hover:text-[#134E8E]');
+        }
 
         function publishPdfEscape(value) {
             return String(value == null ? '' : value).replace(/[&<>'"]/g, function (char) {
@@ -110,6 +145,10 @@
             return value == null || value === '' ? '-' : String(value);
         }
 
+        function publishPdfProgramHeading(program, category) {
+            return (program.code ? String(program.code) + ' - ' : '') + (program.name || 'Program') + ' - (' + category + ')';
+        }
+
         function publishPdfProgramResults(results, programId) {
             return (Array.isArray(results) ? results : []).filter(function (result) {
                 return result.programId === programId;
@@ -147,7 +186,7 @@
                 return '<article class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">' +
                     '<div class="px-6 sm:px-8 py-6 bg-[#134E8E] text-white">' +
                     '<div class="text-xs uppercase tracking-[0.22em] text-blue-200 font-bold mb-2">Official Result</div>' +
-                    '<h2 class="text-xl font-extrabold">' + publishPdfEscape(program.name || 'Program') + ' - (' + publishPdfEscape(category) + ')</h2></div>' +
+                    '<h2 class="text-xl font-extrabold">' + publishPdfEscape(publishPdfProgramHeading(program, category)) + '</h2></div>' +
                     '<div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">' +
                     '<tr><th class="px-6 py-3">Position</th><th class="px-6 py-3">Grade</th><th class="px-6 py-3">Chest No.</th><th class="px-6 py-3">Name</th><th class="px-6 py-3">Team</th><th class="px-6 py-3">Points</th></tr></thead>' +
                     '<tbody>' + (rows || '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No results found.</td></tr>') + '</tbody></table></div></article>';
@@ -225,9 +264,10 @@
 
         // Dependency-free PDF writer. This keeps downloads working even when CDN
         // scripts are blocked by the network, browser, or a content blocker.
-        function publishPdfDownloadFallback(dateValue, programs, savedResults, grandTotals) {
+        function publishPdfDownloadFallback(dateValue, programs, savedResults, grandTotals, options) {
             programs = programs || publishPdfPrograms;
             savedResults = savedResults || publishPdfResults;
+            options = options || {};
             function ascii(value) {
                 return publishPdfDisplayText(value)
                     .replace(/[ʿʾ]/g, "'").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
@@ -263,7 +303,7 @@
                 var category = program.category || program.section || 'General';
                 stream += '0.82 0.84 0.88 RG 45 ' + (y + 12) + ' m 550 ' + (y + 12) + ' l S\n';
                 stream += '0.075 0.306 0.557 rg\n';
-                stream += textLine((program.name || 'Program') + ' - (' + category + ')' + (continued ? ' - Continued' : ''), 45, y, 12, true);
+                stream += textLine(publishPdfProgramHeading(program, category) + (continued ? ' - Continued' : ''), 45, y, 12, true);
                 stream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 45, y - 20, 8, true) + textLine('GRADE', 115, y - 20, 8, true) + textLine('CHEST NO.', 170, y - 20, 8, true) + textLine('NAME', 245, y - 20, 8, true) + textLine('TEAM', 465, y - 20, 8, true) + textLine('POINTS', 535, y - 20, 8, true);
                 y -= 39;
             }
@@ -295,7 +335,7 @@
             grandTotals = grandTotals || [];
             if (grandTotals.length) {
                 for (var totalStart = 0; totalStart < grandTotals.length; totalStart += 10) {
-                    var totalStream = '0.075 0.306 0.557 rg\n' + textLine('GRAND TOTAL - STAGE + NON-STAGE' + (totalStart ? ' - Continued' : ''), 45, 800, 18, true);
+                    var totalStream = '0.075 0.306 0.557 rg\n' + textLine((options.totalTitle || 'GRAND TOTAL - STAGE + NON-STAGE') + (totalStart ? ' - Continued' : ''), 45, 800, 18, true);
                     totalStream += '0.35 0.35 0.35 rg\n' + textLine('POSITION', 55, 755, 10, true) + textLine('TEAM NAME', 180, 755, 10, true) + textLine('SCORE', 455, 755, 10, true);
                     grandTotals.slice(totalStart, totalStart + 10).forEach(function (team, pageIndex) {
                         var index = totalStart + pageIndex;
@@ -334,7 +374,7 @@
             var url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }));
             var link = document.createElement('a');
             link.href = url;
-            link.download = 'all-published-results-' + dateValue + '.pdf';
+            link.download = (options.filePrefix || 'all-published-results') + '-' + dateValue + '.pdf';
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -352,9 +392,10 @@
             return lines.length ? lines : [''];
         }
 
-        async function publishPdfDownloadNative(dateValue, programs, savedResults, grandTotals) {
+        async function publishPdfDownloadNative(dateValue, programs, savedResults, grandTotals, options) {
             programs = programs || publishPdfPrograms;
             savedResults = savedResults || publishPdfResults;
+            options = options || {};
             try {
                 await publishPdfLoadJsPdf();
                 if (document.fonts && document.fonts.ready) await document.fonts.ready;
@@ -403,7 +444,7 @@
                     context.strokeStyle = '#d8dee8'; context.lineWidth = 2;
                     context.beginPath(); context.moveTo(80, canvasY); context.lineTo(1160, canvasY); context.stroke();
                     context.fillStyle = '#134E8E'; context.font = '700 25px Inter, Arial, sans-serif';
-                    context.fillText(fitCanvasText((program.name || 'Program') + ' - (' + category + ')' + (continued ? ' - Continued' : ''), 1080), 80, canvasY + 40);
+                    context.fillText(fitCanvasText(publishPdfProgramHeading(program, category) + (continued ? ' - Continued' : ''), 1080), 80, canvasY + 40);
                     context.fillStyle = '#666666'; context.font = '700 16px Inter, Arial, sans-serif';
                     context.fillText('POSITION', 80, canvasY + 82); context.fillText('GRADE', 210, canvasY + 82);
                     context.fillText('CHEST NO.', 315, canvasY + 82); context.fillText('NAME', 455, canvasY + 82); context.fillText('TEAM', 830, canvasY + 82); context.fillText('POINTS', 1080, canvasY + 82);
@@ -444,7 +485,7 @@
                     for (var totalStart = 0; totalStart < grandTotals.length; totalStart += 10) {
                         beginPage();
                         context.fillStyle = '#134E8E'; context.font = '800 38px Inter, Arial, sans-serif';
-                        context.fillText('GRAND TOTAL - STAGE + NON-STAGE' + (totalStart ? ' - Continued' : ''), 80, 180);
+                        context.fillText((options.totalTitle || 'GRAND TOTAL - STAGE + NON-STAGE') + (totalStart ? ' - Continued' : ''), 80, 180);
                         context.fillStyle = '#667085'; context.font = '600 18px Inter, Arial, sans-serif';
                         context.fillText('FINAL TEAM STANDINGS', 80, 220);
                         context.fillStyle = '#667085'; context.font = '700 17px Inter, Arial, sans-serif';
@@ -465,10 +506,10 @@
                         canvasPageCount++;
                     }
                 }
-                pdf.save('all-published-results-' + dateValue + '.pdf');
+                pdf.save((options.filePrefix || 'all-published-results') + '-' + dateValue + '.pdf');
             } catch (error) {
                 console.error('Unicode PDF generation failed; using text fallback:', error);
-                publishPdfDownloadFallback(dateValue, programs, savedResults, grandTotals);
+                publishPdfDownloadFallback(dateValue, programs, savedResults, grandTotals, options);
             }
         }
 
@@ -485,11 +526,58 @@
             var normalized = String(raw || '').toLowerCase().replace(/[\s_-]+/g, '');
             if (normalized.indexOf('nonstage') !== -1) return 'non-stage';
             if (normalized === 'stage' || normalized.endsWith('stage')) return 'stage';
-            if (normalized.indexOf('sport') !== -1) return 'sports';
+            var section = String((program && program.section) || '').toLowerCase();
+            if (normalized.indexOf('sport') !== -1 || section.indexOf('sport') !== -1) return 'sports';
+            if (normalized.indexOf('art') !== -1 || section.indexOf('art') !== -1) return 'arts';
             var code = String((program && program.code) || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
             if (/^[A-Z]*Y\d+/.test(code)) return 'stage';
             if (/^[A-Z]*X\d+/.test(code)) return 'non-stage';
             return 'other';
+        }
+
+        function publishPdfCodeSort(a, b) {
+            return String(a.code || '').localeCompare(String(b.code || ''), undefined, { numeric: true, sensitivity: 'base' }) ||
+                String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric: true, sensitivity: 'base' });
+        }
+
+        async function printVenueBasedResults() {
+            var type = document.getElementById('venue-print-type').value;
+            var button = document.getElementById('venue-print-button');
+            var status = document.getElementById('venue-print-status');
+            var dateValue = document.getElementById('publication-date').value || new Date().toISOString().slice(0, 10);
+            button.disabled = true;
+            button.textContent = 'Preparing PDF...';
+            status.textContent = 'Loading published ' + (type === 'arts' ? 'Arts' : 'Sports') + ' programs...';
+            try {
+                var data = await Promise.all([
+                    db.collection('programs').where('resultsPublished', '==', true).get(),
+                    db.collection('programResults').get()
+                ]);
+                var programs = data[0].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
+                    .filter(function (program) {
+                        var venueType = publishPdfProgramVenueType(program);
+                        return type === 'arts' ? (venueType === 'stage' || venueType === 'non-stage' || venueType === 'arts') : venueType === 'sports';
+                    })
+                    .sort(publishPdfCodeSort);
+                if (!programs.length) throw new Error('No published ' + (type === 'arts' ? 'Arts' : 'Sports') + ' programs were found.');
+                var programIds = new Set(programs.map(function (program) { return program.id; }));
+                var results = data[1].docs.map(function (doc) { return Object.assign({ id: doc.id }, doc.data()); })
+                    .filter(function (result) { return programIds.has(result.programId); });
+                status.textContent = 'Downloading ' + programs.length + ' programs in program-code order...';
+                var totals = await calculatePublishedGrandTotals(programs, results, false);
+                await publishPdfDownloadNative(dateValue, programs, results, totals, {
+                    filePrefix: type === 'arts' ? 'all-arts-programs' : 'all-sports-programs',
+                    totalTitle: type === 'arts' ? 'GRAND TOTAL - ARTS' : 'GRAND TOTAL - SPORTS'
+                });
+                status.textContent = programs.length + ' ' + (type === 'arts' ? 'Arts' : 'Sports') + ' programs downloaded in program-code order.';
+            } catch (error) {
+                console.error('Could not print venue-based results:', error);
+                status.textContent = error.message || 'Could not create the venue-based PDF.';
+                alert(status.textContent);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Print & Download PDF';
+            }
         }
 
         async function calculatePublishedGrandTotals(programs, results, useAllPublishedArts) {

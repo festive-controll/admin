@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -131,6 +132,11 @@
                         <button onclick="exportData('overall')"
                             class="flex items-center justify-center gap-2 px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-[12px] font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">
                             <i class="fi fi-rr-file-export"></i> Export
+                        </button>
+                        <button onclick="exportFullData()"
+                            class="flex items-center justify-center gap-2 px-4 py-1.5 bg-brand-blue border border-brand-blue rounded-lg text-[12px] font-bold text-white hover:opacity-90 transition-opacity shadow-sm"
+                            title="Export all ranked candidates to Excel">
+                            <i class="fi fi-rr-file-spreadsheet"></i> FullData
                         </button>
                     </div>
                 </div>
@@ -433,11 +439,15 @@
 
                 if (!stats[key]) {
                     // Try to find full candidate info
-                    var candInfo = _data.candidates.find(c => c.id === res.candidateId || c.chestNo === res.chestNo);
+                    var candInfo = _data.candidates.find(c =>
+                        String(c.id) === String(res.candidateId) ||
+                        (res.chestNo !== undefined && res.chestNo !== null && String(c.chestNo) === String(res.chestNo))
+                    );
                     stats[key] = {
                         id: res.candidateId || (candInfo ? candInfo.id : null),
-                        chestNo: res.chestNo || '--',
+                        chestNo: res.chestNo || (candInfo ? candInfo.chestNo : '--'),
                         name: res.candidateName || (candInfo ? candInfo.name : 'Unknown'),
+                        className: candInfo ? (candInfo.class || '--') : (res.class || '--'),
                         team: res.team || res.teamName || (candInfo ? candInfo.team : '--'),
                         section: (candInfo ? candInfo.section : (res.section || '--')),
                         pts: 0,
@@ -570,8 +580,62 @@
             Toastify({ text: "✅ CSV Exported", duration: 2500, gravity: "top", position: "center" }).showToast();
         }
 
+        function exportFullData() {
+            var mode = document.getElementById('globalStatus').value;
+            var programCategory = document.getElementById('programCategory').value;
+            var categoryName = programCategory === 'sports' ? 'Sports' : 'Arts';
+            var publishedProgIds = new Set(_data.programs.filter(p => p.resultsPublished === true).map(p => p.id));
+            var progMap = {};
+            _data.programs.forEach(p => progMap[p.id] = p);
+
+            var rankedCandidates = calculateToppers(
+                'All Sections', mode, programCategory, Number.MAX_SAFE_INTEGER, progMap, publishedProgIds
+            );
+
+            if (_data.candidates.length === 0) {
+                return Toastify({ text: "❌ No data to export", duration: 3000, gravity: "top", position: "center",
+                    style: { background: "#fff", color: "#ef4444" } }).showToast();
+            }
+
+            var pointsById = {};
+            var pointsByChest = {};
+            rankedCandidates.forEach(candidate => {
+                if (candidate.id !== undefined && candidate.id !== null) pointsById[String(candidate.id)] = candidate.pts;
+                if (candidate.chestNo !== undefined && candidate.chestNo !== null) pointsByChest[String(candidate.chestNo)] = candidate.pts;
+            });
+
+            // Start with the master candidate list so candidates without results are also exported.
+            var candidates = _data.candidates.map((candidate, sourceIndex) => {
+                var idKey = String(candidate.id);
+                var chestKey = String(candidate.chestNo);
+                var points = Object.prototype.hasOwnProperty.call(pointsById, idKey)
+                    ? pointsById[idKey]
+                    : (Object.prototype.hasOwnProperty.call(pointsByChest, chestKey) ? pointsByChest[chestKey] : 0);
+                return { ...candidate, pts: points, sourceIndex: sourceIndex };
+            }).sort((a, b) => (b.pts - a.pts) || (a.sourceIndex - b.sourceIndex));
+
+            var rows = candidates.map((candidate, index) => ({
+                positionorder: index + 1,
+                chestNo: candidate.chestNo || '--',
+                name: candidate.name || '--',
+                class: candidate.class || '--',
+                point: candidate.pts
+            }));
+            var worksheet = XLSX.utils.json_to_sheet(rows, {
+                header: ['positionorder', 'chestNo', 'name', 'class', 'point']
+            });
+            worksheet['!cols'] = [{ wch: 15 }, { wch: 14 }, { wch: 30 }, { wch: 14 }, { wch: 12 }];
+            var workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'FullData');
+            XLSX.writeFile(workbook, `Full_Candidates_${categoryName}.xlsx`);
+
+            Toastify({ text: `✅ ${candidates.length} candidates exported to Excel`, duration: 2500,
+                gravity: "top", position: "center" }).showToast();
+        }
+
         window.applyFilters = applyFilters;
         window.exportData = exportData;
+        window.exportFullData = exportFullData;
         window.updateRankings = updateRankings;
         window.handleSectionChange = handleSectionChange;
         window.handleProgramCategoryChange = handleProgramCategoryChange;
